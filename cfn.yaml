@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Validates mobile purchases
+Parameters:
+  Stack:
+    Description: Stack name
+    Type: String
+  App:
+    Description: Application name
+    Type: String
+  Stage:
+    Description: Stage name
+    Type: String
+    AllowedValues:
+      - CODE
+      - PROD
+  DeployBucket:
+    Description: Bucket where RiffRaff uploads artifacts on deploy
+    Type: String
+Resources:
+  MobilePuchasesApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          version: "1.0.0"
+          title: !Ref App
+        paths:
+          "/iosvalidatereceipts":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${iosvalidatereceipts.Arn}/invocations
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                "200":
+                  "description": "200 response"
+  iosvalidatereceipts:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: com.gu.mobilepurchases.lambda.ValidateReceipt::handleRequest
+      Runtime: java8
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-iosvalidatereceipts/${App}-iosvalidatereceipts.jar
+      FunctionName: !Sub ${App}-archive-${Stage}
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Sub ${App}-iosvalidatereceipts
+      Description: Validates purchases
+      MemorySize: 256
+      Timeout: 60
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/iosvalidatereceipts"
+            Method: POST
+            RestApiId: !Ref MobilePuchasesApi
