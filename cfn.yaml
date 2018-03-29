@@ -17,6 +17,15 @@ Parameters:
   DeployBucket:
     Description: Bucket where RiffRaff uploads artifacts on deploy
     Type: String
+  HostedZoneId:
+    Description: HostedZoneId
+    Type: String
+  HostedZoneName:
+    Description: HostedZoneName
+    Type: String
+  CertArn:
+    Description: ACM Certificate ARN
+    Type: String
 Resources:
   MobilePuchasesApi:
     Type: AWS::Serverless::Api
@@ -42,6 +51,33 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
+
+  ApiDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      CertificateArn: !Ref CertArn
+      DomainName: !Sub ${App}.${HostedZoneName}
+
+  ApiRoute53:
+      Type: AWS::Route53::RecordSetGroup
+      Properties:
+        HostedZoneId: !Ref HostedZoneId
+        RecordSets:
+          - Name: !Ref ApiDomainName
+            Type: A
+            AliasTarget:
+              HostedZoneId: Z2FDTNDATAQYW2
+              DNSName: !GetAtt
+                - ApiDomainName
+                - DistributionDomainName
+
+  ApiMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName: !Ref ApiDomainName
+      RestApiId: !Ref MobilePuchasesApi
+      Stage: !Ref Stage
+
   iosvalidatereceipts:
     Type: AWS::Serverless::Function
     Properties:

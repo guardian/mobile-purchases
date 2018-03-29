@@ -1,23 +1,9 @@
-lazy val iosvalidatereceipts = project
-  .settings(commonSettings("iosvalidatereceipts"))
-  .settings(
-    libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
-      "commons-io" % "commons-io" % "2.6",
-      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.4"
-    )
-  )
-lazy val root = project.in(file(".")).aggregate(iosvalidatereceipts)
-  .settings(
-    scalaVersion := "2.12.5",
-    resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
-    name := "mobile-purchases"
-  )
+import sbtassembly.{AssemblyUtils, MergeStrategy}
 
 def commonSettings(module: String) = List(
   name := s"mobile-purchases-$module",
   organization := "com.gu",
-  description := "Validate Receipts",
+  description:= "Validate Receipts",
   version := "1.0",
   scalaVersion := "2.12.5",
   scalacOptions ++= Seq(
@@ -32,7 +18,33 @@ def commonSettings(module: String) = List(
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
   },
-  publishArtifact in(Compile, packageDoc) := false,
+  publishArtifact in (Compile, packageDoc) := false,
   publishArtifact in packageDoc := false,
   assemblyJarName := s"${name.value}.jar"
 )
+
+lazy val iosvalidatereceipts = project.settings(commonSettings("iosvalidatereceipts")).settings(
+    libraryDependencies ++= Seq(
+      "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
+      "commons-io" % "commons-io" % "2.6",
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.4",
+      "com.amazonaws" % "aws-lambda-java-log4j2" % "1.1.0",
+//      "org.apache.logging.log4j" % "log4j-core" % "2.11.0",
+//      "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
+      "org.specs2" %% "specs2-core" % "4.0.2" % "test"
+
+    ),
+    scalacOptions in Test ++= Seq("-Yrangepos"),
+
+    assemblyMergeStrategy in assembly := {
+      case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
+      case x => (assemblyMergeStrategy in assembly).value(x)
+    }
+  )
+
+lazy val root = project.in(file(".")).aggregate(iosvalidatereceipts)
+  .settings(
+    scalaVersion := "2.12.5",
+    resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
+    name := "mobile-purchases"
+  )
