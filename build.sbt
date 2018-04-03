@@ -1,6 +1,6 @@
 import sbtassembly.MergeStrategy
 
-lazy val iosvalidatereceipts = project.enablePlugins(RiffRaffArtifact).settings(commonSettings("iosvalidatereceipts")).settings(
+lazy val iosvalidatereceipts = project.settings(commonSettings("iosvalidatereceipts")).settings(
   libraryDependencies ++= Seq(
     "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
     "commons-io" % "commons-io" % "2.6",
@@ -17,19 +17,22 @@ lazy val iosvalidatereceipts = project.enablePlugins(RiffRaffArtifact).settings(
   assemblyMergeStrategy in assembly := {
     case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
     case x => (assemblyMergeStrategy in assembly).value(x)
-  },
+  }
 
-  riffRaffPackageType := assembly.value,
-  riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
-  riffRaffUploadManifestBucket := Option("riffraff-builds"),
-  riffRaffManifestProjectName := s"Mobile::${name.value}"
 
 )
-lazy val root = project.in(file(".")).aggregate(iosvalidatereceipts)
+lazy val root = project.enablePlugins(RiffRaffArtifact).in(file(".")).aggregate(iosvalidatereceipts)
   .settings(
     scalaVersion := "2.12.5",
     resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
-    name := "mobile-purchases"
+    name := "mobile-purchases",
+
+    riffRaffPackageType := file(".nothing"),
+    riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
+    riffRaffUploadManifestBucket := Option("riffraff-builds"),
+    riffRaffManifestProjectName := s"Mobile::${name.value}",
+    riffRaffArtifactResources += (assembly in iosvalidatereceipts).value -> s"${(name in iosvalidatereceipts).value}/${(assembly in iosvalidatereceipts).value.getName}"
+
   )
 
 def commonSettings(module: String) = List(
