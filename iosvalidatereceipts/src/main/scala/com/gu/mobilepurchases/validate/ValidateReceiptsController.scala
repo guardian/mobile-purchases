@@ -92,7 +92,7 @@ class ValidateReceiptsControllerImpl(
         LambdaResponse(
           okCode,
           Some(Left(mapper.writeValueAsString(ValidateResponse(validateReceiptRequest.transactions.map(validateReceiptsValidator.validate))))))
-      case Failure(_) => LambdaResponse(badRequest, Some(Left("Could not unmarshal data")))
+      case Failure(_) => LambdaResponse(badRequest, Some(Left("Could not unmarshal json")))
     }
   }
 }
