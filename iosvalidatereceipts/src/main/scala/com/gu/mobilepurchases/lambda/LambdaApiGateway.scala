@@ -4,9 +4,10 @@ import java.io.{InputStream, OutputStream}
 import java.nio.charset.StandardCharsets
 
 import com.gu.mobilepurchases.external.Base64Utils.{IsBase64Encoded, IsNotBase64Encoded, decoder, encoder}
+import com.gu.mobilepurchases.external.HttpStatusCodes
+import com.gu.mobilepurchases.external.HttpStatusCodes.internalServerError
 import com.gu.mobilepurchases.external.Jackson.mapper
 import com.gu.mobilepurchases.lambda.LambdaApiGateway.logger
-import com.gu.mobilepurchases.lambda.LambdaApiGatewayImpl.internalServerError
 import com.gu.mobilepurchases.validate.ValidateReceiptLambda
 import org.apache.commons.io.IOUtils
 import org.apache.logging.log4j.{LogManager, Logger}
@@ -84,9 +85,6 @@ trait LambdaApiGateway {
   def execute(input: InputStream, output: OutputStream, function: (LambdaRequest => LambdaResponse)): Unit
 }
 
-object LambdaApiGatewayImpl {
-  val internalServerError = 500
-}
 
 class LambdaApiGatewayImpl extends LambdaApiGateway {
   def execute(input: InputStream, output: OutputStream, function: (LambdaRequest => LambdaResponse)): Unit = {

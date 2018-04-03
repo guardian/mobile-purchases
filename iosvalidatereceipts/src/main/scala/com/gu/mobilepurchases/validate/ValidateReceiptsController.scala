@@ -3,8 +3,8 @@ package com.gu.mobilepurchases.validate
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.gu.mobilepurchases.external.Base64Utils.encoder
 import com.gu.mobilepurchases.external.Jackson.mapper
+import com.gu.mobilepurchases.external.HttpStatusCodes.{badRequest, okCode}
 import com.gu.mobilepurchases.lambda._
-import com.gu.mobilepurchases.validate.ValidateReceiptsControllerImpl.{badRequest, okCode}
 import org.apache.logging.log4j.{LogManager, Logger}
 
 import scala.util.{Failure, Success, Try}
@@ -64,8 +64,7 @@ trait ValidateReceiptsController {
 }
 
 object ValidateReceiptsControllerImpl {
-  val okCode: Int = 200
-  val badRequest: Int = 400
+
   val logger: Logger = LogManager.getLogger(classOf[ValidateReceiptsControllerImpl])
 }
 

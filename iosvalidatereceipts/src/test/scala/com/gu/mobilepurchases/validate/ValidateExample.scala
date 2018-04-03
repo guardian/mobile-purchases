@@ -6,8 +6,8 @@ object ValidateExample {
   val successExample: ValidateExample = new ValidateExample("success")
   val successProdValidatedTransaction: ValidatedTransaction = ValidatedTransaction(
     "1000000385437274",
-    true,
-    true,
+    validated = true,
+    finishTransaction = true,
     ValidatedTransactionPurchase("uk.co.guardian.gce.plusobserver.1monthsub", "20000001746150", ValidatedTransactionPurchaseActiveInterval(
       "2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z")), 0)
 

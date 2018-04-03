@@ -2,7 +2,7 @@ package com.gu.mobilepurchases.validate
 
 import java.time.Instant.ofEpochMilli
 import java.time.ZoneOffset.UTC
-import java.time.format.DateTimeFormatterBuilder
+import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
 
 import com.gu.mobilepurchases.apple._
 import com.gu.mobilepurchases.validate.ValidateReceiptsValidatorImpl.instantFormatter
@@ -13,7 +13,7 @@ trait ValidateReceiptsValidator {
 }
 
 object ValidateReceiptsValidatorImpl {
-  val instantFormatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendInstant(3).toFormatter()
+  val instantFormatter:DateTimeFormatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendInstant(3).toFormatter()
 }
 
 class ValidateReceiptsValidatorImpl(appStore: AppStore) extends ValidateReceiptsValidator {
@@ -33,18 +33,18 @@ class ValidateReceiptsValidatorImpl(appStore: AppStore) extends ValidateReceipts
       appStoreResponse.status.toInt match {
         case 0 | AutoRenewableSubsStatusCodes.ReceiptValidButSubscriptionExpired => ValidatedTransaction(
           transaction.id,
-          true,
-          true,
+          validated = true,
+          finishTransaction = true,
           validatedTransactionPurchase, statusAsLong)
         case AutoRenewableSubsStatusCodes.CouldNotReadJson |
              AutoRenewableSubsStatusCodes.MalformedReceiptData |
              AutoRenewableSubsStatusCodes.CouldNotAuthenticateReceipt => ValidatedTransaction(
           transaction.id,
-          false,
-          false,
+          validated = false,
+          finishTransaction = false,
           validatedTransactionPurchase,
           statusAsLong)
-        case _ => ValidatedTransaction(transaction.id, false, true, validatedTransactionPurchase, statusAsLong)
+        case _ => ValidatedTransaction(transaction.id, validated = false, finishTransaction = true, validatedTransactionPurchase, statusAsLong)
       }
     }
 

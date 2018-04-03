@@ -1,13 +1,10 @@
 package com.gu.mobilepurchases.apple
 
-import java.io.ByteArrayOutputStream
-import java.nio.charset.StandardCharsets
-
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
-import com.gu.mobilepurchases.external.Jackson
+import com.gu.mobilepurchases.external.Jackson.mapper
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
-import org.apache.http.entity.{ByteArrayEntity, InputStreamEntity, StringEntity}
+import org.apache.http.entity.ByteArrayEntity
 import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 
 object AutoRenewableSubsStatusCodes {
@@ -76,7 +73,7 @@ case class AppStoreResponse(
                              @JsonProperty("is-retryable") isRetryable: String
                            ) {
   lazy val allReceipts: Seq[AppStoreResponseReceipt] = Seq(receipt, latest_receipt_Info, latest_expired_receipt_info).flatten
-  lazy val mostRecentReceipt = allReceipts.sortBy(_.purchase_date).lastOption
+  lazy val mostRecentReceipt:Option[AppStoreResponseReceipt] = allReceipts.sortBy(_.purchase_date).lastOption
 
 
 }
@@ -103,7 +100,7 @@ trait AppStore {
 class AppStoreImpl(appStoreConfig: AppStoreConfig, client: CloseableHttpClient = HttpClients.createDefault()) extends AppStore {
   def send(receiptData: String): AppStoreResponse = {
     val request = AppStoreRequest(appStoreConfig.password, receiptData)
-    val bytes = Jackson.mapper.writeValueAsBytes(request)
+    val bytes = mapper.writeValueAsBytes(request)
     val post = new HttpPost(appStoreConfig.appStoreEnv.url)
     val entity = new ByteArrayEntity(bytes)
     post.setEntity(entity)
@@ -111,10 +108,10 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: CloseableHttpClient =
     try {
       val content = response.getEntity.getContent
       try {
-        Jackson.mapper.readValue(content, classOf[AppStoreResponse])
+        mapper.readValue(content, classOf[AppStoreResponse])
       }
       finally {
-        content.close
+        content.close()
       }
     }
     finally {
