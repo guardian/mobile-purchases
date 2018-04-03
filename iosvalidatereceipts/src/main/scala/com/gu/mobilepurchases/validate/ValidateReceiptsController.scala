@@ -1,7 +1,8 @@
 package com.gu.mobilepurchases.validate
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.gu.mobilepurchases.external.Jackson
+import com.gu.mobilepurchases.external.Base64Utils.encoder
+import com.gu.mobilepurchases.external.Jackson.mapper
 import com.gu.mobilepurchases.lambda._
 import com.gu.mobilepurchases.validate.ValidateReceiptsControllerImpl.{badRequest, okCode}
 import org.apache.logging.log4j.{LogManager, Logger}
@@ -73,16 +74,25 @@ class ValidateReceiptsControllerImpl(
                                     ) extends ValidateReceiptsController {
   def validate(lambdaRequest: LambdaRequest): LambdaResponse =
     lambdaRequest match {
-      case LambdaRequest(Some(Left(json))) => Try(Jackson.mapper.readValue(json, classOf[ValidateRequest])) match {
-        case Success(validateReceiptRequest) =>
-          LambdaResponse(
-            okCode,
-            Some(Left(Jackson.mapper.writeValueAsString(ValidateResponse(validateReceiptRequest.transactions.map(validateReceiptsValidator.validate))))))
-        case Failure(t) => ValidateReceiptsControllerImpl.logger.warn("Error reading json", t)
-          LambdaResponse(badRequest, Some(Left("Expecting Json data")))
-      }
+      case LambdaRequest(Some(Left(json))) => validate(Try(mapper.readValue(json, classOf[ValidateRequest])) recoverWith {
+        case t => ValidateReceiptsControllerImpl.logger.warn(s"Error reading json: $json", t)
+          Failure(t)
+      })
 
-      case _ => LambdaResponse(badRequest, Some(Left("Expecting Json data")))
+      case LambdaRequest(Some(Right(bytes))) => validate(Try(mapper.readValue(bytes, classOf[ValidateRequest])) recoverWith {
+        case t => ValidateReceiptsControllerImpl.logger.warn(s"Error reading as json bytes (base64 encoded): ${encoder.encode(bytes)}", t)
+          Failure(t)
+      })
+      case LambdaRequest(None) => LambdaResponse(badRequest, Some(Left("Expected a json body")))
     }
 
+  private def validate(triedRequest: Try[ValidateRequest]) = {
+    triedRequest match {
+      case Success(validateReceiptRequest) =>
+        LambdaResponse(
+          okCode,
+          Some(Left(mapper.writeValueAsString(ValidateResponse(validateReceiptRequest.transactions.map(validateReceiptsValidator.validate))))))
+      case Failure(_) => LambdaResponse(badRequest, Some(Left("Could not unmarshal data")))
+    }
+  }
 }
