@@ -6,7 +6,7 @@ lazy val iosvalidatereceipts = project.enablePlugins(RiffRaffArtifact).settings(
     "commons-io" % "commons-io" % "2.6",
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.4",
     "com.amazonaws" % "aws-lambda-java-log4j2" % "1.1.0",
-    "com.amazonaws" % "aws-java-sdk-dynamodb"  % "1.11.304",
+    "com.amazonaws" % "aws-java-sdk-dynamodb" % "1.11.304",
     "org.apache.logging.log4j" % "log4j-core" % "2.11.0",
     "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
     "org.specs2" %% "specs2-core" % "4.0.2" % "test"
@@ -20,8 +20,10 @@ lazy val iosvalidatereceipts = project.enablePlugins(RiffRaffArtifact).settings(
   },
 
   riffRaffPackageType := assembly.value,
-    riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
-    riffRaffUploadManifestBucket := Option("riffraff-builds")
+  riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
+  riffRaffUploadManifestBucket := Option("riffraff-builds"),
+  riffRaffManifestProjectName := s"Mobile::${name.value}"
+
 )
 lazy val root = project.in(file(".")).aggregate(iosvalidatereceipts)
   .settings(
