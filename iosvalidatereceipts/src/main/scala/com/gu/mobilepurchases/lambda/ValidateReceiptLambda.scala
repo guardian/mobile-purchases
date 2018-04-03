@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import com.gu.mobilepurchases.apple.{AppStoreConfig, AppStoreImpl}
 import com.gu.mobilepurchases.config.SsmConfig
 import com.gu.mobilepurchases.validate._
+import com.gu.{AwsIdentity, DevIdentity}
 
 abstract class ValidateReceiptLambda(
                                       validateReceipts: ValidateReceiptsController,
@@ -17,11 +18,14 @@ abstract class ValidateReceiptLambda(
 }
 
 object ConfiguredValidateReceiptLambda {
-  lazy val config = new SsmConfig().config
+  lazy val ssmConfig = new SsmConfig()
   lazy val validateReceipts: ValidateReceiptsController = new ValidateReceiptsControllerImpl(
     new ValidateReceiptsValidatorImpl(
       new AppStoreImpl(
-        AppStoreConfig(config)
+        AppStoreConfig(ssmConfig.config, ssmConfig.identity match {
+          case x: AwsIdentity => x.stack
+          case _ => "NO_STACK"
+        })
       )
     )
   )
