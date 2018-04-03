@@ -1,17 +1,13 @@
-package com.gu.mobilepurchases.validate
+package com.gu.mobilepurchases.lambda
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.charset.StandardCharsets
 
-import com.fasterxml.jackson.databind.ObjectMapper
+
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.gu.mobilepurchases.lambda.{LambdaApiGatewayImpl, LambdaRequest, LambdaResponse}
-import com.gu.mobilepurchases.validate.ValidateReceiptLambdaSpec.mapper
+import com.gu.mobilepurchases.external.Jackson
 import org.specs2.mutable.Specification
 
-object ValidateReceiptLambdaSpec {
-  val mapper = new ObjectMapper
-}
 
 class ValidateReceiptLambdaSpec extends Specification {
 
@@ -24,7 +20,7 @@ class ValidateReceiptLambdaSpec extends Specification {
         LambdaResponse(200, Some(Left("""test""")))
       }, new LambdaApiGatewayImpl) {}.handleRequest(byteArrayInputStream, byteArrayOutputStream, null)
       val output = new String(byteArrayOutputStream.toByteArray)
-      mapper.readTree(output).asInstanceOf[ObjectNode].get("body").asText() must_== "test"
+      Jackson.mapper.readTree(output).asInstanceOf[ObjectNode].get("body").asText() must_== "test"
     }
   }
 }

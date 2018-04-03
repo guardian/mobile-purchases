@@ -3,6 +3,7 @@ package com.gu.mobilepurchases.apple
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
 import com.gu.mobilepurchases.external.Jackson.mapper
+import com.typesafe.config.Config
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
 import org.apache.http.entity.ByteArrayEntity
 import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
@@ -88,7 +89,17 @@ case object Sandbox extends AppStoreEnv("https://sandbox.itunes.apple.com/verify
 
 // Invalid url for any safe default needs
 case object Invalid extends AppStoreEnv("https://local.invalid")
+object AppStoreConfig {
+  def apply(config: Config): AppStoreConfig = {
+    val appStoreEnv:AppStoreEnv = config.getString("appstore.env") match {
+      case "CODE" => Sandbox
+      case "PROD" => Production
+      case _ => Invalid
+    }
+    AppStoreConfig.apply(config.getString("appstore.password"), appStoreEnv)
+  }
 
+}
 case class AppStoreConfig(password: String, appStoreEnv: AppStoreEnv) {
 
 }

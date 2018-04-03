@@ -1,10 +1,11 @@
-package com.gu.mobilepurchases.validate
+package com.gu.mobilepurchases.lambda
 
 import java.io.{InputStream, OutputStream}
 
 import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
-import com.gu.mobilepurchases.apple.{AppStoreConfig, AppStoreImpl, Invalid}
-import com.gu.mobilepurchases.lambda.{LambdaApiGateway, LambdaApiGatewayImpl}
+import com.gu.mobilepurchases.apple.{AppStoreConfig, AppStoreImpl}
+import com.gu.mobilepurchases.config.SsmConfig
+import com.gu.mobilepurchases.validate._
 
 abstract class ValidateReceiptLambda(
                                       validateReceipts: ValidateReceiptsController,
@@ -16,10 +17,11 @@ abstract class ValidateReceiptLambda(
 }
 
 object ConfiguredValidateReceiptLambda {
+  lazy val config = new SsmConfig().config
   lazy val validateReceipts: ValidateReceiptsController = new ValidateReceiptsControllerImpl(
     new ValidateReceiptsValidatorImpl(
       new AppStoreImpl(
-        AppStoreConfig("password", Invalid)
+        AppStoreConfig(config)
       )
     )
   )
