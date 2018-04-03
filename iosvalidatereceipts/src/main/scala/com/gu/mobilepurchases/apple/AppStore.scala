@@ -90,8 +90,8 @@ case object Sandbox extends AppStoreEnv("https://sandbox.itunes.apple.com/verify
 // Invalid url for any safe default needs
 case object Invalid extends AppStoreEnv("https://local.invalid")
 object AppStoreConfig {
-  def apply(config: Config): AppStoreConfig = {
-    val appStoreEnv:AppStoreEnv = config.getString("appstore.env") match {
+  def apply(config: Config, appStoreEnvString:String): AppStoreConfig = {
+    val appStoreEnv:AppStoreEnv = appStoreEnvString match {
       case "CODE" => Sandbox
       case "PROD" => Production
       case _ => Invalid
