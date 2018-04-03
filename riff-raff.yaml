@@ -7,5 +7,5 @@ deployments:
     parameters:
       bucket: mobile-dist
       functionNames: [mobile-purchases-iosvalidatereceipt-]
-      fileName: mobile-purchases-iosvalidatereceipt.jar
+      fileName: mobile-purchases-iosvalidatereceipts.jar
       prefixStack: false
