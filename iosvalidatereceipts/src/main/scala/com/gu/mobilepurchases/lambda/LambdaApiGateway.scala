@@ -8,7 +8,6 @@ import com.gu.mobilepurchases.external.HttpStatusCodes
 import com.gu.mobilepurchases.external.HttpStatusCodes.internalServerError
 import com.gu.mobilepurchases.external.Jackson.mapper
 import com.gu.mobilepurchases.lambda.LambdaApiGateway.logger
-import com.gu.mobilepurchases.validate.ValidateReceiptLambda
 import org.apache.commons.io.IOUtils
 import org.apache.logging.log4j.{LogManager, Logger}
 

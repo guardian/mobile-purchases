@@ -27,6 +27,25 @@ Parameters:
     Description: ACM Certificate ARN
     Type: String
 Resources:
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: config
+          PolicyDocument:
+            Statement:
+              Action:
+                - ssm:GetParametersByPath
+              Effect: Allow
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Stage}/${Stack}/${App}
   MobilePuchasesApi:
     Type: AWS::Serverless::Api
     Properties:
