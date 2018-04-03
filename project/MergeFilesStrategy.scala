@@ -1,14 +1,15 @@
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 
-import scala.collection.JavaConverters.asJavaEnumerationConverter
-
 import org.apache.logging.log4j.core.config.plugins.processor.PluginCache
 import sbt.File
 import sbtassembly.MergeStrategy
 
+import scala.collection.JavaConverters.asJavaEnumerationConverter
+
 class MergeFilesStrategy extends MergeStrategy {
   override def name: String = "mergeFilesStrategy"
+
   override def apply(tempDir: File, path: String, files: Seq[File]): Either[String, Seq[(File, String)]] = {
     val pluginCache = new PluginCache
     pluginCache.loadCacheFiles(files.map(_.toURI.toURL).toIterator.asJavaEnumeration)

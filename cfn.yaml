@@ -81,7 +81,7 @@ Resources:
   iosvalidatereceipts:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: com.gu.mobilepurchases.lambda.ValidateReceipt::handleRequest
+      Handler: com.gu.mobilepurchases.validate.ConfiguredValidateReceiptLambda::handleRequest
       Runtime: java8
       CodeUri:
         Bucket: !Ref DeployBucket
