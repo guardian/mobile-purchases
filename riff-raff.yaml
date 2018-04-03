@@ -13,4 +13,5 @@ deployments:
   mobile-purchases-cloudformation:
     type: cloud-formation
     parameters:
+      app: mobile-purchases
       templatePath: cloudformation.yaml
