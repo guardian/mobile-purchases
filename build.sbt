@@ -1,6 +1,6 @@
 import sbtassembly.MergeStrategy
 
-lazy val iosvalidatereceipts = project.settings(commonSettings("iosvalidatereceipts")).settings(
+lazy val iosvalidatereceipts = project.enablePlugins(RiffRaffArtifact).settings(commonSettings("iosvalidatereceipts")).settings(
   libraryDependencies ++= Seq(
     "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
     "commons-io" % "commons-io" % "2.6",
