@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
 import com.gu.mobilepurchases.external.Jackson
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
-import org.apache.http.entity.StringEntity
+import org.apache.http.entity.{ByteArrayEntity, InputStreamEntity, StringEntity}
 import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 
 object AutoRenewableSubsStatusCodes {
@@ -100,27 +100,26 @@ trait AppStore {
   def send(receiptData: String): AppStoreResponse
 }
 
-class AppStoreImpl(appStoreConfig: AppStoreConfig) extends AppStore {
-
+class AppStoreImpl(appStoreConfig: AppStoreConfig, client: CloseableHttpClient = HttpClients.createDefault()) extends AppStore {
   def send(receiptData: String): AppStoreResponse = {
-    val output = sendRequest(Jackson.mapper.writeValueAsString(AppStoreRequest(appStoreConfig.password, receiptData)))
-    Jackson.mapper.readValue(output, classOf[AppStoreResponse])
-  }
-
-  def sendRequest(body: String, client: CloseableHttpClient = HttpClients.createDefault()): String = {
+    val request = AppStoreRequest(appStoreConfig.password, receiptData)
+    val bytes = Jackson.mapper.writeValueAsBytes(request)
     val post = new HttpPost(appStoreConfig.appStoreEnv.url)
-    post.setEntity(new StringEntity("", StandardCharsets.UTF_8))
+    val entity = new ByteArrayEntity(bytes)
+    post.setEntity(entity)
     val response: CloseableHttpResponse = client.execute(post)
     try {
-      val stream = new ByteArrayOutputStream()
-      response.getEntity.writeTo(stream)
-      new String(stream.toByteArray)
+      val content = response.getEntity.getContent
+      try {
+        Jackson.mapper.readValue(content, classOf[AppStoreResponse])
+      }
+      finally {
+        content.close
+      }
     }
     finally {
       response.close()
     }
-
-
   }
 
 
