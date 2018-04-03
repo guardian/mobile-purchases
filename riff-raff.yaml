@@ -1,0 +1,11 @@
+stacks: [mobile]
+regions: [eu-west-1]
+
+deployments:
+  mobile-purchases-iosvalidatereceipt:
+    type: aws-lambda
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-iosvalidatereceipt-]
+      fileName: mobile-purchases-iosvalidatereceipt.jar
+      prefixStack: false

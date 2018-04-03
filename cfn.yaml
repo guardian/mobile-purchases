@@ -86,7 +86,7 @@ Resources:
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-iosvalidatereceipts/${App}-iosvalidatereceipts.jar
-      FunctionName: !Sub ${App}-archive-${Stage}
+      FunctionName: !Sub ${App}-iosvalidatereceipt-${Stage}
       Environment:
         Variables:
           Stage: !Ref Stage

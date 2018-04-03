@@ -17,7 +17,11 @@ lazy val iosvalidatereceipts = project.settings(commonSettings("iosvalidaterecei
   assemblyMergeStrategy in assembly := {
     case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
     case x => (assemblyMergeStrategy in assembly).value(x)
-  }
+  },
+
+  riffRaffPackageType := assembly.value,
+    riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
+    riffRaffUploadManifestBucket := Option("riffraff-builds")
 )
 lazy val root = project.in(file(".")).aggregate(iosvalidatereceipts)
   .settings(
