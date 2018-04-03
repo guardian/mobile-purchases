@@ -1,0 +1,18 @@
+{
+  "transactions": [
+    {
+      "transactionId": "1000000385437274",
+      "validated": 1,
+      "finishTransaction": 1,
+      "purchase": {
+        "productId": "uk.co.guardian.gla.1month",
+        "webOrderLineItemId": "1000000036022769",
+        "activeInterval": {
+          "start": "2018-03-26T12:24:23.107Z",
+          "end": "2018-03-26T12:29:23.107Z"
+        }
+      },
+      "appStoreStatusResponse": 0
+    }
+  ]
+}

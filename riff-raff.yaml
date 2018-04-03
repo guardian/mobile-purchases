@@ -1,0 +1,17 @@
+stacks: [mobile]
+regions: [eu-west-1]
+
+deployments:
+  mobile-purchases-iosvalidatereceipts:
+    type: aws-lambda
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-iosvalidatereceipts-]
+      fileName: mobile-purchases-iosvalidatereceipts.jar
+      prefixStack: false
+
+  mobile-purchases-cloudformation:
+    type: cloud-formation
+    app: mobile-purchases
+    parameters:
+      templatePath: cloudformation.yaml
