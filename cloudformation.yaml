@@ -65,7 +65,7 @@ Resources:
           version: "1.0.0"
           title: !Ref App
         paths:
-          "/iosvalidatereceipts":
+          "/validateReceipts":
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -128,6 +128,6 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/iosvalidatereceipts"
+            Path: "/validateReceipts"
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
