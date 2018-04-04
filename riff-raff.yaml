@@ -10,8 +10,3 @@ deployments:
       fileName: mobile-purchases-iosvalidatereceipts.jar
       prefixStack: false
 
-  mobile-purchases-cloudformation:
-    type: cloud-formation
-    app: mobile-purchases
-    parameters:
-      templatePath: cloudformation.yaml
