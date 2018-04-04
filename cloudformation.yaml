@@ -105,7 +105,7 @@ Resources:
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-iosvalidatereceipts/${App}-iosvalidatereceipts.jar
-      FunctionName: !Sub ${App}-IosValidateReceiptsLambda-${Stage}
+      FunctionName: !Sub ${App}-iosvalidatereceipts-${Stage}
       Role: !GetAtt IosValidateReceiptsRole.Arn
       Environment:
         Variables:
