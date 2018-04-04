@@ -5,14 +5,14 @@ lazy val commonlambda = project.disablePlugins(AssemblyPlugin).settings(commonSe
   scalacOptions in Test ++= Seq("-Yrangepos")
 )
 
-lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).dependsOn(commonlambda).settings(commonAssemblySettings("iosvalidatereceipts")).settings(
+lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).dependsOn(commonlambda  % "test->test;compile->compile").settings(commonAssemblySettings("iosvalidatereceipts")).settings(
   scalacOptions in Test ++= Seq("-Yrangepos"),
   assemblyMergeStrategy in assembly := {
     case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
     case x => (assemblyMergeStrategy in assembly).value(x)
   }
 )
-lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).dependsOn(commonlambda).settings(commonAssemblySettings("iosuserpurchases")).settings(
+lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).dependsOn(commonlambda  % "test->test;compile->compile").settings(commonAssemblySettings("iosuserpurchases")).settings(
   scalacOptions in Test ++= Seq("-Yrangepos"),
   assemblyMergeStrategy in assembly := {
     case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
