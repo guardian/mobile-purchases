@@ -5,16 +5,15 @@ import java.io.{InputStream, OutputStream}
 import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import com.gu.mobilepurchases.shared.external.Jackson
 import com.gu.mobilepurchases.shared.lambda.{ApiGatewayLambdaRequest, LambdaApiGateway, LambdaApiGatewayImpl, LambdaResponse}
-import com.gu.mobilepurchases.userpurchases.lambda.UserPurchasesLambda.logger
+import com.gu.mobilepurchases.userpurchases.lambda.UserPurchasesLambda.{lambdaApiGateway, logger}
 import org.apache.logging.log4j.LogManager
 
 object UserPurchasesLambda {
   val logger = LogManager.getLogger(classOf[UserPurchasesLambda])
+  val lambdaApiGateway: LambdaApiGateway = new LambdaApiGatewayImpl
 }
 
-class UserPurchasesLambda(
-                           lambdaApiGateway: LambdaApiGateway = new LambdaApiGatewayImpl
-                         ) extends RequestStreamHandler {
+class UserPurchasesLambda extends RequestStreamHandler {
 
   override def handleRequest(input: InputStream, output: OutputStream, context: Context): Unit = {
     try {
