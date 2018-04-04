@@ -35,7 +35,7 @@ object ConfiguredValidateReceiptLambda {
     new ValidateReceiptsValidatorImpl(
       new AppStoreImpl(
         AppStoreConfig(ssmConfig.config, ssmConfig.identity match {
-          case awsIdentity: AwsIdentity => awsIdentity.stack
+          case awsIdentity: AwsIdentity => awsIdentity.stage
           case _ => "NO_STACK"
         })
       )
