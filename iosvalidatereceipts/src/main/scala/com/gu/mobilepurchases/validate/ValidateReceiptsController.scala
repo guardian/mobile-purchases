@@ -1,10 +1,11 @@
 package com.gu.mobilepurchases.validate
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.gu.mobilepurchases.external.Base64Utils.encoder
-import com.gu.mobilepurchases.external.Jackson.mapper
-import com.gu.mobilepurchases.external.HttpStatusCodes.{badRequest, okCode}
-import com.gu.mobilepurchases.lambda._
+import com.gu.mobilepurchases.shared.external.Base64Utils.encoder
+import com.gu.mobilepurchases.shared.external.Jackson.mapper
+import com.gu.mobilepurchases.shared.external.HttpStatusCodes.{badRequest, okCode}
+
+import com.gu.mobilepurchases.shared.lambda.{LambdaRequest, LambdaResponse}
 import org.apache.logging.log4j.{LogManager, Logger}
 
 import scala.util.{Failure, Success, Try}

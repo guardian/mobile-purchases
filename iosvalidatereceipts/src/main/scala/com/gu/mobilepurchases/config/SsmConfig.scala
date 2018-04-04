@@ -1,7 +1,7 @@
 package com.gu.mobilepurchases.config
 
 import com.gu.conf.{ConfigurationLoader, SSMConfigurationLocation}
-import com.gu.mobilepurchases.external.Logging
+import com.gu.mobilepurchases.shared.external.Logging
 import com.gu.{AppIdentity, AwsIdentity}
 
 class SsmConfig {

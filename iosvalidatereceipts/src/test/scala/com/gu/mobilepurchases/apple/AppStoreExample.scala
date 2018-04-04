@@ -1,6 +1,6 @@
 package com.gu.mobilepurchases.apple
 
-import com.gu.mobilepurchases.external.Jackson
+import com.gu.mobilepurchases.shared.external.Jackson
 
 import scala.io.Source
 

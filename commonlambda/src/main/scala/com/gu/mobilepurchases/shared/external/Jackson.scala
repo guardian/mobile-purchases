@@ -1,4 +1,4 @@
-package com.gu.mobilepurchases.external
+package com.gu.mobilepurchases.shared.external
 
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule

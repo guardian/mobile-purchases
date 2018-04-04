@@ -1,13 +1,13 @@
-package com.gu.mobilepurchases.lambda
+package com.gu.mobilepurchases.shared.lambda
 
 import java.io.{InputStream, OutputStream}
 import java.nio.charset.StandardCharsets
 
-import com.gu.mobilepurchases.external.Base64Utils.{IsBase64Encoded, IsNotBase64Encoded, decoder, encoder}
-import com.gu.mobilepurchases.external.HttpStatusCodes
-import com.gu.mobilepurchases.external.HttpStatusCodes.internalServerError
-import com.gu.mobilepurchases.external.Jackson.mapper
-import com.gu.mobilepurchases.lambda.LambdaApiGateway.logger
+import com.gu.mobilepurchases.shared.external.Base64Utils.{IsBase64Encoded, IsNotBase64Encoded, decoder, encoder}
+import com.gu.mobilepurchases.shared.external.HttpStatusCodes
+import com.gu.mobilepurchases.shared.external.HttpStatusCodes.internalServerError
+import com.gu.mobilepurchases.shared.external.Jackson.mapper
+import com.gu.mobilepurchases.shared.lambda.LambdaApiGateway.logger
 import org.apache.commons.io.IOUtils
 import org.apache.logging.log4j.{LogManager, Logger}
 
@@ -77,7 +77,7 @@ case class LambdaResponse(
                          )
 
 object LambdaApiGateway {
-  val logger: Logger = LogManager.getLogger(classOf[ValidateReceiptLambda])
+  val logger: Logger = LogManager.getLogger(classOf[LambdaApiGateway])
 }
 
 trait LambdaApiGateway {

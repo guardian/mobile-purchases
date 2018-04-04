@@ -3,9 +3,9 @@ package com.gu.mobilepurchases.lambda
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.charset.StandardCharsets
 
-
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.gu.mobilepurchases.external.Jackson
+import com.gu.mobilepurchases.shared.external.Jackson
+import com.gu.mobilepurchases.shared.lambda.{LambdaApiGatewayImpl, LambdaRequest, LambdaResponse}
 import org.specs2.mutable.Specification
 
 

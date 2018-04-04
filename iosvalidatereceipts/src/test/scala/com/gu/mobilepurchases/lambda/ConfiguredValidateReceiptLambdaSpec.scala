@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream, Output
 import java.nio.charset.StandardCharsets
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.gu.mobilepurchases.external.Jackson
+import com.gu.mobilepurchases.shared.external.Jackson
 import com.typesafe.config.ConfigException
 import org.specs2.mutable.Specification
 
