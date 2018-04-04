@@ -4,7 +4,7 @@ import java.io.{InputStream, OutputStream}
 
 import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import com.gu.mobilepurchases.shared.external.Jackson
-import com.gu.mobilepurchases.shared.lambda.{ApiGatewayLambdaRequest, LambdaApiGateway, LambdaResponse}
+import com.gu.mobilepurchases.shared.lambda.{ApiGatewayLambdaRequest, LambdaApiGateway, LambdaApiGatewayImpl, LambdaResponse}
 import com.gu.mobilepurchases.userpurchases.lambda.UserPurchasesLambda.logger
 import org.apache.logging.log4j.LogManager
 
@@ -14,7 +14,7 @@ object UserPurchasesLambda {
 
 class UserPurchasesLambda(
 
-                           lambdaApiGateway: LambdaApiGateway
+                           lambdaApiGateway: LambdaApiGateway = new LambdaApiGatewayImpl
                          ) extends RequestStreamHandler {
 
   override def handleRequest(input: InputStream, output: OutputStream, context: Context): Unit = {
