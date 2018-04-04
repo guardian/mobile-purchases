@@ -39,6 +39,15 @@ Resources:
             Action: sts:AssumeRole
       Path: /
       Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: "arn:aws:logs:*:*:*"
         - PolicyName: config
           PolicyDocument:
             Statement:
