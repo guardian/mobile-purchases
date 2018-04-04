@@ -20,32 +20,31 @@ class ValidateReceiptsValidatorImpl(appStore: AppStore) extends ValidateReceipts
   def validate(transaction: ValidateRequestTransaction): ValidatedTransaction = {
     def validate(receiptData: String): ValidatedTransaction = {
       val appStoreResponse = appStore.send(receiptData)
-      val validatedTransactionPurchase = appStoreResponse.mostRecentReceipt.map(receipt => {
-        ValidatedTransactionPurchase(
+      appStoreResponse.mostRecentReceipt.map(receipt => {
+        val validatedTransactionPurchase =  ValidatedTransactionPurchase(
           receipt.product_id,
           receipt.web_order_line_item_id,
           ValidatedTransactionPurchaseActiveInterval(
             ofEpochMilli(receipt.purchase_date_ms.toLong).atZone(UTC).format(instantFormatter),
             ofEpochMilli(receipt.expires_date.toLong).atZone(UTC).format(instantFormatter)))
-      })
-        .get
-      val statusAsLong = appStoreResponse.status.toLong
-      appStoreResponse.status.toInt match {
-        case 0 | AutoRenewableSubsStatusCodes.ReceiptValidButSubscriptionExpired => ValidatedTransaction(
-          transaction.id,
-          validated = true,
-          finishTransaction = true,
-          validatedTransactionPurchase, statusAsLong)
-        case AutoRenewableSubsStatusCodes.CouldNotReadJson |
-             AutoRenewableSubsStatusCodes.MalformedReceiptData |
-             AutoRenewableSubsStatusCodes.CouldNotAuthenticateReceipt => ValidatedTransaction(
-          transaction.id,
-          validated = false,
-          finishTransaction = false,
-          validatedTransactionPurchase,
-          statusAsLong)
-        case _ => ValidatedTransaction(transaction.id, validated = false, finishTransaction = true, validatedTransactionPurchase, statusAsLong)
-      }
+        val statusAsLong = appStoreResponse.status.toLong
+        appStoreResponse.status.toInt match {
+          case 0 | AutoRenewableSubsStatusCodes.ReceiptValidButSubscriptionExpired => ValidatedTransaction(
+            transaction.id,
+            validated = true,
+            finishTransaction = true,
+            validatedTransactionPurchase, statusAsLong)
+          case AutoRenewableSubsStatusCodes.CouldNotReadJson |
+               AutoRenewableSubsStatusCodes.MalformedReceiptData |
+               AutoRenewableSubsStatusCodes.CouldNotAuthenticateReceipt => ValidatedTransaction(
+            transaction.id,
+            validated = false,
+            finishTransaction = false,
+            validatedTransactionPurchase,
+            statusAsLong)
+          case _ => ValidatedTransaction(transaction.id, validated = false, finishTransaction = true, validatedTransactionPurchase, statusAsLong)
+        }
+      }).getOrElse(throw new IllegalStateException("Missing receipt data"))
     }
 
     validate(transaction.receipt)
