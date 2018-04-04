@@ -6,7 +6,7 @@ import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import com.gu.mobilepurchases.apple.{AppStoreConfig, AppStoreImpl}
 import com.gu.mobilepurchases.config.SsmConfig
 import com.gu.mobilepurchases.validate._
-import com.gu.{AwsIdentity, DevIdentity}
+import com.gu.{AwsIdentity}
 
 abstract class ValidateReceiptLambda(
                                       validateReceipts: ValidateReceiptsController,
@@ -23,7 +23,7 @@ object ConfiguredValidateReceiptLambda {
     new ValidateReceiptsValidatorImpl(
       new AppStoreImpl(
         AppStoreConfig(ssmConfig.config, ssmConfig.identity match {
-          case x: AwsIdentity => x.stack
+          case awsIdentity: AwsIdentity => awsIdentity.stack
           case _ => "NO_STACK"
         })
       )
