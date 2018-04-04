@@ -32,7 +32,7 @@ lazy val root = project.enablePlugins(RiffRaffArtifact).in(file(".")).aggregate(
     riffRaffUploadManifestBucket := Option("riffraff-builds"),
     riffRaffManifestProjectName := s"Mobile::${name.value}",
     riffRaffArtifactResources += (assembly in iosvalidatereceipts).value -> s"${(name in iosvalidatereceipts).value}/${(assembly in iosvalidatereceipts).value.getName}",
-    riffRaffArtifactResources += (file("cloudformation.yaml"), s"mobile-purchases-cloudformation/cloudformation.yaml")
+    riffRaffArtifactResources += (assembly in iosuserpurchases).value -> s"${(name in iosuserpurchases).value}/${(assembly in iosuserpurchases).value.getName}"
 
   )
 
