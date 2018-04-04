@@ -1,4 +1,4 @@
-package com.gu.mobilepurchases.lambda
+package com.gu.mobilepurchases.shared.lambda
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 import java.nio.charset.StandardCharsets

@@ -3,7 +3,7 @@ package com.gu.mobilepurchases.userpurchases.lambda
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.nio.charset.StandardCharsets
 
-import com.gu.mobilepurchases.lambda.LambdaApiGatewaySpec
+import com.gu.mobilepurchases.shared.lambda.LambdaApiGatewaySpec
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda._
 import org.specs2.mutable.Specification
