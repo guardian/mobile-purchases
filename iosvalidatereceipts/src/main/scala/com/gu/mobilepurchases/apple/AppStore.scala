@@ -7,6 +7,8 @@ import com.typesafe.config.Config
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
 import org.apache.http.entity.ByteArrayEntity
 import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 
 object AutoRenewableSubsStatusCodes {
 
@@ -90,11 +92,16 @@ case object Sandbox extends AppStoreEnv("https://sandbox.itunes.apple.com/verify
 // Invalid url for any safe default needs
 case object Invalid extends AppStoreEnv("https://local.invalid")
 object AppStoreConfig {
+  val logger:Logger = LogManager.getLogger(classOf[AppStoreConfig])
   def apply(config: Config, appStoreEnvString:String): AppStoreConfig = {
+
     val appStoreEnv:AppStoreEnv = appStoreEnvString match {
       case "CODE" => Sandbox
       case "PROD" => Invalid // change to production when ready
-      case _ => Invalid
+      case _ => {
+        logger.warn(s"Unexpected app store env $appStoreEnvString")
+        Invalid
+      }
     }
     AppStoreConfig.apply(config.getString("appstore.password"), appStoreEnv)
   }
