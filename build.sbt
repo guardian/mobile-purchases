@@ -14,6 +14,7 @@ lazy val iosvalidatereceipts = project.settings(commonSettings("iosvalidaterecei
     "org.apache.logging.log4j" % "log4j-core" % "2.11.0",
     "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
     "com.gu" %% "simple-configuration-ssm" % "1.4.3",
+    "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.11.0",
     "org.specs2" %% "specs2-core" % "4.0.2" % "test"
 
   ),
