@@ -92,8 +92,8 @@ case object Invalid extends AppStoreEnv("https://local.invalid")
 object AppStoreConfig {
   def apply(config: Config, appStoreEnvString:String): AppStoreConfig = {
     val appStoreEnv:AppStoreEnv = appStoreEnvString match {
-      case "CODE" => Sandbox
-      case "PROD" => Production
+      case "CODE" => Invalid // change to sandbox when ready
+      case "PROD" => Invalid // change to production when ready
       case _ => Invalid
     }
     AppStoreConfig.apply(config.getString("appstore.password"), appStoreEnv)
