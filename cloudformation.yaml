@@ -47,7 +47,7 @@ Resources:
                 - logs:CreateLogGroup
                 - logs:CreateLogStream
                 - logs:PutLogEvents
-              Resource: "arn:aws:logs:*:*:*"
+              Resource: "*"
         - PolicyName: config
           PolicyDocument:
             Statement:
