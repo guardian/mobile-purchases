@@ -13,7 +13,6 @@ object UserPurchasesLambda {
 }
 
 class UserPurchasesLambda(
-
                            lambdaApiGateway: LambdaApiGateway = new LambdaApiGatewayImpl
                          ) extends RequestStreamHandler {
 
