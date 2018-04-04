@@ -91,6 +91,23 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
+          "/healthcheck":
+            get:
+              responses:
+                "200":
+                  description: "200 response"
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: |
+                    {
+                      "statusCode" : 200
+                    }
+                httpMethod: GET
+                responses:
+                  default:
+                    statusCode: "200"
+
 
   ApiDomainName:
     Type: AWS::ApiGateway::DomainName
@@ -140,8 +157,8 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/userPurchases"
-            Method: GET
+            Path: "/validateReceipts"
+            Method: POST
             RestApiId: !Ref MobilePuchasesApi
 
   IosUserPurchasesLambda:
@@ -163,9 +180,9 @@ Resources:
       MemorySize: 256
       Timeout: 60
       Events:
-        PostApi:
+        GetApi:
           Type: Api
           Properties:
             Path: "/userPurchases"
-            Method: POST
+            Method: GET
             RestApiId: !Ref MobilePuchasesApi
