@@ -6,7 +6,8 @@ import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import com.gu.AwsIdentity
 import com.gu.mobilepurchases.apple.{AppStoreConfig, AppStoreImpl}
 import com.gu.mobilepurchases.config.SsmConfig
-import com.gu.mobilepurchases.external.Logging
+import com.gu.mobilepurchases.shared.external.Logging
+import com.gu.mobilepurchases.shared.lambda.{LambdaApiGateway, LambdaApiGatewayImpl}
 import com.gu.mobilepurchases.validate._
 import org.apache.logging.log4j.{LogManager, Logger}
 

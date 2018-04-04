@@ -10,3 +10,10 @@ deployments:
       fileName: mobile-purchases-iosvalidatereceipts.jar
       prefixStack: false
 
+  mobile-purchases-iosuserpurchases:
+    type: aws-lambda
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-iosuserpurchases-]
+      fileName: mobile-purchases-iosuserpurchases.jar
+      prefixStack: false

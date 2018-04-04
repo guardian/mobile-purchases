@@ -1,7 +1,7 @@
 package com.gu.mobilepurchases.validate
 
-import com.gu.mobilepurchases.external.Jackson
-import com.gu.mobilepurchases.lambda.LambdaRequest
+import com.gu.mobilepurchases.shared.external.Jackson
+import com.gu.mobilepurchases.shared.lambda.LambdaRequest
 import org.specs2.mutable.Specification
 
 class ValidateReceiptsControllerSpec extends Specification {

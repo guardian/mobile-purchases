@@ -1,7 +1,54 @@
 import sbtassembly.MergeStrategy
 
-lazy val iosvalidatereceipts = project.settings(commonSettings("iosvalidatereceipts")).settings(
+lazy val commonlambda = project.disablePlugins(AssemblyPlugin).settings(commonSettings("commonlambda")).settings(
   resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
+  scalacOptions in Test ++= Seq("-Yrangepos")
+)
+
+lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).dependsOn(commonlambda).settings(commonAssemblySettings("iosvalidatereceipts")).settings(
+  scalacOptions in Test ++= Seq("-Yrangepos"),
+  assemblyMergeStrategy in assembly := {
+    case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
+    case x => (assemblyMergeStrategy in assembly).value(x)
+  }
+)
+lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).dependsOn(commonlambda).settings(commonAssemblySettings("iosuserpurchases")).settings(
+  scalacOptions in Test ++= Seq("-Yrangepos"),
+  assemblyMergeStrategy in assembly := {
+    case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
+    case x => (assemblyMergeStrategy in assembly).value(x)
+  }
+)
+
+
+
+lazy val root = project.enablePlugins(RiffRaffArtifact).in(file(".")).aggregate(commonlambda, iosvalidatereceipts, iosuserpurchases)
+  .settings(
+    scalaVersion := "2.12.5",
+    resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
+    name := "mobile-purchases",
+    riffRaffPackageType := file(".nothing"),
+    riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
+    riffRaffUploadManifestBucket := Option("riffraff-builds"),
+    riffRaffManifestProjectName := s"Mobile::${name.value}",
+    riffRaffArtifactResources += (assembly in iosvalidatereceipts).value -> s"${(name in iosvalidatereceipts).value}/${(assembly in iosvalidatereceipts).value.getName}",
+    riffRaffArtifactResources += (file("cloudformation.yaml"), s"mobile-purchases-cloudformation/cloudformation.yaml")
+
+  )
+
+def commonAssemblySettings(module: String) = commonSettings(module) ++ List(
+  publishArtifact in(Compile, packageDoc) := false,
+  publishArtifact in packageDoc := false,
+  assemblyMergeStrategy in assembly := {
+    case "META-INF/MANIFEST.MF" => MergeStrategy.discard
+    case x =>
+      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      oldStrategy(x)
+  },
+  assemblyJarName := s"${name.value}.jar"
+)
+
+def commonSettings(module: String) = List(
   libraryDependencies ++= Seq(
     "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
     "commons-io" % "commons-io" % "2.6",
@@ -18,31 +65,6 @@ lazy val iosvalidatereceipts = project.settings(commonSettings("iosvalidaterecei
     "org.specs2" %% "specs2-core" % "4.0.2" % "test"
 
   ),
-  scalacOptions in Test ++= Seq("-Yrangepos"),
-
-  assemblyMergeStrategy in assembly := {
-    case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
-    case x => (assemblyMergeStrategy in assembly).value(x)
-  }
-
-
-)
-lazy val root = project.enablePlugins(RiffRaffArtifact).in(file(".")).aggregate(iosvalidatereceipts)
-  .settings(
-    scalaVersion := "2.12.5",
-    resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
-    name := "mobile-purchases",
-
-    riffRaffPackageType := file(".nothing"),
-    riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
-    riffRaffUploadManifestBucket := Option("riffraff-builds"),
-    riffRaffManifestProjectName := s"Mobile::${name.value}",
-    riffRaffArtifactResources += (assembly in iosvalidatereceipts).value -> s"${(name in iosvalidatereceipts).value}/${(assembly in iosvalidatereceipts).value.getName}",
-    riffRaffArtifactResources += (file("cloudformation.yaml"), s"mobile-purchases-cloudformation/cloudformation.yaml")
-
-  )
-
-def commonSettings(module: String) = List(
   name := s"mobile-purchases-$module",
   organization := "com.gu",
   description := "Validate Receipts",
@@ -53,14 +75,7 @@ def commonSettings(module: String) = List(
     "-encoding", "UTF-8",
     "-target:jvm-1.8",
     "-Ywarn-dead-code"
-  ),
-  assemblyMergeStrategy in assembly := {
-    case "META-INF/MANIFEST.MF" => MergeStrategy.discard
-    case x =>
-      val oldStrategy = (assemblyMergeStrategy in assembly).value
-      oldStrategy(x)
-  },
-  publishArtifact in(Compile, packageDoc) := false,
-  publishArtifact in packageDoc := false,
-  assemblyJarName := s"${name.value}.jar"
+  )
+
+
 )

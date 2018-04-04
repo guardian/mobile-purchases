@@ -4,8 +4,9 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
-import com.gu.mobilepurchases.external.Base64Utils.encoder
-import com.gu.mobilepurchases.external.Jackson.mapper
+import com.gu.mobilepurchases.shared.external.Base64Utils.encoder
+import com.gu.mobilepurchases.shared.external.Jackson.mapper
+import com.gu.mobilepurchases.shared.lambda._
 import org.specs2.mutable.Specification
 
 import scala.util.Random
@@ -48,7 +49,8 @@ class LambdaApiGatewaySpec extends Specification {
       val request = LambdaApiGatewaySpec.randomLambdaRequest
       val response = LambdaApiGatewaySpec.randomLambdaResponse
       new LambdaApiGatewayImpl().execute(
-        LambdaApiGatewaySpec.stringAsInputStream(mapper.writeValueAsString(ApiGatewayLambdaRequest(request))),
+        LambdaApiGatewaySpec.stringAsInputStream(mapper.writeValueAsString(ApiGatewayLambdaRequest
+        (request))),
         outputStream,
         req => {
           req match {

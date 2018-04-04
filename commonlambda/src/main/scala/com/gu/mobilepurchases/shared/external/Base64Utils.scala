@@ -1,4 +1,4 @@
-package com.gu.mobilepurchases.external
+package com.gu.mobilepurchases.shared.external
 
 import java.util.Base64
 

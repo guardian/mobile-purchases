@@ -2,7 +2,7 @@ package com.gu.mobilepurchases.apple
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
-import com.gu.mobilepurchases.external.Jackson.mapper
+import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.typesafe.config.Config
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
 import org.apache.http.entity.ByteArrayEntity

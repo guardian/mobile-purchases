@@ -5,8 +5,9 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 
 import com.gu.mobilepurchases.apple.{AppStore, AppStoreResponse}
-import com.gu.mobilepurchases.external.Jackson.mapper
-import com.gu.mobilepurchases.lambda.{ApiGatewayLambdaRequest, ApiGatewayLambdaResponse, LambdaApiGatewayImpl, ValidateReceiptLambda}
+import com.gu.mobilepurchases.lambda.ValidateReceiptLambda
+import com.gu.mobilepurchases.shared.external.Jackson.mapper
+import com.gu.mobilepurchases.shared.lambda.{ApiGatewayLambdaRequest, ApiGatewayLambdaResponse, LambdaApiGatewayImpl}
 import com.gu.mobilepurchases.validate.{ValidateReceiptsControllerImpl, ValidateReceiptsValidatorImpl}
 import org.specs2.mutable.Specification
 

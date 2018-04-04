@@ -1,4 +1,4 @@
-package com.gu.mobilepurchases.external
+package com.gu.mobilepurchases.shared.external
 
 object HttpStatusCodes {
   val internalServerError = 500
