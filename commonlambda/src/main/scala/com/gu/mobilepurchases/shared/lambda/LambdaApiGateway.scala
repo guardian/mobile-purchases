@@ -35,16 +35,22 @@ case class ApiGatewayLambdaResponse(
 object ApiGatewayLambdaRequest {
   def apply(lambdaRequest: LambdaRequest): ApiGatewayLambdaRequest =
     lambdaRequest.maybeBody match {
-      case Some(body) => body match {
-        case Left(str) => ApiGatewayLambdaRequest(Some(str), IsNotBase64Encoded)
-        case Right(array) => ApiGatewayLambdaRequest(Some(new String(encoder.encode(array))), IsBase64Encoded)
-      }
+      case Some(body) =>
+        val parameters: Option[Map[String, String]] = if (lambdaRequest.queryStringParameters.size > 0) Some(lambdaRequest.queryStringParameters) else None
+        body match {
+          case Left(str) => ApiGatewayLambdaRequest(Some(str), IsNotBase64Encoded, parameters)
+          case Right(array) => ApiGatewayLambdaRequest(Some(new String(encoder.encode(array))), IsBase64Encoded, parameters)
+        }
       case None => ApiGatewayLambdaRequest(None)
     }
 
 }
 
-case class ApiGatewayLambdaRequest(body: Option[String], isBase64Encoded: Boolean = IsNotBase64Encoded)
+case class ApiGatewayLambdaRequest(
+                                    body: Option[String],
+                                    isBase64Encoded: Boolean = IsNotBase64Encoded,
+                                    queryStringParameters: Option[Map[String, String]] = None
+                                  )
 
 
 object LambdaRequest {
@@ -53,11 +59,11 @@ object LambdaRequest {
       Right(decoder.decode(foundBody))
     } else {
       Left(foundBody)
-    }))
+    }), apiGatewayLambdaRequest.queryStringParameters.getOrElse(Map()))
   }
 }
 
-case class LambdaRequest(maybeBody: Option[Either[String, Array[Byte]]])
+case class LambdaRequest(maybeBody: Option[Either[String, Array[Byte]]], queryStringParameters: Map[String, String] = Map())
 
 object LambdaResponse {
   def apply(apiGatewayLambdaResponse: ApiGatewayLambdaResponse): LambdaResponse = {

@@ -14,14 +14,17 @@ import scala.util.Random
 
 object LambdaApiGatewaySpec {
 
-  def randomLambdaRequest: LambdaRequest = if (Random.nextBoolean) {
+  def randomLambdaRequest: LambdaRequest = {
+    val queryStringParameters = Map(UUID.randomUUID().toString -> UUID.randomUUID().toString)
     if (Random.nextBoolean) {
-      LambdaRequest(Some(Right(encoder.encode(UUID.randomUUID().toString.getBytes()))))
+      if (Random.nextBoolean) {
+        LambdaRequest(Some(Right(encoder.encode(UUID.randomUUID().toString.getBytes()))), queryStringParameters)
+      } else {
+        LambdaRequest(Some(Left(UUID.randomUUID().toString)))
+      }
     } else {
-      LambdaRequest(Some(Left(UUID.randomUUID().toString)))
+      LambdaRequest(None)
     }
-  } else {
-    LambdaRequest(None)
   }
 
 
@@ -54,7 +57,10 @@ class LambdaApiGatewaySpec extends Specification {
         outputStream,
         req => {
           req match {
-            case LambdaRequest(Some(Right(array))) => array must beEqualTo(request.maybeBody.get.right.get)
+            case LambdaRequest(Some(Right(array)), queryStringParameters) => {
+              array must beEqualTo(request.maybeBody.get.right.get)
+              queryStringParameters must beEqualTo(request.queryStringParameters)
+            }
             case req => req must beEqualTo(request)
           }
           response

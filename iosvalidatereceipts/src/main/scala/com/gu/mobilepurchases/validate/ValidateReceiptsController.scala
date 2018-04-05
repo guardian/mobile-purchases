@@ -74,16 +74,16 @@ class ValidateReceiptsControllerImpl(
                                     ) extends ValidateReceiptsController {
   def validate(lambdaRequest: LambdaRequest): LambdaResponse =
     lambdaRequest match {
-      case LambdaRequest(Some(Left(json))) => validate(Try(mapper.readValue(json, classOf[ValidateRequest])) recoverWith {
+      case LambdaRequest(Some(Left(json)), _) => validate(Try(mapper.readValue(json, classOf[ValidateRequest])) recoverWith {
         case t => ValidateReceiptsControllerImpl.logger.warn(s"Error reading json: $json", t)
           Failure(t)
       })
 
-      case LambdaRequest(Some(Right(bytes))) => validate(Try(mapper.readValue(bytes, classOf[ValidateRequest])) recoverWith {
+      case LambdaRequest(Some(Right(bytes)), _) => validate(Try(mapper.readValue(bytes, classOf[ValidateRequest])) recoverWith {
         case t => ValidateReceiptsControllerImpl.logger.warn(s"Error reading as json bytes (base64 encoded): ${encoder.encode(bytes)}", t)
           Failure(t)
       })
-      case LambdaRequest(None) => LambdaResponse(badRequest, Some(Left("Expected a json body")))
+      case LambdaRequest(None, _) => LambdaResponse(badRequest, Some(Left("Expected a json body")))
     }
 
   private def validate(triedRequest: Try[ValidateRequest]) = {
