@@ -20,10 +20,10 @@ object LambdaApiGatewaySpec {
       if (Random.nextBoolean) {
         LambdaRequest(Some(Right(encoder.encode(UUID.randomUUID().toString.getBytes()))), queryStringParameters)
       } else {
-        LambdaRequest(Some(Left(UUID.randomUUID().toString)))
+        LambdaRequest(Some(Left(UUID.randomUUID().toString)), queryStringParameters)
       }
     } else {
-      LambdaRequest(None)
+      LambdaRequest(None, queryStringParameters)
     }
   }
 
@@ -52,8 +52,7 @@ class LambdaApiGatewaySpec extends Specification {
       val request = LambdaApiGatewaySpec.randomLambdaRequest
       val response = LambdaApiGatewaySpec.randomLambdaResponse
       new LambdaApiGatewayImpl().execute(
-        LambdaApiGatewaySpec.stringAsInputStream(mapper.writeValueAsString(ApiGatewayLambdaRequest
-        (request))),
+        LambdaApiGatewaySpec.stringAsInputStream(mapper.writeValueAsString(ApiGatewayLambdaRequest(request))),
         outputStream,
         req => {
           req match {
