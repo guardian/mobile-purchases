@@ -74,7 +74,8 @@ def commonSettings(module: String) = List(
     "-deprecation",
     "-encoding", "UTF-8",
     "-target:jvm-1.8",
-    "-Ywarn-dead-code"
+    "-Ywarn-dead-code",
+    "-Xfatal-warnings"
   )
 
 

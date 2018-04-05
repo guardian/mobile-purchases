@@ -54,7 +54,7 @@ Resources:
               Action:
                 - ssm:GetParametersByPath
               Effect: Allow
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Stage}/${Stack}/${App}
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}
   MobilePuchasesApi:
     Type: AWS::Serverless::Api
     Properties:
