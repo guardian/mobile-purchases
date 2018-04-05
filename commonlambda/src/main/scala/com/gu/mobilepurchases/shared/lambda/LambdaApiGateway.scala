@@ -34,14 +34,17 @@ case class ApiGatewayLambdaResponse(
 
 object ApiGatewayLambdaRequest {
   def apply(lambdaRequest: LambdaRequest): ApiGatewayLambdaRequest =
-    lambdaRequest.maybeBody match {
-      case Some(body) =>
-        val parameters: Option[Map[String, String]] = if (lambdaRequest.queryStringParameters.size > 0) Some(lambdaRequest.queryStringParameters) else None
-        body match {
-          case Left(str) => ApiGatewayLambdaRequest(Some(str), IsNotBase64Encoded, parameters)
-          case Right(array) => ApiGatewayLambdaRequest(Some(new String(encoder.encode(array))), IsBase64Encoded, parameters)
-        }
-      case None => ApiGatewayLambdaRequest(None)
+    {
+      val parameters: Option[Map[String, String]] = if (lambdaRequest.queryStringParameters.nonEmpty) Some(lambdaRequest.queryStringParameters) else None
+      lambdaRequest.maybeBody match {
+        case Some(body) =>
+
+          body match {
+            case Left(str) => ApiGatewayLambdaRequest(Some(str), IsNotBase64Encoded, parameters)
+            case Right(array) => ApiGatewayLambdaRequest(Some(new String(encoder.encode(array))), IsBase64Encoded, parameters)
+          }
+        case None => ApiGatewayLambdaRequest(None, isBase64Encoded = false, parameters)
+      }
     }
 
 }
