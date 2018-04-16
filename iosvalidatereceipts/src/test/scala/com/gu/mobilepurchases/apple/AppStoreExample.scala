@@ -8,7 +8,7 @@ import scala.io.Source
 object AppStoreExample {
   val success: AppStoreExample = new AppStoreExample("success-prod")
 
-  def successAsAppStoreResponse: AppStoreResponse = Jackson.mapper.readValue(success.responseString, classOf[AppStoreResponse])
+  def successAsAppStoreResponse: AppStoreResponse = Jackson.mapper.readValue[AppStoreResponse](success.responseString)
 }
 
 class AppStoreExample(folderName: String) {

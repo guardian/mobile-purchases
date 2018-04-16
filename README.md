@@ -3,8 +3,8 @@ _IOS receipt validation and purchase verification_
  
 ## iosvalidatereceipts
 /validateReceipts
-* validate receipts (in progress)
-* persiste into dynamo (todo)
+* validate receipts
+* persist into dynamo (todo)
 
 Notable Implemtation Details:
 * Typseafe Config instrumented from ssm (in progress)

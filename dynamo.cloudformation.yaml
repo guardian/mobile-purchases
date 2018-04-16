@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Mobile Purchases DynamoDB'
+
+Parameters:
+  Stack:
+    Description: Stack name
+    Type: String
+  App:
+    Description: Application name
+    Type: String
+  Stage:
+    Description: Stage name
+    Type: String
+    AllowedValues:
+      - CODE
+      - PROD
+Resources:
+  userPurchasesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${App}-${Stage}-${Stack}-user-purchases
+      AttributeDefinitions:
+        - AttributeName: userIdColonAppId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userIdColonAppId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      SSESpecification:
+        SSEEnabled: true
