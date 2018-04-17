@@ -1,7 +1,6 @@
 package com.gu.mobilepurchases.userpurchases
 
-import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
-
+import java.time.format.{ DateTimeFormatter, DateTimeFormatterBuilder }
 
 case class UserPurchaseInterval(start: String, end: String)
 

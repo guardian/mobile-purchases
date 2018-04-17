@@ -4,7 +4,7 @@ import java.time.Instant.ofEpochMilli
 import java.time.ZoneOffset.UTC
 
 import com.gu.mobilepurchases.apple._
-import com.gu.mobilepurchases.model.{ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval}
+import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
 import com.gu.mobilepurchases.userpurchases.UserPurchase.instantFormatter
 
 trait ValidateReceiptsTransformAppStoreResponse {
@@ -29,11 +29,10 @@ class ValidateReceiptsTransformAppStoreResponseImpl extends ValidateReceiptsTran
     }
   }
 
-
   private def validateReceiptAndExtractMaybeLatest(
-                                                    appStoreResponse: AppStoreResponse,
-                                                    statusCodeInt: Int,
-                                                    receipt: AppStoreResponseReceipt): ValidatedTransaction = {
+    appStoreResponse: AppStoreResponse,
+    statusCodeInt: Int,
+    receipt: AppStoreResponseReceipt): ValidatedTransaction = {
     val validatedTransactionPurchase: ValidatedTransactionPurchase = ValidatedTransactionPurchase(
       receipt.product_id,
       receipt.web_order_line_item_id,
@@ -50,8 +49,8 @@ class ValidateReceiptsTransformAppStoreResponseImpl extends ValidateReceiptsTran
         finishTransaction = true,
         validatedTransactionPurchase, statusAsLong)
       case AutoRenewableSubsStatusCodes.CouldNotReadJson |
-           AutoRenewableSubsStatusCodes.MalformedReceiptData |
-           AutoRenewableSubsStatusCodes.CouldNotAuthenticateReceipt => ValidatedTransaction(
+        AutoRenewableSubsStatusCodes.MalformedReceiptData |
+        AutoRenewableSubsStatusCodes.CouldNotAuthenticateReceipt => ValidatedTransaction(
         receipt.transaction_id,
         validated = false,
         finishTransaction = false,

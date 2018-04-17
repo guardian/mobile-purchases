@@ -1,17 +1,18 @@
 package com.gu.mobilepurchases.model
 
-import java.time.{Instant, ZoneOffset, ZonedDateTime}
+import java.time.{ Instant, ZoneOffset, ZonedDateTime }
 
 import com.gu.mobilepurchases.model.ValidatedTransactionSpec.sampleValidatedTransaction
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
 import com.gu.mobilepurchases.userpurchases.UserPurchase.instantFormatter
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.{ Arbitrary, Gen }
 import org.specs2.mutable.Specification
 
 object ValidatedTransactionSpec {
   val lastYear: Long = ZonedDateTime.now.minusYears(1).toInstant.toEpochMilli
   val nextYear: Long = ZonedDateTime.now.plusYears(1).toInstant.toEpochMilli
-  val sampleValidatedTransaction: ValidatedTransaction = ValidatedTransaction("",
+  val sampleValidatedTransaction: ValidatedTransaction = ValidatedTransaction(
+    "",
     1,
     1,
     ValidatedTransactionPurchase("", "", ValidatedTransactionPurchaseActiveInterval("", "")), 0

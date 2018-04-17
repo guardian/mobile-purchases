@@ -1,6 +1,6 @@
 package com.gu.mobilepurchases.shared.lambda
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
 
 import org.apache.logging.log4j.Logger
 import org.specs2.mock.Mockito
@@ -11,9 +11,9 @@ import scala.util.Try
 class AwsLambdaSpec extends Specification with Mockito {
   "AwsLambda" should {
     "log but not error" in {
-      val mockedLogger:Logger = mock[Logger]
-      val testException:IllegalStateException = new IllegalStateException("Throw an error")
-      Try(new AwsLambda((_:LambdaRequest) => throw testException, mockedLogger) {}.handleRequest(
+      val mockedLogger: Logger = mock[Logger]
+      val testException: IllegalStateException = new IllegalStateException("Throw an error")
+      Try(new AwsLambda((_: LambdaRequest) => throw testException, mockedLogger) {}.handleRequest(
         new ByteArrayInputStream("""{"body":"anybody","isBase64Encoded":false,"queryStringParameters":{"Content-Type":"text/plain"}}""".getBytes()),
         new ByteArrayOutputStream(), null)
       ).recover {

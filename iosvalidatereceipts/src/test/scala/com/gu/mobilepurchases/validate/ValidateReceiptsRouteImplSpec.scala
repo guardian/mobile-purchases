@@ -1,14 +1,14 @@
 package com.gu.mobilepurchases.validate
 
-import com.gu.mobilepurchases.apple.{AppStoreResponse, AppStoreSpec}
-import com.gu.mobilepurchases.model.{ValidatedTransaction, ValidatedTransactionSpec}
-import com.gu.mobilepurchases.persistence.{TransactionPersistence, UserIdWithAppId}
+import com.gu.mobilepurchases.apple.{ AppStoreResponse, AppStoreSpec }
+import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionSpec }
+import com.gu.mobilepurchases.persistence.{ TransactionPersistence, UserIdWithAppId }
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.{ Arbitrary, Gen }
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 object ValidateReceiptsRouteImplSpec {
   val genValidateRequest: Gen[ValidateRequest] = for {
@@ -39,47 +39,47 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
       implicit val arbitraryNotExpiredValidatedTransactions: Arbitrary[Set[ValidatedTransaction]] = Arbitrary(ValidatedTransactionSpec.genValidatedTransactions)
       implicit val arbitraryTryPersist: Arbitrary[Try[_]] = Arbitrary(Gen.oneOf(Success(""), Failure(new IllegalStateException())))
       prop { (
-               validateRequest: ValidateRequest,
-               transactionsByResponse: Map[AppStoreResponse, Set[ValidatedTransaction]],
-               notExpiredTransactions: Set[ValidatedTransaction],
-               persistTried: Try[_]
-             ) => {
+        validateRequest: ValidateRequest,
+        transactionsByResponse: Map[AppStoreResponse, Set[ValidatedTransaction]],
+        notExpiredTransactions: Set[ValidatedTransaction],
+        persistTried: Try[_]
+      ) =>
+        {
 
-        val validatedTransactions: Set[ValidatedTransaction] = transactionsByResponse.values.flatten.toSet
-        val appStoreResponses: Set[AppStoreResponse] = transactionsByResponse.keySet
-        new ValidateReceiptsRouteImpl((appStoreResponse: AppStoreResponse) => {
-          appStoreResponses must contain(appStoreResponse)
-          validatedTransactions
-        }, (remainingReceipts: Set[String]) => {
-          validateRequest.transactions.map((_: ValidateRequestTransaction).receipt) must containAllOf(remainingReceipts.toSeq)
-          appStoreResponses
-        }, (unfilteredTransactions: Set[ValidatedTransaction]) => {
-          unfilteredTransactions must beEqualTo(validatedTransactions)
-          notExpiredTransactions
-        }, new TransactionPersistence {
-          override def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[_] = {
-            userIdWithAppId must beEqualTo(UserIdWithAppId(validateRequest.userIds.vendorUdid, validateRequest.appInfo.id))
-            transactions must beEqualTo(notExpiredTransactions)
-            persistTried
-          }
+          val validatedTransactions: Set[ValidatedTransaction] = transactionsByResponse.values.flatten.toSet
+          val appStoreResponses: Set[AppStoreResponse] = transactionsByResponse.keySet
+          new ValidateReceiptsRouteImpl((appStoreResponse: AppStoreResponse) => {
+            appStoreResponses must contain(appStoreResponse)
+            validatedTransactions
+          }, (remainingReceipts: Set[String]) => {
+            validateRequest.transactions.map((_: ValidateRequestTransaction).receipt) must containAllOf(remainingReceipts.toSeq)
+            appStoreResponses
+          }, (unfilteredTransactions: Set[ValidatedTransaction]) => {
+            unfilteredTransactions must beEqualTo(validatedTransactions)
+            notExpiredTransactions
+          }, new TransactionPersistence {
+            override def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[_] = {
+              userIdWithAppId must beEqualTo(UserIdWithAppId(validateRequest.userIds.vendorUdid, validateRequest.appInfo.id))
+              transactions must beEqualTo(notExpiredTransactions)
+              persistTried
+            }
 
-          override def transformValidateRequest(validateReceiptRequest: ValidateRequest): UserIdWithAppId = {
-            validateReceiptRequest must beEqualTo(validateRequest)
-            UserIdWithAppId(validateRequest.userIds.vendorUdid, validateReceiptRequest.appInfo.id)
-          }
+            override def transformValidateRequest(validateReceiptRequest: ValidateRequest): UserIdWithAppId = {
+              validateReceiptRequest must beEqualTo(validateRequest)
+              UserIdWithAppId(validateRequest.userIds.vendorUdid, validateReceiptRequest.appInfo.id)
+            }
 
-        }).route(validateRequest) must beEqualTo(persistTried match {
-          case Success(_) => Success(notExpiredTransactions)
-          case failure => failure
-        })
-      }
+          }).route(validateRequest) must beEqualTo(persistTried match {
+            case Success(_) => Success(notExpiredTransactions)
+            case failure    => failure
+          })
+        }
       }.setArbitraries(
         arbitraryValidateRequest,
         arbitraryTransactionsByResponses,
         arbitraryNotExpiredValidatedTransactions,
         arbitraryTryPersist)
     }
-
 
   }
 }

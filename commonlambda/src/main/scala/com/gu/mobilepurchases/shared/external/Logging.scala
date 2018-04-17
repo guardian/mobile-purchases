@@ -2,7 +2,7 @@ package com.gu.mobilepurchases.shared.external
 
 import org.apache.logging.log4j.LogManager
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 object Logging {
 

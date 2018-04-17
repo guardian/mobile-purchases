@@ -1,5 +1,6 @@
 import sbt.{Def, project}
 import sbtassembly.MergeStrategy
+import scalariform.formatter.preferences._
 
 import scala.collection.immutable
 
@@ -46,7 +47,11 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
   assemblyJarName := s"${name.value}.jar"
 )
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = List(
-  fork := true,
+  scalariformPreferences := scalariformPreferences.value
+    .setPreference(AlignSingleLineCaseStatements, true)
+    .setPreference(DoubleIndentConstructorArguments, true)
+    .setPreference(DanglingCloseParenthesis, Preserve),
+    fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
   resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
   scalacOptions in Test ++= Seq("-Yrangepos"),
   libraryDependencies ++= Seq(

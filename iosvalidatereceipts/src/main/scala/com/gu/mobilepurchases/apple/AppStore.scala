@@ -5,10 +5,10 @@ import java.io.InputStream
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.typesafe.config.Config
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
+import org.apache.http.client.methods.{ CloseableHttpResponse, HttpPost }
 import org.apache.http.entity.ByteArrayEntity
-import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
-import org.apache.logging.log4j.{LogManager, Logger}
+import org.apache.http.impl.client.{ CloseableHttpClient, HttpClients }
+import org.apache.logging.log4j.{ LogManager, Logger }
 
 object AutoRenewableSubsStatusCodes {
 
@@ -39,43 +39,41 @@ object AutoRenewableSubsStatusCodes {
 }
 
 case class AppStoreRequest(
-                            password: String,
-                            @JsonProperty("receipt-data") receiptData: String
-                          )
+    password: String,
+    @JsonProperty("receipt-data") receiptData: String
+)
 
 case class AppStoreResponseReceipt(
-                                    original_purchase_date_pst: String,
-                                    unique_identifier: String,
-                                    original_transaction_id: String,
-                                    expires_date: String,
-                                    app_item_id: String,
-                                    transaction_id: String,
-                                    quantity: String,
-                                    product_id: String,
-                                    bvrs: String,
-                                    bid: String,
-                                    web_order_line_item_id: String,
-                                    original_purchase_date_ms: String,
-                                    expires_date_formatted: String,
-                                    purchase_date: String,
-                                    purchase_date_ms: String,
-                                    expires_date_formatted_pst: String,
-                                    purchase_date_pst: String,
-                                    original_purchase_date: String,
-                                    item_id: String
-                                  )
-
+    original_purchase_date_pst: String,
+    unique_identifier: String,
+    original_transaction_id: String,
+    expires_date: String,
+    app_item_id: String,
+    transaction_id: String,
+    quantity: String,
+    product_id: String,
+    bvrs: String,
+    bid: String,
+    web_order_line_item_id: String,
+    original_purchase_date_ms: String,
+    expires_date_formatted: String,
+    purchase_date: String,
+    purchase_date_ms: String,
+    expires_date_formatted_pst: String,
+    purchase_date_pst: String,
+    original_purchase_date: String,
+    item_id: String
+)
 
 case class AppStoreResponse(
-                             status: String,
-                             receipt: Option[AppStoreResponseReceipt],
-                             latest_receipt: Option[String],
-                             latest_receipt_Info: Option[AppStoreResponseReceipt],
-                             latest_expired_receipt_info: Option[AppStoreResponseReceipt],
-                             @JsonProperty("is-retryable") isRetryable: Option[String]
-                           ) {
+    status: String,
+    receipt: Option[AppStoreResponseReceipt],
+    latest_receipt: Option[String],
+    latest_receipt_Info: Option[AppStoreResponseReceipt],
+    latest_expired_receipt_info: Option[AppStoreResponseReceipt],
+    @JsonProperty("is-retryable") isRetryable: Option[String]
+) {
   lazy val allReceipts: Set[AppStoreResponseReceipt] = Set(receipt, latest_receipt_Info, latest_expired_receipt_info).flatten
-
 
 }
 
@@ -130,15 +128,12 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: CloseableHttpClient =
       val content: InputStream = response.getEntity.getContent
       try {
         mapper.readValue[AppStoreResponse](content)
-      }
-      finally {
+      } finally {
         content.close()
       }
-    }
-    finally {
+    } finally {
       response.close()
     }
   }
-
 
 }

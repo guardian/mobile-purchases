@@ -6,11 +6,11 @@ import java.nio.charset.StandardCharsets.UTF_8
 
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
+import org.apache.http.client.methods.{ CloseableHttpResponse, HttpPost }
 import org.apache.http.entity.ByteArrayEntity
 import org.apache.http.impl.client.CloseableHttpClient
 import org.mockito.ArgumentCaptor
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.{ Arbitrary, Gen }
 import org.specs2.ScalaCheck
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -57,7 +57,7 @@ object AppStoreSpec {
     original_purchase_date,
     item_id
   )
-  val genLeafAppStoreResponse:Gen[AppStoreResponse] = for {
+  val genLeafAppStoreResponse: Gen[AppStoreResponse] = for {
     status <- genCommonAscii
     receipt <- Gen.option[AppStoreResponseReceipt](genAppStoreResponseReceipt)
     latest_receipt_info <- Gen.option[AppStoreResponseReceipt](genAppStoreResponseReceipt)
@@ -118,30 +118,29 @@ class AppStoreSpec extends Specification with Mockito with ScalaCheck {
       capturedPost.getEntity.writeTo(outputStream)
       mapper.readTree(outputStream.toByteArray) must beEqualTo(mapper.readTree("""{"password":"testPassword","receipt-data":"receiptData"}"""))
 
-
     }
     "ScalaCheck" >> {
       implicit val arbitraryAppStoreResposne: Arbitrary[AppStoreResponse] = Arbitrary(AppStoreSpec.genLeafAppStoreResponse)
-      prop { (expectedAppStoreResponse: AppStoreResponse) => {
-        val mockHttpClient: CloseableHttpClient = mock[CloseableHttpClient]
-        val mockResponse: CloseableHttpResponse = mock[CloseableHttpResponse]
+      prop { (expectedAppStoreResponse: AppStoreResponse) =>
+        {
+          val mockHttpClient: CloseableHttpClient = mock[CloseableHttpClient]
+          val mockResponse: CloseableHttpResponse = mock[CloseableHttpResponse]
 
+          val captor: ArgumentCaptor[HttpPost] = ArgumentCaptor.forClass(classOf[HttpPost])
 
-        val captor: ArgumentCaptor[HttpPost] = ArgumentCaptor.forClass(classOf[HttpPost])
+          mockHttpClient.execute(captor.capture) returns mockResponse
+          mockResponse.getEntity returns new ByteArrayEntity(mapper.writeValueAsBytes(expectedAppStoreResponse))
 
-        mockHttpClient.execute(captor.capture) returns mockResponse
-        mockResponse.getEntity returns new ByteArrayEntity(mapper.writeValueAsBytes(expectedAppStoreResponse))
+          new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient).send("receiptData") must beEqualTo(expectedAppStoreResponse)
 
-        new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient).send("receiptData") must beEqualTo(expectedAppStoreResponse)
+          val capturedPost: HttpPost = captor.getValue
+          capturedPost.getURI must beEqualTo(URI.create("https://local.invalid"))
 
-        val capturedPost: HttpPost = captor.getValue
-        capturedPost.getURI must beEqualTo(URI.create("https://local.invalid"))
+          val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
+          capturedPost.getEntity.writeTo(outputStream)
+          mapper.readTree(outputStream.toByteArray) must beEqualTo(mapper.readTree("""{"password":"testPassword","receipt-data":"receiptData"}"""))
 
-        val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
-        capturedPost.getEntity.writeTo(outputStream)
-        mapper.readTree(outputStream.toByteArray) must beEqualTo(mapper.readTree("""{"password":"testPassword","receipt-data":"receiptData"}"""))
-
-      }
+        }
       }.setArbitrary(arbitraryAppStoreResposne)
 
     }

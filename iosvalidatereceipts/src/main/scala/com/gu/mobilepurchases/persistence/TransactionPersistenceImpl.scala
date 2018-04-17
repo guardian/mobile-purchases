@@ -1,10 +1,10 @@
 package com.gu.mobilepurchases.persistence
 
 import com.gu.mobilepurchases.model.ValidatedTransaction
-import com.gu.mobilepurchases.userpurchases.persistence.{UserPurchasePersistence, UserPurchasesByUserIdAndAppId}
-import com.gu.mobilepurchases.userpurchases.{UserPurchase, UserPurchaseInterval}
+import com.gu.mobilepurchases.userpurchases.persistence.{ UserPurchasePersistence, UserPurchasesByUserIdAndAppId }
+import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
 import com.gu.mobilepurchases.validate.ValidateRequest
-import org.apache.logging.log4j.{LogManager, Logger}
+import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.util.Try
 
@@ -28,7 +28,8 @@ class TransactionPersistenceImpl(userPurchasePersistence: UserPurchasePersistenc
   }
 
   def transformFromTransaction(transaction: ValidatedTransaction): UserPurchase = {
-    UserPurchase(transaction.purchase.productId,
+    UserPurchase(
+      transaction.purchase.productId,
       transaction.purchase.webOrderLineItemId,
       UserPurchaseInterval(transaction.purchase.activeInterval.start, transaction.purchase.activeInterval.end))
   }

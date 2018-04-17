@@ -1,10 +1,10 @@
 package com.gu.mobilepurchases.validate
 
-import java.time.{Clock, ZonedDateTime}
+import java.time.{ Clock, ZonedDateTime }
 
 import com.gu.mobilepurchases.model.ValidatedTransaction
 import com.gu.mobilepurchases.validate.ValidateReceiptsFilterExpiredImpl.logger
-import org.apache.logging.log4j.{LogManager, Logger}
+import org.apache.logging.log4j.{ LogManager, Logger }
 
 object ValidateReceiptsFilterExpiredImpl {
   val logger: Logger = LogManager.getLogger(classOf[ValidateReceiptsFilterExpiredImpl])

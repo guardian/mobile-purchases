@@ -1,8 +1,7 @@
 package com.gu.mobilepurchases.userpurchases.persistence
 
-
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
-import com.gu.mobilepurchases.userpurchases.{UserPurchase, UserPurchaseInterval}
+import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
 import org.specs2.mutable.Specification
 
 class UserPurchasesByUserIdSpec extends Specification {
@@ -13,7 +12,6 @@ class UserPurchasesByUserIdSpec extends Specification {
         "uk.co.guardian.iphone2",
         "1000000038244261",
         UserPurchaseInterval("2018-03-27T15:20:00.000Z", "2018-03-27T15:25:00.000Z"))))
-
 
       val userPurchasesStringsByUserId: UserPurchasesStringsByUserIdColonAppId = UserPurchasesStringsByUserIdColonAppId(
         "userId:appId",

@@ -2,18 +2,18 @@ package com.gu.mobilepurchases.userpurchases.controller
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
-import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.{commonAsciiChars, genCommonAscii, genStringFromChars}
-import com.gu.mobilepurchases.shared.lambda.{LambdaRequest, LambdaResponse}
+import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.{ commonAsciiChars, genCommonAscii, genStringFromChars }
+import com.gu.mobilepurchases.shared.lambda.{ LambdaRequest, LambdaResponse }
 import com.gu.mobilepurchases.userpurchases.purchases._
-import com.gu.mobilepurchases.userpurchases.{UserPurchase, UserPurchaseInterval}
-import org.scalacheck.{Arbitrary, Gen}
+import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
+import org.scalacheck.{ Arbitrary, Gen }
 import org.specs2.ScalaCheck
 import org.specs2.matcher.Matcher
 import org.specs2.mutable.Specification
 
 class UserPurchasesControllerSpec extends Specification with ScalaCheck {
   private val okayCode: Int = 200
-  private val emptyChars: Seq[Char] = commonAsciiChars.filter((_: Char).toString.trim.isEmpty)
+  private val emptyChars: Seq[Char] = commonAsciiChars.filter((_: Char).isWhitespace)
   private val notEmptyChars: Seq[Char] = commonAsciiChars.filter(!(_: Char).toString.trim.isEmpty)
   private val notEmptyNotCommaChars: Seq[Char] = notEmptyChars.filter(!(_: Char).equals(','))
   private val genNotEmptyAsciiChars: Gen[String] = Gen.zip(genStringFromChars(notEmptyChars), oneOf(notEmptyChars)).map(
@@ -33,27 +33,26 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
     val expectedUserPurchaseRequest: UserPurchasesRequest = UserPurchasesRequest(
       "uk.co.guardian.iphone2", Set("gia:319B18F0-3B3A-40FD-9086-6DED1F566D2A", "vendorUdid~5E1CFD76-48C7-40F8-8574-D7A7F25D9943"))
     "missing appId" in {
-      new UserPurchasesControllerImpl((_: UserPurchasesRequest) =>
+      new UserPurchasesController((_: UserPurchasesRequest) =>
         throw new IllegalStateException("Should not get this far"))(
         LambdaRequest(Some(""), Map("appId" -> "", knownGoodUserIds))
       ) must beEqualTo(LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json")))
     }
     "missing userIds" in {
-      new UserPurchasesControllerImpl((_: UserPurchasesRequest) =>
+      new UserPurchasesController((_: UserPurchasesRequest) =>
         throw new IllegalStateException("Should not get this far"))(
         LambdaRequest(Some(""), Map(knownAppId, "userIds" -> ""))
       ) must beEqualTo(LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json")))
     }
     "found appId and userId" in {
-      val controller: UserPurchasesControllerImpl = new UserPurchasesControllerImpl((request: UserPurchasesRequest) => {
+      val controller: UserPurchasesController = new UserPurchasesController((request: UserPurchasesRequest) => {
         if (request.equals(expectedUserPurchaseRequest)) {
           UserPurchasesResponse(
             Set(
               UserPurchase("knownGoodResponse", "1000000038244261",
                 UserPurchaseInterval("2018-03-27T15:20:00.000Z", "2018-03-27T15:25:00.000Z")))
           )
-        }
-        else {
+        } else {
           throw new IllegalStateException("")
         }
       }
@@ -78,10 +77,9 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
 
       }
 
-
     }
     "failed on  appId and userId returns empty" in {
-      new UserPurchasesControllerImpl((_: UserPurchasesRequest) => UserPurchasesResponse(Set())
+      new UserPurchasesController((_: UserPurchasesRequest) => UserPurchasesResponse(Set())
       )(LambdaRequest(None, Map(knownGoodUserIds, knownAppId))) must beEqualTo(
         LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json")))
     }
@@ -90,32 +88,33 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
     "Render empty purchases when missing appId" >> {
       implicit val arbitraryUserIds: Arbitrary[Set[String]] = Arbitrary(genUserIds)
       implicit val emptyAppId: Arbitrary[Option[String]] = Arbitrary(Gen.option[String](genEmptyString))
-      prop { (maybeAppId: Option[String], userIds: Set[String]) => {
-        new UserPurchasesControllerImpl((userPurchasesRequest: UserPurchasesRequest) => {
-          userPurchasesRequest must beNull
-          throw new IllegalStateException("Should not get this far")
-        })(LambdaRequest(None, Map("userIds" -> userIds.mkString(",")) ++ maybeAppId.map(
-          (appId: String) => Map("appId" -> appId)).getOrElse(Map()))) match {
-          case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(emptyBody)
-          case resp => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json")))
+      prop { (maybeAppId: Option[String], userIds: Set[String]) =>
+        {
+          new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => {
+            userPurchasesRequest must beNull
+            throw new IllegalStateException("Should not get this far")
+          })(LambdaRequest(None, Map("userIds" -> userIds.mkString(",")) ++ maybeAppId.map(
+            (appId: String) => Map("appId" -> appId)).getOrElse(Map()))) match {
+            case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(emptyBody)
+            case resp                                      => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json")))
+          }
         }
-      }
       }.setArbitraries(emptyAppId, arbitraryUserIds)
     }
 
     "Render empty purchases when missing userIds" >> {
-      prop { (appId: String, maybeUserIds: Option[Set[String]]) => {
-        val userPurchasesControllerImpl: UserPurchasesControllerImpl = new UserPurchasesControllerImpl((_: UserPurchasesRequest) =>
-          throw new IllegalStateException("Should not get this far"))
-        userPurchasesControllerImpl(LambdaRequest(None, Map("appId" -> appId) ++ maybeUserIds.map(
-          (userIds: Set[String]) => Map("userIds" -> userIds.mkString(","))).getOrElse(Map()))) match {
-          case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(emptyBody)
-          case resp => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json")))
+      prop { (appId: String, maybeUserIds: Option[Set[String]]) =>
+        {
+          val userPurchasesControllerImpl: UserPurchasesController = new UserPurchasesController((_: UserPurchasesRequest) =>
+            throw new IllegalStateException("Should not get this far"))
+          userPurchasesControllerImpl(LambdaRequest(None, Map("appId" -> appId) ++ maybeUserIds.map(
+            (userIds: Set[String]) => Map("userIds" -> userIds.mkString(","))).getOrElse(Map()))) match {
+            case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(emptyBody)
+            case resp                                      => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json")))
+          }
         }
-      }
       }.setArbitraries(Arbitrary(genNotEmptyAsciiChars), Arbitrary(Gen.option(Gen.containerOf[Set, String](genEmptyString))))
     }
-
 
     "Render purchases when appId and userIds present" >> {
       implicit val arbitraryUserPurchases: Arbitrary[Set[UserPurchase]] = Arbitrary(Gen.containerOf[Set, UserPurchase] {
@@ -135,7 +134,7 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
         appId.trim must not be empty
 
         val userPurchasesResponse: UserPurchasesResponse = UserPurchasesResponse(userPurchases)
-        val userPurchasesControllerImpl: UserPurchasesControllerImpl = new UserPurchasesControllerImpl((userPurchasesRequest: UserPurchasesRequest) => {
+        val userPurchasesControllerImpl: UserPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => {
           userPurchasesRequest must beEqualTo(UserPurchasesRequest(appId, userIds))
           userPurchasesResponse
         })

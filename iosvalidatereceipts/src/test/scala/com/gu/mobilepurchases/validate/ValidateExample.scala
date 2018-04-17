@@ -1,15 +1,15 @@
 package com.gu.mobilepurchases.validate
 
-import com.gu.mobilepurchases.model.{ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval}
+import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
 
 import scala.io.Source
 
 object ValidateExample {
   def successExample: ValidateExample = ValidateExample("success")
   def successValidateRequest = ValidateRequest(
-    ValidateRequestUserIds("gia:319B18F0-3B3A-40FD-9086-6DED1F566D2A","5E1CFD76-48C7-40F8-8574-D7A7F25D9943"),
+    ValidateRequestUserIds("gia:319B18F0-3B3A-40FD-9086-6DED1F566D2A", "5E1CFD76-48C7-40F8-8574-D7A7F25D9943"),
     Map("systemName" -> "iOS", "systemVersion" -> "11.2.6"),
-    ValidateRequestAppInfo("uk.co.guardian.iphone2"),List(
+    ValidateRequestAppInfo("uk.co.guardian.iphone2"), List(
       successValidateRequestTransaction),
     "guardian")
 

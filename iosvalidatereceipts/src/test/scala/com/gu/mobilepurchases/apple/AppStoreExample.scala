@@ -4,7 +4,6 @@ import com.gu.mobilepurchases.shared.external.Jackson
 
 import scala.io.Source
 
-
 object AppStoreExample {
   val success: AppStoreExample = new AppStoreExample("success-prod")
 
