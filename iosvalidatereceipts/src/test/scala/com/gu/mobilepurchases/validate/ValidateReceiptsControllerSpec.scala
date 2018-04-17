@@ -21,12 +21,12 @@ class ValidateReceiptsControllerSpec extends Specification {
       new ValidateReceiptsControllerImpl((validateReceiptRequest: ValidateRequest) => {
         validateReceiptRequest must beEqualTo(successValidateRequest)
         Try(Set(ValidateExample.successValidatedTransaction))
-      })(LambdaRequest(Some(Left(requestString)))) match {
-        case LambdaResponse(200, Some(Left(body)), headers) => {
+      })(LambdaRequest(Some(requestString))) match {
+        case LambdaResponse(200, Some(body), headers) => {
           headers must beEqualTo(Map("Content-Type" -> "application/json"))
           mapper.readTree(body) must beEqualTo(mapper.readTree(successExample.responseString))
         }
-        case fail => fail must beEqualTo(LambdaResponse(200, Some(Left(successExample.responseString)), Map("Content-Type" -> "application/json")))
+        case fail => fail must beEqualTo(LambdaResponse(200, Some(successExample.responseString), Map("Content-Type" -> "application/json")))
       }
 
     }

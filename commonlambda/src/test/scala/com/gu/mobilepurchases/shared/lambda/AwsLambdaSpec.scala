@@ -14,7 +14,7 @@ class AwsLambdaSpec extends Specification with Mockito {
       val mockedLogger:Logger = mock[Logger]
       val testException:IllegalStateException = new IllegalStateException("Throw an error")
       Try(new AwsLambda((_:LambdaRequest) => throw testException, mockedLogger) {}.handleRequest(
-        new ByteArrayInputStream("""{"body":"dGVzdEJhc2U2NGlucHV0","isBase64Encoded":true,"queryStringParameters":{"Content-Type":"text/plain"}}""".getBytes()),
+        new ByteArrayInputStream("""{"body":"anybody","isBase64Encoded":false,"queryStringParameters":{"Content-Type":"text/plain"}}""".getBytes()),
         new ByteArrayOutputStream(), null)
       ).recover {
         case t => t must beEqualTo(testException)

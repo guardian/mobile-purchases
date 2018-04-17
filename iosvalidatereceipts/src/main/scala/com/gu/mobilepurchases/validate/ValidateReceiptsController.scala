@@ -45,19 +45,18 @@ class ValidateReceiptsControllerImpl(
                                     ) extends Function[LambdaRequest, LambdaResponse] {
   def apply(lambdaRequest: LambdaRequest): LambdaResponse =
     lambdaRequest match {
-      case LambdaRequest(Some(Left(json)), _) => validate(Try(mapper.readValue[ValidateRequest](json)))
-      case LambdaRequest(Some(Right(bytes)), _) => validate(Try(mapper.readValue[ValidateRequest](bytes)))
-      case LambdaRequest(None, _) => LambdaResponse(badRequest, Some(Left("Expected a json body")), errorHeaders)
+      case LambdaRequest(Some(json), _) => validate(Try(mapper.readValue[ValidateRequest](json)))
+      case LambdaRequest(None, _) => LambdaResponse(badRequest, Some("Expected a json body"), errorHeaders)
     }
 
   private def validate(triedRequest: Try[ValidateRequest]): LambdaResponse = triedRequest
     .map((validateRequest: ValidateRequest) =>
       validateReceiptsRoute.route(validateRequest)
-        .map((transactions: Set[ValidatedTransaction]) => LambdaResponse(okCode, Some(Left(mapper.writeValueAsString(ValidateResponse(transactions)))), successHeaders))
-        .getOrElse(LambdaResponse(HttpStatusCodes.internalServerError, Some(Left("Failed to persist")), errorHeaders)
+        .map((transactions: Set[ValidatedTransaction]) => LambdaResponse(okCode, Some(mapper.writeValueAsString(ValidateResponse(transactions))), successHeaders))
+        .getOrElse(LambdaResponse(HttpStatusCodes.internalServerError, Some("Failed to persist"), errorHeaders)
         )).fold((t: Throwable) => {
     ValidateReceiptsControllerImpl.logger.warn("Error validating", t)
-    LambdaResponse(badRequest, Some(Left("Cannot read json body")), errorHeaders)
+    LambdaResponse(badRequest, Some("Cannot read json body"), errorHeaders)
   }, (x: LambdaResponse) => x)
 
 }

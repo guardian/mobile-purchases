@@ -35,14 +35,14 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
     "missing appId" in {
       new UserPurchasesControllerImpl((_: UserPurchasesRequest) =>
         throw new IllegalStateException("Should not get this far"))(
-        LambdaRequest(Some(Left("")), Map("appId" -> "", knownGoodUserIds))
-      ) must beEqualTo(LambdaResponse(okayCode, Some(Left("""{"purchases":[]}""")), Map("Content-Type" -> "application/json")))
+        LambdaRequest(Some(""), Map("appId" -> "", knownGoodUserIds))
+      ) must beEqualTo(LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json")))
     }
     "missing userIds" in {
       new UserPurchasesControllerImpl((_: UserPurchasesRequest) =>
         throw new IllegalStateException("Should not get this far"))(
-        LambdaRequest(Some(Left("")), Map(knownAppId, "userIds" -> ""))
-      ) must beEqualTo(LambdaResponse(okayCode, Some(Left("""{"purchases":[]}""")), Map("Content-Type" -> "application/json")))
+        LambdaRequest(Some(""), Map(knownAppId, "userIds" -> ""))
+      ) must beEqualTo(LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json")))
     }
     "found appId and userId" in {
       val controller: UserPurchasesControllerImpl = new UserPurchasesControllerImpl((request: UserPurchasesRequest) => {
@@ -63,13 +63,13 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
 "productId":"knownGoodResponse",
 "webOrderLineItemId":"1000000038244261",
 "activeInterval":{"start":"2018-03-27T15:20:00.000Z","end":"2018-03-27T15:25:00.000Z"}}]}""".stripMargin
-      val expectedResponse: LambdaResponse = LambdaResponse(okayCode, Some(Left(
-        expectedBody)),
+      val expectedResponse: LambdaResponse = LambdaResponse(okayCode, Some(
+        expectedBody),
         Map("Content-Type" -> "application/json"
         ))
       val response: LambdaResponse = controller(LambdaRequest(None, Map(knownGoodUserIds, knownAppId)))
       response match {
-        case LambdaResponse(code, Some(Left(body)), headers) => {
+        case LambdaResponse(code, Some(body), headers) => {
           code must beEqualTo(expectedResponse.statusCode)
           headers must beEqualTo(expectedResponse.headers)
           mapper.readTree(body) must beEqualTo(mapper.readTree(expectedBody))
@@ -83,7 +83,7 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
     "failed on  appId and userId returns empty" in {
       new UserPurchasesControllerImpl((_: UserPurchasesRequest) => UserPurchasesResponse(Set())
       )(LambdaRequest(None, Map(knownGoodUserIds, knownAppId))) must beEqualTo(
-        LambdaResponse(okayCode, Some(Left("""{"purchases":[]}""")), Map("Content-Type" -> "application/json")))
+        LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json")))
     }
   }
   "ScalaCheck UserPurchasesController" should {
@@ -96,8 +96,8 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
           throw new IllegalStateException("Should not get this far")
         })(LambdaRequest(None, Map("userIds" -> userIds.mkString(",")) ++ maybeAppId.map(
           (appId: String) => Map("appId" -> appId)).getOrElse(Map()))) match {
-          case LambdaResponse(`okayCode`, Some(Left(body)), _) => mapper.readTree(body) must beEqualTo(emptyBody)
-          case resp => resp must beEqualTo(LambdaResponse(okayCode, Some(Left(emptyBodyString)), Map("Content-Type" -> "application/json")))
+          case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(emptyBody)
+          case resp => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json")))
         }
       }
       }.setArbitraries(emptyAppId, arbitraryUserIds)
@@ -109,8 +109,8 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
           throw new IllegalStateException("Should not get this far"))
         userPurchasesControllerImpl(LambdaRequest(None, Map("appId" -> appId) ++ maybeUserIds.map(
           (userIds: Set[String]) => Map("userIds" -> userIds.mkString(","))).getOrElse(Map()))) match {
-          case LambdaResponse(`okayCode`, Some(Left(body)), _) => mapper.readTree(body) must beEqualTo(emptyBody)
-          case resp => resp must beEqualTo(LambdaResponse(okayCode, Some(Left(emptyBodyString)), Map("Content-Type" -> "application/json")))
+          case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(emptyBody)
+          case resp => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json")))
         }
       }
       }.setArbitraries(Arbitrary(genNotEmptyAsciiChars), Arbitrary(Gen.option(Gen.containerOf[Set, String](genEmptyString))))
@@ -140,10 +140,10 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
           userPurchasesResponse
         })
         userPurchasesControllerImpl(LambdaRequest(None, Map("appId" -> appId, "userIds" -> userIds.mkString(",")))) match {
-          case LambdaResponse(`okayCode`, Some(Left(body)), _) => mapper.readTree(body) must beEqualTo(
+          case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(
             mapper.readTree(mapper.writeValueAsBytes(userPurchasesResponse)))
           case resp => resp must beEqualTo(
-            LambdaResponse(okayCode, Some(Left(mapper.writeValueAsString(userPurchasesResponse))), Map("Content-Type" -> "application/json")))
+            LambdaResponse(okayCode, Some(mapper.writeValueAsString(userPurchasesResponse)), Map("Content-Type" -> "application/json")))
         }
       }
       ).setArbitraries(arbitraryUserPurchases, arbitraryAppId, arbitraryUserIds)

@@ -12,7 +12,7 @@ import org.apache.logging.log4j.{LogManager, Logger}
 
 object UserPurchasesControllerImpl {
   val defaultHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.APPLICATION_JSON.getMimeType)
-  val emptyPurchasesResponse: LambdaResponse = LambdaResponse(okCode, Some(Left(mapper.writeValueAsString(UserPurchasesResponse(Set())))), defaultHeaders)
+  val emptyPurchasesResponse: LambdaResponse = LambdaResponse(okCode, Some(mapper.writeValueAsString(UserPurchasesResponse(Set()))), defaultHeaders)
   val logger: Logger = LogManager.getLogger(classOf[UserPurchasesControllerImpl])
 }
 
@@ -30,7 +30,7 @@ class UserPurchasesControllerImpl(userPurchases: UserPurchases) extends Function
     } yield UserPurchasesRequest(appId, userIDs)).map(userPurchases.findPurchases).map((purchases: UserPurchasesResponse) =>
       LambdaResponse(
         okCode,
-        Some(Left(mapper.writeValueAsString(purchases))),
+        Some(mapper.writeValueAsString(purchases)),
         UserPurchasesControllerImpl.defaultHeaders
       ))
       .getOrElse(emptyPurchasesResponse)

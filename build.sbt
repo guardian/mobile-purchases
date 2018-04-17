@@ -46,7 +46,7 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
   assemblyJarName := s"${name.value}.jar"
 )
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = List(
-  parallelExecution := false,
+  fork := true,
   resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
   scalacOptions in Test ++= Seq("-Yrangepos"),
   libraryDependencies ++= Seq(
