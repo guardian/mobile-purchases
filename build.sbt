@@ -22,6 +22,7 @@ lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).settings(commo
 
 lazy val root = project.enablePlugins(RiffRaffArtifact).in(file(".")).aggregate(commonlambda, userpurchasepersistence, iosvalidatereceipts, iosuserpurchases)
   .settings(
+    fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     scalaVersion := "2.12.5",
     resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
     name := "mobile-purchases",
@@ -31,7 +32,6 @@ lazy val root = project.enablePlugins(RiffRaffArtifact).in(file(".")).aggregate(
     riffRaffManifestProjectName := s"Mobile::${name.value}",
     riffRaffArtifactResources += (assembly in iosvalidatereceipts).value -> s"${(name in iosvalidatereceipts).value}/${(assembly in iosvalidatereceipts).value.getName}",
     riffRaffArtifactResources += (assembly in iosuserpurchases).value -> s"${(name in iosuserpurchases).value}/${(assembly in iosuserpurchases).value.getName}",
-    parallelExecution := false
   )
 
 def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = commonSettings(module) ++ List(
