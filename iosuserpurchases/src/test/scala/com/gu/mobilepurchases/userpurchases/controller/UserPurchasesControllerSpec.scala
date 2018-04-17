@@ -59,9 +59,9 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
       )
       val expectedBody: String =
         """{"purchases":[{
-"productId":"knownGoodResponse",
-"webOrderLineItemId":"1000000038244261",
-"activeInterval":{"start":"2018-03-27T15:20:00.000Z","end":"2018-03-27T15:25:00.000Z"}}]}""".stripMargin
+             |"productId":"knownGoodResponse",
+             |"webOrderLineItemId":"1000000038244261",
+             |"activeInterval":{"start":"2018-03-27T15:20:00.000Z","end":"2018-03-27T15:25:00.000Z"}}]}""".stripMargin
       val expectedResponse: LambdaResponse = LambdaResponse(okayCode, Some(
         expectedBody),
         Map("Content-Type" -> "application/json"
