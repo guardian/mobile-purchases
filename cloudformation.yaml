@@ -23,8 +23,14 @@ Parameters:
   HostedZoneName:
     Description: HostedZoneName
     Type: String
-  CertArn:
-    Description: ACM Certificate ARN
+  ApiCertArn:
+    Description: ACM Certificate for api use
+    Type: String
+  AppCertArn:
+    Description: ACM Certificate for app use
+    Type: String
+  AppDNS:
+    Description: DNS used by app
     Type: String
 Resources:
   IosValidateReceiptsRole:
@@ -112,8 +118,15 @@ Resources:
   ApiDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
-      CertificateArn: !Ref CertArn
+      CertificateArn: !Ref ApiCertArn
       DomainName: !Sub ${App}.${HostedZoneName}
+
+  AppDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      CertificateArn: !Ref AppCertArn
+      DomainName: !Ref AppDNS
+
 
   ApiRoute53:
       Type: AWS::Route53::RecordSetGroup
@@ -132,6 +145,13 @@ Resources:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
       DomainName: !Ref ApiDomainName
+      RestApiId: !Ref MobilePuchasesApi
+      Stage: !Ref Stage
+
+  AppMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName: !Ref AppDomainName
       RestApiId: !Ref MobilePuchasesApi
       Stage: !Ref Stage
 
