@@ -1,29 +1,28 @@
+import sbt.{Def, project}
 import sbtassembly.MergeStrategy
+import scalariform.formatter.preferences._
 
-lazy val commonlambda = project.disablePlugins(AssemblyPlugin).settings(commonSettings("commonlambda")).settings(
-  resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
-  scalacOptions in Test ++= Seq("-Yrangepos")
-)
+import scala.collection.immutable
 
-lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).dependsOn(commonlambda  % "test->test;compile->compile").settings(commonAssemblySettings("iosvalidatereceipts")).settings(
-  scalacOptions in Test ++= Seq("-Yrangepos"),
-  assemblyMergeStrategy in assembly := {
-    case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
-    case x => (assemblyMergeStrategy in assembly).value(x)
-  }
-)
-lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).dependsOn(commonlambda  % "test->test;compile->compile").settings(commonAssemblySettings("iosuserpurchases")).settings(
-  scalacOptions in Test ++= Seq("-Yrangepos"),
-  assemblyMergeStrategy in assembly := {
-    case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
-    case x => (assemblyMergeStrategy in assembly).value(x)
-  }
-)
+val testAndCompileDependencies = "test->test;compile->compile"
+
+lazy val commonlambda = project.disablePlugins(AssemblyPlugin).settings(commonSettings("commonlambda"))
+
+lazy val userpurchasepersistence = project.disablePlugins(AssemblyPlugin)
+  .settings(commonSettings("userpurchasepersistence"))
+  .dependsOn(commonlambda % testAndCompileDependencies)
+
+lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("iosvalidatereceipts"))
+  .dependsOn(userpurchasepersistence % testAndCompileDependencies)
+
+lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("iosuserpurchases"))
+  .dependsOn(userpurchasepersistence % testAndCompileDependencies)
 
 
 
-lazy val root = project.enablePlugins(RiffRaffArtifact).in(file(".")).aggregate(commonlambda, iosvalidatereceipts, iosuserpurchases)
+lazy val root = project.enablePlugins(RiffRaffArtifact).in(file(".")).aggregate(commonlambda, userpurchasepersistence, iosvalidatereceipts, iosuserpurchases)
   .settings(
+    fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     scalaVersion := "2.12.5",
     resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
     name := "mobile-purchases",
@@ -32,23 +31,29 @@ lazy val root = project.enablePlugins(RiffRaffArtifact).in(file(".")).aggregate(
     riffRaffUploadManifestBucket := Option("riffraff-builds"),
     riffRaffManifestProjectName := s"Mobile::${name.value}",
     riffRaffArtifactResources += (assembly in iosvalidatereceipts).value -> s"${(name in iosvalidatereceipts).value}/${(assembly in iosvalidatereceipts).value.getName}",
-    riffRaffArtifactResources += (assembly in iosuserpurchases).value -> s"${(name in iosuserpurchases).value}/${(assembly in iosuserpurchases).value.getName}"
-
+    riffRaffArtifactResources += (assembly in iosuserpurchases).value -> s"${(name in iosuserpurchases).value}/${(assembly in iosuserpurchases).value.getName}",
   )
 
-def commonAssemblySettings(module: String) = commonSettings(module) ++ List(
+def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = commonSettings(module) ++ List(
   publishArtifact in(Compile, packageDoc) := false,
   publishArtifact in packageDoc := false,
   assemblyMergeStrategy in assembly := {
     case "META-INF/MANIFEST.MF" => MergeStrategy.discard
+    case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
   },
   assemblyJarName := s"${name.value}.jar"
 )
-
-def commonSettings(module: String) = List(
+def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = List(
+  scalariformPreferences := scalariformPreferences.value
+    .setPreference(AlignSingleLineCaseStatements, true)
+    .setPreference(DoubleIndentConstructorArguments, true)
+    .setPreference(DanglingCloseParenthesis, Preserve),
+    fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
+  resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
+  scalacOptions in Test ++= Seq("-Yrangepos"),
   libraryDependencies ++= Seq(
     "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
     "commons-io" % "commons-io" % "2.6",
@@ -62,7 +67,10 @@ def commonSettings(module: String) = List(
     "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
     "com.gu" %% "simple-configuration-ssm" % "1.4.3",
     "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.11.0",
-    "org.specs2" %% "specs2-core" % "4.0.2" % "test"
+    "org.specs2" %% "specs2-core" % "4.0.3" % "test",
+    "org.specs2" %% "specs2-scalacheck" % "4.0.3" % "test",
+    "org.specs2" %% "specs2-mock" % "4.0.3" % "test",
+    "com.gu" %% "scanamo" % "1.0.0-M6"
 
   ),
   name := s"mobile-purchases-$module",
@@ -75,8 +83,8 @@ def commonSettings(module: String) = List(
     "-encoding", "UTF-8",
     "-target:jvm-1.8",
     "-Ywarn-dead-code",
-    "-Xfatal-warnings"
+    "-Xfatal-warnings",
+    "-Ypartial-unification"
   )
-
 
 )

@@ -1,70 +1,91 @@
 package com.gu.mobilepurchases.shared.lambda
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
-import java.nio.charset.StandardCharsets
-import java.util.UUID
+import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, InputStream }
+import java.nio.charset.StandardCharsets.UTF_8
 
-import com.gu.mobilepurchases.shared.external.Base64Utils.encoder
+import com.fasterxml.jackson.databind.JsonNode
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
-import com.gu.mobilepurchases.shared.lambda._
+import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
+import com.gu.mobilepurchases.shared.lambda.LambdaApiGatewaySpec.stringAsInputStream
+import org.scalacheck.{ Arbitrary, Gen }
+import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 
-import scala.util.Random
-
-
 object LambdaApiGatewaySpec {
-
-  def randomLambdaRequest: LambdaRequest = {
-    val queryStringParameters = Map(UUID.randomUUID().toString -> UUID.randomUUID().toString)
-    if (Random.nextBoolean) {
-      if (Random.nextBoolean) {
-        LambdaRequest(Some(Right(encoder.encode(UUID.randomUUID().toString.getBytes()))), queryStringParameters)
-      } else {
-        LambdaRequest(Some(Left(UUID.randomUUID().toString)), queryStringParameters)
-      }
-    } else {
-      LambdaRequest(None, queryStringParameters)
-    }
-  }
-
-
-  def randomLambdaResponse: LambdaResponse = {
-    val randomStatusCode = Random.nextInt()
-    val randomHeaders = Map(UUID.randomUUID().toString -> UUID.randomUUID().toString)
-    if (Random.nextBoolean) {
-      if (Random.nextBoolean) {
-        LambdaResponse(randomStatusCode, Some(Right(encoder.encode(UUID.randomUUID().toString.getBytes()))), randomHeaders)
-      } else {
-        LambdaResponse(randomStatusCode, Some(Left(UUID.randomUUID.toString)), randomHeaders)
-      }
-    } else {
-      LambdaResponse(randomStatusCode, None, randomHeaders)
-    }
-  }
-
-  def stringAsInputStream(str: String): InputStream = new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8))
+  def stringAsInputStream(str: String): InputStream = new ByteArrayInputStream(str.getBytes(UTF_8))
 }
 
-class LambdaApiGatewaySpec extends Specification {
+class LambdaApiGatewaySpec extends Specification with ScalaCheck {
+  private val genQueryParameters: Gen[(String, String)] = Gen.zip(genCommonAscii, genCommonAscii)
+
+  implicit def arbitraryLambdaRequest: Arbitrary[LambdaRequest] = Arbitrary(for {
+    stringOfBinary <- Gen.option[String](genCommonAscii)
+    query <- Gen.mapOf[String, String](genQueryParameters)
+  } yield LambdaRequest(stringOfBinary, query))
+
+  implicit def arbitraryLambdaResponse: Arbitrary[LambdaResponse] = Arbitrary(for {
+    statusCode <- Arbitrary.arbitrary[Int]
+    stringOfBinary <- Gen.option[String](genCommonAscii)
+    query <- Gen.mapOf[String, String](genQueryParameters)
+  } yield LambdaResponse(statusCode, stringOfBinary, query))
+
   "LambdaApiGatewayTest" should {
-    "work with api gateway lambda proxy" in {
-      val outputStream = new ByteArrayOutputStream
-      val request = LambdaApiGatewaySpec.randomLambdaRequest
-      val response = LambdaApiGatewaySpec.randomLambdaResponse
-      new LambdaApiGatewayImpl().execute(
-        LambdaApiGatewaySpec.stringAsInputStream(mapper.writeValueAsString(ApiGatewayLambdaRequest(request))),
-        outputStream,
-        req => {
-          req match {
-            case LambdaRequest(Some(Right(array)), queryStringParameters) => {
-              array must beEqualTo(request.maybeBody.get.right.get)
-              queryStringParameters must beEqualTo(request.queryStringParameters)
-            }
-            case req => req must beEqualTo(request)
-          }
-          response
-        })
-      mapper.readValue(outputStream.toByteArray, classOf[ApiGatewayLambdaResponse]) must_== ApiGatewayLambdaResponse(response)
+    "marshal and unmarshal string properly" in {
+      val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
+      val expectedBodyString: String = """{"test":"content"}"""
+      val expectedBodyJson: JsonNode = mapper.readTree(expectedBodyString)
+      new LambdaApiGatewayImpl((req: LambdaRequest) => {
+        req.queryStringParameters must beEqualTo(Map("Content-Type" -> "application/json"))
+
+        req.maybeBody match {
+          case Some(body) => mapper.readTree(body) must beEqualTo(expectedBodyJson)
+          case notString  => notString must beEqualTo(Some(expectedBodyJson))
+        }
+        LambdaResponse(200, Some("""{"test":"body"}"""), Map("Content-Type" -> "application/json"))
+
+      }).execute(stringAsInputStream(
+        """{"body":"{\"test\":\"content\"}","isBase64Encoded":false,"queryStringParameters":{"Content-Type":"application/json"}}"""
+      ), outputStream)
+
+      mapper.readTree(outputStream.toByteArray) must beEqualTo(mapper.readTree(
+        """{"statusCode":200,"isBase64Encoded":false,"headers":{"Content-Type":"application/json"},"body":"{\"test\":\"body\"}"}"""
+      ))
+    }
+
+    "marshal and unmarshal bytes properly" in {
+      val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
+      new LambdaApiGatewayImpl((req: LambdaRequest) => {
+        throw new IllegalStateException("Should not be called")
+
+      }).execute(stringAsInputStream(
+        """{"body":"dGVzdEJhc2U2NGlucHV0","isBase64Encoded":true,"queryStringParameters":{"Content-Type":"text/plain"}}"""
+      ), outputStream)
+      mapper.readTree(outputStream.toByteArray) must beEqualTo(mapper.readTree(
+        """{"statusCode":400,"body":"Binary content not supported","headers":{"Content-Type":"text/plain"},"isBase64Encoded":false}"""
+      ))
+    }
+    "check random lambdaRequest and LambdaResponse convert as expected" >> prop { (request: LambdaRequest, response: LambdaResponse) =>
+      val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream
+      new LambdaApiGatewayImpl((req: LambdaRequest) => {
+        req must beEqualTo(request)
+        response
+      }).execute(
+        stringAsInputStream(mapper.writeValueAsString(ApiGatewayLambdaRequest(request))), outputStream)
+      mapper.readValue[ApiGatewayLambdaResponse](outputStream.toByteArray) must_== ApiGatewayLambdaResponse(response)
+    }
+    "LambdaRequest to and from Api" >> prop { (lambdaRequest: LambdaRequest) =>
+      {
+        val renderedRequest: LambdaRequest = LambdaRequest(ApiGatewayLambdaRequest(lambdaRequest))
+        renderedRequest must beEqualTo(lambdaRequest)
+        renderedRequest.hashCode() must beEqualTo(lambdaRequest.hashCode())
+      }
+    }
+    "LambdaResponse to and from Api" >> prop { (lambdaResponse: LambdaResponse) =>
+      {
+        val renderedResponse: LambdaResponse = LambdaResponse(ApiGatewayLambdaResponse(lambdaResponse))
+        renderedResponse must beEqualTo(lambdaResponse)
+        renderedResponse.hashCode() must beEqualTo(lambdaResponse.hashCode())
+      }
     }
   }
 }

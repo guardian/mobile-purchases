@@ -1,59 +1,34 @@
 package com.gu.mobilepurchases.lambda
 
-import java.io.{InputStream, OutputStream}
-
-import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import com.gu.AwsIdentity
-import com.gu.mobilepurchases.apple.{AppStoreConfig, AppStoreImpl}
-import com.gu.mobilepurchases.config.SsmConfig
+import com.gu.mobilepurchases.apple.{ AppStoreConfig, AppStoreImpl }
+import com.gu.mobilepurchases.persistence.TransactionPersistenceImpl
+import com.gu.mobilepurchases.shared.config.SsmConfig
 import com.gu.mobilepurchases.shared.external.Logging
-import com.gu.mobilepurchases.shared.lambda.{LambdaApiGateway, LambdaApiGatewayImpl}
+import com.gu.mobilepurchases.shared.lambda.AwsLambda
+import com.gu.mobilepurchases.userpurchases.persistence.{ ScanamaoUserPurchasesStringsByUserIdColonAppIdImpl, UserPurchaseConfig, UserPurchasePersistenceImpl }
 import com.gu.mobilepurchases.validate._
-import org.apache.logging.log4j.{LogManager, Logger}
 
 object ValidateReceiptLambda {
-  val logger: Logger = LogManager.getLogger(classOf[ValidateReceiptLambda])
-}
+  lazy val ssmConfig: SsmConfig = new SsmConfig()
 
-abstract class ValidateReceiptLambda(
-                                      validateReceipts: ValidateReceiptsController,
-                                      lambdaApiGateway: LambdaApiGateway
-                                    ) extends RequestStreamHandler {
-  override def handleRequest(input: InputStream, output: OutputStream, context: Context): Unit = {
-    try {
-      lambdaApiGateway.execute(input, output, validateReceipts.validate)
-    }
-    catch {
-      case t: Throwable => ValidateReceiptLambda.logger.warn(s"Error executing lambda", t)
-    }
-  }
-}
+  lazy val validateReceipts: ValidateReceiptsController = Logging.logOnThrown(
+    () => ssmConfig.identity match {
+      case awsIdentity: AwsIdentity => new ValidateReceiptsController(
+        new ValidateReceiptsRouteImpl(
+          new ValidateReceiptsTransformAppStoreResponseImpl(),
+          new FetchAppStoreResponsesImpl(
+            new AppStoreImpl(AppStoreConfig(ssmConfig.config, awsIdentity.stage))),
+          new ValidateReceiptsFilterExpiredImpl(),
+          new TransactionPersistenceImpl(new UserPurchasePersistenceImpl(
+            ScanamaoUserPurchasesStringsByUserIdColonAppIdImpl(UserPurchaseConfig(awsIdentity.app, awsIdentity.stage, awsIdentity.stack))
 
-object ConfiguredValidateReceiptLambda {
-  lazy val ssmConfig = new SsmConfig()
-
-  lazy val validateReceipts: ValidateReceiptsController = Logging.logOnThrown(() => new ValidateReceiptsControllerImpl(
-    new ValidateReceiptsValidatorImpl(
-      new AppStoreImpl(
-        AppStoreConfig(ssmConfig.config, ssmConfig.identity match {
-          case awsIdentity: AwsIdentity => awsIdentity.stage
-          case _ => "NO_STACK"
-        })
+          )))
       )
-    )
-  ),
+      case _ => throw new IllegalStateException("Missing aws Identity")
+    },
     "Error initialising validate receipts controller",
-    Some(classOf[ConfiguredValidateReceiptLambda])
-  )
-
-  lazy val lambdaApiGateway: LambdaApiGateway = Logging.logOnThrown(
-    () => new LambdaApiGatewayImpl(),
-    "Error initialising LambdaApiGatewayImpl",
-    Some(classOf[ConfiguredValidateReceiptLambda])
-  )
-
+    Some(classOf[ValidateReceiptLambda]))
 }
 
-class ConfiguredValidateReceiptLambda extends ValidateReceiptLambda(
-  ConfiguredValidateReceiptLambda.validateReceipts,
-  ConfiguredValidateReceiptLambda.lambdaApiGateway)
+class ValidateReceiptLambda extends AwsLambda(ValidateReceiptLambda.validateReceipts)

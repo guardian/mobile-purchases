@@ -1,129 +1,116 @@
 package com.gu.mobilepurchases.shared.lambda
 
-import java.io.{InputStream, OutputStream}
+import java.io.{ InputStream, OutputStream }
 import java.nio.charset.StandardCharsets
+import java.util
 
-import com.gu.mobilepurchases.shared.external.Base64Utils.{IsBase64Encoded, IsNotBase64Encoded, decoder, encoder}
+import com.gu.mobilepurchases.shared.external.Base64Utils.{ IsBase64Encoded, IsNotBase64Encoded, decoder, encoder }
+import com.gu.mobilepurchases.shared.external.HttpStatusCodes
 import com.gu.mobilepurchases.shared.external.HttpStatusCodes.internalServerError
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.LambdaApiGateway.logger
 import org.apache.commons.io.IOUtils
-import org.apache.logging.log4j.{LogManager, Logger}
+import org.apache.logging.log4j.{ LogManager, Logger }
 
+import scala.util.Try
 
 object ApiGatewayLambdaResponse {
   def apply(lambdaResponse: LambdaResponse): ApiGatewayLambdaResponse =
-    lambdaResponse.maybeBody match {
-      case Some(body) => body match {
-        case Left(str) => ApiGatewayLambdaResponse(lambdaResponse.statusCode, Some(str), lambdaResponse.headers, IsNotBase64Encoded)
-        case Right(array) => ApiGatewayLambdaResponse(
-          lambdaResponse.statusCode,
-          Some(new String(encoder.encode(array))),
-          lambdaResponse.headers,
-          IsBase64Encoded)
-      }
-      case None => ApiGatewayLambdaResponse(lambdaResponse.statusCode, None, lambdaResponse.headers)
-    }
+    ApiGatewayLambdaResponse(lambdaResponse.statusCode, lambdaResponse.maybeBody, lambdaResponse.headers, IsNotBase64Encoded)
+
 }
 
 case class ApiGatewayLambdaResponse(
-                                     statusCode: Int,
-                                     body: Option[String] = None,
-                                     headers: Map[String, String] = Map("Content-Type" -> "application/json"),
-                                     isBase64Encoded: Boolean = IsNotBase64Encoded)
+    statusCode: Int,
+    body: Option[String] = None,
+    headers: Map[String, String] = Map(),
+    isBase64Encoded: Boolean = IsNotBase64Encoded)
 
 object ApiGatewayLambdaRequest {
-  def apply(lambdaRequest: LambdaRequest): ApiGatewayLambdaRequest =
-    {
-      val parameters: Option[Map[String, String]] = if (lambdaRequest.queryStringParameters.nonEmpty) Some(lambdaRequest.queryStringParameters) else None
-      lambdaRequest.maybeBody match {
-        case Some(body) =>
+  def apply(lambdaRequest: LambdaRequest): ApiGatewayLambdaRequest = {
 
-          body match {
-            case Left(str) => ApiGatewayLambdaRequest(Some(str), IsNotBase64Encoded, parameters)
-            case Right(array) => ApiGatewayLambdaRequest(Some(new String(encoder.encode(array))), IsBase64Encoded, parameters)
-          }
-        case None => ApiGatewayLambdaRequest(None, isBase64Encoded = false, parameters)
-      }
-    }
+    val parameters: Option[Map[String, String]] = if (lambdaRequest.queryStringParameters.nonEmpty) Some(lambdaRequest.queryStringParameters) else None
+    ApiGatewayLambdaRequest(lambdaRequest.maybeBody, IsNotBase64Encoded, parameters)
+  }
 
 }
 
 case class ApiGatewayLambdaRequest(
-                                    body: Option[String],
-                                    isBase64Encoded: Boolean = IsNotBase64Encoded,
-                                    queryStringParameters: Option[Map[String, String]] = None
-                                  )
-
+    body: Option[String],
+    isBase64Encoded: Boolean = IsNotBase64Encoded,
+    queryStringParameters: Option[Map[String, String]] = None
+)
 
 object LambdaRequest {
   def apply(apiGatewayLambdaRequest: ApiGatewayLambdaRequest): LambdaRequest = {
-    LambdaRequest(apiGatewayLambdaRequest.body.map(foundBody => if (apiGatewayLambdaRequest.isBase64Encoded) {
-      Right(decoder.decode(foundBody))
+    LambdaRequest(apiGatewayLambdaRequest.body.map((foundBody: String) => if (apiGatewayLambdaRequest.isBase64Encoded) {
+      throw new UnsupportedOperationException("Binary content unsupported")
     } else {
-      Left(foundBody)
+      foundBody
     }), apiGatewayLambdaRequest.queryStringParameters.getOrElse(Map()))
   }
 }
 
-case class LambdaRequest(maybeBody: Option[Either[String, Array[Byte]]], queryStringParameters: Map[String, String] = Map())
+case class LambdaRequest(maybeBody: Option[String], queryStringParameters: Map[String, String] = Map()) {}
 
 object LambdaResponse {
   def apply(apiGatewayLambdaResponse: ApiGatewayLambdaResponse): LambdaResponse = {
-    LambdaResponse(apiGatewayLambdaResponse.statusCode, apiGatewayLambdaResponse.body.map(foundBody => if (apiGatewayLambdaResponse.isBase64Encoded) {
-      Right(decoder.decode(foundBody))
+    LambdaResponse(apiGatewayLambdaResponse.statusCode, apiGatewayLambdaResponse.body.map((foundBody: String) => if (apiGatewayLambdaResponse.isBase64Encoded) {
+      throw new UnsupportedOperationException("Binary content unsupported")
     } else {
-      Left(foundBody)
+      foundBody
     }), apiGatewayLambdaResponse.headers)
   }
+
 }
 
 case class LambdaResponse(
-                           statusCode: Int,
-                           maybeBody: Option[Either[String, Array[Byte]]],
-                           headers: Map[String, String] = Map("Content-Type" -> "application/json")
-                         )
+    statusCode: Int,
+    maybeBody: Option[String],
+    headers: Map[String, String]
+) {
+}
 
 object LambdaApiGateway {
   val logger: Logger = LogManager.getLogger(classOf[LambdaApiGateway])
 }
 
 trait LambdaApiGateway {
-  def execute(input: InputStream, output: OutputStream, function: (LambdaRequest => LambdaResponse)): Unit
+  def execute(input: InputStream, output: OutputStream): Unit
 }
 
-
-class LambdaApiGatewayImpl extends LambdaApiGateway {
-  def execute(input: InputStream, output: OutputStream, function: (LambdaRequest => LambdaResponse)): Unit = {
+class LambdaApiGatewayImpl(function: (LambdaRequest => LambdaResponse)) extends LambdaApiGateway {
+  def execute(input: InputStream, output: OutputStream): Unit = {
     try {
+
       mapper.writeValue(output, objectReadAndClose(input) match {
-        case Left(apiGatewayLambdaRequest) => ApiGatewayLambdaResponse(function(LambdaRequest(apiGatewayLambdaRequest)))
-        case Right(_) => ApiGatewayLambdaResponse(internalServerError)
+        case Right(apiGatewayLambdaRequest) =>
+          if (apiGatewayLambdaRequest.isBase64Encoded) {
+            ApiGatewayLambdaResponse(LambdaResponse(HttpStatusCodes.badRequest, Some("Binary content not supported"), Map("Content-Type" -> "text/plain")))
+          } else {
+            val lambdaRequest: LambdaRequest = LambdaRequest(apiGatewayLambdaRequest)
+            val lambdaResponse: LambdaResponse = function(lambdaRequest)
+            ApiGatewayLambdaResponse(lambdaResponse)
+          }
+        case Left(_) => ApiGatewayLambdaResponse(internalServerError)
       })
-    }
-    finally output.close()
-
+    } finally output.close()
   }
 
-  private def objectReadAndClose(input: InputStream): Either[ApiGatewayLambdaRequest, Throwable] = {
-    val inputAsString = stringReadAndClose(input)
-    try {
-      Left(mapper.readValue(inputAsString, classOf[ApiGatewayLambdaRequest]))
-    }
-    catch {
-      case t: Throwable => logger.error(s"Input not an API Gateway Request: $inputAsString", t)
-        Right(t)
-    }
-  }
+  private def objectReadAndClose(input: InputStream): Either[Throwable, ApiGatewayLambdaRequest] = {
+    Try {
+      try {
+        new String(IOUtils.toByteArray(input), StandardCharsets.UTF_8)
+      } finally {
+        input.close()
+      }
+    }.toEither.left.map((t: Throwable) => {
+      logger.error(s"Unable to read input", t)
+      t
+    }).flatMap((inputAsString: String) => Try(mapper.readValue[ApiGatewayLambdaRequest](inputAsString)).toEither.left.map((t: Throwable) => {
+      logger.error(s"Input not an API Gateway Request: $inputAsString", t)
+      t
+    }))
 
-  private def stringReadAndClose(input: InputStream): String = {
-    try {
-      val inputAsString = new String(IOUtils.toByteArray(input), StandardCharsets.UTF_8)
-      logger.info(inputAsString)
-      inputAsString
-    }
-    finally {
-      input.close()
-    }
   }
 }
