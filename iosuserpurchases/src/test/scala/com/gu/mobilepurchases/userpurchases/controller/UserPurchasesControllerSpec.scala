@@ -36,13 +36,13 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
       new UserPurchasesController((_: UserPurchasesRequest) =>
         throw new IllegalStateException("Should not get this far"))(
         LambdaRequest(Some(""), Map("appId" -> "", knownGoodUserIds))
-      ) must beEqualTo(LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json")))
+      ) must beEqualTo(LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json; charset=UTF-8")))
     }
     "missing userIds" in {
       new UserPurchasesController((_: UserPurchasesRequest) =>
         throw new IllegalStateException("Should not get this far"))(
         LambdaRequest(Some(""), Map(knownAppId, "userIds" -> ""))
-      ) must beEqualTo(LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json")))
+      ) must beEqualTo(LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json; charset=UTF-8")))
     }
     "found appId and userId" in {
       val controller: UserPurchasesController = new UserPurchasesController((request: UserPurchasesRequest) => {
@@ -64,7 +64,7 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
              |"activeInterval":{"start":"2018-03-27T15:20:00.000Z","end":"2018-03-27T15:25:00.000Z"}}]}""".stripMargin
       val expectedResponse: LambdaResponse = LambdaResponse(okayCode, Some(
         expectedBody),
-        Map("Content-Type" -> "application/json"
+        Map("Content-Type" -> "application/json; charset=UTF-8"
         ))
       val response: LambdaResponse = controller(LambdaRequest(None, Map(knownGoodUserIds, knownAppId)))
       response match {
@@ -81,7 +81,7 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
     "failed on  appId and userId returns empty" in {
       new UserPurchasesController((_: UserPurchasesRequest) => UserPurchasesResponse(Set())
       )(LambdaRequest(None, Map(knownGoodUserIds, knownAppId))) must beEqualTo(
-        LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json")))
+        LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json; charset=UTF-8")))
     }
   }
   "ScalaCheck UserPurchasesController" should {
@@ -96,7 +96,7 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
           })(LambdaRequest(None, Map("userIds" -> userIds.mkString(",")) ++ maybeAppId.map(
             (appId: String) => Map("appId" -> appId)).getOrElse(Map()))) match {
             case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(emptyBody)
-            case resp                                      => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json")))
+            case resp                                      => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json; charset=UTF-8")))
           }
         }
       }.setArbitraries(emptyAppId, arbitraryUserIds)
@@ -110,7 +110,7 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
           userPurchasesControllerImpl(LambdaRequest(None, Map("appId" -> appId) ++ maybeUserIds.map(
             (userIds: Set[String]) => Map("userIds" -> userIds.mkString(","))).getOrElse(Map()))) match {
             case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(emptyBody)
-            case resp                                      => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json")))
+            case resp                                      => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json; charset=UTF-8")))
           }
         }
       }.setArbitraries(Arbitrary(genNotEmptyAsciiChars), Arbitrary(Gen.option(Gen.containerOf[Set, String](genEmptyString))))
@@ -142,7 +142,7 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
           case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(
             mapper.readTree(mapper.writeValueAsBytes(userPurchasesResponse)))
           case resp => resp must beEqualTo(
-            LambdaResponse(okayCode, Some(mapper.writeValueAsString(userPurchasesResponse)), Map("Content-Type" -> "application/json")))
+            LambdaResponse(okayCode, Some(mapper.writeValueAsString(userPurchasesResponse)), Map("Content-Type" -> "application/json; charset=UTF-8")))
         }
       }
       ).setArbitraries(arbitraryUserPurchases, arbitraryAppId, arbitraryUserIds)

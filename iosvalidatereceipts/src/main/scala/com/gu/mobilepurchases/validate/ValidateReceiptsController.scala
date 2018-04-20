@@ -37,7 +37,7 @@ case class ValidateResponse(transactions: Set[ValidatedTransaction])
 
 object ValidateReceiptsController {
   val errorHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.TEXT_PLAIN.withCharset(StandardCharsets.UTF_8).toString)
-  val successHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.APPLICATION_JSON.getMimeType)
+  val successHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.APPLICATION_JSON.toString)
   val logger: Logger = LogManager.getLogger(classOf[ValidateReceiptsController])
 }
 

@@ -1,6 +1,5 @@
 package com.gu.mobilepurchases.validate
 
-import com.gu.mobilepurchases.model.ValidatedTransaction
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.{ LambdaRequest, LambdaResponse }
 import com.gu.mobilepurchases.validate.ValidateExample.{ successExample, successValidateRequest }
@@ -18,10 +17,10 @@ class ValidateReceiptsControllerSpec extends Specification {
         Try(Set(ValidateExample.successValidatedTransaction))
       })(LambdaRequest(Some(requestString))) match {
         case LambdaResponse(200, Some(body), headers) => {
-          headers must beEqualTo(Map("Content-Type" -> "application/json"))
+          headers must beEqualTo(Map("Content-Type" -> "application/json; charset=UTF-8"))
           mapper.readTree(body) must beEqualTo(mapper.readTree(successExample.responseString))
         }
-        case fail => fail must beEqualTo(LambdaResponse(200, Some(successExample.responseString), Map("Content-Type" -> "application/json")))
+        case fail => fail must beEqualTo(LambdaResponse(200, Some(successExample.responseString), Map("Content-Type" -> "application/json; charset=UTF-8")))
       }
 
     }

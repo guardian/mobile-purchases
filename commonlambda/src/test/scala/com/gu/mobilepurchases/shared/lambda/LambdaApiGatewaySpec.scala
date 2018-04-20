@@ -35,20 +35,20 @@ class LambdaApiGatewaySpec extends Specification with ScalaCheck {
       val expectedBodyString: String = """{"test":"content"}"""
       val expectedBodyJson: JsonNode = mapper.readTree(expectedBodyString)
       new LambdaApiGatewayImpl((req: LambdaRequest) => {
-        req.queryStringParameters must beEqualTo(Map("Content-Type" -> "application/json"))
+        req.queryStringParameters must beEqualTo(Map("Content-Type" -> "application/json; charset=UTF-8"))
 
         req.maybeBody match {
           case Some(body) => mapper.readTree(body) must beEqualTo(expectedBodyJson)
           case notString  => notString must beEqualTo(Some(expectedBodyJson))
         }
-        LambdaResponse(200, Some("""{"test":"body"}"""), Map("Content-Type" -> "application/json"))
+        LambdaResponse(200, Some("""{"test":"body"}"""), Map("Content-Type" -> "application/json; charset=UTF-8"))
 
       }).execute(stringAsInputStream(
-        """{"body":"{\"test\":\"content\"}","isBase64Encoded":false,"queryStringParameters":{"Content-Type":"application/json"}}"""
+        """{"body":"{\"test\":\"content\"}","isBase64Encoded":false,"queryStringParameters":{"Content-Type":"application/json; charset=UTF-8"}}"""
       ), outputStream)
 
       mapper.readTree(outputStream.toByteArray) must beEqualTo(mapper.readTree(
-        """{"statusCode":200,"isBase64Encoded":false,"headers":{"Content-Type":"application/json"},"body":"{\"test\":\"body\"}"}"""
+        """{"statusCode":200,"isBase64Encoded":false,"headers":{"Content-Type":"application/json; charset=UTF-8"},"body":"{\"test\":\"body\"}"}"""
       ))
     }
 

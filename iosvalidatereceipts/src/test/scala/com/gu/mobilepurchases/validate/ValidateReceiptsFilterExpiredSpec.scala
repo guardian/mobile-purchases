@@ -13,6 +13,9 @@ import org.specs2.mutable.Specification
 
 object ValidateReceiptsFilterExpiredSpec {
   val expectedDate: String = "2018-03-26T12:24:23.107Z"
+  val clockBeforeExpiredDate: Clock = Clock.offset(systemUTC(), Duration.between(
+    ZonedDateTime.now(UTC), ZonedDateTime.parse(expectedDate).minusHours(2)))
+
   val sampleTransactionAtExpectedData: ValidatedTransaction = sampleValidatedTransaction.copy(purchase =
     sampleValidatedTransaction.purchase.copy(activeInterval =
       sampleValidatedTransaction.purchase.activeInterval.copy(end = expectedDate)
@@ -32,8 +35,8 @@ class ValidateReceiptsFilterExpiredSpec extends Specification with ScalaCheck {
     }
 
     "filter none expired" in {
-      new ValidateReceiptsFilterExpiredImpl(Clock.offset(systemUTC(), Duration.between(
-        ZonedDateTime.now(UTC), ZonedDateTime.parse(expectedDate).minusHours(2)))).filterExpired(Set(sampleTransactionAtExpectedData)) must beEqualTo(Set(sampleTransactionAtExpectedData))
+
+      new ValidateReceiptsFilterExpiredImpl(ValidateReceiptsFilterExpiredSpec.clockBeforeExpiredDate).filterExpired(Set(sampleTransactionAtExpectedData)) must beEqualTo(Set(sampleTransactionAtExpectedData))
     }
 
     "ScalaCheck" >> {

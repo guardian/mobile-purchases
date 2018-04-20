@@ -10,8 +10,7 @@ import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesImpl
 
 object UserPurchasesLambda {
 
-  lazy val ssmConfig: SsmConfig = new SsmConfig()
-  lazy val userPurchasesController: UserPurchasesController = Logging.logOnThrown(() => ssmConfig.identity match {
+  def userPurchasesController(ssmConfig: SsmConfig): UserPurchasesController = Logging.logOnThrown(() => ssmConfig.identity match {
     case awsIdentity: AwsIdentity => new UserPurchasesController(new UserPurchasesImpl(new UserPurchasePersistenceImpl(
       ScanamaoUserPurchasesStringsByUserIdColonAppIdImpl(
         UserPurchaseConfig(
@@ -23,5 +22,7 @@ object UserPurchasesLambda {
 
 }
 
-class UserPurchasesLambda extends AwsLambda(UserPurchasesLambda.userPurchasesController)
+class UserPurchasesLambda(ssmConfig: SsmConfig) extends AwsLambda(UserPurchasesLambda.userPurchasesController(ssmConfig)) {
+  def this() = this(new SsmConfig)
+}
 

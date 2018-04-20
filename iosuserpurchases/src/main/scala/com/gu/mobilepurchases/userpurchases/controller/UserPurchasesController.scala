@@ -10,20 +10,12 @@ import org.apache.http.entity.ContentType
 import org.apache.logging.log4j.{ LogManager, Logger }
 
 object UserPurchasesController {
-  val defaultHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.APPLICATION_JSON.getMimeType)
+  val defaultHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.APPLICATION_JSON.toString)
   val emptyPurchasesResponse: LambdaResponse = LambdaResponse(okCode, Some(mapper.writeValueAsString(UserPurchasesResponse(Set()))), defaultHeaders)
   val logger: Logger = LogManager.getLogger(classOf[UserPurchasesController])
 }
 
 class UserPurchasesController(userPurchases: UserPurchases) extends Function[LambdaRequest, LambdaResponse] {
-  def extractMaybeUserIds(userIds: String): Option[Set[String]] = {
-    val maybeEmptyUserIds: Set[String] = userIds.split(",")
-      .toSeq
-      .map((_: String).trim)
-      .filter((_: String).nonEmpty)
-      .toSet
-    if (maybeEmptyUserIds.isEmpty) None else Some(maybeEmptyUserIds)
-  }
   override def apply(lambdaRequest: LambdaRequest): LambdaResponse = {
     val parameters: Map[String, String] = lambdaRequest.queryStringParameters
     (for {
@@ -36,5 +28,14 @@ class UserPurchasesController(userPurchases: UserPurchases) extends Function[Lam
         UserPurchasesController.defaultHeaders
       ))
       .getOrElse(emptyPurchasesResponse)
+  }
+
+  def extractMaybeUserIds(userIds: String): Option[Set[String]] = {
+    val maybeEmptyUserIds: Set[String] = userIds.split(",")
+      .toSeq
+      .map((_: String).trim)
+      .filter((_: String).nonEmpty)
+      .toSet
+    if (maybeEmptyUserIds.isEmpty) None else Some(maybeEmptyUserIds)
   }
 }

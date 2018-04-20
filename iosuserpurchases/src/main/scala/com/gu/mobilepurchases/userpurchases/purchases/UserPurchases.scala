@@ -4,7 +4,7 @@ import java.time.ZonedDateTime.parse
 import java.time.{ Clock, ZonedDateTime }
 
 import com.gu.mobilepurchases.userpurchases.UserPurchase
-import com.gu.mobilepurchases.userpurchases.persistence.{ UserPurchasePersistence, UserPurchasesByUserIdAndAppId }
+import com.gu.mobilepurchases.userpurchases.persistence.UserPurchasePersistence
 import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.util.{ Failure, Success }
@@ -35,20 +35,6 @@ class UserPurchasesImpl(userPurchasePersistence: UserPurchasePersistence, clock:
           None
         }
       })
-
-    //
-    //    val purchasesForAppId: Set[UserPurchase] = userPurchasesRequest.userIds
-    //      .map(userPurchasePersistence.read(_: String, userPurchasesRequest.appId))
-    //      .map {
-    //        case Success(option) => option
-    //        case Failure(t) => {
-    //          UserPurchasesImpl.logger.warn("Unexpected error from dynamo", t)
-    //          None
-    //        }
-    //      }.flatMap((_: Option[UserPurchasesByUserIdAndAppId]).map((_: UserPurchasesByUserIdAndAppId).purchases.filter((purchase: UserPurchase) =>
-    //      parse(purchase.activeInterval.end).isAfter(zonedDateTime)
-    //    )).getOrElse(Set[UserPurchase]()))
-    //    UserPurchasesResponse(purchasesForAppId)
 
   }
 }

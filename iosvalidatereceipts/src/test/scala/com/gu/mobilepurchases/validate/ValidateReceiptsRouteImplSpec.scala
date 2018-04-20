@@ -30,6 +30,7 @@ object ValidateReceiptsRouteImplSpec {
 }
 
 class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
+
   "ValidateReceiptsRouteImpl" should {
     "follow an expected integration route" >> {
       implicit val arbitraryValidateRequest: Arbitrary[ValidateRequest] = Arbitrary(ValidateReceiptsRouteImplSpec.genValidateRequest)
@@ -70,7 +71,7 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
             }
 
           }).route(validateRequest) must beEqualTo(persistTried match {
-            case Success(_) => Success(notExpiredTransactions)
+            case Success(_) => Success(validatedTransactions)
             case failure    => failure
           })
         }

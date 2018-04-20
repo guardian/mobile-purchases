@@ -1,12 +1,16 @@
 package com.gu.mobilepurchases.validate
 
-import com.gu.mobilepurchases.apple.{ AppStore, AppStoreExample, AppStoreResponse, AppStoreSpec }
-import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
-import org.scalacheck.{ Arbitrary, Gen }
+import java.util.concurrent.ConcurrentLinkedQueue
+import com.gu.mobilepurchases.apple.{ AppStoreExample, AppStoreResponse, AppStoreSpec }
+import org.scalacheck.Arbitrary
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 
+import scala.collection.JavaConverters._
+import scala.concurrent.{ ExecutionContext, Future }
+
 class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck {
+  implicit val ec: ExecutionContext = ExecutionContext.global
   "FetchAllValidatedReceiptsImpl" should {
 
     val responseWithoutNestedReceipts: AppStoreResponse = AppStoreExample.successAsAppStoreResponse.copy(latest_receipt = None)
@@ -15,7 +19,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck {
         Set()) must beEqualTo(Set())
     }
     "Single AppStoreResponse with no nested receipts" in {
-      new FetchAppStoreResponsesImpl((receiptData: String) => {
+      new FetchAppStoreResponsesImpl((receiptData: String) => Future {
         receiptData must beEqualTo("test")
         responseWithoutNestedReceipts
 
@@ -24,30 +28,45 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck {
     "AppStoreResponse within AppStoreResponse also returned" in {
       val responseWithNestedReceipts: AppStoreResponse = responseWithoutNestedReceipts.copy(latest_receipt = Some("testInner"))
       new FetchAppStoreResponsesImpl((receiptData: String) => {
-        receiptData match {
-          case "testNested" => responseWithNestedReceipts
-          case "testInner"  => responseWithoutNestedReceipts
-          case other =>
-            Set("testNested", "testInner") must contain(other)
-            throw new IllegalStateException("Unexpected receipt data")
+        Future {
+          receiptData match {
+            case "testNested" => responseWithNestedReceipts
+            case "testInner"  => responseWithoutNestedReceipts
+            case other =>
+              Set("testNested", "testInner") must contain(other)
+              throw new IllegalStateException("Unexpected receipt data")
+          }
         }
       }).fetchAllValidatedTransactions(Set("testNested")) must beEqualTo(Set(responseWithoutNestedReceipts, responseWithNestedReceipts))
     }
 
-    "Cache receipt data" >> {
-      implicit val arbitraryAppStoreResponse: Arbitrary[AppStoreResponse] = Arbitrary(AppStoreSpec.genLeafAppStoreResponse)
-      implicit val arbitraryReceiptData: Arbitrary[Set[String]] = Arbitrary(Gen.containerOf[Set, String](genCommonAscii))
-      prop {
-        (appStoreResponse: AppStoreResponse, receiptDatas: Set[String]) =>
-          {
-            new FetchAppStoreResponsesImpl((receiptData: String) => {
-              receiptDatas must contain(receiptData)
-              appStoreResponse
-            }).fetchAllValidatedTransactions(receiptDatas) must beEqualTo(receiptDatas.headOption.map((_: String) => Set(appStoreResponse)).getOrElse(Set()))
-          }
+    "Caching works" in {
+      val responseWithNestedReceipts: AppStoreResponse = responseWithoutNestedReceipts.copy(latest_receipt = Some("test")) //circular loop!
 
-      }.setArbitraries(arbitraryAppStoreResponse, arbitraryReceiptData)
+      val responses = new ConcurrentLinkedQueue[AppStoreResponse](List(responseWithNestedReceipts).asJavaCollection)
+      new FetchAppStoreResponsesImpl((receiptData: String) => {
+        Future {
+          receiptData match {
+            case "test" => responses.poll()
+            case _      => throw new IllegalStateException("Unexpected receipt data")
+          }
+        }
+      }).fetchAllValidatedTransactions(Set("test")) must beEqualTo(Set(responseWithNestedReceipts))
     }
+    "Async works" in {
+      val arrived = new ConcurrentLinkedQueue[String]()
+      val sent = new ConcurrentLinkedQueue[String]()
+      val delay = new ConcurrentLinkedQueue[Int](List(1, 0).asJavaCollection)
+      new FetchAppStoreResponsesImpl((receiptData: String) => Future {
+        arrived.add(receiptData)
+        Thread.sleep(1000 * delay.poll())
+        sent.add(receiptData)
+        responseWithoutNestedReceipts
+
+      }).fetchAllValidatedTransactions(Set("test", "test2")) must beEqualTo(Set(responseWithoutNestedReceipts))
+      (arrived.toArray).reverse must beEqualTo(sent.toArray())
+    }
+
     "Match all receipt data" >> {
       implicit val arbitraryRootReceiptDataWithAppStoreResponsesByReceiptData: Arbitrary[(String, Map[String, AppStoreResponse])] = Arbitrary(AppStoreSpec.genAppStoreResponseTree)
 
@@ -55,7 +74,9 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck {
         (rootReceiptDataWithAppStoreResponsesByReceiptData: (String, Map[String, AppStoreResponse])) =>
           {
             new FetchAppStoreResponsesImpl((receiptData: String) =>
-              rootReceiptDataWithAppStoreResponsesByReceiptData._2(receiptData)
+              Future {
+                rootReceiptDataWithAppStoreResponsesByReceiptData._2(receiptData)
+              }
             ) fetchAllValidatedTransactions Set(rootReceiptDataWithAppStoreResponsesByReceiptData._1) must beEqualTo(
               rootReceiptDataWithAppStoreResponsesByReceiptData._2.values.toSet
             )

@@ -4,13 +4,12 @@ import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Paths }
 
-import com.gu.mobilepurchases.model.ValidatedTransaction
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.{ ApiGatewayLambdaRequest, ApiGatewayLambdaResponse, AwsLambda }
 import com.gu.mobilepurchases.validate._
 import org.specs2.mutable.Specification
 
-import scala.util.{ Success, Try }
+import scala.util.Success
 
 class ValidateToAppleSpec extends Specification {
   "ValidateReceiptLambdaMockedApple" should {
