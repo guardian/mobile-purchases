@@ -4,6 +4,7 @@ import com.gu.conf.{ ConfigurationLoader, SSMConfigurationLocation }
 import com.gu.mobilepurchases.shared.external.Logging
 import com.gu.{ AppIdentity, AwsIdentity }
 import com.typesafe.config.Config
+import org.apache.logging.log4j.LogManager
 
 case class SsmConfig(
     app: String,
@@ -14,6 +15,7 @@ case class SsmConfig(
 }
 
 object SsmConfigLoader {
+  val logger = LogManager.getLogger(SsmConfigLoader)
   val locationFunction: PartialFunction[AppIdentity, SSMConfigurationLocation] = {
     case identity: AwsIdentity => SSMConfigurationLocation(s"/${identity.app}/${identity.stage}/${identity.stack}")
   }
@@ -25,7 +27,11 @@ object SsmConfigLoader {
     }, "Error reading config from ssm")
     identity match {
       case awsIdentity: AwsIdentity => SsmConfig(awsIdentity.app, awsIdentity.stack, awsIdentity.stage, config)
-      case _                        => SsmConfig("", "", "", config)
+      case _ => {
+        val notAnAppMessage: String = "Not running an app"
+        logger.error(notAnAppMessage)
+        throw new IllegalStateException(notAnAppMessage)
+      }
     }
 
   }
