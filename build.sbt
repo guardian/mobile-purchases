@@ -70,7 +70,8 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = List(
     "org.specs2" %% "specs2-core" % "4.0.3" % "test",
     "org.specs2" %% "specs2-scalacheck" % "4.0.3" % "test",
     "org.specs2" %% "specs2-mock" % "4.0.3" % "test",
-    "com.gu" %% "scanamo" % "1.0.0-M6"
+    "com.gu" %% "scanamo" % "1.0.0-M6",
+    "com.squareup.okhttp3" % "okhttp" % "3.10.0"
 
   ),
   name := s"mobile-purchases-$module",

@@ -1,14 +1,18 @@
 package com.gu.mobilepurchases.apple
 
-import java.io.InputStream
+import java.io.IOException
+import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicLong
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
+import com.gu.mobilepurchases.shared.external.{ Base64Utils, GlobalOkHttpClient }
 import com.typesafe.config.Config
-import org.apache.http.client.methods.{ CloseableHttpResponse, HttpPost }
-import org.apache.http.entity.ByteArrayEntity
-import org.apache.http.impl.client.{ CloseableHttpClient, HttpClients }
+import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody }
 import org.apache.logging.log4j.{ LogManager, Logger }
+
+import scala.concurrent.{ Future, Promise }
+import scala.util.{ Failure, Success, Try }
 
 object AutoRenewableSubsStatusCodes {
 
@@ -90,6 +94,7 @@ case object Invalid extends AppStoreEnv("https://local.invalid")
 
 object AppStoreConfig {
   val logger: Logger = LogManager.getLogger(classOf[AppStoreConfig])
+  val messageDigest = MessageDigest.getInstance("SHA-256")
 
   def apply(config: Config, stage: String): AppStoreConfig = {
     val appStoreEnv: AppStoreEnv = stage match {
@@ -109,31 +114,39 @@ case class AppStoreConfig(password: String, appStoreEnv: AppStoreEnv) {
 }
 
 trait AppStore {
-  def send(receiptData: String): AppStoreResponse
+  def send(receiptData: String): Future[AppStoreResponse]
 }
 
 object AppStoreImpl {
   val logger: Logger = LogManager.getLogger(classOf[AppStoreImpl])
 }
 
-class AppStoreImpl(appStoreConfig: AppStoreConfig, client: CloseableHttpClient = HttpClients.createDefault()) extends AppStore {
-  def send(receiptData: String): AppStoreResponse = {
+class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient) extends AppStore {
+  val counter = new AtomicLong(0)
+
+  def send(receiptData: String): Future[AppStoreResponse] = {
     val request: AppStoreRequest = AppStoreRequest(appStoreConfig.password, receiptData)
-    val bytes: Array[Byte] = mapper.writeValueAsBytes(request)
-    val post: HttpPost = new HttpPost(appStoreConfig.appStoreEnv.url)
-    val entity: ByteArrayEntity = new ByteArrayEntity(bytes)
-    post.setEntity(entity)
-    val response: CloseableHttpResponse = client.execute(post)
-    try {
-      val content: InputStream = response.getEntity.getContent
-      try {
-        mapper.readValue[AppStoreResponse](content)
-      } finally {
-        content.close()
+    val hash = new String(Base64Utils.encoder.encode(AppStoreConfig.messageDigest.digest(Base64Utils.decoder.decode(receiptData))))
+    val count: Long = counter.incrementAndGet()
+    AppStoreImpl.logger.info(s"Sending request ${count}: ${hash}")
+    val promise = Promise[AppStoreResponse]
+    client.newCall(new Request.Builder().url(appStoreConfig.appStoreEnv.url).post(RequestBody.create(
+      GlobalOkHttpClient.applicationJsonMediaType,
+      mapper.writeValueAsBytes(request))).build()
+    ).enqueue(new Callback {
+      override def onFailure(call: Call, e: IOException): Unit = promise.failure(e)
+
+      override def onResponse(call: Call, response: okhttp3.Response): Unit = {
+        AppStoreImpl.logger.info(s"Got response ${count}")
+        Try {
+          mapper.readValue[AppStoreResponse](response.body().bytes())
+        } match {
+          case Success(appStoreResponse: AppStoreResponse) => promise.success(appStoreResponse)
+          case Failure(throwable)                          => promise.failure(throwable)
+        }
       }
-    } finally {
-      response.close()
-    }
+    })
+    promise.future
   }
 
 }

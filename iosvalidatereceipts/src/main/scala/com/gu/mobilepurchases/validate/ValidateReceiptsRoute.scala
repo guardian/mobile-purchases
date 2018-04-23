@@ -17,10 +17,12 @@ class ValidateReceiptsRouteImpl(
     transactionPersistence: TransactionPersistence) extends ValidateReceiptsRoute {
   def route(validateReceiptRequest: ValidateRequest): Try[Set[ValidatedTransaction]] = {
     val allAppStoreResponses: Set[AppStoreResponse] = validateReceipts.fetchAllValidatedTransactions(validateReceiptRequest.receipts)
-    val allTransactions: Set[ValidatedTransaction] = allAppStoreResponses.flatMap(validateReceiptsTransformAppStoreResponse.transformAppStoreResponse)
+    val allTransactions: Set[ValidatedTransaction] = allAppStoreResponses.flatMap(
+      validateReceiptsTransformAppStoreResponse.transformAppStoreResponse
+    )
     val filteredTransactions: Set[ValidatedTransaction] = validateReceiptsFilterExpired.filterExpired(allTransactions)
     val triedToPersist: Try[_] = persist(validateReceiptRequest, filteredTransactions)
-    triedToPersist.map((_: Any) => filteredTransactions)
+    triedToPersist.map((_: Any) => allTransactions)
   }
 
   private def persist(validateReceiptRequest: ValidateRequest, filteredTransactions: Set[ValidatedTransaction]): Try[_] = {

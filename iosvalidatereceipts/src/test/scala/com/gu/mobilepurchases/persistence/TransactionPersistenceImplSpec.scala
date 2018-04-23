@@ -4,7 +4,6 @@ import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransaction
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
 import com.gu.mobilepurchases.userpurchases.persistence.{ UserPurchasePersistence, UserPurchasesByUserIdAndAppId }
 import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
-import com.gu.mobilepurchases.validate._
 import org.scalacheck.{ Arbitrary, Gen }
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
