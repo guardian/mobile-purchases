@@ -53,6 +53,7 @@ Resources:
                 - logs:CreateLogGroup
                 - logs:CreateLogStream
                 - logs:PutLogEvents
+                - cloudwatch:putMetricData
               Resource: "*"
         - PolicyName: config
           PolicyDocument:
