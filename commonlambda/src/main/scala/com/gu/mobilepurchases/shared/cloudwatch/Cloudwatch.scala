@@ -20,10 +20,10 @@ trait CloudWatch {
 
 sealed class Timer(metricName: String, cloudWatch: CloudWatch, start: Instant = Instant.now()) {
   def succeed = {
-    cloudWatch.queueMetric(s"$metricName-success", Duration.between(Instant.now(), start).toMillis, StandardUnit.Milliseconds)
+    cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds)
   }
 
-  def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(Instant.now(), start).toMillis, StandardUnit.Milliseconds)
+  def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds)
 
 }
 
@@ -55,6 +55,6 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatch) ex
 
   def startTimer(metricName: String): Timer = new Timer(metricName, this)
 
-  def meterHttpStatusResponses(metricPrefix: String, code: Int): Unit = queueMetric(s"$metricPrefix-${code % 100}xx", 1)
+  def meterHttpStatusResponses(metricPrefix: String, code: Int): Unit = queueMetric(s"$metricPrefix-${code / 100}xx", 1)
 
 }
