@@ -49,8 +49,9 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
   val awsVersion: String = "1.11.315"
   val specsVersion: String = "4.0.3"
-  val log4j2Version: String = "2.11.0"
+  val log4j2Version: String = "2.10.0"
   val jacksonVersion: String = "2.9.5"
+  val byteBuddyVersion = "1.8.8"
   List(
     conflictManager := ConflictManager.strict,
     scalariformPreferences := scalariformPreferences.value
@@ -65,9 +66,8 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
       "com.amazonaws" % "aws-lambda-java-log4j2" % "1.1.0",
       "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
-
+      "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-
       "com.gu" %% "scanamo" % "1.0.0-M6",
       "com.gu" %% "simple-configuration-ssm" % "1.4.3",
       "org.specs2" %% "specs2-core" % specsVersion % "test",
@@ -91,9 +91,10 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
       "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
       "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
       "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
-      "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
+      "org.slf4j" % "slf4j-api" % "1.7.25",
       "commons-logging" % "commons-logging" % "1.2",
-      "net.bytebuddy" % "byte-buddy" % "1.8.8",
+      "net.bytebuddy" % "byte-buddy" % byteBuddyVersion,
+      "net.bytebuddy" % "byte-buddy-agent" % byteBuddyVersion,
       "org.objenesis" % "objenesis" % "2.6" ,
       "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
       "org.typelevel" %% "cats-core" % "1.1.0",
