@@ -3,6 +3,7 @@ package com.gu.mobilepurchases.apple
 import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, Timer }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
@@ -126,7 +127,7 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
       }
 
       new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient, new CloudWatch {
-        override def queueMetric(metricName: String, value: Double): Boolean = true
+        override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None): Boolean = true
 
         override def sendMetricsSoFar(): Unit = ???
 
@@ -171,7 +172,7 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
           }
 
           new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient, new CloudWatch {
-            override def queueMetric(metricName: String, value: Double): Boolean = true
+            override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None): Boolean = true
 
             override def sendMetricsSoFar(): Unit = ???
 
