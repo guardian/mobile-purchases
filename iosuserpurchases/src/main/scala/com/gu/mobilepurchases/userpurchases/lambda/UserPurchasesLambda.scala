@@ -1,6 +1,7 @@
 package com.gu.mobilepurchases.userpurchases.lambda
 
 import com.gu.AwsIdentity
+import com.gu.mobilepurchases.shared.cloudwatch.CloudWatchImpl
 import com.gu.mobilepurchases.shared.config.SsmConfig
 import com.gu.mobilepurchases.shared.external.Logging
 import com.gu.mobilepurchases.shared.lambda.AwsLambda
@@ -22,7 +23,7 @@ object UserPurchasesLambda {
 
 }
 
-class UserPurchasesLambda(ssmConfig: SsmConfig) extends AwsLambda(UserPurchasesLambda.userPurchasesController(ssmConfig)) {
+class UserPurchasesLambda(ssmConfig: SsmConfig) extends AwsLambda(UserPurchasesLambda.userPurchasesController(ssmConfig), cloudWatch = new CloudWatchImpl(ssmConfig.stage)) {
   def this() = this(new SsmConfig)
 }
 

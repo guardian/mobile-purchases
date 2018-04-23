@@ -1,14 +1,16 @@
 package com.gu.mobilepurchases.lambda
 
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
-import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Clock.systemUTC
 import java.time.ZoneOffset.UTC
 import java.time.{ Clock, Duration, ZonedDateTime }
 
+import com.amazonaws.SdkClientException
+import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.gu.mobilepurchases.apple.AppStoreExample
 import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
 import com.gu.mobilepurchases.persistence.TransactionPersistenceImpl
+import com.gu.mobilepurchases.shared.cloudwatch.CloudWatchImpl
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.applicationJsonMediaType
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.OkHttpClientTestUtils.testOkHttpResponse
@@ -65,7 +67,8 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       val config: Config = ConfigFactory.empty()
       val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
       val client = mock[OkHttpClient]
-      new DelegatingValidateReceiptLambda(config, validateReceiptsController, client).handleRequest(new ByteArrayInputStream(
+      val mockAmazonCloudWatch = mock[AmazonCloudWatch]
+      new DelegatingValidateReceiptLambda(config, validateReceiptsController, client, new CloudWatchImpl("", mockAmazonCloudWatch)).handleRequest(new ByteArrayInputStream(
         mapper.writeValueAsBytes(exampleRequest)), stream, null)
       val actualResponse: LambdaResponse = LambdaResponse(mapper.readValue[ApiGatewayLambdaResponse](stream.toByteArray))
       actualResponse.copy(maybeBody = None) must beEqualTo(LambdaResponse(200, None, Map("Content-Type" -> "application/json; charset=UTF-8")))
@@ -92,9 +95,10 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
         }
 
       }
+      val mockAmazonCloudWatch = mock[AmazonCloudWatch]
       new DelegatingValidateReceiptLambda(config, new ValidateReceiptsController(new ValidateReceiptsRoute {
         override def route(validateReceiptRequest: ValidateRequest): Try[Set[ValidatedTransaction]] = Failure(new IllegalStateException())
-      }), client).handleRequest(new ByteArrayInputStream(
+      }), client, new CloudWatchImpl("", mockAmazonCloudWatch)).handleRequest(new ByteArrayInputStream(
         mapper.writeValueAsBytes(exampleRequest)), stream, null)
       val actualResponse: LambdaResponse = LambdaResponse(mapper.readValue[ApiGatewayLambdaResponse](stream.toByteArray))
       val expectedResponse: LambdaResponse = LambdaResponse(200, None, Map("headerkey" -> "headerValue"))
@@ -103,7 +107,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       there was one(client).newCall(any[Request]())
     }
     "constructor" in {
-      new DelegatingValidateReceiptLambda() must throwA[IllegalStateException]
+      new DelegatingValidateReceiptLambda() must throwA[SdkClientException]
     }
   }
 

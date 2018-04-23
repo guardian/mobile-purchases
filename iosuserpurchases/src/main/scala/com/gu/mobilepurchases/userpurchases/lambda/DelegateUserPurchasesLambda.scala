@@ -1,5 +1,6 @@
 package com.gu.mobilepurchases.userpurchases.lambda
 
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
 import com.gu.mobilepurchases.shared.config.SsmConfig
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
@@ -7,7 +8,6 @@ import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodResponse
 import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegateComparator, DelegatingLambda, LambdaRequest, LambdaResponse }
 import com.gu.mobilepurchases.userpurchases.UserPurchase
 import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesResponse
-
 import com.typesafe.config.ConfigException
 import okhttp3.Request
 import org.apache.http.NameValuePair
@@ -62,5 +62,7 @@ object DelegateUserPurchasesLambda {
   }
 }
 
-class DelegateUserPurchasesLambda extends AwsLambda(DelegateUserPurchasesLambda.delegateIfConfigured(new SsmConfig))
+class DelegateUserPurchasesLambda(ssmConfig: SsmConfig) extends AwsLambda(DelegateUserPurchasesLambda.delegateIfConfigured(ssmConfig), cloudWatch = new CloudWatchImpl(ssmConfig.stage)) {
+  def this() = this(new SsmConfig)
+}
 

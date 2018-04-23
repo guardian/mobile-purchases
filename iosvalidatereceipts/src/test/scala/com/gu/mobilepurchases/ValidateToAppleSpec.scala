@@ -4,6 +4,7 @@ import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Paths }
 
+import com.gu.mobilepurchases.shared.cloudwatch.CloudWatchImpl
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.{ ApiGatewayLambdaRequest, ApiGatewayLambdaResponse, AwsLambda }
 import com.gu.mobilepurchases.validate._
@@ -19,7 +20,7 @@ class ValidateToAppleSpec extends Specification {
           validateReceiptRequest must beEqualTo(null)
           Success(Set())
         }
-      )) {}
+      ), cloudWatch = new CloudWatchImpl("")) {}
       val byteArrayOutputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
       lambda.handleRequest(
         new ByteArrayInputStream(mapper.writeValueAsBytes(

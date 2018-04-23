@@ -2,11 +2,11 @@ package com.gu.mobilepurchases.apple
 
 import java.io.IOException
 import java.security.MessageDigest
-import java.util.concurrent.atomic.AtomicLong
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, Timer }
+import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
-import com.gu.mobilepurchases.shared.external.{ Base64Utils, GlobalOkHttpClient }
 import com.typesafe.config.Config
 import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody }
 import org.apache.logging.log4j.{ LogManager, Logger }
@@ -121,28 +121,38 @@ object AppStoreImpl {
   val logger: Logger = LogManager.getLogger(classOf[AppStoreImpl])
 }
 
-class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient) extends AppStore {
-  val counter = new AtomicLong(0)
+class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWatch: CloudWatch) extends AppStore {
 
   def send(receiptData: String): Future[AppStoreResponse] = {
+
     val request: AppStoreRequest = AppStoreRequest(appStoreConfig.password, receiptData)
-    val hash = new String(Base64Utils.encoder.encode(AppStoreConfig.messageDigest.digest(Base64Utils.decoder.decode(receiptData))))
-    val count: Long = counter.incrementAndGet()
-    AppStoreImpl.logger.info(s"Sending request ${count}: ${hash}")
     val promise = Promise[AppStoreResponse]
+    val timer: Timer = cloudWatch.startTimer("appstore-timer")
     client.newCall(new Request.Builder().url(appStoreConfig.appStoreEnv.url).post(RequestBody.create(
       GlobalOkHttpClient.applicationJsonMediaType,
       mapper.writeValueAsBytes(request))).build()
     ).enqueue(new Callback {
-      override def onFailure(call: Call, e: IOException): Unit = promise.failure(e)
+      override def onFailure(call: Call, e: IOException): Unit = {
+        timer.fail
+        promise.failure(e)
+      }
 
       override def onResponse(call: Call, response: okhttp3.Response): Unit = {
-        AppStoreImpl.logger.info(s"Got response ${count}")
+        val code: Int = response.code()
+        cloudWatch.meterHttpStatusResponses("appstore-code", code)
         Try {
           mapper.readValue[AppStoreResponse](response.body().bytes())
         } match {
-          case Success(appStoreResponse: AppStoreResponse) => promise.success(appStoreResponse)
-          case Failure(throwable)                          => promise.failure(throwable)
+          case Success(appStoreResponse: AppStoreResponse) => {
+            timer.succeed
+            cloudWatch.queueMetric("appstore-unmarshall-success", 1)
+            promise.success(appStoreResponse)
+          }
+          case Failure(throwable) => {
+            timer.fail
+            cloudWatch.queueMetric("appstore-unmarshall-fail", 1)
+            promise.failure(throwable)
+          }
         }
       }
     })

@@ -3,6 +3,7 @@ package com.gu.mobilepurchases.apple
 import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
 
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, Timer }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
 import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, OkHttpClientTestUtils }
@@ -107,6 +108,7 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
       val mockHttpClient: OkHttpClient = mock[OkHttpClient]
       val mockCall = mock[Call]
       val captor: ArgumentCaptor[Request] = ArgumentCaptor.forClass(classOf[Request])
+
       mockHttpClient.newCall(captor.capture()) answers {
         (_: Any) match {
           case (request: Request) => {
@@ -123,7 +125,15 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
         }
       }
 
-      new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient).send("receiptData") must beEqualTo(testAppStoreResponse).await
+      new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient, new CloudWatch {
+        override def queueMetric(metricName: String, value: Double): Boolean = true
+
+        override def sendMetricsSoFar(): Unit = ???
+
+        override def startTimer(metricName: String): Timer = mock[Timer]
+
+        override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ()
+      }).send("receiptData") must beEqualTo(testAppStoreResponse).await
 
       val capturedRequest: Request = captor.getValue
       capturedRequest.url().uri() must beEqualTo(URI.create("https://local.invalid/"))
@@ -160,7 +170,15 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
 
           }
 
-          new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient).send("receiptData") must beEqualTo(expectedAppStoreResponse).await
+          new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient, new CloudWatch {
+            override def queueMetric(metricName: String, value: Double): Boolean = true
+
+            override def sendMetricsSoFar(): Unit = ???
+
+            override def startTimer(metricName: String): Timer = mock[Timer]
+
+            override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ()
+          }).send("receiptData") must beEqualTo(expectedAppStoreResponse).await
 
           val captureRequest: Request = captor.getValue
           captureRequest.url().uri() must beEqualTo(URI.create("https://local.invalid/"))

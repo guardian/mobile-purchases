@@ -3,11 +3,12 @@ package com.gu.mobilepurchases.lambda
 import java.net.URI
 
 import com.gu.mobilepurchases.model.ValidatedTransaction
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
 import com.gu.mobilepurchases.shared.config.SsmConfig
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodResponse
-import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegateComparator, DelegatingLambda, LambdaRequest, LambdaResponse }
+import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegatingLambda, LambdaRequest, LambdaResponse }
 import com.gu.mobilepurchases.validate.{ ValidateReceiptsController, ValidateResponse }
 import com.typesafe.config.{ Config, ConfigException }
 import okhttp3.{ OkHttpClient, Request, RequestBody }
@@ -67,11 +68,18 @@ object DelegatingValidateReceiptLambda {
 class DelegatingValidateReceiptLambda(
     config: Config,
     controller: ValidateReceiptsController,
-    client: OkHttpClient
-) extends AwsLambda(DelegatingValidateReceiptLambda.delegateIfConfigured(config, controller, client)) {
-  def this(ssmConfig: SsmConfig, client: OkHttpClient) {
-    this(ssmConfig.config, ValidateReceiptLambda.validateReceipts(ssmConfig, client), client)
-  }
+    client: OkHttpClient,
+    cloudWatch: CloudWatch
+
+) extends AwsLambda(DelegatingValidateReceiptLambda.delegateIfConfigured(config, controller, client), cloudWatch = cloudWatch) {
+  def this(ssmConfig: SsmConfig, client: OkHttpClient, cloudWatch: CloudWatch) = this(
+    ssmConfig.config,
+    ValidateReceiptLambda.validateReceipts(ssmConfig, client, cloudWatch),
+    client, cloudWatch
+
+  )
+
+  def this(ssmConfig: SsmConfig, client: OkHttpClient) = this(ssmConfig, client, new CloudWatchImpl(ssmConfig.stage))
 
   def this() {
     this(new SsmConfig, GlobalOkHttpClient.defaultHttpClient)

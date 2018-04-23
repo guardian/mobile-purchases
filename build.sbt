@@ -46,46 +46,50 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
   },
   assemblyJarName := s"${name.value}.jar"
 )
-def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = List(
-  scalariformPreferences := scalariformPreferences.value
-    .setPreference(AlignSingleLineCaseStatements, true)
-    .setPreference(DoubleIndentConstructorArguments, true)
-    .setPreference(DanglingCloseParenthesis, Preserve),
+def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
+  val awsVersion: String = "1.11.307"
+  List(
+    scalariformPreferences := scalariformPreferences.value
+      .setPreference(AlignSingleLineCaseStatements, true)
+      .setPreference(DoubleIndentConstructorArguments, true)
+      .setPreference(DanglingCloseParenthesis, Preserve),
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
-  resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
-  scalacOptions in Test ++= Seq("-Yrangepos"),
-  libraryDependencies ++= Seq(
-    "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
-    "commons-io" % "commons-io" % "2.6",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.4",
-    "com.amazonaws" % "aws-lambda-java-log4j2" % "1.1.0",
-    "com.amazonaws" % "aws-java-sdk-dynamodb" % "1.11.307",
-    "com.amazonaws" % "aws-java-sdk-ssm" % "1.11.307",
-    "com.amazonaws" % "aws-java-sdk-ec2" % "1.11.307",
-    "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.4",
-    "org.apache.logging.log4j" % "log4j-core" % "2.11.0",
-    "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
-    "com.gu" %% "simple-configuration-ssm" % "1.4.3",
-    "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.11.0",
-    "org.specs2" %% "specs2-core" % "4.0.3" % "test",
-    "org.specs2" %% "specs2-scalacheck" % "4.0.3" % "test",
-    "org.specs2" %% "specs2-mock" % "4.0.3" % "test",
-    "com.gu" %% "scanamo" % "1.0.0-M6",
-    "com.squareup.okhttp3" % "okhttp" % "3.10.0"
+    resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
+    scalacOptions in Test ++= Seq("-Yrangepos"),
+    libraryDependencies ++= Seq(
+      "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
+      "commons-io" % "commons-io" % "2.6",
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.4",
+      "com.amazonaws" % "aws-lambda-java-log4j2" % "1.1.0",
+      "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
+      "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
+      "com.amazonaws" % "aws-java-sdk-ssm" % awsVersion,
+      "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
+      "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.4",
+      "org.apache.logging.log4j" % "log4j-core" % "2.11.0",
+      "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
+      "com.gu" %% "simple-configuration-ssm" % "1.4.3",
+      "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.11.0",
+      "org.specs2" %% "specs2-core" % "4.0.3" % "test",
+      "org.specs2" %% "specs2-scalacheck" % "4.0.3" % "test",
+      "org.specs2" %% "specs2-mock" % "4.0.3" % "test",
+      "com.gu" %% "scanamo" % "1.0.0-M6",
+      "com.squareup.okhttp3" % "okhttp" % "3.10.0"
 
-  ),
-  name := s"mobile-purchases-$module",
-  organization := "com.gu",
-  description := "Validate Receipts",
-  version := "1.0",
-  scalaVersion := "2.12.5",
-  scalacOptions ++= Seq(
-    "-deprecation",
-    "-encoding", "UTF-8",
-    "-target:jvm-1.8",
-    "-Ywarn-dead-code",
-    "-Xfatal-warnings",
-    "-Ypartial-unification"
+    ),
+    name := s"mobile-purchases-$module",
+    organization := "com.gu",
+    description := "Validate Receipts",
+    version := "1.0",
+    scalaVersion := "2.12.5",
+    scalacOptions ++= Seq(
+      "-deprecation",
+      "-encoding", "UTF-8",
+      "-target:jvm-1.8",
+      "-Ywarn-dead-code",
+      "-Xfatal-warnings",
+      "-Ypartial-unification"
+    )
+
   )
-
-)
+}
