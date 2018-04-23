@@ -38,12 +38,13 @@ case class ValidateResponse(transactions: Set[ValidatedTransaction])
 object ValidateReceiptsController {
   val errorHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.TEXT_PLAIN.withCharset(StandardCharsets.UTF_8).toString)
   val successHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.APPLICATION_JSON.toString)
-  val logger: Logger = LogManager.getLogger(classOf[ValidateReceiptsController])
+
 }
 
 class ValidateReceiptsController(
     validateReceiptsRoute: ValidateReceiptsRoute
 ) extends Function[LambdaRequest, LambdaResponse] {
+  private val logger: Logger = LogManager.getLogger(classOf[ValidateReceiptsController])
   def apply(lambdaRequest: LambdaRequest): LambdaResponse =
     lambdaRequest match {
       case LambdaRequest(Some(json), _) => validate(Try(mapper.readValue[ValidateRequest](json)))
@@ -54,7 +55,7 @@ class ValidateReceiptsController(
     .map(routeValidRequest) match {
       case Success(response) => response
       case Failure(throwable) =>
-        ValidateReceiptsController.logger.warn("Error validating", throwable)
+        logger.warn("Error validating", throwable)
         LambdaResponse(badRequest, Some("Cannot read json body"), errorHeaders)
     }
 

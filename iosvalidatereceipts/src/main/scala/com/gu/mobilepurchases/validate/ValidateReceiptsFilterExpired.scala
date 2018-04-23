@@ -5,10 +5,6 @@ import java.time.{ Clock, ZonedDateTime }
 import com.gu.mobilepurchases.model.ValidatedTransaction
 import org.apache.logging.log4j.{ LogManager, Logger }
 
-object ValidateReceiptsFilterExpiredImpl {
-  val logger: Logger = LogManager.getLogger(classOf[ValidateReceiptsFilterExpiredImpl])
-}
-
 trait ValidateReceiptsFilterExpired {
   def filterExpired(unfilteredTransactions: Set[ValidatedTransaction]): Set[ValidatedTransaction]
 }

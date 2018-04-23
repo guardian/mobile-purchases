@@ -15,11 +15,9 @@ case class SsmConfig(
 }
 
 object SsmConfigLoader {
-  val logger = LogManager.getLogger(SsmConfigLoader)
   val locationFunction: PartialFunction[AppIdentity, SSMConfigurationLocation] = {
     case identity: AwsIdentity => SSMConfigurationLocation(s"/${identity.app}/${identity.stage}/${identity.stack}")
   }
-
   def apply(awsIdentitySupplier: () => AppIdentity = () => AppIdentity.whoAmI(defaultAppName = "mobile-purchases")): SsmConfig = {
     val identity: AppIdentity = Logging.logOnThrown(awsIdentitySupplier, "Error feature appidentity")
     val config: Config = Logging.logOnThrown(() => {
@@ -29,7 +27,7 @@ object SsmConfigLoader {
       case awsIdentity: AwsIdentity => SsmConfig(awsIdentity.app, awsIdentity.stack, awsIdentity.stage, config)
       case _ => {
         val notAnAppMessage: String = "Not running an app"
-        logger.error(notAnAppMessage)
+        LogManager.getLogger("SsmConfigLoader").error(notAnAppMessage)
         throw new IllegalStateException(notAnAppMessage)
       }
     }

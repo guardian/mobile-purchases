@@ -9,6 +9,7 @@ import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.typesafe.config.Config
 import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody }
+import org.apache.logging.log4j.LogManager.getLogger
 import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.concurrent.{ Future, Promise }
@@ -93,15 +94,12 @@ case object Sandbox extends AppStoreEnv("https://sandbox.itunes.apple.com/verify
 case object Invalid extends AppStoreEnv("https://local.invalid")
 
 object AppStoreConfig {
-  val logger: Logger = LogManager.getLogger(classOf[AppStoreConfig])
-  val messageDigest = MessageDigest.getInstance("SHA-256")
-
   def apply(config: Config, stage: String): AppStoreConfig = {
     val appStoreEnv: AppStoreEnv = stage match {
       case "CODE" => Sandbox
       case "PROD" => Invalid // change to production when ready
       case _ =>
-        logger.warn(s"Unexpected app store env $stage")
+        getLogger(classOf[AppStoreConfig]).warn(s"Unexpected app store env $stage")
         Invalid
     }
     AppStoreConfig.apply(config.getString("appstore.password"), appStoreEnv)
@@ -109,20 +107,13 @@ object AppStoreConfig {
 
 }
 
-case class AppStoreConfig(password: String, appStoreEnv: AppStoreEnv) {
-
-}
+case class AppStoreConfig(password: String, appStoreEnv: AppStoreEnv)
 
 trait AppStore {
   def send(receiptData: String): Future[AppStoreResponse]
 }
 
-object AppStoreImpl {
-  val logger: Logger = LogManager.getLogger(classOf[AppStoreImpl])
-}
-
 class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWatch: CloudWatch) extends AppStore {
-
   def send(receiptData: String): Future[AppStoreResponse] = {
 
     val request: AppStoreRequest = AppStoreRequest(appStoreConfig.password, receiptData)

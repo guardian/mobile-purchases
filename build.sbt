@@ -47,8 +47,12 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
   assemblyJarName := s"${name.value}.jar"
 )
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
-  val awsVersion: String = "1.11.307"
+  val awsVersion: String = "1.11.315"
+  val specsVersion: String = "4.0.3"
+  val log4j2Version: String = "2.11.0"
+  val jacksonVersion: String = "2.9.5"
   List(
+    conflictManager := ConflictManager.strict,
     scalariformPreferences := scalariformPreferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentConstructorArguments, true)
@@ -57,25 +61,47 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
     resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
     scalacOptions in Test ++= Seq("-Yrangepos"),
     libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
       "commons-io" % "commons-io" % "2.6",
-      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.4",
+      "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
       "com.amazonaws" % "aws-lambda-java-log4j2" % "1.1.0",
       "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
-      "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
-      "com.amazonaws" % "aws-java-sdk-ssm" % awsVersion,
-      "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
-      "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.9.4",
-      "org.apache.logging.log4j" % "log4j-core" % "2.11.0",
-      "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
-      "com.gu" %% "simple-configuration-ssm" % "1.4.3",
-      "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.11.0",
-      "org.specs2" %% "specs2-core" % "4.0.3" % "test",
-      "org.specs2" %% "specs2-scalacheck" % "4.0.3" % "test",
-      "org.specs2" %% "specs2-mock" % "4.0.3" % "test",
+
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
+
       "com.gu" %% "scanamo" % "1.0.0-M6",
+      "com.gu" %% "simple-configuration-ssm" % "1.4.3",
+      "org.specs2" %% "specs2-core" % specsVersion % "test",
+      "org.specs2" %% "specs2-scalacheck" % specsVersion % "test",
+      "org.specs2" %% "specs2-mock" % specsVersion % "test",
       "com.squareup.okhttp3" % "okhttp" % "3.10.0"
 
+    ),
+    dependencyOverrides ++= List(
+      "org.apache.logging.log4j" % "log4j-core" % log4j2Version,
+      "org.apache.logging.log4j" % "log4j-api" % log4j2Version,
+      "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
+      "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
+      "com.amazonaws" % "aws-java-sdk-ssm" % awsVersion,
+      "com.amazonaws" % "aws-java-sdk-core" % awsVersion,
+      "com.amazonaws" % "jmespath-java" % awsVersion,
+      "com.github.mpilquist" %% "simulacrum" % "0.12.0",
+      "commons-codec" % "commons-codec" % "1.11",
+      "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion,
+      "joda-time" % "joda-time" % "2.9.9",
+      "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
+      "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
+      "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
+      "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
+      "commons-logging" % "commons-logging" % "1.2",
+      "net.bytebuddy" % "byte-buddy" % "1.8.8",
+      "org.objenesis" % "objenesis" % "2.6" ,
+      "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
+      "org.typelevel" %% "cats-core" % "1.1.0",
+      "org.typelevel" %% "cats-free" % "1.1.0",
+      "org.typelevel" %% "cats-kernel" % "1.1.0",
+      "org.typelevel" %% "cats-macros" % "1.1.0",
+      "org.typelevel" %% "machinist" % "0.6.4",
+      "software.amazon.ion" % "ion-java" % "1.1.2"
     ),
     name := s"mobile-purchases-$module",
     organization := "com.gu",

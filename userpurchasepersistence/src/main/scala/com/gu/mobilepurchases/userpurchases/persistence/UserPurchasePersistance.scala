@@ -80,14 +80,10 @@ trait UserPurchasePersistence {
   def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]]
 }
 
-object UserPurchasePersistenceImpl {
-  val logger: Logger = LogManager.getLogger(classOf[UserPurchasePersistenceImpl])
-
-}
-
 class UserPurchasePersistenceImpl(
     scanamoClient: ScanamaoUserPurchasesStringsByUserIdColonAppId
 ) extends UserPurchasePersistence {
+  private val logger: Logger = LogManager.getLogger(classOf[UserPurchasePersistenceImpl])
 
   override def write(currentBatchUserPurchasesByUserIds: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] = {
     read(currentBatchUserPurchasesByUserIds.userId, currentBatchUserPurchasesByUserIds.appId)
@@ -109,11 +105,11 @@ class UserPurchasePersistenceImpl(
 
   override def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]] = {
     val key: String = s"$userId:$appId"
-    UserPurchasePersistenceImpl.logger.info(s"Looking for {}", key)
+    logger.info(s"Looking for {}", key)
     scanamoClient.get('userIdColonAppId -> key) match {
       case Some(Right(u)) =>
         val userPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId = UserPurchasesByUserIdAndAppId(u)
-        UserPurchasePersistenceImpl.logger.info(s"Found {}", userPurchasesByUserIdAndAppId)
+        logger.info(s"Found {}", userPurchasesByUserIdAndAppId)
         Success(Some(userPurchasesByUserIdAndAppId))
       case Some(Left(error)) => Failure(new IllegalStateException(s"$error"))
       case None              => Success(None)

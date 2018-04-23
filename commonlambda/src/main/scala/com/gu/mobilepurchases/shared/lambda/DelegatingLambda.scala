@@ -15,7 +15,6 @@ import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
 import scala.util.{ Failure, Success, Try }
 
 object DelegatingLambda {
-  val logger = LogManager.getLogger(classOf[DelegatingLambda])
   def goodResponse(delegateResponse: LambdaResponse): Boolean = {
     delegateResponse.statusCode >= 200 && delegateResponse.statusCode < 400
   }
@@ -32,7 +31,7 @@ class DelegatingLambda(
     delegateComparator: DelegateComparator,
     httpClient: OkHttpClient
 ) extends (LambdaRequest => LambdaResponse) {
-
+  private val logger = LogManager.getLogger(classOf[DelegatingLambda])
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
 
   def apply(lambdaRequest: LambdaRequest): LambdaResponse = {
@@ -44,16 +43,16 @@ class DelegatingLambda(
 
       }
       case (Failure(lambdaThrowable), Success(delegate)) => {
-        DelegatingLambda.logger.warn(s"Lambda failed for $lambdaRequest", lambdaThrowable)
+        logger.warn(s"Lambda failed for $lambdaRequest", lambdaThrowable)
         delegate
       }
       case (Success(lambda), Failure(delegateThrowable)) => {
-        DelegatingLambda.logger.warn(s"Delegate failed for $lambdaRequest", delegateThrowable)
+        logger.warn(s"Delegate failed for $lambdaRequest", delegateThrowable)
         lambda
       }
       case (Failure(lambdaThrowable), Failure(delegateThrowable)) => {
-        DelegatingLambda.logger.warn(s"Delegate Failure, but both failed for $lambdaRequest", delegateThrowable)
-        DelegatingLambda.logger.warn(s"Lambda Failure, but both failed for $lambdaRequest", lambdaThrowable)
+        logger.warn(s"Delegate Failure, but both failed for $lambdaRequest", delegateThrowable)
+        logger.warn(s"Lambda Failure, but both failed for $lambdaRequest", lambdaThrowable)
         throw delegateThrowable
       }
     }
@@ -70,7 +69,7 @@ class DelegatingLambda(
       case (key: String, _: String) => expectedLowercaseHeaders.contains(key.toLowerCase())
     })
     if (!metadataLambda.equals(metadataDelegate)) {
-      DelegatingLambda.logger.warn(s"Metadata variance for request {} lambda: {} delegate {}", lambdaRequest: Any, metadataLambda: Any, metadataDelegate: Any)
+      logger.warn(s"Metadata variance for request {} lambda: {} delegate {}", lambdaRequest: Any, metadataLambda: Any, metadataDelegate: Any)
     }
   }
 
@@ -86,7 +85,7 @@ class DelegatingLambda(
       case (None, None)                           => true
       case (_, _)                                 => false
     })) {
-      DelegatingLambda.logger.warn(s"Mismatch bodies in Request $lambdaRequest \n\n Lambda: $lambda \n\n Delegate $delegate")
+      logger.warn(s"Mismatch bodies in Request $lambdaRequest \n\n Lambda: $lambda \n\n Delegate $delegate")
     }
 
   }

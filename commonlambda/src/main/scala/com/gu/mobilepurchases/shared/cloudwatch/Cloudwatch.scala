@@ -9,7 +9,6 @@ import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch }
 
 trait CloudWatch {
   def queueMetric(metricName: String, value: Double): Boolean
-
   def sendMetricsSoFar(): Unit
   def startTimer(metricName: String): Timer
   def meterHttpStatusResponses(metricName: String, code: Int): Unit

@@ -13,12 +13,9 @@ trait FetchAppStoreResponses {
   def fetchAllValidatedTransactions(remainingReceipts: Set[String]): Set[AppStoreResponse]
 }
 
-object FetchAppStoreResponsesImpl {
-  val logger: Logger = LogManager.getLogger(classOf[FetchAppStoreResponsesImpl])
-}
-
 class FetchAppStoreResponsesImpl(
     appStore: AppStore) extends FetchAppStoreResponses {
+  private val logger: Logger = LogManager.getLogger(classOf[FetchAppStoreResponsesImpl])
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
 
   def fetchAllValidatedTransactions(remainingReceipts: Set[String]): Set[AppStoreResponse] = {
@@ -35,9 +32,9 @@ class FetchAppStoreResponsesImpl(
     processedReceipts: Set[String],
     existingAppStoreResponses: Set[AppStoreResponse]): Future[Set[AppStoreResponse]] = {
     val unprocessedReceipts: Set[String] = remainingReceipts.filterNot((receiptData: String) => processedReceipts.contains(receiptData))
-    FetchAppStoreResponsesImpl.logger.info(s"Unprocessed number ${unprocessedReceipts.size}")
+    logger.info(s"Unprocessed number ${unprocessedReceipts.size}")
     if (unprocessedReceipts.isEmpty) {
-      FetchAppStoreResponsesImpl.logger.info("Finished processing app store requests")
+      logger.info("Finished processing app store requests")
       Future(existingAppStoreResponses)
     } else {
       val eventualResponses: Set[Future[AppStoreResponse]] = unprocessedReceipts.map((receipt: String) => futureAppStoreResponse(receipt))

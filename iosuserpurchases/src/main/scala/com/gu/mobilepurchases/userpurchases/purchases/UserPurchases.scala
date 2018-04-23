@@ -17,11 +17,8 @@ trait UserPurchases {
   def findPurchases(userPurchasesRequest: UserPurchasesRequest): UserPurchasesResponse
 }
 
-object UserPurchasesImpl {
-  val logger: Logger = LogManager.getLogger(classOf[UserPurchasesImpl])
-}
-
 class UserPurchasesImpl(userPurchasePersistence: UserPurchasePersistence, clock: Clock = Clock.systemUTC()) extends UserPurchases {
+  val logger: Logger = LogManager.getLogger(classOf[UserPurchasesImpl])
   override def findPurchases(userPurchasesRequest: UserPurchasesRequest): UserPurchasesResponse = {
     val zonedDateTime: ZonedDateTime = ZonedDateTime.now(clock)
     UserPurchasesResponse(userPurchasesRequest.userIds
@@ -31,7 +28,7 @@ class UserPurchasesImpl(userPurchasePersistence: UserPurchasePersistence, clock:
           parse(purchase.activeInterval.end).isAfter(zonedDateTime)
         )).getOrElse(Set())
         case Failure(t) => {
-          UserPurchasesImpl.logger.warn("Unexpected error from dynamo", t)
+          logger.warn("Unexpected error from dynamo", t)
           None
         }
       })

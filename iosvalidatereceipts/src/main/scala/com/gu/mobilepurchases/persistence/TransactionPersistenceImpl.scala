@@ -14,14 +14,9 @@ trait TransactionPersistence {
   def transformValidateRequest(validateReceiptRequest: ValidateRequest): UserIdWithAppId
 }
 
-object TransactionPersistenceImpl {
-  val logger: Logger = LogManager.getLogger(classOf[TransactionPersistenceImpl])
-}
-
 case class UserIdWithAppId(userId: String, appId: String)
 
 class TransactionPersistenceImpl(userPurchasePersistence: UserPurchasePersistence) extends TransactionPersistence {
-
   def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[_] = {
     userPurchasePersistence.write(UserPurchasesByUserIdAndAppId(userIdWithAppId.userId, userIdWithAppId.appId,
       transactions.map((transaction: ValidatedTransaction) => transformFromTransaction(transaction))))

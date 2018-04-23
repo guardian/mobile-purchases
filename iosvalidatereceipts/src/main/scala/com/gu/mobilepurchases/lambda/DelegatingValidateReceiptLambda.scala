@@ -2,6 +2,7 @@ package com.gu.mobilepurchases.lambda
 
 import java.net.URI
 
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.http.AmazonHttpClient
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
 import com.gu.mobilepurchases.lambda.ValidateReceiptLambda.validateReceiptsName
@@ -36,9 +37,9 @@ class DelegatingValidateReceiptLambdaRequestMapper(delegateValidateUrl: String) 
 }
 
 object DelegatingValidateReceiptLambda {
-  val logger: Logger = LogManager.getLogger(classOf[DelegatingValidateReceiptLambda])
 
   def delegateIfConfigured(config: Config, validateReceiptsController: ValidateReceiptsController, client: OkHttpClient): (LambdaRequest => LambdaResponse) = {
+    val logger: Logger = LogManager.getLogger(classOf[DelegatingValidateReceiptLambda])
     Try(config.getString("delegate.validatereceiptsurl")) match {
       case Success(delegateUrl) => {
         logger.info(s"Delegating to $delegateUrl")
