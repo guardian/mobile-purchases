@@ -3,6 +3,7 @@ package com.gu.mobilepurchases.apple
 import java.io.IOException
 import java.security.MessageDigest
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, Timer }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
@@ -136,12 +137,12 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWa
         } match {
           case Success(appStoreResponse: AppStoreResponse) => {
             timer.succeed
-            cloudWatch.queueMetric("appstore-unmarshall-success", 1)
+            cloudWatch.queueMetric("appstore-unmarshall-success", 1, StandardUnit.Count)
             promise.success(appStoreResponse)
           }
           case Failure(throwable) => {
             timer.fail
-            cloudWatch.queueMetric("appstore-unmarshall-fail", 1)
+            cloudWatch.queueMetric("appstore-unmarshall-fail", 1, StandardUnit.Count)
             promise.failure(throwable)
           }
         }
