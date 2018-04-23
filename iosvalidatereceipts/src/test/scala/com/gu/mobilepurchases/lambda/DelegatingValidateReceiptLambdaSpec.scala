@@ -5,7 +5,6 @@ import java.time.Clock.systemUTC
 import java.time.ZoneOffset.UTC
 import java.time.{ Clock, Duration, ZonedDateTime }
 
-import com.amazonaws.SdkClientException
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.gu.mobilepurchases.apple.AppStoreExample
 import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
@@ -68,7 +67,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
       val client = mock[OkHttpClient]
       val mockAmazonCloudWatch = mock[AmazonCloudWatch]
-      new DelegatingValidateReceiptLambda(config, validateReceiptsController, client, new CloudWatchImpl("", mockAmazonCloudWatch)).handleRequest(new ByteArrayInputStream(
+      new DelegatingValidateReceiptLambda(config, validateReceiptsController, client, new CloudWatchImpl("", "lambdaname", mockAmazonCloudWatch)).handleRequest(new ByteArrayInputStream(
         mapper.writeValueAsBytes(exampleRequest)), stream, null)
       val actualResponse: LambdaResponse = LambdaResponse(mapper.readValue[ApiGatewayLambdaResponse](stream.toByteArray))
       actualResponse.copy(maybeBody = None) must beEqualTo(LambdaResponse(200, None, Map("Content-Type" -> "application/json; charset=UTF-8")))
@@ -98,7 +97,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       val mockAmazonCloudWatch = mock[AmazonCloudWatch]
       new DelegatingValidateReceiptLambda(config, new ValidateReceiptsController(new ValidateReceiptsRoute {
         override def route(validateReceiptRequest: ValidateRequest): Try[Set[ValidatedTransaction]] = Failure(new IllegalStateException())
-      }), client, new CloudWatchImpl("", mockAmazonCloudWatch)).handleRequest(new ByteArrayInputStream(
+      }), client, new CloudWatchImpl("", "lambda-name", mockAmazonCloudWatch)).handleRequest(new ByteArrayInputStream(
         mapper.writeValueAsBytes(exampleRequest)), stream, null)
       val actualResponse: LambdaResponse = LambdaResponse(mapper.readValue[ApiGatewayLambdaResponse](stream.toByteArray))
       val expectedResponse: LambdaResponse = LambdaResponse(200, None, Map("headerkey" -> "headerValue"))
@@ -107,7 +106,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       there was one(client).newCall(any[Request]())
     }
     "constructor" in {
-      new DelegatingValidateReceiptLambda() must throwA[SdkClientException]
+      new DelegatingValidateReceiptLambda() must throwA[Exception]
     }
   }
 

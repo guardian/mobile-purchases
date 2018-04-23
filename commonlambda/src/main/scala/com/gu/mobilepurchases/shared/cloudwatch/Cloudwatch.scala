@@ -5,7 +5,7 @@ import java.util
 import java.util.concurrent.ConcurrentLinkedQueue
 
 import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataRequest, StandardUnit }
-import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch }
 
 trait CloudWatch {
   def queueMetric(metricName: String, value: Double): Boolean
@@ -21,7 +21,7 @@ sealed class Timer(metricName: String, cloudWatch: CloudWatch, start: Instant = 
   def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(Instant.now(), start).toMillis)
 
 }
-class CloudWatchImpl(stage: String, cw: AmazonCloudWatch = AmazonCloudWatchClientBuilder.defaultClient()) extends CloudWatch {
+class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatch) extends CloudWatch {
   val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
 
   def queueMetric(metricName: String, value: Double): Boolean = {
@@ -34,7 +34,10 @@ class CloudWatchImpl(stage: String, cw: AmazonCloudWatch = AmazonCloudWatchClien
   def sendMetricsSoFar(): Unit = {
     val arrayOfMetrics: util.ArrayList[MetricDatum] = new util.ArrayList[MetricDatum]()
     queue.removeAll(arrayOfMetrics)
-    cw.putMetricData(new PutMetricDataRequest().withMetricData(arrayOfMetrics))
+    cw.putMetricData(new PutMetricDataRequest()
+      .withNamespace(s"mobile-purchases/$stage/$lambdaname")
+      .withMetricData(arrayOfMetrics)
+    )
   }
   def startTimer(metricName: String): Timer = new Timer(metricName, this)
   def meterHttpStatusResponses(metricPrefix: String, code: Int): Unit = queueMetric(s"$metricPrefix-${code % 100}xx", 1)

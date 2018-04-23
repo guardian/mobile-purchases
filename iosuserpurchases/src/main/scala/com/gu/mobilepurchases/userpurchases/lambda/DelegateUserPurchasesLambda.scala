@@ -1,12 +1,16 @@
+
+
 package com.gu.mobilepurchases.userpurchases.lambda
 
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
-import com.gu.mobilepurchases.shared.config.SsmConfig
+import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodResponse
 import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegateComparator, DelegatingLambda, LambdaRequest, LambdaResponse }
 import com.gu.mobilepurchases.userpurchases.UserPurchase
+import com.gu.mobilepurchases.userpurchases.lambda.UserPurchasesLambda.userPurchasesName
 import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesResponse
 import com.typesafe.config.ConfigException
 import okhttp3.Request
@@ -28,6 +32,7 @@ class DelegateUserPurchasesLambdaRequestMapper(delegateUserPurchasesUrl: String)
 }
 
 object DelegateUserPurchasesLambda {
+
   def delegateIfConfigured(ssmConfig: SsmConfig): (LambdaRequest => LambdaResponse) = {
     val logger: Logger = LogManager.getLogger(classOf[DelegateUserPurchasesLambda])
     Try {
@@ -62,7 +67,7 @@ object DelegateUserPurchasesLambda {
   }
 }
 
-class DelegateUserPurchasesLambda(ssmConfig: SsmConfig) extends AwsLambda(DelegateUserPurchasesLambda.delegateIfConfigured(ssmConfig), cloudWatch = new CloudWatchImpl(ssmConfig.stage)) {
-  def this() = this(new SsmConfig)
+class DelegateUserPurchasesLambda(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatch) extends AwsLambda(DelegateUserPurchasesLambda.delegateIfConfigured(ssmConfig), cloudWatch = new CloudWatchImpl(ssmConfig.stage, userPurchasesName, amazonCloudWatch)) {
+  def this() = this(SsmConfigLoader(), AmazonCloudWatchClientBuilder.defaultClient())
 }
 

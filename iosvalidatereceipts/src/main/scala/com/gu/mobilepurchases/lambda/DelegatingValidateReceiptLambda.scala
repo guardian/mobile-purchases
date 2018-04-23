@@ -2,10 +2,14 @@ package com.gu.mobilepurchases.lambda
 
 import java.net.URI
 
+import com.amazonaws.http.AmazonHttpClient
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
+import com.gu.mobilepurchases.lambda.ValidateReceiptLambda.validateReceiptsName
 import com.gu.mobilepurchases.model.ValidatedTransaction
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
-import com.gu.mobilepurchases.shared.config.SsmConfig
+import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
+import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.defaultHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodResponse
 import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegatingLambda, LambdaRequest, LambdaResponse }
@@ -76,13 +80,12 @@ class DelegatingValidateReceiptLambda(
     ssmConfig.config,
     ValidateReceiptLambda.validateReceipts(ssmConfig, client, cloudWatch),
     client, cloudWatch
-
   )
 
-  def this(ssmConfig: SsmConfig, client: OkHttpClient) = this(ssmConfig, client, new CloudWatchImpl(ssmConfig.stage))
+  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatch) = this(ssmConfig, defaultHttpClient, new CloudWatchImpl(ssmConfig.stage, validateReceiptsName, amazonCloudWatch))
 
   def this() {
-    this(new SsmConfig, GlobalOkHttpClient.defaultHttpClient)
+    this(SsmConfigLoader(), AmazonCloudWatchClientBuilder.defaultClient())
   }
 
 }
