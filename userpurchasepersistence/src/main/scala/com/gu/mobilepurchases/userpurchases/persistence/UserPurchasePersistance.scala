@@ -89,12 +89,22 @@ class UserPurchasePersistenceImpl(
     scanamoClient: ScanamaoUserPurchasesStringsByUserIdColonAppId
 ) extends UserPurchasePersistence {
 
-  override def write(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] = {
-    scanamoClient.put(UserPurchasesStringsByUserIdColonAppId(userPurchasesByUserId)) match {
-      case Some(Right(u))    => Success(Some(UserPurchasesByUserIdAndAppId(u)))
-      case Some(Left(error)) => Failure(new IllegalStateException(s"$error"))
-      case None              => Success(None)
-    }
+  override def write(currentBatchUserPurchasesByUserIds: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] = {
+    read(currentBatchUserPurchasesByUserIds.userId, currentBatchUserPurchasesByUserIds.appId)
+      .map((_: Option[UserPurchasesByUserIdAndAppId])
+        .map((previousUserPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId) =>
+          currentBatchUserPurchasesByUserIds.copy(
+            purchases = currentBatchUserPurchasesByUserIds.purchases ++ previousUserPurchasesByUserIdAndAppId.purchases
+          ))
+        .getOrElse(currentBatchUserPurchasesByUserIds)
+      )
+      .flatMap((userPurchasesByUserId: UserPurchasesByUserIdAndAppId) =>
+        scanamoClient.put(UserPurchasesStringsByUserIdColonAppId(userPurchasesByUserId)) match {
+          case Some(Right(u))    => Success(Some(UserPurchasesByUserIdAndAppId(u)))
+          case Some(Left(error)) => Failure(new IllegalStateException(s"$error"))
+          case None              => Success(None)
+        }
+      )
   }
 
   override def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]] = {
