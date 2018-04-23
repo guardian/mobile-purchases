@@ -8,17 +8,20 @@ import java.util.stream.Collectors
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataRequest, StandardUnit, StatisticSet }
 
-trait CloudWatch {
+trait CloudWatchMetrics {
   def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None): Boolean
-
-  def sendMetricsSoFar(): Unit
 
   def startTimer(metricName: String): Timer
 
   def meterHttpStatusResponses(metricName: String, code: Int): Unit
 }
+trait CloudWatchPublisher {
+  def sendMetricsSoFar(): Unit
+}
 
-sealed class Timer(metricName: String, cloudWatch: CloudWatch, start: Instant = Instant.now()) {
+trait CloudWatch extends CloudWatchMetrics with CloudWatchPublisher
+
+sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Instant = Instant.now()) {
   def succeed = {
     cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds)
   }
@@ -38,19 +41,21 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatch) ex
   }
 
   def sendMetricsSoFar(): Unit = {
-    val iterator: util.Iterator[MetricDatum] = queue.iterator
-    while (iterator.hasNext()) {
+    var current = queue.poll()
+    while (current != null) {
       val arrayOfMetrics: util.ArrayList[MetricDatum] = new util.ArrayList[MetricDatum]()
       var index = 0
-      while (index < 20 && iterator.hasNext) {
-        arrayOfMetrics.add(iterator.next())
+      while (index < 20 && current != null) {
+        arrayOfMetrics.add(current)
         index = index + 1
+        current = queue.poll()
       }
       val request: PutMetricDataRequest = new PutMetricDataRequest()
         .withNamespace(s"mobile-purchases/$stage/$lambdaname")
         .withMetricData(arrayOfMetrics)
       cw.putMetricData(request)
     }
+
   }
 
   def startTimer(metricName: String): Timer = new Timer(metricName, this)

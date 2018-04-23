@@ -6,10 +6,11 @@ import java.time.ZoneOffset.UTC
 import java.time.{ Clock, Duration, ZonedDateTime }
 
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.apple.AppStoreExample
 import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
 import com.gu.mobilepurchases.persistence.TransactionPersistenceImpl
-import com.gu.mobilepurchases.shared.cloudwatch.CloudWatchImpl
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, CloudWatchImpl, Timer }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.applicationJsonMediaType
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.OkHttpClientTestUtils.testOkHttpResponse
@@ -31,6 +32,7 @@ import scala.util.{ Failure, Try }
 class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
   implicit val ec: ExecutionContext = ExecutionContext.global
   "DelegatingValidateReceiptLambda" should {
+
     val exampleRequest: ApiGatewayLambdaRequest = ApiGatewayLambdaRequest(LambdaRequest(Some(mapper.writeValueAsString(ValidateRequest(
       ValidateRequestUserIds("gnmUdid", "vendorUdid"),
       Map(),
@@ -38,6 +40,8 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       List(ValidateRequestTransaction("transactionid", "receipt", "typeField")),
       "nominatedHandler"
     )))))
+
+    val mockAmazonCloudWatch: AmazonCloudWatch = mock[AmazonCloudWatch]
     val validateReceiptsController: ValidateReceiptsController = new ValidateReceiptsController(new ValidateReceiptsRouteImpl(
       new ValidateReceiptsTransformAppStoreResponseImpl(),
       new FetchAppStoreResponsesImpl((receiptData: String) => {
@@ -45,7 +49,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
         Future {
           AppStoreExample.successAsAppStoreResponse
         }
-      }), new ValidateReceiptsFilterExpiredImpl(Clock.offset(systemUTC(), Duration.between(
+      }, new CloudWatchImpl("", "lambdaname", mockAmazonCloudWatch)), new ValidateReceiptsFilterExpiredImpl(Clock.offset(systemUTC(), Duration.between(
         ZonedDateTime.now(UTC), ZonedDateTime.parse("2012-11-06T13:24:36.000Z").minusHours(2)))), new TransactionPersistenceImpl(
         new UserPurchasePersistenceImpl(
           new ScanamaoUserPurchasesStringsByUserIdColonAppId {

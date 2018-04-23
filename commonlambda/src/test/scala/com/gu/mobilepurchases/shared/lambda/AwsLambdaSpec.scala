@@ -2,7 +2,7 @@ package com.gu.mobilepurchases.shared.lambda
 
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
 
-import com.gu.mobilepurchases.shared.cloudwatch.CloudWatch
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchMetrics, CloudWatchPublisher }
 import org.apache.logging.log4j.Logger
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification

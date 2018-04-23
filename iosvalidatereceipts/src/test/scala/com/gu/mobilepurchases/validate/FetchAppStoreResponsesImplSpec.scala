@@ -1,21 +1,31 @@
 package com.gu.mobilepurchases.validate
 
 import java.util.concurrent.ConcurrentLinkedQueue
+
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.apple.{ AppStoreExample, AppStoreResponse, AppStoreSpec }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import org.scalacheck.Arbitrary
 import org.specs2.ScalaCheck
+import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
 
-class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck {
+class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with Mockito {
   implicit val ec: ExecutionContext = ExecutionContext.global
   "FetchAllValidatedReceiptsImpl" should {
+    val ignoreCloudWatch: CloudWatchMetrics = new CloudWatchMetrics {
+      override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit): Boolean = true
 
+      override def startTimer(metricName: String): Timer = mock[Timer]
+
+      override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ()
+    }
     val responseWithoutNestedReceipts: AppStoreResponse = AppStoreExample.successAsAppStoreResponse.copy(latest_receipt = None)
     "Empty set" in {
-      new FetchAppStoreResponsesImpl((_: String) => throw new UnsupportedOperationException).fetchAllValidatedTransactions(
+      new FetchAppStoreResponsesImpl((_: String) => throw new UnsupportedOperationException, ignoreCloudWatch).fetchAllValidatedTransactions(
         Set()) must beEqualTo(Set())
     }
     "Single AppStoreResponse with no nested receipts" in {
@@ -23,7 +33,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck {
         receiptData must beEqualTo("test")
         responseWithoutNestedReceipts
 
-      }).fetchAllValidatedTransactions(Set("test")) must beEqualTo(Set(responseWithoutNestedReceipts))
+      }, ignoreCloudWatch).fetchAllValidatedTransactions(Set("test")) must beEqualTo(Set(responseWithoutNestedReceipts))
     }
     "AppStoreResponse within AppStoreResponse also returned" in {
       val responseWithNestedReceipts: AppStoreResponse = responseWithoutNestedReceipts.copy(latest_receipt = Some("testInner"))
@@ -37,7 +47,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck {
               throw new IllegalStateException("Unexpected receipt data")
           }
         }
-      }).fetchAllValidatedTransactions(Set("testNested")) must beEqualTo(Set(responseWithoutNestedReceipts, responseWithNestedReceipts))
+      }, ignoreCloudWatch).fetchAllValidatedTransactions(Set("testNested")) must beEqualTo(Set(responseWithoutNestedReceipts, responseWithNestedReceipts))
     }
 
     "Caching works" in {
@@ -51,7 +61,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck {
             case _      => throw new IllegalStateException("Unexpected receipt data")
           }
         }
-      }).fetchAllValidatedTransactions(Set("test")) must beEqualTo(Set(responseWithNestedReceipts))
+      }, ignoreCloudWatch).fetchAllValidatedTransactions(Set("test")) must beEqualTo(Set(responseWithNestedReceipts))
     }
     "Async works" in {
       val arrived = new ConcurrentLinkedQueue[String]()
@@ -63,7 +73,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck {
         sent.add(receiptData)
         responseWithoutNestedReceipts
 
-      }).fetchAllValidatedTransactions(Set("test", "test2")) must beEqualTo(Set(responseWithoutNestedReceipts))
+      }, ignoreCloudWatch).fetchAllValidatedTransactions(Set("test", "test2")) must beEqualTo(Set(responseWithoutNestedReceipts))
       (arrived.toArray).reverse must beEqualTo(sent.toArray())
     }
 
@@ -76,8 +86,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck {
             new FetchAppStoreResponsesImpl((receiptData: String) =>
               Future {
                 rootReceiptDataWithAppStoreResponsesByReceiptData._2(receiptData)
-              }
-            ) fetchAllValidatedTransactions Set(rootReceiptDataWithAppStoreResponsesByReceiptData._1) must beEqualTo(
+              }, ignoreCloudWatch) fetchAllValidatedTransactions Set(rootReceiptDataWithAppStoreResponsesByReceiptData._1) must beEqualTo(
               rootReceiptDataWithAppStoreResponsesByReceiptData._2.values.toSet
             )
           }

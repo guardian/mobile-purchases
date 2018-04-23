@@ -5,7 +5,7 @@ import java.security.MessageDigest
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, Timer }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.typesafe.config.Config
@@ -114,7 +114,7 @@ trait AppStore {
   def send(receiptData: String): Future[AppStoreResponse]
 }
 
-class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWatch: CloudWatch) extends AppStore {
+class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWatch: CloudWatchMetrics) extends AppStore {
   def send(receiptData: String): Future[AppStoreResponse] = {
 
     val request: AppStoreRequest = AppStoreRequest(appStoreConfig.password, receiptData)

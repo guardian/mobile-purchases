@@ -3,7 +3,7 @@
 package com.gu.mobilepurchases.userpurchases.lambda
 
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, CloudWatchImpl }
 import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson.mapper

@@ -3,12 +3,12 @@ package com.gu.mobilepurchases.shared.lambda
 import java.io.{ InputStream, OutputStream }
 
 import com.amazonaws.services.lambda.runtime.{ Context, RequestStreamHandler }
-import com.gu.mobilepurchases.shared.cloudwatch.CloudWatch
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, CloudWatchPublisher }
 import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.util.Try
 
-abstract class AwsLambda(function: LambdaRequest => LambdaResponse, logger: Logger = LogManager.getLogger(classOf[AwsLambda]), cloudWatch: CloudWatch) extends RequestStreamHandler {
+abstract class AwsLambda(function: LambdaRequest => LambdaResponse, logger: Logger = LogManager.getLogger(classOf[AwsLambda]), cloudWatch: CloudWatchPublisher) extends RequestStreamHandler {
 
   private val lambdaApiGateway: LambdaApiGatewayImpl = new LambdaApiGatewayImpl(function)
 

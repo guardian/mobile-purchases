@@ -7,7 +7,7 @@ import com.amazonaws.http.AmazonHttpClient
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
 import com.gu.mobilepurchases.lambda.ValidateReceiptLambda.validateReceiptsName
 import com.gu.mobilepurchases.model.ValidatedTransaction
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl, CloudWatchMetrics, CloudWatchPublisher }
 import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.defaultHttpClient

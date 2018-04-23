@@ -4,7 +4,7 @@ import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, Timer }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
 import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, OkHttpClientTestUtils }
@@ -126,10 +126,8 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
         }
       }
 
-      new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient, new CloudWatch {
+      new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient, new CloudWatchMetrics {
         override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None): Boolean = true
-
-        override def sendMetricsSoFar(): Unit = ???
 
         override def startTimer(metricName: String): Timer = mock[Timer]
 
@@ -171,10 +169,8 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
 
           }
 
-          new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient, new CloudWatch {
+          new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient, new CloudWatchMetrics {
             override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None): Boolean = true
-
-            override def sendMetricsSoFar(): Unit = ???
 
             override def startTimer(metricName: String): Timer = mock[Timer]
 
