@@ -10,7 +10,7 @@ import com.gu.mobilepurchases.userpurchases.persistence.{ ScanamaoUserPurchasesS
 import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesImpl
 
 object UserPurchasesLambda {
-  val userPurchasesName: String = "user-purchases"
+  val userPurchasesName: String = "iosuserpurchases"
 
   def userPurchasesController(ssmConfig: SsmConfig): UserPurchasesController = Logging.logOnThrown(() =>
     new UserPurchasesController(new UserPurchasesImpl(new UserPurchasePersistenceImpl(

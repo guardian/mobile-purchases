@@ -24,9 +24,7 @@ trait CloudWatchPublisher {
 trait CloudWatch extends CloudWatchMetrics with CloudWatchPublisher
 
 sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Instant = Instant.now()) {
-  def succeed = {
-    cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds)
-  }
+  def succeed = cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds)
 
   def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds)
 

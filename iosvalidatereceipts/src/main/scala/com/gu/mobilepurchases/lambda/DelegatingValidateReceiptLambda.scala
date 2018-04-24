@@ -10,7 +10,7 @@ import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.defaultHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson._
 import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodStatus
-import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegateComparator, DelegatingLambda, LambdaRequest, LambdaResponse }
+import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegateComparator, DelegateLambdaConfig, DelegatingLambda, LambdaRequest, LambdaResponse }
 import com.gu.mobilepurchases.validate.{ ValidateReceiptsController, ValidateResponse }
 import com.typesafe.config.{ Config, ConfigException }
 import okhttp3.{ OkHttpClient, Request, RequestBody }
@@ -35,10 +35,11 @@ class DelegatingValidateReceiptLambdaRequestMapper(delegateValidateUrl: String) 
 
 class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends DelegateComparator {
   override def apply(lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse = {
+    val diffMetricName: String = "transactions-diff"
     (readTransactions(lambdaResponse), readTransactions(delegateResponse)) match {
       case (Some(lambdaTransactions), Some(delegateTransactions)) => {
         val difference = lambdaTransactions.transactions.size - delegateTransactions.transactions.size
-        cloudWatch.queueMetric("transactions-diff", difference)
+        cloudWatch.queueMetric(diffMetricName, difference)
         if (difference >= 0) {
           lambdaResponse
         } else {
@@ -46,11 +47,11 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
         }
       }
       case (Some(lambdaTransactions), _) => {
-        cloudWatch.queueMetric("transactions-diff", lambdaTransactions.transactions.size)
+        cloudWatch.queueMetric(diffMetricName, lambdaTransactions.transactions.size)
         lambdaResponse
       }
       case (_, Some(lambdaTransactions)) => {
-        cloudWatch.queueMetric("transactions-diff", 0 - lambdaTransactions.transactions.size)
+        cloudWatch.queueMetric(diffMetricName, 0 - lambdaTransactions.transactions.size)
         delegateResponse
       }
       case (_, _) => delegateResponse
@@ -85,7 +86,7 @@ object DelegatingValidateReceiptLambda {
           validateReceiptsController,
           new DelegatingValidateReceiptLambdaRequestMapper(delegateUrl),
           new DelegatingValidateReceiptCompators(cloudWatch),
-          httpClient = client, cloudWatch, "iosvalidatereceipts"
+          httpClient = client, cloudWatch, DelegateLambdaConfig(validateReceiptsName)
         )
       }
       case Failure(_: ConfigException.Missing) => {

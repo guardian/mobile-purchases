@@ -3,16 +3,15 @@
 package com.gu.mobilepurchases.userpurchases.lambda
 
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl, CloudWatchMetrics }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl}
 import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodStatus
-import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegateComparator, DelegatingLambda, LambdaRequest, LambdaResponse }
+import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegateComparator, DelegateLambdaConfig, DelegatingLambda, LambdaRequest, LambdaResponse }
 import com.gu.mobilepurchases.userpurchases.UserPurchase
 import com.gu.mobilepurchases.userpurchases.lambda.UserPurchasesLambda.userPurchasesName
 import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesResponse
-
 import com.typesafe.config.ConfigException
 import okhttp3.Request
 import org.apache.http.NameValuePair
@@ -90,7 +89,7 @@ object DelegateUserPurchasesLambda {
           },
           GlobalOkHttpClient.defaultHttpClient,
           cloudWatch,
-          "iosuserpurchases"
+          DelegateLambdaConfig(userPurchasesName)
         )
       }
       case Failure(_: ConfigException.Missing) => {

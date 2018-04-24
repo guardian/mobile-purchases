@@ -9,9 +9,8 @@ object GlobalOkHttpClient {
     .connectTimeout(240, TimeUnit.SECONDS)
     .readTimeout(240, TimeUnit.SECONDS)
     .writeTimeout(240, TimeUnit.SECONDS)
-    .connectionPool(new ConnectionPool(25, 5, TimeUnit.MINUTES))
+    .connectionPool(new ConnectionPool(30, 30, TimeUnit.MINUTES))
     .build()
   private val applicationJsonContentType: String = "application/json; charset=utf-8"
   val applicationJsonMediaType: MediaType = MediaType.parse(applicationJsonContentType)
-
 }

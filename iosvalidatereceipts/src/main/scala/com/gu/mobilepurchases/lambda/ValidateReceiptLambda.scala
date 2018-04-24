@@ -12,7 +12,7 @@ import com.gu.mobilepurchases.validate._
 import okhttp3.OkHttpClient
 
 object ValidateReceiptLambda {
-  val validateReceiptsName: String = "validate-receipts"
+  val validateReceiptsName: String = "iosvalidatereceipts"
   def validateReceipts(ssmConfig: SsmConfig, client: OkHttpClient, cloudWatch: CloudWatchMetrics): ValidateReceiptsController = Logging.logOnThrown(
     () => new ValidateReceiptsController(
       new ValidateReceiptsRouteImpl(
