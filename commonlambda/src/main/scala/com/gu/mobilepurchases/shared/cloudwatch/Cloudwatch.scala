@@ -3,10 +3,11 @@ package com.gu.mobilepurchases.shared.cloudwatch
 import java.time.{ Duration, Instant }
 import java.util
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.stream.Collectors
 
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
-import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataRequest, StandardUnit, StatisticSet }
+import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataRequest, StandardUnit }
+
+import scala.annotation.tailrec
 
 trait CloudWatchMetrics {
   def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None): Boolean
@@ -15,6 +16,7 @@ trait CloudWatchMetrics {
 
   def meterHttpStatusResponses(metricName: String, code: Int): Unit
 }
+
 trait CloudWatchPublisher {
   def sendMetricsSoFar(): Unit
 }
@@ -40,22 +42,33 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatch) ex
       .withValue(value))
   }
 
-  def sendMetricsSoFar(): Unit = {
-    var current = queue.poll()
-    while (current != null) {
-      val arrayOfMetrics: util.ArrayList[MetricDatum] = new util.ArrayList[MetricDatum]()
-      var index = 0
-      while (index < 20 && current != null) {
-        arrayOfMetrics.add(current)
-        index = index + 1
-        current = queue.poll()
-      }
+  def sendABatch(bufferOfMetrics: util.ArrayList[MetricDatum]): Unit = {
+    if (!bufferOfMetrics.isEmpty) {
       val request: PutMetricDataRequest = new PutMetricDataRequest()
         .withNamespace(s"mobile-purchases/$stage/$lambdaname")
-        .withMetricData(arrayOfMetrics)
+        .withMetricData(bufferOfMetrics)
       cw.putMetricData(request)
     }
+  }
 
+  @tailrec
+  final def sendMetricsSoFar(queue: ConcurrentLinkedQueue[MetricDatum], bufferOfMetrics: util.ArrayList[MetricDatum]): Unit = {
+    val current: MetricDatum = queue.poll()
+    if (current == null) {
+      sendABatch(bufferOfMetrics)
+    } else {
+      bufferOfMetrics.add(current)
+      if (bufferOfMetrics.size() > 20) {
+        sendABatch(bufferOfMetrics)
+        sendMetricsSoFar(queue, new util.ArrayList[MetricDatum]())
+      } else {
+        sendMetricsSoFar(queue, bufferOfMetrics)
+      }
+    }
+  }
+
+  def sendMetricsSoFar(): Unit = {
+    sendMetricsSoFar(queue, new util.ArrayList[MetricDatum]())
   }
 
   def startTimer(metricName: String): Timer = new Timer(metricName, this)

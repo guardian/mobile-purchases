@@ -11,7 +11,6 @@ case class SsmConfig(
     stack: String,
     stage: String,
     config: Config) {
-
 }
 
 object SsmConfigLoader {

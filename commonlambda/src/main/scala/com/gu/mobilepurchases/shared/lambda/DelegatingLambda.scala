@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, Timer }
 import com.gu.mobilepurchases.shared.external.{ Jackson, Parallelism }
 import okhttp3.{ Call, Callback, OkHttpClient, Request }
 import org.apache.logging.log4j.LogManager
@@ -15,8 +16,8 @@ import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
 import scala.util.{ Failure, Success, Try }
 
 object DelegatingLambda {
-  def goodResponse(delegateResponse: LambdaResponse): Boolean = {
-    delegateResponse.statusCode >= 200 && delegateResponse.statusCode < 400
+  def goodStatus(statusCode: Int): Boolean = {
+    statusCode >= 200 && statusCode < 400
   }
 }
 
@@ -29,7 +30,9 @@ class DelegatingLambda(
     underTest: (LambdaRequest => LambdaResponse),
     toHttpRequest: (LambdaRequest => Request),
     delegateComparator: DelegateComparator,
-    httpClient: OkHttpClient
+    httpClient: OkHttpClient,
+    cloudWatch: CloudWatch,
+    lambdaName: String
 ) extends (LambdaRequest => LambdaResponse) {
   private val logger = LogManager.getLogger(classOf[DelegatingLambda])
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
@@ -99,12 +102,19 @@ class DelegatingLambda(
 
   private def delegateTried(lambdaRequest: LambdaRequest): Try[LambdaResponse] = Try {
     val promise = Promise[LambdaResponse]
+    val timer: Timer = cloudWatch.startTimer(s"$lambdaName-delegate")
     httpClient.newCall(toHttpRequest(lambdaRequest)).enqueue(new Callback {
       override def onFailure(call: Call, e: IOException): Unit = {
+        timer.fail
         promise.failure(e)
       }
 
       override def onResponse(call: Call, response: okhttp3.Response): Unit = {
+        if (DelegatingLambda.goodStatus(response.code())) {
+          timer.succeed
+        } else {
+          timer.fail
+        }
         promise.success(
           LambdaResponse(
             response.code(),

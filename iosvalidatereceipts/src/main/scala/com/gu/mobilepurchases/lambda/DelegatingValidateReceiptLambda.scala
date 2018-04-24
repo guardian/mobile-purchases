@@ -2,18 +2,15 @@ package com.gu.mobilepurchases.lambda
 
 import java.net.URI
 
-import com.amazonaws.ClientConfiguration
-import com.amazonaws.http.AmazonHttpClient
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
 import com.gu.mobilepurchases.lambda.ValidateReceiptLambda.validateReceiptsName
-import com.gu.mobilepurchases.model.ValidatedTransaction
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl, CloudWatchMetrics, CloudWatchPublisher }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
 import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.defaultHttpClient
-import com.gu.mobilepurchases.shared.external.Jackson.mapper
-import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodResponse
-import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegatingLambda, LambdaRequest, LambdaResponse }
+import com.gu.mobilepurchases.shared.external.Jackson._
+import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodStatus
+import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegateComparator, DelegatingLambda, LambdaRequest, LambdaResponse }
 import com.gu.mobilepurchases.validate.{ ValidateReceiptsController, ValidateResponse }
 import com.typesafe.config.{ Config, ConfigException }
 import okhttp3.{ OkHttpClient, Request, RequestBody }
@@ -36,9 +33,50 @@ class DelegatingValidateReceiptLambdaRequestMapper(delegateValidateUrl: String) 
   }
 }
 
+class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends DelegateComparator {
+  override def apply(lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse = {
+    (readTransactions(lambdaResponse), readTransactions(delegateResponse)) match {
+      case (Some(lambdaTransactions), Some(delegateTransactions)) => {
+        val difference = lambdaTransactions.transactions.size - delegateTransactions.transactions.size
+        cloudWatch.queueMetric("transactions-diff", difference)
+        if (difference >= 0) {
+          lambdaResponse
+        } else {
+          delegateResponse
+        }
+      }
+      case (Some(lambdaTransactions), _) => {
+        cloudWatch.queueMetric("transactions-diff", lambdaTransactions.transactions.size)
+        lambdaResponse
+      }
+      case (_, Some(lambdaTransactions)) => {
+        cloudWatch.queueMetric("transactions-diff", 0 - lambdaTransactions.transactions.size)
+        delegateResponse
+      }
+      case (_, _) => delegateResponse
+    }
+
+  }
+
+  def readTransactions(response: LambdaResponse): Option[ValidateResponse] = {
+    Try {
+      if (goodStatus(response.statusCode)) {
+        response.maybeBody.map(mapper.readValue[ValidateResponse])
+      } else {
+        None
+      }
+    }.toOption.flatten
+  }
+
+}
+
 object DelegatingValidateReceiptLambda {
 
-  def delegateIfConfigured(config: Config, validateReceiptsController: ValidateReceiptsController, client: OkHttpClient): (LambdaRequest => LambdaResponse) = {
+  def delegateIfConfigured(
+    config: Config,
+    validateReceiptsController: ValidateReceiptsController,
+    client: OkHttpClient,
+    cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
     val logger: Logger = LogManager.getLogger(classOf[DelegatingValidateReceiptLambda])
     Try(config.getString("delegate.validatereceiptsurl")) match {
       case Success(delegateUrl) => {
@@ -46,15 +84,8 @@ object DelegatingValidateReceiptLambda {
         new DelegatingLambda(
           validateReceiptsController,
           new DelegatingValidateReceiptLambdaRequestMapper(delegateUrl),
-          (lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse) => (goodResponse(lambdaResponse), goodResponse(delegateResponse)) match {
-            case (true, true) => lambdaResponse.maybeBody.map((lambdaBody: String) =>
-              mapper.readValue[ValidateResponse](lambdaBody).transactions.headOption.map((_: ValidatedTransaction) => lambdaResponse).getOrElse(delegateResponse)
-            ).getOrElse(delegateResponse)
-            case (true, false) => lambdaResponse
-            case _             => delegateResponse
-          },
-
-          httpClient = client
+          new DelegatingValidateReceiptCompators(cloudWatch),
+          httpClient = client, cloudWatch, "iosvalidatereceipts"
         )
       }
       case Failure(_: ConfigException.Missing) => {
@@ -76,7 +107,7 @@ class DelegatingValidateReceiptLambda(
     client: OkHttpClient,
     cloudWatch: CloudWatch
 
-) extends AwsLambda(DelegatingValidateReceiptLambda.delegateIfConfigured(config, controller, client), cloudWatch = cloudWatch) {
+) extends AwsLambda(DelegatingValidateReceiptLambda.delegateIfConfigured(config, controller, client, cloudWatch), cloudWatch = cloudWatch) {
   def this(ssmConfig: SsmConfig, client: OkHttpClient, cloudWatch: CloudWatch) = this(
     ssmConfig.config,
     ValidateReceiptLambda.validateReceipts(ssmConfig, client, cloudWatch),
