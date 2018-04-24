@@ -1,22 +1,21 @@
 package com.gu.mobilepurchases.apple
 
 import java.io.IOException
-import java.security.MessageDigest
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
-import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
+import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, Parallelism }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.typesafe.config.Config
 import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody }
 import org.apache.logging.log4j.LogManager.getLogger
-import org.apache.logging.log4j.{ LogManager, Logger }
 
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.util.{ Failure, Success, Try }
 
 object AutoRenewableSubsStatusCodes {
+  val valid: Int = 0
 
   // 21000 The App Store could not read the JSON object you provided.
   val CouldNotReadJson: Int = 21000
@@ -111,11 +110,12 @@ object AppStoreConfig {
 case class AppStoreConfig(password: String, appStoreEnv: AppStoreEnv)
 
 trait AppStore {
-  def send(receiptData: String): Future[AppStoreResponse]
+  def send(receiptData: String): Future[Option[AppStoreResponse]]
 }
 
 class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWatch: CloudWatchMetrics) extends AppStore {
-  def send(receiptData: String): Future[AppStoreResponse] = {
+  implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
+  def send(receiptData: String): Future[Option[AppStoreResponse]] = {
 
     val request: AppStoreRequest = AppStoreRequest(appStoreConfig.password, receiptData)
     val promise = Promise[AppStoreResponse]
@@ -148,7 +148,7 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWa
         }
       }
     })
-    promise.future
+    promise.future.transform((appStoreResponseAttempt: Try[AppStoreResponse]) => Success(appStoreResponseAttempt.toOption))
   }
 
 }

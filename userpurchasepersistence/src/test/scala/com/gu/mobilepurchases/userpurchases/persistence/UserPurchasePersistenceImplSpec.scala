@@ -25,22 +25,6 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
         override def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = None
       }).write(userPurchasesByUserIdAndAppId) must beEqualTo(Success(None))
     }
-    "write success merge with read " in {
-      val altPurchase: UserPurchase = purchase.copy(activeInterval = UserPurchaseInterval("altStart", "altEnd"))
-      val altUserPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId = userPurchasesByUserIdAndAppId.copy(purchases = Set(altPurchase))
-      new UserPurchasePersistenceImpl(new ScanamaoUserPurchasesStringsByUserIdColonAppId {
-        override def put(putting: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
-          putting must beEqualTo(UserPurchasesStringsByUserIdColonAppId(userPurchasesByUserIdAndAppId.copy(purchases = Set(purchase, altPurchase))))
-          None
-        }
-        override def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
-          Some(Right(UserPurchasesStringsByUserIdColonAppId(
-            altUserPurchasesByUserIdAndAppId
-          )
-          ))
-        }
-      }).write(userPurchasesByUserIdAndAppId) must beEqualTo(Success(None))
-    }
     "write fail" in {
       new UserPurchasePersistenceImpl(new ScanamaoUserPurchasesStringsByUserIdColonAppId {
         override def put(userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
@@ -51,13 +35,7 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
 
       }).write(userPurchasesByUserIdAndAppId) must beAnInstanceOf[Failure[_]]
     }
-    "write fail because of read" in {
-      new UserPurchasePersistenceImpl(new ScanamaoUserPurchasesStringsByUserIdColonAppId {
-        override def put(userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = ???
 
-        override def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = Some(Left(MissingProperty))
-      }).write(userPurchasesByUserIdAndAppId) must beAnInstanceOf[Failure[_]]
-    }
     "read success" in {
       val userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId = UserPurchasesStringsByUserIdColonAppId(userPurchasesByUserIdAndAppId)
       new UserPurchasePersistenceImpl(new ScanamaoUserPurchasesStringsByUserIdColonAppId {

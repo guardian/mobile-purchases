@@ -8,6 +8,8 @@ object AppStoreExample {
   val success: AppStoreExample = new AppStoreExample("success-prod")
 
   def successAsAppStoreResponse: AppStoreResponse = Jackson.mapper.readValue[AppStoreResponse](success.responseString)
+  def appStoreResponseExample = AppStoreResponse("", None, None, None, None, None)
+  def appStoreResponseReceiptExample = AppStoreResponseReceipt("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
 }
 
 class AppStoreExample(folderName: String) {

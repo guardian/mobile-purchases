@@ -6,8 +6,8 @@ import java.nio.charset.StandardCharsets.UTF_8
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
-import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
-import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, OkHttpClientTestUtils }
+import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.{ genCommonAscii, genReasonableEpoch }
+import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, OkHttpClientTestUtils, ScalaCheckUtils }
 import okhttp3.{ Call, Callback, OkHttpClient, Request }
 import okio.Buffer
 import org.mockito.ArgumentCaptor
@@ -22,7 +22,7 @@ object AppStoreSpec {
     original_purchase_date_pst <- genCommonAscii
     unique_identifier <- genCommonAscii
     original_transaction_id <- genCommonAscii
-    expires_date <- genCommonAscii
+    expires_date <- genReasonableEpoch.map(_.toString)
     app_item_id <- genCommonAscii
     transaction_id <- genCommonAscii
     quantity <- genCommonAscii
@@ -30,10 +30,10 @@ object AppStoreSpec {
     bvrs <- genCommonAscii
     bid <- genCommonAscii
     web_order_line_item_id <- genCommonAscii
-    original_purchase_date_ms <- genCommonAscii
+    original_purchase_date_ms <- genReasonableEpoch.map(_.toString)
     expires_date_formatted <- genCommonAscii
     purchase_date <- genCommonAscii
-    purchase_date_ms <- genCommonAscii
+    purchase_date_ms <- genReasonableEpoch.map(_.toString)
     expires_date_formatted_pst <- genCommonAscii
     purchase_date_pst <- genCommonAscii
     original_purchase_date <- genCommonAscii
@@ -60,7 +60,7 @@ object AppStoreSpec {
     item_id
   )
   val genLeafAppStoreResponse: Gen[AppStoreResponse] = for {
-    status <- genCommonAscii
+    status <- Gen.choose(0L, 100L).map(_.toString)
     receipt <- Gen.option[AppStoreResponseReceipt](genAppStoreResponseReceipt)
     latest_receipt_info <- Gen.option[AppStoreResponseReceipt](genAppStoreResponseReceipt)
     latest_expired_receipt_info <- Gen.option[AppStoreResponseReceipt](genAppStoreResponseReceipt)
@@ -132,7 +132,7 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
         override def startTimer(metricName: String): Timer = mock[Timer]
 
         override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ()
-      }).send("receiptData") must beEqualTo(testAppStoreResponse).await
+      }).send("receiptData") must beEqualTo(Some(testAppStoreResponse)).await
 
       val capturedRequest: Request = captor.getValue
       capturedRequest.url().uri() must beEqualTo(URI.create("https://local.invalid/"))
@@ -175,7 +175,7 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
             override def startTimer(metricName: String): Timer = mock[Timer]
 
             override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ()
-          }).send("receiptData") must beEqualTo(expectedAppStoreResponse).await
+          }).send("receiptData") must beEqualTo(Some(expectedAppStoreResponse)).await
 
           val captureRequest: Request = captor.getValue
           captureRequest.url().uri() must beEqualTo(URI.create("https://local.invalid/"))

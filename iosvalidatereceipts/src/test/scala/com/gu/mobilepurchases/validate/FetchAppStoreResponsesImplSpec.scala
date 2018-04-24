@@ -3,8 +3,8 @@ package com.gu.mobilepurchases.validate
 import java.util.concurrent.ConcurrentLinkedQueue
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
-import com.gu.mobilepurchases.apple.{AppStoreExample, AppStoreResponse, AppStoreSpec}
-import com.gu.mobilepurchases.shared.cloudwatch.{CloudWatchMetrics, Timer}
+import com.gu.mobilepurchases.apple.{ AppStoreExample, AppStoreResponse, AppStoreSpec }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Parallelism
 import org.scalacheck.Arbitrary
 import org.specs2.ScalaCheck
@@ -12,7 +12,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with Mockito {
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
@@ -32,7 +32,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
     "Single AppStoreResponse with no nested receipts" in {
       new FetchAppStoreResponsesImpl((receiptData: String) => Future {
         receiptData must beEqualTo("test")
-        responseWithoutNestedReceipts
+        Some(responseWithoutNestedReceipts)
 
       }, ignoreCloudWatch).fetchAllValidatedTransactions(Set("test")) must beEqualTo(Set(responseWithoutNestedReceipts))
     }
@@ -40,13 +40,13 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
       val responseWithNestedReceipts: AppStoreResponse = responseWithoutNestedReceipts.copy(latest_receipt = Some("testInner"))
       new FetchAppStoreResponsesImpl((receiptData: String) => {
         Future {
-          receiptData match {
+          Some(receiptData match {
             case "testNested" => responseWithNestedReceipts
             case "testInner"  => responseWithoutNestedReceipts
             case other =>
               Set("testNested", "testInner") must contain(other)
               throw new IllegalStateException("Unexpected receipt data")
-          }
+          })
         }
       }, ignoreCloudWatch).fetchAllValidatedTransactions(Set("testNested")) must beEqualTo(Set(responseWithoutNestedReceipts, responseWithNestedReceipts))
     }
@@ -57,10 +57,10 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
       val responses = new ConcurrentLinkedQueue[AppStoreResponse](List(responseWithNestedReceipts).asJavaCollection)
       new FetchAppStoreResponsesImpl((receiptData: String) => {
         Future {
-          receiptData match {
+          Some(receiptData match {
             case "test" => responses.poll()
             case _      => throw new IllegalStateException("Unexpected receipt data")
-          }
+          })
         }
       }, ignoreCloudWatch).fetchAllValidatedTransactions(Set("test")) must beEqualTo(Set(responseWithNestedReceipts))
     }
@@ -72,7 +72,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
         arrived.add(receiptData)
         Thread.sleep(1000 * delay.poll())
         sent.add(receiptData)
-        responseWithoutNestedReceipts
+        Some(responseWithoutNestedReceipts)
 
       }, ignoreCloudWatch).fetchAllValidatedTransactions(Set("test", "test2")) must beEqualTo(Set(responseWithoutNestedReceipts))
       (arrived.toArray).reverse must beEqualTo(sent.toArray())
@@ -86,7 +86,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
           {
             new FetchAppStoreResponsesImpl((receiptData: String) =>
               Future {
-                rootReceiptDataWithAppStoreResponsesByReceiptData._2(receiptData)
+                Some(rootReceiptDataWithAppStoreResponsesByReceiptData._2(receiptData))
               }, ignoreCloudWatch) fetchAllValidatedTransactions Set(rootReceiptDataWithAppStoreResponsesByReceiptData._1) must beEqualTo(
               rootReceiptDataWithAppStoreResponsesByReceiptData._2.values.toSet
             )

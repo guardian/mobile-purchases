@@ -45,8 +45,10 @@ class FetchAppStoreResponsesImpl(
       cloudWatch.queueMetric("fetch-all-total", existingAppStoreResponses.size)
       Future(existingAppStoreResponses)
     } else {
-      val eventualResponses: Set[Future[AppStoreResponse]] = unprocessedReceipts.map((receipt: String) => futureAppStoreResponse(receipt))
-      Future.sequence(eventualResponses).flatMap((appStoreResponses: Set[AppStoreResponse]) => {
+      val eventualMaybeAppStoreResponses: Seq[Future[Option[AppStoreResponse]]] = unprocessedReceipts.toSeq.map(futureAppStoreResponse)
+      val eventualMaybeAppStoreResponsesSeq: Future[Seq[Option[AppStoreResponse]]] = Future.sequence(eventualMaybeAppStoreResponses)
+      val eventualAppStoreResponses: Future[Set[AppStoreResponse]] = eventualMaybeAppStoreResponsesSeq.map((_: Seq[Option[AppStoreResponse]]).flatten.toSet)
+      eventualAppStoreResponses.flatMap((appStoreResponses: Set[AppStoreResponse]) => {
         fetchAppStoreResponsesFuture(
           appStoreResponses.toSeq.flatMap((_: AppStoreResponse).latest_receipt.toSeq).toSet,
           processedReceipts ++ unprocessedReceipts,
@@ -56,7 +58,7 @@ class FetchAppStoreResponsesImpl(
     }
   }
 
-  private def futureAppStoreResponse(receipt: String): Future[AppStoreResponse] = {
+  private def futureAppStoreResponse(receipt: String): Future[Option[AppStoreResponse]] = {
     appStore.send(receipt)
 
   }

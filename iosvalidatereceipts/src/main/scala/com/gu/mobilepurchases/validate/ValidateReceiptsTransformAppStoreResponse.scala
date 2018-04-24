@@ -43,7 +43,7 @@ class ValidateReceiptsTransformAppStoreResponseImpl extends ValidateReceiptsTran
     val statusAsLong: Long = appStoreResponse.status.toLong
 
     statusCodeInt match {
-      case 0 | AutoRenewableSubsStatusCodes.ReceiptValidButSubscriptionExpired => ValidatedTransaction(
+      case AutoRenewableSubsStatusCodes.valid | AutoRenewableSubsStatusCodes.ReceiptValidButSubscriptionExpired => ValidatedTransaction(
         receipt.transaction_id,
         validated = true,
         finishTransaction = true,
