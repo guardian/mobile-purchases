@@ -3,18 +3,19 @@ package com.gu.mobilepurchases.validate
 import java.util.concurrent.ConcurrentLinkedQueue
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
-import com.gu.mobilepurchases.apple.{ AppStoreExample, AppStoreResponse, AppStoreSpec }
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
+import com.gu.mobilepurchases.apple.{AppStoreExample, AppStoreResponse, AppStoreSpec}
+import com.gu.mobilepurchases.shared.cloudwatch.{CloudWatchMetrics, Timer}
+import com.gu.mobilepurchases.shared.external.Parallelism
 import org.scalacheck.Arbitrary
 import org.specs2.ScalaCheck
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with Mockito {
-  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   "FetchAllValidatedReceiptsImpl" should {
     val ignoreCloudWatch: CloudWatchMetrics = new CloudWatchMetrics {
       override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit): Boolean = true

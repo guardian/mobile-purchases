@@ -1,36 +1,37 @@
 package com.gu.mobilepurchases.lambda
 
-import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.time.Clock.systemUTC
 import java.time.ZoneOffset.UTC
-import java.time.{ Clock, Duration, ZonedDateTime }
+import java.time.{Clock, Duration, ZonedDateTime}
 
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.apple.AppStoreExample
-import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
+import com.gu.mobilepurchases.model.{ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval}
 import com.gu.mobilepurchases.persistence.TransactionPersistenceImpl
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, CloudWatchImpl, Timer }
+import com.gu.mobilepurchases.shared.cloudwatch.{CloudWatchImpl, CloudWatchMetrics, Timer}
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.applicationJsonMediaType
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.OkHttpClientTestUtils.testOkHttpResponse
-import com.gu.mobilepurchases.shared.lambda.{ ApiGatewayLambdaRequest, ApiGatewayLambdaResponse, LambdaRequest, LambdaResponse }
-import com.gu.mobilepurchases.userpurchases.persistence.{ ScanamaoUserPurchasesStringsByUserIdColonAppId, UserPurchasePersistenceImpl, UserPurchasesByUserIdAndAppId, UserPurchasesStringsByUserIdColonAppId }
-import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
-import com.gu.mobilepurchases.validate.{ FetchAppStoreResponsesImpl, ValidateReceiptsController, ValidateReceiptsFilterExpiredImpl, ValidateReceiptsRoute, ValidateReceiptsRouteImpl, ValidateReceiptsTransformAppStoreResponseImpl, ValidateRequest, ValidateRequestAppInfo, ValidateRequestTransaction, ValidateRequestUserIds, ValidateResponse }
+import com.gu.mobilepurchases.shared.external.Parallelism
+import com.gu.mobilepurchases.shared.lambda.{ApiGatewayLambdaRequest, ApiGatewayLambdaResponse, LambdaRequest, LambdaResponse}
+import com.gu.mobilepurchases.userpurchases.persistence.{ScanamaoUserPurchasesStringsByUserIdColonAppId, UserPurchasePersistenceImpl, UserPurchasesByUserIdAndAppId, UserPurchasesStringsByUserIdColonAppId}
+import com.gu.mobilepurchases.userpurchases.{UserPurchase, UserPurchaseInterval}
+import com.gu.mobilepurchases.validate.{FetchAppStoreResponsesImpl, ValidateReceiptsController, ValidateReceiptsFilterExpiredImpl, ValidateReceiptsRoute, ValidateReceiptsRouteImpl, ValidateReceiptsTransformAppStoreResponseImpl, ValidateRequest, ValidateRequestAppInfo, ValidateRequestTransaction, ValidateRequestUserIds, ValidateResponse}
 import com.gu.scanamo.error.DynamoReadError
 import com.gu.scanamo.query.UniqueKey
-import com.typesafe.config.{ Config, ConfigFactory }
-import okhttp3.{ Call, Callback, OkHttpClient, Request }
+import com.typesafe.config.{Config, ConfigFactory}
+import okhttp3.{Call, Callback, OkHttpClient, Request}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Try }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Try}
 
 class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
-  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   "DelegatingValidateReceiptLambda" should {
 
     val exampleRequest: ApiGatewayLambdaRequest = ApiGatewayLambdaRequest(LambdaRequest(Some(mapper.writeValueAsString(ValidateRequest(
