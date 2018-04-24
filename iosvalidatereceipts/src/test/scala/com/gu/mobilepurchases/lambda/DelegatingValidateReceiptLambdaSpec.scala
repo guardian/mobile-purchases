@@ -4,6 +4,7 @@ import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
 import java.time.Clock.systemUTC
 import java.time.ZoneOffset.UTC
 import java.time.{ Clock, Duration, ZonedDateTime }
+import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
 import com.gu.mobilepurchases.apple.AppStoreExample
@@ -26,7 +27,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ ExecutionContext, Future, duration }
 import scala.util.Failure
 
 class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
@@ -50,7 +51,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
           Some(AppStoreExample.successAsAppStoreResponse)
         }
       },
-      cloudWatchImpl)
+      cloudWatchImpl, duration.Duration(1, TimeUnit.MINUTES))
 
     val userPurchasePersistenceImpl: UserPurchasePersistenceImpl = new UserPurchasePersistenceImpl(
       new ScanamaoUserPurchasesStringsByUserIdColonAppId {

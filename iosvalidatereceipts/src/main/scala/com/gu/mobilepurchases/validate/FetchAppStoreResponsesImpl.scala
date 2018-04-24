@@ -15,7 +15,10 @@ trait FetchAppStoreResponses {
 }
 
 class FetchAppStoreResponsesImpl(
-    appStore: AppStore, cloudWatch: CloudWatchMetrics) extends FetchAppStoreResponses {
+    appStore: AppStore,
+    cloudWatch: CloudWatchMetrics,
+    timeout: Duration
+) extends FetchAppStoreResponses {
   private val logger: Logger = LogManager.getLogger(classOf[FetchAppStoreResponsesImpl])
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
 
@@ -32,7 +35,7 @@ class FetchAppStoreResponsesImpl(
 
     Await.result(
       futureResponse,
-      Duration(4, TimeUnit.MINUTES))
+      timeout)
   }
 
   private def fetchAppStoreResponsesFuture(
