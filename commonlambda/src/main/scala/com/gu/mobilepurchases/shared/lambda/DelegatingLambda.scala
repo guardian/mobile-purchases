@@ -69,20 +69,20 @@ class DelegatingLambda(
     }
 
   }
-  // slightly more explicit flow, that reduces await quantity to one.
+
   private def tryAndTimeoutLambdaAndDelegate(lambdaRequest: LambdaRequest): (Try[LambdaResponse], Try[LambdaResponse]) = {
     val promiseLambdaResponse: Promise[LambdaResponse] = Promise[LambdaResponse]
     val promiseDelegateResponse: Promise[LambdaResponse] = Promise[LambdaResponse]
+
     val futureLambdaResponse: Future[LambdaResponse] = promiseLambdaResponse.future
     val futureDelegateResponse: Future[LambdaResponse] = promiseDelegateResponse.future
+
     val eventualResponses: Future[Seq[LambdaResponse]] = Future.sequence(Seq(futureLambdaResponse, futureDelegateResponse))
     delegateResponseF(lambdaRequest).transform((triedDelegateResponse: Try[LambdaResponse]) => {
       promiseDelegateResponse.complete(triedDelegateResponse)
       triedDelegateResponse
     })
-    Future {
-      underTest.apply(lambdaRequest)
-    }.transform((triedLambdaResponse: Try[LambdaResponse]) => {
+    Future { underTest.apply(lambdaRequest) }.transform((triedLambdaResponse: Try[LambdaResponse]) => {
       promiseLambdaResponse.complete(triedLambdaResponse)
       triedLambdaResponse
     })

@@ -12,8 +12,8 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import scala.collection.JavaConverters._
-import scala.concurrent.duration.{ Duration, FiniteDuration }
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.duration.{ Duration, FiniteDuration }
 
 class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with Mockito {
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
@@ -32,7 +32,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
         Set()) must beEqualTo(Set())
     }
     "Single AppStoreResponse with no nested receipts" in {
-      new FetchAppStoreResponsesImpl((receiptData: String) => Future {
+      new FetchAppStoreResponsesImpl((receiptData: String) => Future.successful {
         receiptData must beEqualTo("test")
         Some(responseWithoutNestedReceipts)
 
@@ -41,7 +41,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
     "AppStoreResponse within AppStoreResponse also returned" in {
       val responseWithNestedReceipts: AppStoreResponse = responseWithoutNestedReceipts.copy(latest_receipt = Some("testInner"))
       new FetchAppStoreResponsesImpl((receiptData: String) => {
-        Future {
+        Future.successful {
           Some(receiptData match {
             case "testNested" => responseWithNestedReceipts
             case "testInner"  => responseWithoutNestedReceipts
@@ -58,7 +58,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
 
       val responses = new ConcurrentLinkedQueue[AppStoreResponse](List(responseWithNestedReceipts).asJavaCollection)
       new FetchAppStoreResponsesImpl((receiptData: String) => {
-        Future {
+        Future.successful {
           Some(receiptData match {
             case "test" => responses.poll()
             case _      => throw new IllegalStateException("Unexpected receipt data")
@@ -88,7 +88,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
           {
 
             new FetchAppStoreResponsesImpl((receiptData: String) =>
-              Future {
+              Future.successful {
                 Some(rootReceiptDataWithAppStoreResponsesByReceiptData._2(receiptData))
               }, ignoreCloudWatch, minuteDuration) fetchAllValidatedTransactions Set(rootReceiptDataWithAppStoreResponsesByReceiptData._1) must beEqualTo(
               rootReceiptDataWithAppStoreResponsesByReceiptData._2.values.toSet

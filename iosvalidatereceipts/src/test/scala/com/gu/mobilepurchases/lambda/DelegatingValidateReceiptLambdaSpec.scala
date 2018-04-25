@@ -48,7 +48,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
     val fetchAppStoreResponsesImpl: FetchAppStoreResponsesImpl = new FetchAppStoreResponsesImpl(
       (receiptData: String) => {
         Set(ValidateExample.successValidateRequestTransaction.receipt, AppStoreExample.successAsAppStoreResponse.latest_receipt.get) must contain(receiptData)
-        Future {
+        Future.successful {
           Some(AppStoreExample.successAsAppStoreResponse)
         }
       },
