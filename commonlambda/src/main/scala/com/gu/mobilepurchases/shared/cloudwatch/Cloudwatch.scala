@@ -10,7 +10,7 @@ import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataReque
 import scala.annotation.tailrec
 
 trait CloudWatchMetrics {
-  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None): Boolean
+  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit): Boolean
 
   def startTimer(metricName: String): Timer
 
@@ -33,10 +33,10 @@ sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Ins
 class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatch) extends CloudWatch {
   val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
 
-  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None): Boolean = {
+  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit): Boolean = {
     queue.add(new MetricDatum()
       .withMetricName(metricName)
-      .withUnit(StandardUnit.None)
+      .withUnit(standardUnit)
       .withValue(value))
   }
 
@@ -71,6 +71,6 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatch) ex
 
   def startTimer(metricName: String): Timer = new Timer(metricName, this)
 
-  def meterHttpStatusResponses(metricPrefix: String, code: Int): Unit = queueMetric(s"$metricPrefix-${code / 100}xx", 1)
+  def meterHttpStatusResponses(metricPrefix: String, code: Int): Unit = queueMetric(s"$metricPrefix-${code / 100}xx", 1, StandardUnit.Count)
 
 }

@@ -2,6 +2,7 @@
 
 package com.gu.mobilepurchases.userpurchases.lambda
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
 import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
@@ -37,7 +38,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
     (readPurhcases(lambdaResponse), readPurhcases(delegateResponse)) match {
       case (Some(lambdaUserPurchasesResponse), Some(delegateUserPurchasesResponse)) => {
         val difference = lambdaUserPurchasesResponse.purchases.size - delegateUserPurchasesResponse.purchases.size
-        cloudWatch.queueMetric(diffMetricName, difference)
+        cloudWatch.queueMetric(diffMetricName, difference, StandardUnit.Count)
         if (difference >= 0) {
           lambdaResponse
         } else {
@@ -45,11 +46,11 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
         }
       }
       case (Some(userPurchasesResponse), _) => {
-        cloudWatch.queueMetric(diffMetricName, userPurchasesResponse.purchases.size)
+        cloudWatch.queueMetric(diffMetricName, userPurchasesResponse.purchases.size, StandardUnit.Count)
         lambdaResponse
       }
       case (_, Some(userPurchasesResponse)) => {
-        cloudWatch.queueMetric(diffMetricName, 0 - userPurchasesResponse.purchases.size)
+        cloudWatch.queueMetric(diffMetricName, 0 - userPurchasesResponse.purchases.size, StandardUnit.Count)
         delegateResponse
       }
       case (_, _) => delegateResponse

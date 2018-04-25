@@ -2,8 +2,9 @@ package com.gu.mobilepurchases.validate
 
 import java.util.concurrent.TimeUnit
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.apple.{ AppStore, AppStoreResponse }
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, CloudWatchImpl, Timer }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchImpl, CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Parallelism
 import org.apache.logging.log4j.{ LogManager, Logger }
 
@@ -45,7 +46,7 @@ class FetchAppStoreResponsesImpl(
   ): Future[Set[AppStoreResponse]] = {
     val unprocessedReceipts: Set[String] = remainingReceipts.filterNot((receiptData: String) => processedReceipts.contains(receiptData))
     if (unprocessedReceipts.isEmpty) {
-      cloudWatch.queueMetric("fetch-all-total", existingAppStoreResponses.size)
+      cloudWatch.queueMetric("fetch-all-total", existingAppStoreResponses.size, StandardUnit.Count)
       Future(existingAppStoreResponses)
     } else {
       val eventualMaybeAppStoreResponses: Seq[Future[Option[AppStoreResponse]]] = unprocessedReceipts.toSeq.map(futureAppStoreResponse)

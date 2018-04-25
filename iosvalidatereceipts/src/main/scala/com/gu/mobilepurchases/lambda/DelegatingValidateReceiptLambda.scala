@@ -3,6 +3,7 @@ package com.gu.mobilepurchases.lambda
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.amazonaws.services.cloudwatch.{AmazonCloudWatch, AmazonCloudWatchClientBuilder}
 import com.gu.mobilepurchases.lambda.ValidateReceiptLambda.validateReceiptsName
 import com.gu.mobilepurchases.shared.cloudwatch.{CloudWatch, CloudWatchImpl}
@@ -41,7 +42,7 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
     (readTransactions(lambdaResponse), readTransactions(delegateResponse)) match {
       case (Some(lambdaTransactions), Some(delegateTransactions)) => {
         val difference = lambdaTransactions.transactions.size - delegateTransactions.transactions.size
-        cloudWatch.queueMetric(diffMetricName, difference)
+        cloudWatch.queueMetric(diffMetricName, difference, StandardUnit.Count)
         if (difference >= 0) {
           lambdaResponse
         } else {
@@ -49,11 +50,11 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
         }
       }
       case (Some(lambdaTransactions), _) => {
-        cloudWatch.queueMetric(diffMetricName, lambdaTransactions.transactions.size)
+        cloudWatch.queueMetric(diffMetricName, lambdaTransactions.transactions.size, StandardUnit.Count)
         lambdaResponse
       }
       case (_, Some(lambdaTransactions)) => {
-        cloudWatch.queueMetric(diffMetricName, 0 - lambdaTransactions.transactions.size)
+        cloudWatch.queueMetric(diffMetricName, 0 - lambdaTransactions.transactions.size, StandardUnit.Count)
         delegateResponse
       }
       case (_, _) => delegateResponse

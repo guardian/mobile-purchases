@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger
 import org.scalacheck.{ Arbitrary, Gen }
 import org.specs2.ScalaCheck
 import org.specs2.mock.Mockito
-import org.specs2.mock.mockito.CalledMatchers
 import org.specs2.mutable.Specification
 
 import scala.util.{ Failure, Success, Try }
@@ -16,7 +15,6 @@ import scala.util.{ Failure, Success, Try }
 case class AppIdWithUserPurchasesByUserId(appId: String, userPurchases: Map[String, Set[UserPurchase]])
 
 object UserPurchasesSpec {
-
   def genMatchingAppIdWithUserPurchasesByUserId: Gen[AppIdWithUserPurchasesByUserId] = for {
     productId <- genCommonAscii
     orderIdsStartsAndEnds <- Gen.mapOf[String, Set[(String, String, String)]](
@@ -111,10 +109,8 @@ class UserPurchasesSpec extends Specification with ScalaCheck with Mockito {
             }
           }, mockLogger).findPurchases(UserPurchasesRequest(appIdWithUserPurchasesByUserId.appId, userIds)) must beEqualTo(UserPurchasesResponse(Set()))
           there was exactly(appIdWithUserPurchasesByUserId.userPurchases.size)(mockLogger).warn(anyString, any[Throwable]())
-
         }
       }.setArbitrary(arbitraryAppIdWithUserPurchasesByUserId)
-
     }
   }
 }
