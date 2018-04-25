@@ -2,7 +2,9 @@ package com.gu.mobilepurchases.validate
 
 import java.util.concurrent.TimeUnit
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.apple.{ AppStore, AppStoreResponse }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchImpl, CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Parallelism
 import org.apache.logging.log4j.{ LogManager, Logger }
 
@@ -13,35 +15,44 @@ trait FetchAppStoreResponses {
   def fetchAllValidatedTransactions(remainingReceipts: Set[String]): Set[AppStoreResponse]
 }
 
-object FetchAppStoreResponsesImpl {
-  val logger: Logger = LogManager.getLogger(classOf[FetchAppStoreResponsesImpl])
-}
-
 class FetchAppStoreResponsesImpl(
-    appStore: AppStore) extends FetchAppStoreResponses {
+    appStore: AppStore,
+    cloudWatch: CloudWatchMetrics,
+    timeout: Duration
+) extends FetchAppStoreResponses {
+  private val logger: Logger = LogManager.getLogger(classOf[FetchAppStoreResponsesImpl])
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
 
-  def fetchAllValidatedTransactions(remainingReceipts: Set[String]): Set[AppStoreResponse] = {
-    val futureResponse: Future[Set[AppStoreResponse]] = Future {
-      fetchAppStoreResponsesFuture(remainingReceipts, Set(), Set())
-    }.flatten
+  def fetchAllValidatedTransactions(receipts: Set[String]): Set[AppStoreResponse] = {
+    val timer: Timer = cloudWatch.startTimer("fetch-all-timer")
+    val futureResponse: Future[Set[AppStoreResponse]] = fetchAppStoreResponsesFuture(receipts, Set(), Set()).transform(attempt => {
+      if (attempt.isSuccess) {
+        timer.succeed
+      } else {
+        timer.fail
+      }
+      attempt
+    })
+
     Await.result(
       futureResponse,
-      Duration(4, TimeUnit.MINUTES))
+      timeout)
   }
 
   private def fetchAppStoreResponsesFuture(
     remainingReceipts: Set[String],
     processedReceipts: Set[String],
-    existingAppStoreResponses: Set[AppStoreResponse]): Future[Set[AppStoreResponse]] = {
+    existingAppStoreResponses: Set[AppStoreResponse]
+  ): Future[Set[AppStoreResponse]] = {
     val unprocessedReceipts: Set[String] = remainingReceipts.filterNot((receiptData: String) => processedReceipts.contains(receiptData))
-    FetchAppStoreResponsesImpl.logger.info(s"Unprocessed number ${unprocessedReceipts.size}")
     if (unprocessedReceipts.isEmpty) {
-      FetchAppStoreResponsesImpl.logger.info("Finished processing app store requests")
+      cloudWatch.queueMetric("fetch-all-total", existingAppStoreResponses.size, StandardUnit.Count)
       Future(existingAppStoreResponses)
     } else {
-      val eventualResponses: Set[Future[AppStoreResponse]] = unprocessedReceipts.map((receipt: String) => futureAppStoreResponse(receipt))
-      Future.sequence(eventualResponses).flatMap((appStoreResponses: Set[AppStoreResponse]) => {
+      val eventualMaybeAppStoreResponses: Seq[Future[Option[AppStoreResponse]]] = unprocessedReceipts.toSeq.map(futureAppStoreResponse)
+      val eventualMaybeAppStoreResponsesSeq: Future[Seq[Option[AppStoreResponse]]] = Future.sequence(eventualMaybeAppStoreResponses)
+      val eventualAppStoreResponses: Future[Set[AppStoreResponse]] = eventualMaybeAppStoreResponsesSeq.map((_: Seq[Option[AppStoreResponse]]).flatten.toSet)
+      eventualAppStoreResponses.flatMap((appStoreResponses: Set[AppStoreResponse]) => {
         fetchAppStoreResponsesFuture(
           appStoreResponses.toSeq.flatMap((_: AppStoreResponse).latest_receipt.toSeq).toSet,
           processedReceipts ++ unprocessedReceipts,
@@ -51,7 +62,7 @@ class FetchAppStoreResponsesImpl(
     }
   }
 
-  private def futureAppStoreResponse(receipt: String): Future[AppStoreResponse] = {
+  private def futureAppStoreResponse(receipt: String): Future[Option[AppStoreResponse]] = {
     appStore.send(receipt)
 
   }

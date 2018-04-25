@@ -12,10 +12,11 @@ import org.apache.logging.log4j.{ LogManager, Logger }
 object UserPurchasesController {
   val defaultHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.APPLICATION_JSON.toString)
   val emptyPurchasesResponse: LambdaResponse = LambdaResponse(okCode, Some(mapper.writeValueAsString(UserPurchasesResponse(Set()))), defaultHeaders)
-  val logger: Logger = LogManager.getLogger(classOf[UserPurchasesController])
+
 }
 
 class UserPurchasesController(userPurchases: UserPurchases) extends Function[LambdaRequest, LambdaResponse] {
+
   override def apply(lambdaRequest: LambdaRequest): LambdaResponse = {
     val parameters: Map[String, String] = lambdaRequest.queryStringParameters
     (for {

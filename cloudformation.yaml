@@ -53,6 +53,7 @@ Resources:
                 - logs:CreateLogGroup
                 - logs:CreateLogStream
                 - logs:PutLogEvents
+                - cloudwatch:putMetricData
               Resource: "*"
         - PolicyName: config
           PolicyDocument:
@@ -71,6 +72,16 @@ Resources:
                     - "dynamodb:UpdateItem"
                     - "dynamodb:Query"
                 Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
+  LogGroupValidateReceipts:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${App}-iosvalidatereceipts-${Stage}
+      RetentionInDays: 7
+  LogGroupUserPurchases:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${App}-iosuserpurchases-${Stage}
+      RetentionInDays: 7
   MobilePuchasesApi:
     Type: AWS::Serverless::Api
     Properties:

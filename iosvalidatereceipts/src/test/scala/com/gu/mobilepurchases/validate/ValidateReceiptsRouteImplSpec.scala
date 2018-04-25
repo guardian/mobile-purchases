@@ -37,16 +37,13 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
       implicit val arbitraryTransactionsByResponses: Arbitrary[Map[AppStoreResponse, Set[ValidatedTransaction]]] = Arbitrary(
         Gen.mapOf[AppStoreResponse, Set[ValidatedTransaction]](Gen.zip(
           AppStoreSpec.genLeafAppStoreResponse, ValidatedTransactionSpec.genValidatedTransactions)))
-      implicit val arbitraryNotExpiredValidatedTransactions: Arbitrary[Set[ValidatedTransaction]] = Arbitrary(ValidatedTransactionSpec.genValidatedTransactions)
       implicit val arbitraryTryPersist: Arbitrary[Try[_]] = Arbitrary(Gen.oneOf(Success(""), Failure(new IllegalStateException())))
       prop { (
         validateRequest: ValidateRequest,
         transactionsByResponse: Map[AppStoreResponse, Set[ValidatedTransaction]],
-        notExpiredTransactions: Set[ValidatedTransaction],
         persistTried: Try[_]
       ) =>
         {
-
           val validatedTransactions: Set[ValidatedTransaction] = transactionsByResponse.values.flatten.toSet
           val appStoreResponses: Set[AppStoreResponse] = transactionsByResponse.keySet
           new ValidateReceiptsRouteImpl((appStoreResponse: AppStoreResponse) => {
@@ -55,13 +52,10 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
           }, (remainingReceipts: Set[String]) => {
             validateRequest.transactions.map((_: ValidateRequestTransaction).receipt) must containAllOf(remainingReceipts.toSeq)
             appStoreResponses
-          }, (unfilteredTransactions: Set[ValidatedTransaction]) => {
-            unfilteredTransactions must beEqualTo(validatedTransactions)
-            notExpiredTransactions
           }, new TransactionPersistence {
             override def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[_] = {
               userIdWithAppId must beEqualTo(UserIdWithAppId(validateRequest.userIds.vendorUdid, validateRequest.appInfo.id))
-              transactions must beEqualTo(notExpiredTransactions)
+              transactions must beEqualTo(validatedTransactions)
               persistTried
             }
 
@@ -78,7 +72,6 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
       }.setArbitraries(
         arbitraryValidateRequest,
         arbitraryTransactionsByResponses,
-        arbitraryNotExpiredValidatedTransactions,
         arbitraryTryPersist)
     }
 

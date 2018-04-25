@@ -4,7 +4,6 @@ import com.gu.mobilepurchases.model.ValidatedTransaction
 import com.gu.mobilepurchases.userpurchases.persistence.{ UserPurchasePersistence, UserPurchasesByUserIdAndAppId }
 import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
 import com.gu.mobilepurchases.validate.ValidateRequest
-import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.util.Try
 
@@ -14,17 +13,28 @@ trait TransactionPersistence {
   def transformValidateRequest(validateReceiptRequest: ValidateRequest): UserIdWithAppId
 }
 
-object TransactionPersistenceImpl {
-  val logger: Logger = LogManager.getLogger(classOf[TransactionPersistenceImpl])
-}
-
 case class UserIdWithAppId(userId: String, appId: String)
 
-class TransactionPersistenceImpl(userPurchasePersistence: UserPurchasePersistence) extends TransactionPersistence {
+class TransactionPersistenceImpl(
+    userPurchasePersistence: UserPurchasePersistence,
+    userPurchaseFilterExpired: UserPurchaseFilterExpired
+) extends TransactionPersistence {
 
   def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[_] = {
-    userPurchasePersistence.write(UserPurchasesByUserIdAndAppId(userIdWithAppId.userId, userIdWithAppId.appId,
-      transactions.map((transaction: ValidatedTransaction) => transformFromTransaction(transaction))))
+    val userId: String = userIdWithAppId.userId
+    val appId: String = userIdWithAppId.appId
+    val appStorePurchases: Set[UserPurchase] = transactions.map((transaction: ValidatedTransaction) => transformFromTransaction(transaction))
+    for {
+      existingMaybeUserPurchasesByUserIdAndAppId: Option[UserPurchasesByUserIdAndAppId] <- userPurchasePersistence.read(userId, appId)
+
+      allPurchases = existingMaybeUserPurchasesByUserIdAndAppId
+        .map((_: UserPurchasesByUserIdAndAppId).purchases ++ appStorePurchases)
+        .getOrElse(appStorePurchases)
+
+      filteredPurchases = userPurchaseFilterExpired.filterExpired(allPurchases)
+
+      written: Option[UserPurchasesByUserIdAndAppId] <- userPurchasePersistence.write(UserPurchasesByUserIdAndAppId(userId, appId, filteredPurchases))
+    } yield written
   }
 
   def transformFromTransaction(transaction: ValidatedTransaction): UserPurchase = {

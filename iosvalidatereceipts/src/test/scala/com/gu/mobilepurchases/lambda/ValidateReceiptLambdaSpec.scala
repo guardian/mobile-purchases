@@ -6,7 +6,7 @@ class ValidateReceiptLambdaSpec extends Specification {
 
   "ConfiguredValidateReceiptLambda" should {
     "initialize" in {
-      new ValidateReceiptLambda() must throwA[IllegalStateException]
+      new ValidateReceiptLambda() must throwA[Exception]
     }
   }
 }

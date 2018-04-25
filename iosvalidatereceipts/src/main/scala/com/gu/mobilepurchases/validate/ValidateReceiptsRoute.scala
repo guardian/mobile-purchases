@@ -13,20 +13,16 @@ trait ValidateReceiptsRoute {
 class ValidateReceiptsRouteImpl(
     validateReceiptsTransformAppStoreResponse: ValidateReceiptsTransformAppStoreResponse,
     validateReceipts: FetchAppStoreResponses,
-    validateReceiptsFilterExpired: ValidateReceiptsFilterExpired,
     transactionPersistence: TransactionPersistence) extends ValidateReceiptsRoute {
   def route(validateReceiptRequest: ValidateRequest): Try[Set[ValidatedTransaction]] = {
     val allAppStoreResponses: Set[AppStoreResponse] = validateReceipts.fetchAllValidatedTransactions(validateReceiptRequest.receipts)
-    val allTransactions: Set[ValidatedTransaction] = allAppStoreResponses.flatMap(
-      validateReceiptsTransformAppStoreResponse.transformAppStoreResponse
-    )
-    val filteredTransactions: Set[ValidatedTransaction] = validateReceiptsFilterExpired.filterExpired(allTransactions)
-    val triedToPersist: Try[_] = persist(validateReceiptRequest, filteredTransactions)
+    val allTransactions: Set[ValidatedTransaction] = allAppStoreResponses.flatMap(validateReceiptsTransformAppStoreResponse.transformAppStoreResponse)
+    val triedToPersist: Try[_] = persist(validateReceiptRequest, allTransactions)
     triedToPersist.map((_: Any) => allTransactions)
   }
 
-  private def persist(validateReceiptRequest: ValidateRequest, filteredTransactions: Set[ValidatedTransaction]): Try[_] = {
+  private def persist(validateReceiptRequest: ValidateRequest, allTransactions: Set[ValidatedTransaction]): Try[_] = {
     val userIdWithAppId: UserIdWithAppId = transactionPersistence.transformValidateRequest(validateReceiptRequest)
-    transactionPersistence.persist(userIdWithAppId, filteredTransactions)
+    transactionPersistence.persist(userIdWithAppId, allTransactions)
   }
 }

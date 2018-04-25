@@ -4,14 +4,17 @@ import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Paths }
 
+import com.amazonaws.services.cloudwatch.AmazonCloudWatch
+import com.gu.mobilepurchases.shared.cloudwatch.CloudWatchImpl
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.{ ApiGatewayLambdaRequest, ApiGatewayLambdaResponse, AwsLambda }
 import com.gu.mobilepurchases.validate._
+import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import scala.util.Success
 
-class ValidateToAppleSpec extends Specification {
+class ValidateToAppleSpec extends Specification with Mockito {
   "ValidateReceiptLambdaMockedApple" should {
     "success sandbox" in {
       val lambda: AwsLambda = new AwsLambda(new ValidateReceiptsController(
@@ -19,7 +22,7 @@ class ValidateToAppleSpec extends Specification {
           validateReceiptRequest must beEqualTo(null)
           Success(Set())
         }
-      )) {}
+      ), cloudWatch = new CloudWatchImpl("", "lambdaname", mock[AmazonCloudWatch])) {}
       val byteArrayOutputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
       lambda.handleRequest(
         new ByteArrayInputStream(mapper.writeValueAsBytes(

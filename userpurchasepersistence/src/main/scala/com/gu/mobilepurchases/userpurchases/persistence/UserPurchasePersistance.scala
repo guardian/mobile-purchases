@@ -1,7 +1,9 @@
 package com.gu.mobilepurchases.userpurchases.persistence
 
+import java.time.{Clock, Instant, ZonedDateTime}
+
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.services.dynamodbv2.{ AmazonDynamoDBAsync, AmazonDynamoDBAsyncClient }
+import com.amazonaws.services.dynamodbv2.{AmazonDynamoDBAsync, AmazonDynamoDBAsyncClient}
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.userpurchases.UserPurchase
 import com.gu.scanamo.Scanamo.exec
@@ -10,9 +12,9 @@ import com.gu.scanamo.error.DynamoReadError
 import com.gu.scanamo.ops.ScanamoOps
 import com.gu.scanamo.query.UniqueKey
 import com.gu.scanamo.syntax._
-import org.apache.logging.log4j.{ LogManager, Logger }
+import org.apache.logging.log4j.{LogManager, Logger}
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 case class UserPurchaseConfig(app: String, stage: String, stack: String) {
   val userPurchasesTable: String = s"$app-$stage-$stack-user-purchases"
@@ -33,13 +35,7 @@ object UserPurchasesByUserIdAndAppId {
   }
 }
 
-object UserPurchasesStringsByUserIdColonAppId {
-  def apply(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): UserPurchasesStringsByUserIdColonAppId = UserPurchasesStringsByUserIdColonAppId(
-    s"${userPurchasesByUserId.userId}:${userPurchasesByUserId.appId}",
-    mapper.writeValueAsString(userPurchasesByUserId.purchases))
-}
-
-case class UserPurchasesStringsByUserIdColonAppId(userIdColonAppId: String, purchases: String)
+case class UserPurchasesStringsByUserIdColonAppId(userIdColonAppId: String, purchases: String, ttl: Long)
 
 /**
  * ScanamaoUserPurchasesStringsByUserIdColonAppId helps testing as it doesn't seem valuable to test Scanamo
@@ -79,41 +75,38 @@ trait UserPurchasePersistence {
 
   def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]]
 }
-
-object UserPurchasePersistenceImpl {
-  val logger: Logger = LogManager.getLogger(classOf[UserPurchasePersistenceImpl])
-
+class UserPurchasePersistenceTransformer(clock: Clock) {
+  def transform(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): UserPurchasesStringsByUserIdColonAppId = UserPurchasesStringsByUserIdColonAppId(
+    s"${userPurchasesByUserId.userId}:${userPurchasesByUserId.appId}",
+    mapper.writeValueAsString(userPurchasesByUserId.purchases), ZonedDateTime.now(clock).plusMonths(6).toEpochSecond)
 }
 
 class UserPurchasePersistenceImpl(
-    scanamoClient: ScanamaoUserPurchasesStringsByUserIdColonAppId
+    scanamoClient: ScanamaoUserPurchasesStringsByUserIdColonAppId,
+    userPurchasePersistenceTransformer: UserPurchasePersistenceTransformer
 ) extends UserPurchasePersistence {
 
-  override def write(currentBatchUserPurchasesByUserIds: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] = {
-    read(currentBatchUserPurchasesByUserIds.userId, currentBatchUserPurchasesByUserIds.appId)
-      .map((_: Option[UserPurchasesByUserIdAndAppId])
-        .map((previousUserPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId) =>
-          currentBatchUserPurchasesByUserIds.copy(
-            purchases = currentBatchUserPurchasesByUserIds.purchases ++ previousUserPurchasesByUserIdAndAppId.purchases
-          ))
-        .getOrElse(currentBatchUserPurchasesByUserIds)
-      )
-      .flatMap((userPurchasesByUserId: UserPurchasesByUserIdAndAppId) =>
-        scanamoClient.put(UserPurchasesStringsByUserIdColonAppId(userPurchasesByUserId)) match {
-          case Some(Right(u))    => Success(Some(UserPurchasesByUserIdAndAppId(u)))
-          case Some(Left(error)) => Failure(new IllegalStateException(s"$error"))
-          case None              => Success(None)
-        }
-      )
+  private val logger: Logger = LogManager.getLogger(classOf[UserPurchasePersistenceImpl])
+
+  override def write(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] = {
+    if (userPurchasesByUserId.purchases.isEmpty) {
+      Success(None)
+    } else {
+      scanamoClient.put(userPurchasePersistenceTransformer.transform(userPurchasesByUserId)) match {
+        case Some(Right(u))    => Success(Some(UserPurchasesByUserIdAndAppId(u)))
+        case Some(Left(error)) => Failure(new IllegalStateException(s"$error"))
+        case None              => Success(None)
+      }
+    }
   }
 
   override def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]] = {
     val key: String = s"$userId:$appId"
-    UserPurchasePersistenceImpl.logger.info(s"Looking for {}", key)
+    logger.info(s"Looking for {}", key)
     scanamoClient.get('userIdColonAppId -> key) match {
       case Some(Right(u)) =>
         val userPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId = UserPurchasesByUserIdAndAppId(u)
-        UserPurchasePersistenceImpl.logger.info(s"Found {}", userPurchasesByUserIdAndAppId)
+        logger.info(s"Found {}", userPurchasesByUserIdAndAppId)
         Success(Some(userPurchasesByUserIdAndAppId))
       case Some(Left(error)) => Failure(new IllegalStateException(s"$error"))
       case None              => Success(None)

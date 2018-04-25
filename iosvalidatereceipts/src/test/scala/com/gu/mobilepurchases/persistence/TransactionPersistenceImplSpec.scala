@@ -47,8 +47,8 @@ class TransactionPersistenceImplSpec extends Specification with ScalaCheck {
               Success(None)
             }
 
-            override def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]] = throw new UnsupportedOperationException
-          }).persist(validateRequestWithTransactions.userIdWithAppId, validateRequestWithTransactions.transactions) must haveClass[Success[_]]
+            override def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]] = Try(None)
+          }, (purchases: Set[UserPurchase]) => purchases).persist(validateRequestWithTransactions.userIdWithAppId, validateRequestWithTransactions.transactions) must haveClass[Success[_]]
         }
       }.setArbitrary(arbitraryValidateRequestWithTransactions)
     }

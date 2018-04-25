@@ -3,11 +3,10 @@ package com.gu.mobilepurchases.shared.lambda
 import java.io.{ InputStream, OutputStream }
 import java.nio.charset.StandardCharsets
 
-import com.gu.mobilepurchases.shared.external.Base64Utils.IsNotBase64Encoded
 import com.gu.mobilepurchases.shared.external.HttpStatusCodes
 import com.gu.mobilepurchases.shared.external.HttpStatusCodes.internalServerError
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
-import com.gu.mobilepurchases.shared.lambda.LambdaApiGateway.logger
+
 import org.apache.commons.io.IOUtils
 import org.apache.logging.log4j.{ LogManager, Logger }
 
@@ -15,7 +14,7 @@ import scala.util.Try
 
 object ApiGatewayLambdaResponse {
   def apply(lambdaResponse: LambdaResponse): ApiGatewayLambdaResponse =
-    ApiGatewayLambdaResponse(lambdaResponse.statusCode, lambdaResponse.maybeBody, lambdaResponse.headers, IsNotBase64Encoded)
+    ApiGatewayLambdaResponse(lambdaResponse.statusCode, lambdaResponse.maybeBody, lambdaResponse.headers, false)
 
 }
 
@@ -23,20 +22,20 @@ case class ApiGatewayLambdaResponse(
     statusCode: Int,
     body: Option[String] = None,
     headers: Map[String, String] = Map(),
-    isBase64Encoded: Boolean = IsNotBase64Encoded)
+    isBase64Encoded: Boolean = false)
 
 object ApiGatewayLambdaRequest {
   def apply(lambdaRequest: LambdaRequest): ApiGatewayLambdaRequest = {
 
     val parameters: Option[Map[String, String]] = if (lambdaRequest.queryStringParameters.nonEmpty) Some(lambdaRequest.queryStringParameters) else None
-    ApiGatewayLambdaRequest(lambdaRequest.maybeBody, IsNotBase64Encoded, parameters)
+    ApiGatewayLambdaRequest(lambdaRequest.maybeBody, false, parameters)
   }
 
 }
 
 case class ApiGatewayLambdaRequest(
     body: Option[String],
-    isBase64Encoded: Boolean = IsNotBase64Encoded,
+    isBase64Encoded: Boolean = false,
     queryStringParameters: Option[Map[String, String]] = None
 )
 
@@ -70,15 +69,12 @@ case class LambdaResponse(
 ) {
 }
 
-object LambdaApiGateway {
-  val logger: Logger = LogManager.getLogger(classOf[LambdaApiGateway])
-}
-
 trait LambdaApiGateway {
   def execute(input: InputStream, output: OutputStream): Unit
 }
 
 class LambdaApiGatewayImpl(function: (LambdaRequest => LambdaResponse)) extends LambdaApiGateway {
+  private val logger: Logger = LogManager.getLogger(classOf[LambdaApiGateway])
   def execute(input: InputStream, output: OutputStream): Unit = {
     try {
 

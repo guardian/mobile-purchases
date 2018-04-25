@@ -1,20 +1,21 @@
 package com.gu.mobilepurchases.apple
 
 import java.io.IOException
-import java.security.MessageDigest
-import java.util.concurrent.atomic.AtomicLong
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
+import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, Parallelism }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
-import com.gu.mobilepurchases.shared.external.{ Base64Utils, GlobalOkHttpClient }
 import com.typesafe.config.Config
 import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody }
-import org.apache.logging.log4j.{ LogManager, Logger }
+import org.apache.logging.log4j.LogManager.getLogger
 
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.util.{ Failure, Success, Try }
 
 object AutoRenewableSubsStatusCodes {
+  val valid: Int = 0
 
   // 21000 The App Store could not read the JSON object you provided.
   val CouldNotReadJson: Int = 21000
@@ -93,15 +94,12 @@ case object Sandbox extends AppStoreEnv("https://sandbox.itunes.apple.com/verify
 case object Invalid extends AppStoreEnv("https://local.invalid")
 
 object AppStoreConfig {
-  val logger: Logger = LogManager.getLogger(classOf[AppStoreConfig])
-  val messageDigest = MessageDigest.getInstance("SHA-256")
-
   def apply(config: Config, stage: String): AppStoreConfig = {
     val appStoreEnv: AppStoreEnv = stage match {
       case "CODE" => Sandbox
       case "PROD" => Invalid // change to production when ready
       case _ =>
-        logger.warn(s"Unexpected app store env $stage")
+        getLogger(classOf[AppStoreConfig]).warn(s"Unexpected app store env $stage")
         Invalid
     }
     AppStoreConfig.apply(config.getString("appstore.password"), appStoreEnv)
@@ -109,44 +107,48 @@ object AppStoreConfig {
 
 }
 
-case class AppStoreConfig(password: String, appStoreEnv: AppStoreEnv) {
-
-}
+case class AppStoreConfig(password: String, appStoreEnv: AppStoreEnv)
 
 trait AppStore {
-  def send(receiptData: String): Future[AppStoreResponse]
+  def send(receiptData: String): Future[Option[AppStoreResponse]]
 }
 
-object AppStoreImpl {
-  val logger: Logger = LogManager.getLogger(classOf[AppStoreImpl])
-}
+class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWatch: CloudWatchMetrics) extends AppStore {
+  implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
+  def send(receiptData: String): Future[Option[AppStoreResponse]] = {
 
-class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient) extends AppStore {
-  val counter = new AtomicLong(0)
-
-  def send(receiptData: String): Future[AppStoreResponse] = {
     val request: AppStoreRequest = AppStoreRequest(appStoreConfig.password, receiptData)
-    val hash = new String(Base64Utils.encoder.encode(AppStoreConfig.messageDigest.digest(Base64Utils.decoder.decode(receiptData))))
-    val count: Long = counter.incrementAndGet()
-    AppStoreImpl.logger.info(s"Sending request ${count}: ${hash}")
     val promise = Promise[AppStoreResponse]
+    val timer: Timer = cloudWatch.startTimer("appstore-timer")
     client.newCall(new Request.Builder().url(appStoreConfig.appStoreEnv.url).post(RequestBody.create(
       GlobalOkHttpClient.applicationJsonMediaType,
       mapper.writeValueAsBytes(request))).build()
     ).enqueue(new Callback {
-      override def onFailure(call: Call, e: IOException): Unit = promise.failure(e)
+      override def onFailure(call: Call, e: IOException): Unit = {
+        timer.fail
+        promise.failure(e)
+      }
 
       override def onResponse(call: Call, response: okhttp3.Response): Unit = {
-        AppStoreImpl.logger.info(s"Got response ${count}")
+        val code: Int = response.code()
+        cloudWatch.meterHttpStatusResponses("appstore-code", code)
         Try {
           mapper.readValue[AppStoreResponse](response.body().bytes())
         } match {
-          case Success(appStoreResponse: AppStoreResponse) => promise.success(appStoreResponse)
-          case Failure(throwable)                          => promise.failure(throwable)
+          case Success(appStoreResponse: AppStoreResponse) => {
+            timer.succeed
+            cloudWatch.queueMetric("appstore-unmarshall-success", 1, StandardUnit.Count)
+            promise.success(appStoreResponse)
+          }
+          case Failure(throwable) => {
+            timer.fail
+            cloudWatch.queueMetric("appstore-unmarshall-fail", 1, StandardUnit.Count)
+            promise.failure(throwable)
+          }
         }
       }
     })
-    promise.future
+    promise.future.transform((appStoreResponseAttempt: Try[AppStoreResponse]) => Success(appStoreResponseAttempt.toOption))
   }
 
 }

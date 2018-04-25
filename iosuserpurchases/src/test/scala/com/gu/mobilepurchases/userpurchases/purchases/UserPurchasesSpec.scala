@@ -1,17 +1,13 @@
 package com.gu.mobilepurchases.userpurchases.purchases
 
-import java.time.Instant
-import java.time.Instant.ofEpochMilli
-import java.time.ZoneOffset.UTC
-import java.time.temporal.ChronoUnit.{ HOURS, MONTHS }
-
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
-import com.gu.mobilepurchases.userpurchases.UserPurchase.instantFormatter
 import com.gu.mobilepurchases.userpurchases.persistence.{ UserPurchasePersistence, UserPurchasesByUserIdAndAppId }
-import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesSpec.{ genFutureDate, genMatchingAppIdWithUserPurchasesByUserId, genPastDate }
+import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesSpec.genMatchingAppIdWithUserPurchasesByUserId
 import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
+import org.apache.logging.log4j.Logger
 import org.scalacheck.{ Arbitrary, Gen }
 import org.specs2.ScalaCheck
+import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import scala.util.{ Failure, Success, Try }
@@ -19,47 +15,32 @@ import scala.util.{ Failure, Success, Try }
 case class AppIdWithUserPurchasesByUserId(appId: String, userPurchases: Map[String, Set[UserPurchase]])
 
 object UserPurchasesSpec {
-  private val instantNow: Instant = Instant.now()
-  val genFutureDate: Gen[String] = for {
-    epoch <- Gen.choose[Long](instantNow.plus(1, HOURS).toEpochMilli, instantNow.atZone(UTC).plus(1, MONTHS).toInstant.toEpochMilli)
-  } yield ofEpochMilli(epoch).atZone(UTC).format(instantFormatter)
-  val genPastDate: Gen[String] = for {
-    epoch <- Gen.choose[Long](instantNow.atZone(UTC).minus(1, MONTHS).toInstant.toEpochMilli, instantNow.minus(1, HOURS).toEpochMilli)
-  } yield ofEpochMilli(epoch).atZone(UTC).format(instantFormatter)
+  def emptyOrSuffix(random: String, suffix: String) = if (random.isEmpty) {
+    random
+  } else {
+    s"$random$suffix"
+  }
 
-  def genMatchingAppIdWithUserPurchasesByUserId(endDateGen: Gen[String]): Gen[AppIdWithUserPurchasesByUserId] = for {
-    productId <- genCommonAscii
+  def genMatchingAppIdWithUserPurchasesByUserId: Gen[AppIdWithUserPurchasesByUserId] = for {
+    randomString <- genCommonAscii
     orderIdsStartsAndEnds <- Gen.mapOf[String, Set[(String, String, String)]](
       Gen.zip[String, Set[(String, String, String)]](
         genCommonAscii,
         Gen.containerOf[Set, (String, String, String)](for {
-          webOrderLineItemId <- genCommonAscii
-          start <- genCommonAscii
-          end <- endDateGen
-        } yield (webOrderLineItemId, start, end))))
-  } yield AppIdWithUserPurchasesByUserId(productId, orderIdsStartsAndEnds.mapValues(
+          randomPurchaseString <- genCommonAscii
+        } yield (
+          emptyOrSuffix(randomPurchaseString, "webOrderLineItemId"),
+          emptyOrSuffix(randomPurchaseString, "start"),
+          emptyOrSuffix(randomPurchaseString, "end")))))
+  } yield AppIdWithUserPurchasesByUserId(randomString, orderIdsStartsAndEnds.mapValues(
     (_: Set[(String, String, String)]).map((v: (String, String, String)) =>
-      UserPurchase(productId, v._1, UserPurchaseInterval(v._2, v._3)))))
-
-  def genConflictingAppIdWithUserPurchasesByUserId(endDateGen: Gen[String]): Gen[AppIdWithUserPurchasesByUserId] = for {
-    productIdAndAppId <- Gen.zip(genCommonAscii, genCommonAscii).suchThat { case (a, b) => !a.equals(b) }
-    orderIdsStartsAndEnds <- Gen.mapOf[String, Set[(String, String, String)]](
-      Gen.zip[String, Set[(String, String, String)]](
-        genCommonAscii,
-        Gen.containerOf[Set, (String, String, String)](for {
-          webOrderLineItemId <- genCommonAscii
-          start <- genCommonAscii
-          end <- endDateGen
-        } yield (webOrderLineItemId, start, end))))
-  } yield AppIdWithUserPurchasesByUserId(productIdAndAppId._1, orderIdsStartsAndEnds.mapValues(
-    (_: Set[(String, String, String)]).map((v: (String, String, String)) =>
-      UserPurchase(productIdAndAppId._2, v._1, UserPurchaseInterval(v._2, v._3)))))
+      UserPurchase(randomString, v._1, UserPurchaseInterval(v._2, v._3)))))
 }
 
-class UserPurchasesSpec extends Specification with ScalaCheck {
+class UserPurchasesSpec extends Specification with ScalaCheck with Mockito {
   "UserPurchases" should {
     "find matching purchases" >> {
-      implicit val arbitraryPurchasesByUserId: Arbitrary[AppIdWithUserPurchasesByUserId] = Arbitrary(genMatchingAppIdWithUserPurchasesByUserId(genFutureDate))
+      implicit val arbitraryPurchasesByUserId: Arbitrary[AppIdWithUserPurchasesByUserId] = Arbitrary(genMatchingAppIdWithUserPurchasesByUserId)
       prop { (appIdWithUserPurchasesByUserId: AppIdWithUserPurchasesByUserId) =>
         {
           val userPurchasesByUserId: Map[String, Set[UserPurchase]] = appIdWithUserPurchasesByUserId.userPurchases
@@ -80,30 +61,9 @@ class UserPurchasesSpec extends Specification with ScalaCheck {
       }.setArbitrary(arbitraryPurchasesByUserId)
     }
 
-    "miss out of date matching purchases" >> {
-      implicit val arbitraryPurchasesByUserId: Arbitrary[AppIdWithUserPurchasesByUserId] = Arbitrary(genMatchingAppIdWithUserPurchasesByUserId(genPastDate))
-      prop { (appIdWithUserPurchasesByUserId: AppIdWithUserPurchasesByUserId) =>
-        {
-          val userPurchasesByUserId: Map[String, Set[UserPurchase]] = appIdWithUserPurchasesByUserId.userPurchases
-          val userIds: Set[String] = userPurchasesByUserId.keySet
-
-          new UserPurchasesImpl(new UserPurchasePersistence {
-            override def write(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] =
-              throw new UnsupportedOperationException
-
-            override def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]] = {
-              appId must beEqualTo(appIdWithUserPurchasesByUserId.appId)
-              userIds must contain(userId)
-              Success(userPurchasesByUserId.get(userId).map((purchases: Set[UserPurchase]) => UserPurchasesByUserIdAndAppId(userId, appId, purchases)))
-            }
-          }).findPurchases(UserPurchasesRequest(appIdWithUserPurchasesByUserId.appId, userIds)) must beEqualTo(UserPurchasesResponse(Set()))
-        }
-      }.setArbitrary(arbitraryPurchasesByUserId)
-    }
-
     "no purchases" >> {
       implicit val arbitraryAppIdWithUserPurchasesByUserId: Arbitrary[AppIdWithUserPurchasesByUserId] = Arbitrary(
-        genMatchingAppIdWithUserPurchasesByUserId(genFutureDate))
+        genMatchingAppIdWithUserPurchasesByUserId)
       prop { (appIdWithUserPurchasesByUserId: AppIdWithUserPurchasesByUserId) =>
         {
           val userPurchasesByUserId: Map[String, Set[UserPurchase]] = appIdWithUserPurchasesByUserId.userPurchases
@@ -125,9 +85,10 @@ class UserPurchasesSpec extends Specification with ScalaCheck {
 
     "fail purchases" in {
       implicit val arbitraryAppIdWithUserPurchasesByUserId: Arbitrary[AppIdWithUserPurchasesByUserId] = Arbitrary(
-        genMatchingAppIdWithUserPurchasesByUserId(genFutureDate))
+        genMatchingAppIdWithUserPurchasesByUserId)
       prop { (appIdWithUserPurchasesByUserId: AppIdWithUserPurchasesByUserId) =>
         {
+          val mockLogger = mock[Logger]
           val userPurchasesByUserId: Map[String, Set[UserPurchase]] = appIdWithUserPurchasesByUserId.userPurchases
           val userIds: Set[String] = userPurchasesByUserId.keySet
           new UserPurchasesImpl(new UserPurchasePersistence {
@@ -139,10 +100,10 @@ class UserPurchasesSpec extends Specification with ScalaCheck {
               appId must beEqualTo(appIdWithUserPurchasesByUserId.appId)
               Failure(new IllegalStateException("Ignored"))
             }
-          }).findPurchases(UserPurchasesRequest(appIdWithUserPurchasesByUserId.appId, userIds)) must beEqualTo(UserPurchasesResponse(Set()))
+          }, mockLogger).findPurchases(UserPurchasesRequest(appIdWithUserPurchasesByUserId.appId, userIds)) must beEqualTo(UserPurchasesResponse(Set()))
+          there was exactly(appIdWithUserPurchasesByUserId.userPurchases.size)(mockLogger).warn(anyString, any[Throwable]())
         }
       }.setArbitrary(arbitraryAppIdWithUserPurchasesByUserId)
-
     }
   }
 }

@@ -6,7 +6,7 @@ class UserPurchasesLambdaSpec extends Specification {
   "UserPurchasesLambda" should {
     "initialize" in {
 
-      new UserPurchasesLambda() must throwA[IllegalStateException]
+      new UserPurchasesLambda() must throwA[Exception]
     }
   }
 }
