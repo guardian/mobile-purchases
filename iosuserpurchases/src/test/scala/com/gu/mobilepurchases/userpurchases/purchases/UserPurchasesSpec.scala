@@ -4,8 +4,11 @@ import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
 import com.gu.mobilepurchases.userpurchases.persistence.{ UserPurchasePersistence, UserPurchasesByUserIdAndAppId }
 import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesSpec.genMatchingAppIdWithUserPurchasesByUserId
 import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
+import org.apache.logging.log4j.Logger
 import org.scalacheck.{ Arbitrary, Gen }
 import org.specs2.ScalaCheck
+import org.specs2.mock.Mockito
+import org.specs2.mock.mockito.CalledMatchers
 import org.specs2.mutable.Specification
 
 import scala.util.{ Failure, Success, Try }
@@ -43,7 +46,7 @@ object UserPurchasesSpec {
       UserPurchase(productIdAndAppId._2, v._1, UserPurchaseInterval(v._2, v._3)))))
 }
 
-class UserPurchasesSpec extends Specification with ScalaCheck {
+class UserPurchasesSpec extends Specification with ScalaCheck with Mockito {
   "UserPurchases" should {
     "find matching purchases" >> {
       implicit val arbitraryPurchasesByUserId: Arbitrary[AppIdWithUserPurchasesByUserId] = Arbitrary(genMatchingAppIdWithUserPurchasesByUserId)
@@ -94,6 +97,7 @@ class UserPurchasesSpec extends Specification with ScalaCheck {
         genMatchingAppIdWithUserPurchasesByUserId)
       prop { (appIdWithUserPurchasesByUserId: AppIdWithUserPurchasesByUserId) =>
         {
+          val mockLogger = mock[Logger]
           val userPurchasesByUserId: Map[String, Set[UserPurchase]] = appIdWithUserPurchasesByUserId.userPurchases
           val userIds: Set[String] = userPurchasesByUserId.keySet
           new UserPurchasesImpl(new UserPurchasePersistence {
@@ -105,7 +109,9 @@ class UserPurchasesSpec extends Specification with ScalaCheck {
               appId must beEqualTo(appIdWithUserPurchasesByUserId.appId)
               Failure(new IllegalStateException("Ignored"))
             }
-          }).findPurchases(UserPurchasesRequest(appIdWithUserPurchasesByUserId.appId, userIds)) must beEqualTo(UserPurchasesResponse(Set()))
+          }, mockLogger).findPurchases(UserPurchasesRequest(appIdWithUserPurchasesByUserId.appId, userIds)) must beEqualTo(UserPurchasesResponse(Set()))
+          there was exactly(appIdWithUserPurchasesByUserId.userPurchases.size)(mockLogger).warn(anyString, any[Throwable]())
+
         }
       }.setArbitrary(arbitraryAppIdWithUserPurchasesByUserId)
 

@@ -14,8 +14,9 @@ trait UserPurchases {
   def findPurchases(userPurchasesRequest: UserPurchasesRequest): UserPurchasesResponse
 }
 
-class UserPurchasesImpl(userPurchasePersistence: UserPurchasePersistence) extends UserPurchases {
-  val logger: Logger = LogManager.getLogger(classOf[UserPurchasesImpl])
+class UserPurchasesImpl(
+    userPurchasePersistence: UserPurchasePersistence,
+    logger: Logger = LogManager.getLogger(classOf[UserPurchasesImpl])) extends UserPurchases {
 
   override def findPurchases(userPurchasesRequest: UserPurchasesRequest): UserPurchasesResponse = {
     UserPurchasesResponse(userPurchasesRequest.userIds
