@@ -15,33 +15,26 @@ import scala.util.{ Failure, Success, Try }
 case class AppIdWithUserPurchasesByUserId(appId: String, userPurchases: Map[String, Set[UserPurchase]])
 
 object UserPurchasesSpec {
-  def genMatchingAppIdWithUserPurchasesByUserId: Gen[AppIdWithUserPurchasesByUserId] = for {
-    productId <- genCommonAscii
-    orderIdsStartsAndEnds <- Gen.mapOf[String, Set[(String, String, String)]](
-      Gen.zip[String, Set[(String, String, String)]](
-        genCommonAscii,
-        Gen.containerOf[Set, (String, String, String)](for {
-          webOrderLineItemId <- genCommonAscii
-          start <- genCommonAscii
-          end <- genCommonAscii
-        } yield (webOrderLineItemId, start, end))))
-  } yield AppIdWithUserPurchasesByUserId(productId, orderIdsStartsAndEnds.mapValues(
-    (_: Set[(String, String, String)]).map((v: (String, String, String)) =>
-      UserPurchase(productId, v._1, UserPurchaseInterval(v._2, v._3)))))
+  def emptyOrSuffix(random: String, suffix: String) = if (random.isEmpty) {
+    random
+  } else {
+    s"$random$suffix"
+  }
 
-  def genConflictingAppIdWithUserPurchasesByUserId(endDateGen: Gen[String]): Gen[AppIdWithUserPurchasesByUserId] = for {
-    productIdAndAppId <- Gen.zip(genCommonAscii, genCommonAscii).suchThat { case (a, b) => !a.equals(b) }
+  def genMatchingAppIdWithUserPurchasesByUserId: Gen[AppIdWithUserPurchasesByUserId] = for {
+    randomString <- genCommonAscii
     orderIdsStartsAndEnds <- Gen.mapOf[String, Set[(String, String, String)]](
       Gen.zip[String, Set[(String, String, String)]](
         genCommonAscii,
         Gen.containerOf[Set, (String, String, String)](for {
-          webOrderLineItemId <- genCommonAscii
-          start <- genCommonAscii
-          end <- endDateGen
-        } yield (webOrderLineItemId, start, end))))
-  } yield AppIdWithUserPurchasesByUserId(productIdAndAppId._1, orderIdsStartsAndEnds.mapValues(
+          randomPurchaseString <- genCommonAscii
+        } yield (
+          emptyOrSuffix(randomPurchaseString, "webOrderLineItemId"),
+          emptyOrSuffix(randomPurchaseString, "start"),
+          emptyOrSuffix(randomPurchaseString, "end")))))
+  } yield AppIdWithUserPurchasesByUserId(randomString, orderIdsStartsAndEnds.mapValues(
     (_: Set[(String, String, String)]).map((v: (String, String, String)) =>
-      UserPurchase(productIdAndAppId._2, v._1, UserPurchaseInterval(v._2, v._3)))))
+      UserPurchase(randomString, v._1, UserPurchaseInterval(v._2, v._3)))))
 }
 
 class UserPurchasesSpec extends Specification with ScalaCheck with Mockito {

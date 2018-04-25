@@ -30,3 +30,7 @@ Resources:
         WriteCapacityUnits: 1
       SSESpecification:
         SSEEnabled: true
+      TimeToLiveSpecification:
+        Enabled: true
+        AttributeName: 'ttl'
+

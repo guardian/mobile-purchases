@@ -16,7 +16,7 @@ import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.OkHttpClientTestUtils.testOkHttpResponse
 import com.gu.mobilepurchases.shared.external.Parallelism
 import com.gu.mobilepurchases.shared.lambda.{ ApiGatewayLambdaRequest, ApiGatewayLambdaResponse, LambdaRequest, LambdaResponse }
-import com.gu.mobilepurchases.userpurchases.persistence.{ ScanamaoUserPurchasesStringsByUserIdColonAppId, UserPurchasePersistenceImpl, UserPurchasesByUserIdAndAppId, UserPurchasesStringsByUserIdColonAppId }
+import com.gu.mobilepurchases.userpurchases.persistence.{ ScanamaoUserPurchasesStringsByUserIdColonAppId, UserPurchasePersistenceImpl, UserPurchasePersistenceTransformer, UserPurchasesByUserIdAndAppId, UserPurchasesStringsByUserIdColonAppId }
 import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
 import com.gu.mobilepurchases.validate.{ FetchAppStoreResponsesImpl, ValidateExample, ValidateReceiptsController, ValidateReceiptsRouteImpl, ValidateReceiptsTransformAppStoreResponseImpl, ValidateRequest, ValidateResponse }
 import com.gu.scanamo.error.DynamoReadError
@@ -35,10 +35,11 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   "DelegatingValidateReceiptLambda" should {
     val clock: Clock = Clock.offset(systemUTC(), Duration.between(ZonedDateTime.now(UTC), ZonedDateTime.parse("2012-11-06T13:24:36.000Z").minusHours(2)))
+    val userPurchasePersistenceTransformer: UserPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(clock)
     val mockAmazonCloudWatch: AmazonCloudWatch = mock[AmazonCloudWatch]
     val cloudWatchImpl: CloudWatchImpl = new CloudWatchImpl("", "lambdaname", mockAmazonCloudWatch)
     val expectedApiGatewayRequest: Array[Byte] = mapper.writeValueAsBytes(ApiGatewayLambdaRequest(LambdaRequest(Some(mapper.writeValueAsString(ValidateExample.successValidateRequest)), Map())))
-    val expectedUserPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId = UserPurchasesStringsByUserIdColonAppId(UserPurchasesByUserIdAndAppId(
+    val expectedUserPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId = userPurchasePersistenceTransformer.transform(UserPurchasesByUserIdAndAppId(
       s"vendorUdid~${ValidateExample.successValidateRequest.userIds.vendorUdid}", ValidateExample.successValidateRequest.appInfo.id, Set(UserPurchase(
         "uk.co.guardian.gce.plusobserver.1monthsub",
         "20000001746150",
@@ -56,12 +57,12 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
     val userPurchasePersistenceImpl: UserPurchasePersistenceImpl = new UserPurchasePersistenceImpl(
       new ScanamaoUserPurchasesStringsByUserIdColonAppId {
         override def put(userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
-          userPurchasesStringsByUserIdColonAppId must beEqualTo(expectedUserPurchasesStringsByUserIdColonAppId)
+          userPurchasesStringsByUserIdColonAppId.copy(ttl = 0) must beEqualTo(expectedUserPurchasesStringsByUserIdColonAppId.copy(ttl = 0))
           None
         }
 
         override def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = None
-      })
+      }, userPurchasePersistenceTransformer)
 
     val validateReceiptsController: ValidateReceiptsController = new ValidateReceiptsController(new ValidateReceiptsRouteImpl(
       new ValidateReceiptsTransformAppStoreResponseImpl(),

@@ -1,6 +1,7 @@
 package com.gu.mobilepurchases.lambda
 
 import java.net.URI
+import java.time.Clock
 import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
@@ -112,17 +113,17 @@ class DelegatingValidateReceiptLambda(
                                        cloudWatch: CloudWatch
 
                                      ) extends AwsLambda(DelegatingValidateReceiptLambda.delegateIfConfigured(config, controller, client, cloudWatch), cloudWatch = cloudWatch) {
-  def this(ssmConfig: SsmConfig, client: OkHttpClient, cloudWatch: CloudWatch, lamdaTimeout: Duration) = this(
+  def this(ssmConfig: SsmConfig, client: OkHttpClient, cloudWatch: CloudWatch, clock:Clock,  lamdaTimeout: Duration) = this(
     ssmConfig.config,
-    ValidateReceiptLambda.validateReceipts(ssmConfig, client, cloudWatch, lamdaTimeout),
+    ValidateReceiptLambda.validateReceipts(ssmConfig, client, cloudWatch, clock, lamdaTimeout),
     client, cloudWatch,
 
   )
 
-  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatch, lambdaTimeout: Duration) = this(ssmConfig, defaultHttpClient, new CloudWatchImpl(ssmConfig.stage, validateReceiptsName, amazonCloudWatch), lambdaTimeout)
+  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatch, clock: Clock, lambdaTimeout: Duration) = this(ssmConfig, defaultHttpClient, new CloudWatchImpl(ssmConfig.stage, validateReceiptsName, amazonCloudWatch), clock ,lambdaTimeout)
 
   def this() {
-    this(SsmConfigLoader(), AmazonCloudWatchClientBuilder.defaultClient(), Duration(240, TimeUnit.SECONDS))
+    this(SsmConfigLoader(), AmazonCloudWatchClientBuilder.defaultClient(), Clock.systemUTC(), Duration(240, TimeUnit.SECONDS))
   }
 
 }

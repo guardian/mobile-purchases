@@ -77,6 +77,11 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/lambda/${App}-iosvalidatereceipts-${Stage}
       RetentionInDays: 7
+  LogGroupUserPurchases:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${App}-iosuserpurchases-${Stage}
+      RetentionInDays: 7
   MobilePuchasesApi:
     Type: AWS::Serverless::Api
     Properties:

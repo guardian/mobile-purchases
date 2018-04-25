@@ -1,5 +1,7 @@
 package com.gu.mobilepurchases.userpurchases.persistence
 
+import java.time.{ Clock, Instant }
+
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.services.dynamodbv2.{ AmazonDynamoDBAsync, AmazonDynamoDBAsyncClient }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
@@ -32,14 +34,12 @@ object UserPurchasesByUserIdAndAppId {
 
   }
 }
+//
+//object UserPurchasesStringsByUserIdColonAppId {
 
-object UserPurchasesStringsByUserIdColonAppId {
-  def apply(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): UserPurchasesStringsByUserIdColonAppId = UserPurchasesStringsByUserIdColonAppId(
-    s"${userPurchasesByUserId.userId}:${userPurchasesByUserId.appId}",
-    mapper.writeValueAsString(userPurchasesByUserId.purchases))
-}
+//}
 
-case class UserPurchasesStringsByUserIdColonAppId(userIdColonAppId: String, purchases: String)
+case class UserPurchasesStringsByUserIdColonAppId(userIdColonAppId: String, purchases: String, ttl: Long)
 
 /**
  * ScanamaoUserPurchasesStringsByUserIdColonAppId helps testing as it doesn't seem valuable to test Scanamo
@@ -79,17 +79,28 @@ trait UserPurchasePersistence {
 
   def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]]
 }
+class UserPurchasePersistenceTransformer(clock: Clock) {
+  def transform(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): UserPurchasesStringsByUserIdColonAppId = UserPurchasesStringsByUserIdColonAppId(
+    s"${userPurchasesByUserId.userId}:${userPurchasesByUserId.appId}",
+    mapper.writeValueAsString(userPurchasesByUserId.purchases), Instant.now(clock).toEpochMilli)
+}
 
 class UserPurchasePersistenceImpl(
-    scanamoClient: ScanamaoUserPurchasesStringsByUserIdColonAppId
+    scanamoClient: ScanamaoUserPurchasesStringsByUserIdColonAppId,
+    userPurchasePersistenceTransformer: UserPurchasePersistenceTransformer
 ) extends UserPurchasePersistence {
+
   private val logger: Logger = LogManager.getLogger(classOf[UserPurchasePersistenceImpl])
 
   override def write(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] = {
-    scanamoClient.put(UserPurchasesStringsByUserIdColonAppId(userPurchasesByUserId)) match {
-      case Some(Right(u))    => Success(Some(UserPurchasesByUserIdAndAppId(u)))
-      case Some(Left(error)) => Failure(new IllegalStateException(s"$error"))
-      case None              => Success(None)
+    if (userPurchasesByUserId.purchases.isEmpty) {
+      Success(None) // ttl will expire any old records
+    } else {
+      scanamoClient.put(userPurchasePersistenceTransformer.transform(userPurchasesByUserId)) match {
+        case Some(Right(u))    => Success(Some(UserPurchasesByUserIdAndAppId(u)))
+        case Some(Left(error)) => Failure(new IllegalStateException(s"$error"))
+        case None              => Success(None)
+      }
     }
   }
 

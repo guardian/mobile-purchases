@@ -2,6 +2,8 @@
 
 package com.gu.mobilepurchases.userpurchases.lambda
 
+import java.time.Clock
+
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
@@ -69,7 +71,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
 
 object DelegateUserPurchasesLambda {
 
-  def delegateIfConfigured(ssmConfig: SsmConfig, cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
+  def delegateIfConfigured(ssmConfig: SsmConfig, clock: Clock, cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
     val logger: Logger = LogManager.getLogger(classOf[DelegateUserPurchasesLambda])
     Try {
       ssmConfig.config.getString("delegate.userpurchasesurl")
@@ -77,7 +79,7 @@ object DelegateUserPurchasesLambda {
       case Success(url) => {
         logger.info(s"Delegating to $url")
         new DelegatingLambda(
-          UserPurchasesLambda.userPurchasesController(ssmConfig),
+          UserPurchasesLambda.userPurchasesController(ssmConfig, clock),
           new DelegateUserPurchasesLambdaRequestMapper(url),
           (lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse) => {
             (goodStatus(lambdaResponse.statusCode), goodStatus(delegateResponse.statusCode)) match {
@@ -95,7 +97,7 @@ object DelegateUserPurchasesLambda {
       }
       case Failure(_: ConfigException.Missing) => {
         logger.info(s"Not delegating")
-        UserPurchasesLambda.userPurchasesController(ssmConfig)
+        UserPurchasesLambda.userPurchasesController(ssmConfig, clock)
       }
       case Failure(t: Throwable) => {
         logger.info("Unexpected config error")
@@ -105,8 +107,8 @@ object DelegateUserPurchasesLambda {
   }
 }
 
-class DelegateUserPurchasesLambda(ssmConfig: SsmConfig, cloudWatch: CloudWatch) extends AwsLambda(DelegateUserPurchasesLambda.delegateIfConfigured(ssmConfig, cloudWatch), cloudWatch = cloudWatch) {
-  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatch) = this(ssmConfig, new CloudWatchImpl(ssmConfig.stage, userPurchasesName, amazonCloudWatch))
-  def this() = this(SsmConfigLoader(), AmazonCloudWatchClientBuilder.defaultClient())
+class DelegateUserPurchasesLambda(ssmConfig: SsmConfig, clock: Clock, cloudWatch: CloudWatch) extends AwsLambda(DelegateUserPurchasesLambda.delegateIfConfigured(ssmConfig, clock, cloudWatch), cloudWatch = cloudWatch) {
+  def this(ssmConfig: SsmConfig, clock: Clock, amazonCloudWatch: AmazonCloudWatch) = this(ssmConfig, clock, new CloudWatchImpl(ssmConfig.stage, userPurchasesName, amazonCloudWatch))
+  def this() = this(SsmConfigLoader(), Clock.systemUTC(), AmazonCloudWatchClientBuilder.defaultClient())
 }
 
