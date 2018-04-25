@@ -17,7 +17,7 @@ import scala.util.{ Failure, Success, Try }
 
 object DelegatingLambda {
   def goodStatus(statusCode: Int): Boolean = {
-    statusCode >= 200 && statusCode < 400
+    statusCode >= 200 && statusCode < 300
   }
 }
 

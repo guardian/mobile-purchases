@@ -34,10 +34,6 @@ object UserPurchasesByUserIdAndAppId {
 
   }
 }
-//
-//object UserPurchasesStringsByUserIdColonAppId {
-
-//}
 
 case class UserPurchasesStringsByUserIdColonAppId(userIdColonAppId: String, purchases: String, ttl: Long)
 
@@ -94,7 +90,7 @@ class UserPurchasePersistenceImpl(
 
   override def write(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] = {
     if (userPurchasesByUserId.purchases.isEmpty) {
-      Success(None) // ttl will expire any old records
+      Success(None)
     } else {
       scanamoClient.put(userPurchasePersistenceTransformer.transform(userPurchasesByUserId)) match {
         case Some(Right(u))    => Success(Some(UserPurchasesByUserIdAndAppId(u)))
