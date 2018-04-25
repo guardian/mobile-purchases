@@ -82,7 +82,7 @@ class DelegatingLambda(
       promiseDelegateResponse.complete(triedDelegateResponse)
       triedDelegateResponse
     })
-    Future.successful { underTest.apply(lambdaRequest) }.transform((triedLambdaResponse: Try[LambdaResponse]) => {
+    Future { underTest.apply(lambdaRequest) }.transform((triedLambdaResponse: Try[LambdaResponse]) => {
       promiseLambdaResponse.complete(triedLambdaResponse)
       triedLambdaResponse
     })
