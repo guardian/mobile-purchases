@@ -1,9 +1,9 @@
 package com.gu.mobilepurchases.userpurchases.persistence
 
-import java.time.{ Clock, Instant }
+import java.time.{Clock, Instant, ZonedDateTime}
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.services.dynamodbv2.{ AmazonDynamoDBAsync, AmazonDynamoDBAsyncClient }
+import com.amazonaws.services.dynamodbv2.{AmazonDynamoDBAsync, AmazonDynamoDBAsyncClient}
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.userpurchases.UserPurchase
 import com.gu.scanamo.Scanamo.exec
@@ -12,9 +12,9 @@ import com.gu.scanamo.error.DynamoReadError
 import com.gu.scanamo.ops.ScanamoOps
 import com.gu.scanamo.query.UniqueKey
 import com.gu.scanamo.syntax._
-import org.apache.logging.log4j.{ LogManager, Logger }
+import org.apache.logging.log4j.{LogManager, Logger}
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 case class UserPurchaseConfig(app: String, stage: String, stack: String) {
   val userPurchasesTable: String = s"$app-$stage-$stack-user-purchases"
@@ -78,7 +78,7 @@ trait UserPurchasePersistence {
 class UserPurchasePersistenceTransformer(clock: Clock) {
   def transform(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): UserPurchasesStringsByUserIdColonAppId = UserPurchasesStringsByUserIdColonAppId(
     s"${userPurchasesByUserId.userId}:${userPurchasesByUserId.appId}",
-    mapper.writeValueAsString(userPurchasesByUserId.purchases), Instant.now(clock).getEpochSecond)
+    mapper.writeValueAsString(userPurchasesByUserId.purchases), ZonedDateTime.now(clock).plusMonths(6).toEpochSecond)
 }
 
 class UserPurchasePersistenceImpl(
