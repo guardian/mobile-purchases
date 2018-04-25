@@ -2,15 +2,16 @@ package com.gu.mobilepurchases.apple
 
 import java.io.IOException
 
-import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.gu.mobilepurchases.apple.AutoRenewableSubsStatusCodes.SandboxReceiptSentToProductionService
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
-import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, Parallelism }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
+import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, Parallelism }
 import com.typesafe.config.Config
-import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody }
+import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody, Response }
 import org.apache.logging.log4j.LogManager.getLogger
 
+import scala.concurrent.Future.successful
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.util.{ Failure, Success, Try }
 
@@ -115,40 +116,70 @@ trait AppStore {
 
 class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWatch: CloudWatchMetrics) extends AppStore {
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
-  def send(receiptData: String): Future[Option[AppStoreResponse]] = {
 
-    val request: AppStoreRequest = AppStoreRequest(appStoreConfig.password, receiptData)
+  def sendOrOverride(receiptData: String, sandboxSentToProtection: Boolean): Future[AppStoreResponse] = {
     val promise = Promise[AppStoreResponse]
     val timer: Timer = cloudWatch.startTimer("appstore-timer")
-    client.newCall(new Request.Builder().url(appStoreConfig.appStoreEnv.url).post(RequestBody.create(
-      GlobalOkHttpClient.applicationJsonMediaType,
-      mapper.writeValueAsBytes(request))).build()
-    ).enqueue(new Callback {
+
+    client.newCall(buildRequest(receiptData, sandboxSentToProtection)).enqueue(new Callback {
       override def onFailure(call: Call, e: IOException): Unit = {
         timer.fail
         promise.failure(e)
       }
 
-      override def onResponse(call: Call, response: okhttp3.Response): Unit = {
-        val code: Int = response.code()
-        cloudWatch.meterHttpStatusResponses("appstore-code", code)
+      override def onResponse(call: Call, response: Response): Unit = {
+        cloudWatch.meterHttpStatusResponses("appstore-code", response.code())
         Try {
           mapper.readValue[AppStoreResponse](response.body().bytes())
         } match {
           case Success(appStoreResponse: AppStoreResponse) => {
             timer.succeed
-            cloudWatch.queueMetric("appstore-unmarshall-success", 1, StandardUnit.Count)
             promise.success(appStoreResponse)
           }
           case Failure(throwable) => {
             timer.fail
-            cloudWatch.queueMetric("appstore-unmarshall-fail", 1, StandardUnit.Count)
             promise.failure(throwable)
           }
         }
       }
     })
-    promise.future.transform((appStoreResponseAttempt: Try[AppStoreResponse]) => Success(appStoreResponseAttempt.toOption))
+    delegateToSandboxIfNeeded(
+      receiptData,
+      sandboxSentToProtection,
+      promise.future
+    )
   }
 
+  override def send(receiptData: String): Future[Option[AppStoreResponse]] = {
+    sendOrOverride(receiptData, false)
+      .transform((appStoreResponseAttempt: Try[AppStoreResponse]) => Success(appStoreResponseAttempt.toOption))
+  }
+
+  private def buildRequest(receiptData: String, sandboxSentToProtection: Boolean): Request = {
+    val url: String = if (sandboxSentToProtection) {
+      Sandbox.url
+    } else {
+      appStoreConfig.appStoreEnv.url
+    }
+    new Request.Builder().url(url).post(RequestBody.create(
+      GlobalOkHttpClient.applicationJsonMediaType,
+      mapper.writeValueAsBytes(AppStoreRequest(appStoreConfig.password, receiptData)))).build()
+  }
+
+  private def delegateToSandboxIfNeeded(
+    receiptData: String,
+    sandboxSentToProtection: Boolean,
+    productionResponse: Future[AppStoreResponse]): Future[AppStoreResponse] = {
+    if (!sandboxSentToProtection) {
+      productionResponse.flatMap((response: AppStoreResponse) => {
+        if (response.status.equals(SandboxReceiptSentToProductionService.toString)) {
+          sendOrOverride(receiptData, true)
+        } else {
+          successful(response)
+        }
+      })
+    } else {
+      productionResponse
+    }
+  }
 }

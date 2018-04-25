@@ -5,26 +5,26 @@ import java.time.Clock
 import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
-import com.amazonaws.services.cloudwatch.{AmazonCloudWatch, AmazonCloudWatchClientBuilder}
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
 import com.gu.mobilepurchases.lambda.ValidateReceiptLambda.validateReceiptsName
-import com.gu.mobilepurchases.shared.cloudwatch.{CloudWatch, CloudWatchImpl}
-import com.gu.mobilepurchases.shared.config.{SsmConfig, SsmConfigLoader}
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
+import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.defaultHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson._
 import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodStatus
-import com.gu.mobilepurchases.shared.lambda.{AwsLambda, DelegateComparator, DelegateLambdaConfig, DelegatingLambda, LambdaRequest, LambdaResponse}
-import com.gu.mobilepurchases.validate.{ValidateReceiptsController, ValidateResponse}
-import com.typesafe.config.{Config, ConfigException}
-import okhttp3.{OkHttpClient, Request, RequestBody}
+import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegateComparator, DelegateLambdaConfig, DelegatingLambda, LambdaRequest, LambdaResponse }
+import com.gu.mobilepurchases.validate.{ ValidateReceiptsController, ValidateResponse }
+import com.typesafe.config.{ Config, ConfigException }
+import okhttp3.{ OkHttpClient, Request, RequestBody }
 import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URIBuilder
 import org.apache.http.message.BasicNameValuePair
-import org.apache.logging.log4j.{LogManager, Logger}
+import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 class DelegatingValidateReceiptLambdaRequestMapper(delegateValidateUrl: String) extends (LambdaRequest => Request) {
   def apply(lambdaRequest: LambdaRequest): Request = {
@@ -78,10 +78,10 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
 object DelegatingValidateReceiptLambda {
 
   def delegateIfConfigured(
-                            config: Config,
-                            validateReceiptsController: ValidateReceiptsController,
-                            client: OkHttpClient,
-                            cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
+    config: Config,
+    validateReceiptsController: ValidateReceiptsController,
+    client: OkHttpClient,
+    cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
     val logger: Logger = LogManager.getLogger(classOf[DelegatingValidateReceiptLambda])
     Try(config.getString("delegate.validatereceiptsurl")) match {
       case Success(delegateUrl) => {
@@ -107,19 +107,19 @@ object DelegatingValidateReceiptLambda {
 }
 
 class DelegatingValidateReceiptLambda(
-                                       config: Config,
-                                       controller: ValidateReceiptsController,
-                                       client: OkHttpClient,
-                                       cloudWatch: CloudWatch
+    config: Config,
+    controller: ValidateReceiptsController,
+    client: OkHttpClient,
+    cloudWatch: CloudWatch
 
-                                     ) extends AwsLambda(DelegatingValidateReceiptLambda.delegateIfConfigured(config, controller, client, cloudWatch), cloudWatch = cloudWatch) {
-  def this(ssmConfig: SsmConfig, client: OkHttpClient, cloudWatch: CloudWatch, clock:Clock,  lamdaTimeout: Duration) = this(
+) extends AwsLambda(DelegatingValidateReceiptLambda.delegateIfConfigured(config, controller, client, cloudWatch), cloudWatch = cloudWatch) {
+  def this(ssmConfig: SsmConfig, client: OkHttpClient, cloudWatch: CloudWatch, clock: Clock, lamdaTimeout: Duration) = this(
     ssmConfig.config,
     ValidateReceiptLambda.validateReceipts(ssmConfig, client, cloudWatch, clock, lamdaTimeout),
     client, cloudWatch
   )
 
-  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatch, clock: Clock, lambdaTimeout: Duration) = this(ssmConfig, defaultHttpClient, new CloudWatchImpl(ssmConfig.stage, validateReceiptsName, amazonCloudWatch), clock ,lambdaTimeout)
+  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatch, clock: Clock, lambdaTimeout: Duration) = this(ssmConfig, defaultHttpClient, new CloudWatchImpl(ssmConfig.stage, validateReceiptsName, amazonCloudWatch), clock, lambdaTimeout)
 
   def this() {
     this(SsmConfigLoader(), AmazonCloudWatchClientBuilder.defaultClient(), Clock.systemUTC(), Duration(240, TimeUnit.SECONDS))

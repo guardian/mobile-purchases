@@ -13,6 +13,7 @@ _IOS receipt validation and purchase persistence_
 * only worry about the vendor id
 * enrich with any known existing purchases (device sends batches of 25, so latest may not be in there)
 * persist all valid purchases older than a month ago (may include future purchases)
+* ttl is 6 months
 
 ## Lambda: iosuserpurchases (/userPurchases)
 * read last persisted purchases (see /iosvalidatereceipts)

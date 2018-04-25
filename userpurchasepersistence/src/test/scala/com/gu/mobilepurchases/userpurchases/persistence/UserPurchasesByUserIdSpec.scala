@@ -1,6 +1,6 @@
 package com.gu.mobilepurchases.userpurchases.persistence
 
-import java.time.{ Clock, Instant }
+import java.time.{ Clock, Instant, ZoneOffset }
 
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
@@ -15,6 +15,7 @@ class UserPurchasesByUserIdSpec extends Specification with Mockito {
     "marshall and unmarshal from json correctly" in {
       val mockClock = mock[Clock]
       mockClock.instant() returns instant
+      mockClock.getZone returns ZoneOffset.UTC
       val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(mockClock)
 
       val exampleUserPurchaseByUsedID: UserPurchasesByUserIdAndAppId = UserPurchasesByUserIdAndAppId("userId", "appId", Set(UserPurchase(
