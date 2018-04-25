@@ -47,7 +47,7 @@ class FetchAppStoreResponsesImpl(
     val unprocessedReceipts: Set[String] = remainingReceipts.filterNot((receiptData: String) => processedReceipts.contains(receiptData))
     if (unprocessedReceipts.isEmpty) {
       cloudWatch.queueMetric("fetch-all-total", existingAppStoreResponses.size, StandardUnit.Count)
-      Future(existingAppStoreResponses)
+      Future.successful(existingAppStoreResponses)
     } else {
       val eventualMaybeAppStoreResponses: Seq[Future[Option[AppStoreResponse]]] = unprocessedReceipts.toSeq.map(futureAppStoreResponse)
       val eventualMaybeAppStoreResponsesSeq: Future[Seq[Option[AppStoreResponse]]] = Future.sequence(eventualMaybeAppStoreResponses)
