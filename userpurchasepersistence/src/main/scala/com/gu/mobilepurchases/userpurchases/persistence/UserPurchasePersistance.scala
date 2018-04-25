@@ -78,7 +78,7 @@ trait UserPurchasePersistence {
 class UserPurchasePersistenceTransformer(clock: Clock) {
   def transform(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): UserPurchasesStringsByUserIdColonAppId = UserPurchasesStringsByUserIdColonAppId(
     s"${userPurchasesByUserId.userId}:${userPurchasesByUserId.appId}",
-    mapper.writeValueAsString(userPurchasesByUserId.purchases), Instant.now(clock).toEpochMilli)
+    mapper.writeValueAsString(userPurchasesByUserId.purchases), Instant.now(clock).getEpochSecond)
 }
 
 class UserPurchasePersistenceImpl(
