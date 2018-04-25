@@ -56,7 +56,7 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatch) ex
       sendABatch(bufferOfMetrics)
     } else {
       bufferOfMetrics.add(current)
-      if (bufferOfMetrics.size() > 20) {
+      if (bufferOfMetrics.size() >= 20) {
         sendABatch(bufferOfMetrics)
         sendMetricsSoFar(queue, new util.ArrayList[MetricDatum]())
       } else {
