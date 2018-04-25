@@ -72,7 +72,7 @@ Resources:
                     - "dynamodb:UpdateItem"
                     - "dynamodb:Query"
                 Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
-  LogGroupUserPurchases:
+  LogGroupValidateReceipts:
     Type: "AWS::Logs::LogGroup"
     Properties:
       LogGroupName: !Sub /aws/lambda/${App}-iosvalidatereceipts-${Stage}
