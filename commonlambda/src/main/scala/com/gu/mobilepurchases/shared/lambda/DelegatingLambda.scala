@@ -127,7 +127,7 @@ class DelegatingLambda(
   }
 
   private def delegateResponseF(lambdaRequest: LambdaRequest): Future[LambdaResponse] = {
-    val promise = Promise[LambdaResponse]
+    val promise: Promise[LambdaResponse] = Promise[LambdaResponse]
     val timer: Timer = cloudWatch.startTimer(s"${delegateLambdaConfig.lambdaName}-delegate")
     httpClient.newCall(toHttpRequest(lambdaRequest)).enqueue(new Callback {
       override def onFailure(call: Call, e: IOException): Unit = {

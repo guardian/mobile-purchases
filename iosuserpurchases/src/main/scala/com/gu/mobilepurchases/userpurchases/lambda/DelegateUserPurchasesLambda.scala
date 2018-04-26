@@ -37,7 +37,7 @@ class DelegateUserPurchasesLambdaRequestMapper(delegateUserPurchasesUrl: String)
 class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends DelegateComparator {
   override def apply(lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse = {
     val diffMetricName: String = "purchases-diff"
-    (readPurhcases(lambdaResponse), readPurhcases(delegateResponse)) match {
+    (readPurchases(lambdaResponse), readPurchases(delegateResponse)) match {
       case (Some(lambdaUserPurchasesResponse), Some(delegateUserPurchasesResponse)) => {
         val difference = lambdaUserPurchasesResponse.purchases.size - delegateUserPurchasesResponse.purchases.size
         cloudWatch.queueMetric(diffMetricName, difference, StandardUnit.Count)
@@ -60,7 +60,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
 
   }
 
-  def readPurhcases(response: LambdaResponse): Option[UserPurchasesResponse] = Try {
+  def readPurchases(response: LambdaResponse): Option[UserPurchasesResponse] = Try {
     if (goodStatus(response.statusCode)) {
       response.maybeBody.map(mapper.readValue[UserPurchasesResponse])
     } else {
@@ -81,15 +81,7 @@ object DelegateUserPurchasesLambda {
         new DelegatingLambda(
           UserPurchasesLambda.userPurchasesController(ssmConfig, clock),
           new DelegateUserPurchasesLambdaRequestMapper(url),
-          (lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse) => {
-            (goodStatus(lambdaResponse.statusCode), goodStatus(delegateResponse.statusCode)) match {
-              case (true, true) => lambdaResponse.maybeBody.map((lambdaBody: String) =>
-                mapper.readValue[UserPurchasesResponse](lambdaBody).purchases.headOption.map((_: UserPurchase) => lambdaResponse).getOrElse(delegateResponse)
-              ).getOrElse(delegateResponse)
-              case (true, false) => lambdaResponse
-              case _             => delegateResponse
-            }
-          },
+          new DelegateUserPurchasesLambdaComparator(cloudWatch),
           GlobalOkHttpClient.defaultHttpClient,
           cloudWatch,
           DelegateLambdaConfig(userPurchasesName)
