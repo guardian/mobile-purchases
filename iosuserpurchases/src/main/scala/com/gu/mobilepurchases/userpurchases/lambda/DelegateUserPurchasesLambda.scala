@@ -35,33 +35,46 @@ class DelegateUserPurchasesLambdaRequestMapper(delegateUserPurchasesUrl: String)
 }
 
 class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends DelegateComparator {
-  override def apply(lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse = {
-    val diffMetricName: String = "purchases-diff"
-    val returnedMetricName: String = "returned-purchases"
+  private val logger = LogManager.getLogger(classOf[DelegateUserPurchasesLambdaComparator])
+  private val diffMetricName: String = "purchases-diff"
+  private val lambdaDiffMetricName: String = s"$diffMetricName-lambda"
+  private val delegateDiffMetricName: String = s"$diffMetricName-delegate"
+  private val returnedMetricName: String = "returned-purchases"
+  override def apply(lambdaRequest: LambdaRequest, lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse = {
     (readPurchases(lambdaResponse), readPurchases(delegateResponse)) match {
       case (Some(lambdaUserPurchasesResponse), Some(delegateUserPurchasesResponse)) => {
-        val delegatePurchaseSize: Double = delegateUserPurchasesResponse.purchases.size
-        val lambdaPurchaseSize: Double = lambdaUserPurchasesResponse.purchases.size
-        val difference = lambdaPurchaseSize - delegatePurchaseSize
-        cloudWatch.queueMetric(diffMetricName, difference, StandardUnit.Count)
-        if (difference >= 0) {
-          cloudWatch.queueMetric(returnedMetricName, lambdaPurchaseSize, StandardUnit.Count)
+        if (lambdaUserPurchasesResponse.equals(delegateUserPurchasesResponse)) {
+          cloudWatch.queueMetric(lambdaDiffMetricName, 0, StandardUnit.Count)
+          cloudWatch.queueMetric(delegateDiffMetricName, 0, StandardUnit.Count)
+          cloudWatch.queueMetric(returnedMetricName, lambdaUserPurchasesResponse.purchases.size, StandardUnit.Count)
           lambdaResponse
         } else {
-          cloudWatch.queueMetric(returnedMetricName, delegatePurchaseSize, StandardUnit.Count)
-          delegateResponse
+          logger.warn(s"Purchases mismatch for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
+          val delegatePurchaseSet: Set[UserPurchase] = delegateUserPurchasesResponse.purchases
+          val lambdaPurchaseSet: Set[UserPurchase] = lambdaUserPurchasesResponse.purchases
+          val lambdaExtraQuantity: Int = lambdaPurchaseSet.diff(delegatePurchaseSet).size
+          val delegateExtraQuantity: Int = lambdaPurchaseSet.diff(lambdaPurchaseSet).size
+          cloudWatch.queueMetric(lambdaDiffMetricName, lambdaExtraQuantity, StandardUnit.Count)
+          cloudWatch.queueMetric(delegateDiffMetricName, delegateExtraQuantity, StandardUnit.Count)
+          if (lambdaExtraQuantity >= delegateExtraQuantity) {
+            cloudWatch.queueMetric(returnedMetricName, lambdaPurchaseSet.size, StandardUnit.Count)
+            lambdaResponse
+          } else {
+            cloudWatch.queueMetric(returnedMetricName, delegatePurchaseSet.size, StandardUnit.Count)
+            delegateResponse
+          }
         }
       }
       case (Some(userPurchasesResponse), _) => {
-        val lambdaPurchaseSize: Double = userPurchasesResponse.purchases.size
-        cloudWatch.queueMetric(diffMetricName, lambdaPurchaseSize, StandardUnit.Count)
-        cloudWatch.queueMetric(returnedMetricName, lambdaPurchaseSize, StandardUnit.Count)
+        val lambdaPurchasesQuanitty: Double = userPurchasesResponse.purchases.size
+        cloudWatch.queueMetric(lambdaDiffMetricName, lambdaPurchasesQuanitty, StandardUnit.Count)
+        cloudWatch.queueMetric(returnedMetricName, lambdaPurchasesQuanitty, StandardUnit.Count)
         lambdaResponse
       }
       case (_, Some(userPurchasesResponse)) => {
-        val delegatePurchaseSize: Double = userPurchasesResponse.purchases.size
-        cloudWatch.queueMetric(diffMetricName, 0 - delegatePurchaseSize, StandardUnit.Count)
-        cloudWatch.queueMetric(returnedMetricName, delegatePurchaseSize, StandardUnit.Count)
+        val delegatePurchasesQuantity: Double = userPurchasesResponse.purchases.size
+        cloudWatch.queueMetric(delegateDiffMetricName, delegatePurchasesQuantity, StandardUnit.Count)
+        cloudWatch.queueMetric(returnedMetricName, delegatePurchasesQuantity, StandardUnit.Count)
         delegateResponse
       }
       case (_, _) => delegateResponse

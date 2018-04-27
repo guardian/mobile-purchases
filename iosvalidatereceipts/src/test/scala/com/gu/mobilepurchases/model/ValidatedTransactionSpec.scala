@@ -1,5 +1,6 @@
 package com.gu.mobilepurchases.model
 
+import java.time.Instant.ofEpochMilli
 import java.time.{ Instant, ZoneOffset, ZonedDateTime }
 
 import com.gu.mobilepurchases.model.ValidatedTransactionSpec.sampleValidatedTransaction
@@ -17,7 +18,7 @@ object ValidatedTransactionSpec {
     1,
     ValidatedTransactionPurchase("", "", ValidatedTransactionPurchaseActiveInterval("", "")), 0
   )
-  val genValidatedTransactions: Gen[Set[ValidatedTransaction]] = Gen.containerOf[Set, ValidatedTransaction](for {
+  val genValidatedTransaction: Gen[ValidatedTransaction] = for {
     transactionId <- genCommonAscii
     validated <- Arbitrary.arbitrary[Long]
     finishTransaction <- Arbitrary.arbitrary[Long]
@@ -28,11 +29,12 @@ object ValidatedTransactionSpec {
         start <- genCommonAscii
         end <- for {
           epoch <- Gen.choose(lastYear, nextYear)
-        } yield (Instant.ofEpochMilli(epoch).atZone(ZoneOffset.UTC).format(instantFormatter))
+        } yield ofEpochMilli(epoch).atZone(ZoneOffset.UTC).format(instantFormatter)
       } yield ValidatedTransactionPurchaseActiveInterval(start, end)
     } yield ValidatedTransactionPurchase(productId, webOrderLineItemId, activeInterval)
     appStoreStatusResponse <- Arbitrary.arbitrary[Long]
-  } yield ValidatedTransaction(transactionId, validated, finishTransaction, purchase, appStoreStatusResponse))
+  } yield ValidatedTransaction(transactionId, validated, finishTransaction, purchase, appStoreStatusResponse)
+  val genValidatedTransactions: Gen[Set[ValidatedTransaction]] = Gen.containerOf[Set, ValidatedTransaction](genValidatedTransaction)
 }
 
 class ValidatedTransactionSpec extends Specification {

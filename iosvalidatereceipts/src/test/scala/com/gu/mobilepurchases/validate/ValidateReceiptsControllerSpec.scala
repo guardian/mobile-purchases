@@ -14,7 +14,7 @@ class ValidateReceiptsControllerSpec extends Specification {
       val requestString: String = successExample.requestString
       new ValidateReceiptsController((validateReceiptRequest: ValidateRequest) => {
         validateReceiptRequest must beEqualTo(successValidateRequest)
-        Try(Set(ValidateExample.successValidatedTransaction))
+        Try(ValidateResponse(Set(ValidateExample.successValidatedTransaction)))
       })(LambdaRequest(Some(requestString))) match {
         case LambdaResponse(200, Some(body), headers) => {
           headers must beEqualTo(Map("Content-Type" -> "application/json; charset=UTF-8"))

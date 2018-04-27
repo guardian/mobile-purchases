@@ -3,22 +3,44 @@ package com.gu.mobilepurchases.validate
 import com.gu.mobilepurchases.apple.AppStoreResponse
 import com.gu.mobilepurchases.model.ValidatedTransaction
 import com.gu.mobilepurchases.persistence.{ TransactionPersistence, UserIdWithAppId }
+import org.apache.logging.log4j.LogManager
 
 import scala.util.Try
 
 trait ValidateReceiptsRoute {
-  def route(validateReceiptRequest: ValidateRequest): Try[Set[ValidatedTransaction]]
+  def route(validateReceiptRequest: ValidateRequest): Try[ValidateResponse]
 }
 
 class ValidateReceiptsRouteImpl(
     validateReceiptsTransformAppStoreResponse: ValidateReceiptsTransformAppStoreResponse,
     validateReceipts: FetchAppStoreResponses,
     transactionPersistence: TransactionPersistence) extends ValidateReceiptsRoute {
-  def route(validateReceiptRequest: ValidateRequest): Try[Set[ValidatedTransaction]] = {
-    val allAppStoreResponses: Set[AppStoreResponse] = validateReceipts.fetchAllValidatedTransactions(validateReceiptRequest.receipts)
+  val logger = LogManager.getLogger(classOf[ValidateReceiptsRouteImpl])
+
+  def route(validateReceiptRequest: ValidateRequest): Try[ValidateResponse] = {
+    val allAppStoreResponses: Set[AppStoreResponse] = validateReceipts.fetchAllValidatedTransactions(validateReceiptRequest.receipts).values.toSet
     val allTransactions: Set[ValidatedTransaction] = allAppStoreResponses.flatMap(validateReceiptsTransformAppStoreResponse.transformAppStoreResponse)
     val triedToPersist: Try[_] = persist(validateReceiptRequest, allTransactions)
-    triedToPersist.map((_: Any) => allTransactions)
+    val requestedTransactions: Set[ValidatedTransaction] = iosExpectsValidatedTransactionsForReceiptsSent(validateReceiptRequest, allTransactions)
+    val response: ValidateResponse = ValidateResponse(requestedTransactions)
+
+    triedToPersist.map((_: Any) => {
+      response
+    })
+  }
+
+  private def iosExpectsValidatedTransactionsForReceiptsSent(
+    validateReceiptRequest: ValidateRequest,
+    allTransactions: Set[ValidatedTransaction]
+  ): Set[ValidatedTransaction] = {
+    val validatedTransactions: Set[String] = validateReceiptRequest.transactions.map(_.id).toSet
+    val stringToTransactions: Map[String, Set[ValidatedTransaction]] = allTransactions.groupBy(_.transactionId)
+    stringToTransactions
+      .mapValues((_: Set[ValidatedTransaction])
+        .maxBy((_: ValidatedTransaction).purchase.activeInterval.end))
+      .filterKeys(validatedTransactions.contains)
+      .values
+      .toSet
   }
 
   private def persist(validateReceiptRequest: ValidateRequest, allTransactions: Set[ValidatedTransaction]): Try[_] = {
