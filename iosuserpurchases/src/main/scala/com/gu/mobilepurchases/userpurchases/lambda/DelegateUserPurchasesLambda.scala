@@ -37,22 +37,31 @@ class DelegateUserPurchasesLambdaRequestMapper(delegateUserPurchasesUrl: String)
 class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends DelegateComparator {
   override def apply(lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse = {
     val diffMetricName: String = "purchases-diff"
-    (readPurhcases(lambdaResponse), readPurhcases(delegateResponse)) match {
+    val returnedMetricName: String = "returned-purchases"
+    (readPurchases(lambdaResponse), readPurchases(delegateResponse)) match {
       case (Some(lambdaUserPurchasesResponse), Some(delegateUserPurchasesResponse)) => {
-        val difference = lambdaUserPurchasesResponse.purchases.size - delegateUserPurchasesResponse.purchases.size
+        val delegatePurchaseSize: Double = delegateUserPurchasesResponse.purchases.size
+        val lambdaPurchaseSize: Double = lambdaUserPurchasesResponse.purchases.size
+        val difference = lambdaPurchaseSize - delegatePurchaseSize
         cloudWatch.queueMetric(diffMetricName, difference, StandardUnit.Count)
         if (difference >= 0) {
+          cloudWatch.queueMetric(returnedMetricName, lambdaPurchaseSize, StandardUnit.Count)
           lambdaResponse
         } else {
+          cloudWatch.queueMetric(returnedMetricName, delegatePurchaseSize, StandardUnit.Count)
           delegateResponse
         }
       }
       case (Some(userPurchasesResponse), _) => {
-        cloudWatch.queueMetric(diffMetricName, userPurchasesResponse.purchases.size, StandardUnit.Count)
+        val lambdaPurchaseSize: Double = userPurchasesResponse.purchases.size
+        cloudWatch.queueMetric(diffMetricName, lambdaPurchaseSize, StandardUnit.Count)
+        cloudWatch.queueMetric(returnedMetricName, lambdaPurchaseSize, StandardUnit.Count)
         lambdaResponse
       }
       case (_, Some(userPurchasesResponse)) => {
-        cloudWatch.queueMetric(diffMetricName, 0 - userPurchasesResponse.purchases.size, StandardUnit.Count)
+        val delegatePurchaseSize: Double = userPurchasesResponse.purchases.size
+        cloudWatch.queueMetric(diffMetricName, 0 - delegatePurchaseSize, StandardUnit.Count)
+        cloudWatch.queueMetric(returnedMetricName, delegatePurchaseSize, StandardUnit.Count)
         delegateResponse
       }
       case (_, _) => delegateResponse
@@ -60,7 +69,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
 
   }
 
-  def readPurhcases(response: LambdaResponse): Option[UserPurchasesResponse] = Try {
+  def readPurchases(response: LambdaResponse): Option[UserPurchasesResponse] = Try {
     if (goodStatus(response.statusCode)) {
       response.maybeBody.map(mapper.readValue[UserPurchasesResponse])
     } else {
@@ -81,15 +90,7 @@ object DelegateUserPurchasesLambda {
         new DelegatingLambda(
           UserPurchasesLambda.userPurchasesController(ssmConfig, clock),
           new DelegateUserPurchasesLambdaRequestMapper(url),
-          (lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse) => {
-            (goodStatus(lambdaResponse.statusCode), goodStatus(delegateResponse.statusCode)) match {
-              case (true, true) => lambdaResponse.maybeBody.map((lambdaBody: String) =>
-                mapper.readValue[UserPurchasesResponse](lambdaBody).purchases.headOption.map((_: UserPurchase) => lambdaResponse).getOrElse(delegateResponse)
-              ).getOrElse(delegateResponse)
-              case (true, false) => lambdaResponse
-              case _             => delegateResponse
-            }
-          },
+          new DelegateUserPurchasesLambdaComparator(cloudWatch),
           GlobalOkHttpClient.defaultHttpClient,
           cloudWatch,
           DelegateLambdaConfig(userPurchasesName)

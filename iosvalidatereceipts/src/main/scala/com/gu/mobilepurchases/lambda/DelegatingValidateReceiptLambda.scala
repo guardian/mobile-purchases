@@ -80,7 +80,7 @@ object DelegatingValidateReceiptLambda {
   def delegateIfConfigured(
     config: Config,
     validateReceiptsController: ValidateReceiptsController,
-    client: OkHttpClient,
+    okHttpClient: OkHttpClient,
     cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
     val logger: Logger = LogManager.getLogger(classOf[DelegatingValidateReceiptLambda])
     Try(config.getString("delegate.validatereceiptsurl")) match {
@@ -90,7 +90,7 @@ object DelegatingValidateReceiptLambda {
           validateReceiptsController,
           new DelegatingValidateReceiptLambdaRequestMapper(delegateUrl),
           new DelegatingValidateReceiptCompators(cloudWatch),
-          httpClient = client, cloudWatch, DelegateLambdaConfig(validateReceiptsName)
+          okHttpClient, cloudWatch, DelegateLambdaConfig(validateReceiptsName)
         )
       }
       case Failure(_: ConfigException.Missing) => {

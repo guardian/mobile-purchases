@@ -1,10 +1,8 @@
 package com.gu.mobilepurchases.validate
 
-import java.util.concurrent.TimeUnit
-
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.apple.{ AppStore, AppStoreResponse }
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchImpl, CloudWatchMetrics, Timer }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Parallelism
 import org.apache.logging.log4j.{ LogManager, Logger }
 
@@ -25,15 +23,15 @@ class FetchAppStoreResponsesImpl(
 
   def fetchAllValidatedTransactions(receipts: Set[String]): Set[AppStoreResponse] = {
     val timer: Timer = cloudWatch.startTimer("fetch-all-timer")
-    val futureResponse: Future[Set[AppStoreResponse]] = fetchAppStoreResponsesFuture(receipts, Set(), Set()).transform(attempt => {
-      if (attempt.isSuccess) {
+    val futureResponse: Future[Set[AppStoreResponse]] = fetchAppStoreResponsesFuture(receipts, Set(), Set()).transform(
+      (success: Set[AppStoreResponse]) => {
         timer.succeed
-      } else {
+        success
+      },
+      (failure: Throwable) => {
         timer.fail
-      }
-      attempt
-    })
-
+        failure
+      })
     Await.result(
       futureResponse,
       timeout)
