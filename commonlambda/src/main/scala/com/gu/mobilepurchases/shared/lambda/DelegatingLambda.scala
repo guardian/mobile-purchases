@@ -28,8 +28,8 @@ trait DelegateComparator {
 
 case class DelegateLambdaConfig(
     lambdaName: String,
-    wholeExecutionTimeout: Duration = Duration(270, TimeUnit.SECONDS),
-    postProcessingDurationWindow: Duration = Duration(10, TimeUnit.SECONDS)
+    wholeExecutionTimeout: Duration = Duration(25, TimeUnit.SECONDS),
+    postProcessingDurationWindow: Duration = Duration(4, TimeUnit.SECONDS)
 )
 
 class DelegatingLambda(
