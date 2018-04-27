@@ -36,10 +36,10 @@ class ValidateReceiptsRouteImpl(
     val validatedTransactions: Set[String] = validateReceiptRequest.transactions.map(_.id).toSet
     val stringToTransactions: Map[String, Set[ValidatedTransaction]] = allTransactions.groupBy(_.transactionId)
     stringToTransactions
-      .mapValues((_: Set[ValidatedTransaction])
-        .maxBy((_: ValidatedTransaction).purchase.activeInterval.end))
       .filterKeys(validatedTransactions.contains)
       .values
+      .map((_: Set[ValidatedTransaction])
+        .maxBy((_: ValidatedTransaction).purchase.activeInterval.end))
       .toSet
   }
 
