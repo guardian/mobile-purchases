@@ -2,6 +2,7 @@ package com.gu.mobilepurchases.apple
 
 import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
+import java.util.Date
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
@@ -127,7 +128,7 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
       }
 
       new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient, new CloudWatchMetrics {
-        override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None): Boolean = true
+        override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None, date: Date): Boolean = true
 
         override def startTimer(metricName: String): Timer = mock[Timer]
 
@@ -170,7 +171,7 @@ class AppStoreSpec(implicit ec: ExecutionEnv) extends Specification with Mockito
           }
 
           new AppStoreImpl(AppStoreConfig("testPassword", Invalid), mockHttpClient, new CloudWatchMetrics {
-            override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None): Boolean = true
+            override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit = StandardUnit.None, date: Date): Boolean = true
 
             override def startTimer(metricName: String): Timer = mock[Timer]
 

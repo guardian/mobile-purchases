@@ -1,7 +1,8 @@
 package com.gu.mobilepurchases.shared.cloudwatch
 
-import java.time.{ Duration, Instant }
+import java.time.{ Duration, Instant, ZoneOffset, ZonedDateTime }
 import java.util
+import java.util.Date
 import java.util.concurrent.ConcurrentLinkedQueue
 
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
@@ -10,7 +11,7 @@ import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataReque
 import scala.annotation.tailrec
 
 trait CloudWatchMetrics {
-  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit): Boolean
+  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date = Date.from(Instant.now())): Boolean
 
   def startTimer(metricName: String): Timer
 
@@ -24,17 +25,18 @@ trait CloudWatchPublisher {
 trait CloudWatch extends CloudWatchMetrics with CloudWatchPublisher
 
 sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Instant = Instant.now()) {
-  def succeed = cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds)
+  def succeed = cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds, Date.from(start))
 
-  def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds)
+  def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds, Date.from(start))
 
 }
 
 class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatch) extends CloudWatch {
   val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
 
-  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit): Boolean = {
+  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date): Boolean = {
     queue.add(new MetricDatum()
+      .withTimestamp(Date.from(Instant.now()))
       .withMetricName(metricName)
       .withUnit(standardUnit)
       .withValue(value))
