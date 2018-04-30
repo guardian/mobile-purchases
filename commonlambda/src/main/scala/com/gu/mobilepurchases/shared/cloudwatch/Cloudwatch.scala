@@ -1,18 +1,19 @@
 package com.gu.mobilepurchases.shared.cloudwatch
 
-import java.time.{Duration, Instant}
+import java.time.{ Duration, Instant }
 import java.util
 import java.util.Date
-import java.util.concurrent.{ConcurrentLinkedQueue, TimeUnit}
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.{ ConcurrentLinkedQueue, TimeUnit }
 
 import com.amazonaws.handlers.AsyncHandler
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync
-import com.amazonaws.services.cloudwatch.model.{MetricDatum, PutMetricDataRequest, PutMetricDataResult, StandardUnit}
+import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataRequest, PutMetricDataResult, StandardUnit }
 import com.gu.mobilepurchases.shared.external.Parallelism
-import org.apache.logging.log4j.{LogManager, Logger}
+import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.annotation.tailrec
-import scala.concurrent.{Await, ExecutionContext, Future, Promise, duration}
+import scala.concurrent.{ Await, ExecutionContext, Future, Promise, duration }
 
 trait CloudWatchMetrics {
   def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant = Instant.now()): Boolean
@@ -30,15 +31,15 @@ trait CloudWatch extends CloudWatchMetrics with CloudWatchPublisher
 
 sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Instant = Instant.now()) {
   def succeed = cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds, start)
-
   def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds, start)
 
 }
 
 class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsync) extends CloudWatch {
-  val logger: Logger = LogManager.getLogger(classOf[CloudWatchImpl])
-  implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
-  val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
+  private val atomicLong: AtomicLong = new AtomicLong(0)
+  private val logger: Logger = LogManager.getLogger(classOf[CloudWatchImpl])
+  implicit private  val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
+  private val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
 
   def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Boolean = {
 
@@ -50,8 +51,10 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsyn
   }
 
   def sendABatch(bufferOfMetrics: util.ArrayList[MetricDatum]): Option[Future[PutMetricDataResult]] = {
+
     if (!bufferOfMetrics.isEmpty) {
-      logger.info(s"Sending ${bufferOfMetrics.size} metrics")
+      val batchNumber: Long = atomicLong.incrementAndGet()
+      logger.info(s"Sending $batchNumber:${bufferOfMetrics.size} metrics")
       val request: PutMetricDataRequest = new PutMetricDataRequest()
         .withNamespace(s"mobile-purchases/$stage/$lambdaname")
         .withMetricData(bufferOfMetrics)
@@ -59,7 +62,10 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsyn
       val value: AsyncHandler[PutMetricDataRequest, PutMetricDataResult] = new AsyncHandler[PutMetricDataRequest, PutMetricDataResult] {
         override def onError(exception: Exception): Unit = promise.failure(exception)
 
-        override def onSuccess(request: PutMetricDataRequest, result: PutMetricDataResult): Unit = promise.success(result)
+        override def onSuccess(request: PutMetricDataRequest, result: PutMetricDataResult): Unit = {
+          logger.info(s"Sent $batchNumber:${bufferOfMetrics.size} metrics")
+          promise.success(result)
+        }
       }
       cw.putMetricDataAsync(request, value)
       Some(promise.future)
