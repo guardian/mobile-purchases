@@ -1,5 +1,6 @@
 package com.gu.mobilepurchases.validate
 
+import java.time.Instant
 import java.util.Date
 import java.util.concurrent.{ ConcurrentLinkedQueue, TimeUnit }
 
@@ -21,7 +22,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
   "FetchAllValidatedReceiptsImpl" should {
     val minuteDuration: FiniteDuration = Duration(1, TimeUnit.MINUTES)
     val ignoreCloudWatch: CloudWatchMetrics = new CloudWatchMetrics {
-      override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date): Boolean = true
+      override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Boolean = true
 
       override def startTimer(metricName: String): Timer = mock[Timer]
 

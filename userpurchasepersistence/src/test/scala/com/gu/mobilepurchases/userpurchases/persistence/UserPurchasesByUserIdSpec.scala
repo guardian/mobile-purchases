@@ -36,7 +36,7 @@ class UserPurchasesByUserIdSpec extends Specification with Mockito {
 
         override def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = ???
       }, userPurchasePersistenceTransformer, new CloudWatchMetrics {
-        override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date): Boolean = ???
+        override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Boolean = ???
 
         override def startTimer(metricName: String): Timer = mock[Timer]
 

@@ -14,7 +14,7 @@ import scala.annotation.tailrec
 import scala.concurrent.{ Await, ExecutionContext, Future, Promise, duration }
 
 trait CloudWatchMetrics {
-  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date = Date.from(Instant.now())): Boolean
+  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant = Instant.now()): Boolean
 
   def startTimer(metricName: String): Timer
 
@@ -28,9 +28,9 @@ trait CloudWatchPublisher {
 trait CloudWatch extends CloudWatchMetrics with CloudWatchPublisher
 
 sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Instant = Instant.now()) {
-  def succeed = cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds, Date.from(start))
+  def succeed = cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds, start)
 
-  def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds, Date.from(start))
+  def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds, start)
 
 }
 
@@ -38,10 +38,10 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsyn
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
 
-  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date): Boolean = {
+  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Boolean = {
 
     queue.add(new MetricDatum()
-      .withTimestamp(Date.from(Instant.now()))
+      .withTimestamp(Date.from(instant))
       .withMetricName(metricName)
       .withUnit(standardUnit)
       .withValue(value))

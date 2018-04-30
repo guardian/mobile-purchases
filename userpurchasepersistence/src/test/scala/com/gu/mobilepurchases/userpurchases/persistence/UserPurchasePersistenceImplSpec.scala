@@ -18,7 +18,7 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
   val instant = Instant.now()
   "UserPurchasePersistenceImpl" should {
     val cloudWatchMetrics: CloudWatchMetrics = new CloudWatchMetrics {
-      override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date): Boolean = ???
+      override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Boolean = ???
 
       override def startTimer(metricName: String): Timer = mock[Timer]
 
