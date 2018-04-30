@@ -1,14 +1,17 @@
 package com.gu.mobilepurchases.shared.cloudwatch
 
-import java.time.{ Duration, Instant, ZoneOffset, ZonedDateTime }
+import java.time.{ Duration, Instant }
 import java.util
 import java.util.Date
-import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.{ ConcurrentLinkedQueue, TimeUnit }
 
-import com.amazonaws.services.cloudwatch.AmazonCloudWatch
-import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataRequest, StandardUnit }
+import com.amazonaws.handlers.AsyncHandler
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync
+import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataRequest, PutMetricDataResult, StandardUnit }
+import com.gu.mobilepurchases.shared.external.Parallelism
 
 import scala.annotation.tailrec
+import scala.concurrent.{ Await, ExecutionContext, Future, Promise, duration }
 
 trait CloudWatchMetrics {
   def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date = Date.from(Instant.now())): Boolean
@@ -31,10 +34,12 @@ sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Ins
 
 }
 
-class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatch) extends CloudWatch {
+class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsync) extends CloudWatch {
+  implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
 
   def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date): Boolean = {
+
     queue.add(new MetricDatum()
       .withTimestamp(Date.from(Instant.now()))
       .withMetricName(metricName)
@@ -42,33 +47,47 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatch) ex
       .withValue(value))
   }
 
-  def sendABatch(bufferOfMetrics: util.ArrayList[MetricDatum]): Unit = {
+  def sendABatch(bufferOfMetrics: util.ArrayList[MetricDatum]): Option[Future[PutMetricDataResult]] = {
     if (!bufferOfMetrics.isEmpty) {
       val request: PutMetricDataRequest = new PutMetricDataRequest()
         .withNamespace(s"mobile-purchases/$stage/$lambdaname")
         .withMetricData(bufferOfMetrics)
-      cw.putMetricData(request)
+      val promise: Promise[PutMetricDataResult] = Promise()
+      val value: AsyncHandler[PutMetricDataRequest, PutMetricDataResult] = new AsyncHandler[PutMetricDataRequest, PutMetricDataResult] {
+        override def onError(exception: Exception): Unit = promise.failure(exception)
+
+        override def onSuccess(request: PutMetricDataRequest, result: PutMetricDataResult): Unit = promise.success(result)
+      }
+      cw.putMetricDataAsync(request, value)
+      Some(promise.future)
+    } else {
+      None
     }
+
   }
 
   @tailrec
-  final def sendMetricsSoFar(queue: ConcurrentLinkedQueue[MetricDatum], bufferOfMetrics: util.ArrayList[MetricDatum]): Unit = {
+  final def sendMetricsSoFar(
+    queue: ConcurrentLinkedQueue[MetricDatum],
+    bufferOfMetrics: util.ArrayList[MetricDatum],
+    eventuallySentSoFar: Seq[Option[Future[PutMetricDataResult]]]): Seq[Option[Future[PutMetricDataResult]]] = {
     val current: MetricDatum = queue.poll()
     if (current == null) {
-      sendABatch(bufferOfMetrics)
+      eventuallySentSoFar :+ sendABatch(bufferOfMetrics)
     } else {
       bufferOfMetrics.add(current)
       if (bufferOfMetrics.size() >= 20) {
-        sendABatch(bufferOfMetrics)
-        sendMetricsSoFar(queue, new util.ArrayList[MetricDatum]())
+
+        sendMetricsSoFar(queue, new util.ArrayList[MetricDatum](), eventuallySentSoFar :+ sendABatch(bufferOfMetrics))
       } else {
-        sendMetricsSoFar(queue, bufferOfMetrics)
+        sendMetricsSoFar(queue, bufferOfMetrics, eventuallySentSoFar)
       }
     }
   }
 
   def sendMetricsSoFar(): Unit = {
-    sendMetricsSoFar(queue, new util.ArrayList[MetricDatum]())
+    val eventualSeq: Future[Seq[PutMetricDataResult]] = Future.sequence(sendMetricsSoFar(queue, new util.ArrayList[MetricDatum](), Seq()).flatten)
+    Await.ready(eventualSeq, duration.Duration(30, TimeUnit.SECONDS))
   }
 
   def startTimer(metricName: String): Timer = new Timer(metricName, this)

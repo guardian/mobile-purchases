@@ -32,7 +32,6 @@ object UserPurchasesByUserIdAndAppId {
         userIdColonAppIdArray(1), mapper.readValue[List[UserPurchase]](userPurchasesStringsByUserId.purchases).toSet)
       case _ => throw new IllegalStateException("Not a userId:appId")
     }
-
   }
 }
 

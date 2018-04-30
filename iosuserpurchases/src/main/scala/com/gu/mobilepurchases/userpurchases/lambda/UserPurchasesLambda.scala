@@ -2,7 +2,7 @@ package com.gu.mobilepurchases.userpurchases.lambda
 
 import java.time.Clock
 
-import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchAsync, AmazonCloudWatchAsyncClientBuilder, AmazonCloudWatchClientBuilder }
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl, CloudWatchMetrics }
 import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.Logging
@@ -25,8 +25,8 @@ object UserPurchasesLambda {
 }
 
 class UserPurchasesLambda(ssmConfig: SsmConfig, cloudWatch: CloudWatch, clock: Clock) extends AwsLambda(UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch), cloudWatch = cloudWatch) {
-  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatch, clock: Clock) = this(ssmConfig, new CloudWatchImpl(ssmConfig.stage, UserPurchasesLambda.userPurchasesName, amazonCloudWatch), clock)
-  def this() = this(SsmConfigLoader(), AmazonCloudWatchClientBuilder.defaultClient(), Clock.systemUTC())
+  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatchAsync, clock: Clock) = this(ssmConfig, new CloudWatchImpl(ssmConfig.stage, UserPurchasesLambda.userPurchasesName, amazonCloudWatch), clock)
+  def this() = this(SsmConfigLoader(), AmazonCloudWatchAsyncClientBuilder.defaultClient(), Clock.systemUTC())
 
 }
 
