@@ -9,6 +9,7 @@ import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, Parallelism }
 import com.typesafe.config.Config
 import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody, Response }
+import org.apache.logging.log4j.{ LogManager, Logger }
 import org.apache.logging.log4j.LogManager.getLogger
 
 import scala.concurrent.Future.successful
@@ -98,7 +99,7 @@ object AppStoreConfig {
   def apply(config: Config, stage: String): AppStoreConfig = {
     val appStoreEnv: AppStoreEnv = stage match {
       case "CODE" => Sandbox
-      case "PROD" => Invalid // change to production when ready
+      case "PROD" => Production
       case _ =>
         getLogger(classOf[AppStoreConfig]).warn(s"Unexpected app store env $stage")
         Invalid
@@ -116,13 +117,14 @@ trait AppStore {
 
 class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWatch: CloudWatchMetrics) extends AppStore {
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
-
+  val logger: Logger = LogManager.getLogger(classOf[AppStoreImpl])
   def sendOrOverride(receiptData: String, sandboxSentToProtection: Boolean): Future[AppStoreResponse] = {
     val promise = Promise[AppStoreResponse]
     val timer: Timer = cloudWatch.startTimer("appstore-timer")
 
     client.newCall(buildRequest(receiptData, sandboxSentToProtection)).enqueue(new Callback {
       override def onFailure(call: Call, e: IOException): Unit = {
+        logger.warn(s"appstore failure", e)
         timer.fail
         promise.failure(e)
       }

@@ -22,7 +22,7 @@ object DelegatingLambda {
 }
 
 trait DelegateComparator {
-  def apply(lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse
+  def apply(lambdaRequest: LambdaRequest, lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse
 
 }
 
@@ -47,10 +47,9 @@ class DelegatingLambda(
   def apply(lambdaRequest: LambdaRequest): LambdaResponse = {
     val triedLambdaAndDelegate: (Try[LambdaResponse], Try[LambdaResponse]) = tryAndTimeoutLambdaAndDelegate(lambdaRequest)
     triedLambdaAndDelegate match {
-      case (Success(lambda), Success(delegate)) => {
-        logBodyDifference(lambdaRequest, lambda, delegate)
-        logMetadataDifference(lambdaRequest, lambda, delegate)
-        delegateComparator.apply(lambda, delegate)
+      case (Success(lambdaResponse), Success(delegateResponse)) => {
+        logMetadataDifference(lambdaRequest, lambdaResponse, delegateResponse)
+        delegateComparator.apply(lambdaRequest, lambdaResponse, delegateResponse)
 
       }
       case (Failure(lambdaThrowable), Success(delegate)) => {
@@ -107,23 +106,6 @@ class DelegatingLambda(
     if (!metadataLambda.equals(metadataDelegate)) {
       logger.warn(s"Metadata variance for request {} lambda: {} delegate {}", lambdaRequest: Any, metadataLambda: Any, metadataDelegate: Any)
     }
-  }
-
-  def logBodyDifference(lambdaRequest: LambdaRequest, lambda: LambdaResponse, delegate: LambdaResponse): Unit = {
-    def extractAnyJson(maybeBody: Option[String]): Option[JsonNode] = {
-      Try {
-        maybeBody.map(Jackson.mapper.readTree(_: String))
-      }.toOption.flatten
-    }
-
-    if (!((extractAnyJson(lambda.maybeBody), extractAnyJson(delegate.maybeBody)) match {
-      case (Some(lambdaJson), Some(delegateJson)) => lambdaJson.equals(delegateJson)
-      case (None, None)                           => true
-      case (_, _)                                 => false
-    })) {
-      logger.warn(s"Mismatch bodies in Request $lambdaRequest \n\n Lambda: $lambda \n\n Delegate $delegate")
-    }
-
   }
 
   private def delegateResponseF(lambdaRequest: LambdaRequest): Future[LambdaResponse] = {

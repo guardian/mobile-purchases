@@ -45,6 +45,7 @@ class ValidateReceiptsController(
     validateReceiptsRoute: ValidateReceiptsRoute
 ) extends Function[LambdaRequest, LambdaResponse] {
   private val logger: Logger = LogManager.getLogger(classOf[ValidateReceiptsController])
+
   def apply(lambdaRequest: LambdaRequest): LambdaResponse =
     lambdaRequest match {
       case LambdaRequest(Some(json), _) => validate(Try(mapper.readValue[ValidateRequest](json)))
@@ -60,8 +61,8 @@ class ValidateReceiptsController(
     }
 
   private def routeValidRequest(validateRequest: ValidateRequest): LambdaResponse = {
-    validateReceiptsRoute.route(validateRequest).map((transactions: Set[ValidatedTransaction]) => LambdaResponse(
-      okCode, Some(mapper.writeValueAsString(ValidateResponse(transactions))), successHeaders))
+    validateReceiptsRoute.route(validateRequest).map((validateResponse: ValidateResponse) => LambdaResponse(
+      okCode, Some(mapper.writeValueAsString(validateResponse)), successHeaders))
       .getOrElse(LambdaResponse(HttpStatusCodes.internalServerError, Some("Failed to process request"), errorHeaders)
       )
   }

@@ -6,7 +6,9 @@ import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
+import com.gu.mobilepurchases.apple.{ AppStoreResponse, AppStoreResponseReceipt }
 import com.gu.mobilepurchases.lambda.ValidateReceiptLambda.validateReceiptsName
+import com.gu.mobilepurchases.model.ValidatedTransaction
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
 import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
@@ -38,24 +40,42 @@ class DelegatingValidateReceiptLambdaRequestMapper(delegateValidateUrl: String) 
 }
 
 class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends DelegateComparator {
-  override def apply(lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse = {
-    val diffMetricName: String = "transactions-diff"
-    (readTransactions(lambdaResponse), readTransactions(delegateResponse)) match {
-      case (Some(lambdaTransactions), Some(delegateTransactions)) => {
-        val difference = lambdaTransactions.transactions.size - delegateTransactions.transactions.size
-        cloudWatch.queueMetric(diffMetricName, difference, StandardUnit.Count)
-        if (difference >= 0) {
+  private val logger = LogManager.getLogger(classOf[DelegatingValidateReceiptCompators])
+  private val diffMetricName: String = "transactions-diff"
+  private val lambdaDiffMetricName: String = s"$diffMetricName-lambda"
+  private val delegateDiffMetricsName: String = s"$diffMetricName-delegate"
+  override def apply(lambdaRequest: LambdaRequest, lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse = {
+    val maybeDelegateResponse: Option[ValidateResponse] = readValidateResponse(delegateResponse)
+    (readValidateResponse(lambdaResponse), maybeDelegateResponse) match {
+      case (Some(lambdaValidateResponse), Some(delegateValidateResponse)) => {
+        if (lambdaValidateResponse.equals(delegateValidateResponse)) {
+          cloudWatch.queueMetric(lambdaDiffMetricName, 0, StandardUnit.Count)
+          cloudWatch.queueMetric(delegateDiffMetricsName, 0, StandardUnit.Count)
           lambdaResponse
         } else {
-          delegateResponse
+          logger.warn(s"Validate mismatch for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
+          val lambdaTransactions: Set[ValidatedTransaction] = lambdaValidateResponse.transactions
+          val delegateTransactions: Set[ValidatedTransaction] = delegateValidateResponse.transactions
+          val lambdaExtraQuantity: Int = lambdaTransactions.diff(delegateTransactions).size
+          val delegateExtraQuantity: Int = delegateTransactions.diff(lambdaTransactions).size
+          cloudWatch.queueMetric(lambdaDiffMetricName, lambdaExtraQuantity, StandardUnit.Count)
+          cloudWatch.queueMetric(delegateDiffMetricsName, delegateExtraQuantity, StandardUnit.Count)
+          if (lambdaExtraQuantity >= delegateExtraQuantity) {
+            lambdaResponse
+          } else {
+            delegateResponse
+          }
         }
+
       }
-      case (Some(lambdaTransactions), _) => {
-        cloudWatch.queueMetric(diffMetricName, lambdaTransactions.transactions.size, StandardUnit.Count)
+      case (Some(validateResponse), _) => {
+        logger.warn(s"Validate mismatch for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
+        cloudWatch.queueMetric(lambdaDiffMetricName, validateResponse.transactions.size, StandardUnit.Count)
         lambdaResponse
       }
-      case (_, Some(lambdaTransactions)) => {
-        cloudWatch.queueMetric(diffMetricName, 0 - lambdaTransactions.transactions.size, StandardUnit.Count)
+      case (_, Some(validateResponse)) => {
+        logger.warn(s"Validate mismatch for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
+        cloudWatch.queueMetric(delegateDiffMetricsName, validateResponse.transactions.size, StandardUnit.Count)
         delegateResponse
       }
       case (_, _) => delegateResponse
@@ -63,7 +83,7 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
 
   }
 
-  def readTransactions(response: LambdaResponse): Option[ValidateResponse] = {
+  def readValidateResponse(response: LambdaResponse): Option[ValidateResponse] = {
     Try {
       if (goodStatus(response.statusCode)) {
         response.maybeBody.map(mapper.readValue[ValidateResponse])

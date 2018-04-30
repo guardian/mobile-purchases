@@ -7,7 +7,7 @@ import java.time.{ Clock, Duration, ZonedDateTime }
 import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
-import com.gu.mobilepurchases.apple.AppStoreExample
+import com.gu.mobilepurchases.apple.AppStoreExample.successAsAppStoreResponse
 import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
 import com.gu.mobilepurchases.persistence.{ TransactionPersistenceImpl, UserPurchaseFilterExpiredImpl }
 import com.gu.mobilepurchases.shared.cloudwatch.CloudWatchImpl
@@ -18,6 +18,7 @@ import com.gu.mobilepurchases.shared.external.Parallelism
 import com.gu.mobilepurchases.shared.lambda.{ ApiGatewayLambdaRequest, ApiGatewayLambdaResponse, LambdaRequest, LambdaResponse }
 import com.gu.mobilepurchases.userpurchases.persistence.{ ScanamaoUserPurchasesStringsByUserIdColonAppId, UserPurchasePersistenceImpl, UserPurchasePersistenceTransformer, UserPurchasesByUserIdAndAppId, UserPurchasesStringsByUserIdColonAppId }
 import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
+import com.gu.mobilepurchases.validate.ValidateExample.successValidateRequest
 import com.gu.mobilepurchases.validate.{ FetchAppStoreResponsesImpl, ValidateExample, ValidateReceiptsController, ValidateReceiptsRouteImpl, ValidateReceiptsTransformAppStoreResponseImpl, ValidateRequest, ValidateResponse }
 import com.gu.scanamo.error.DynamoReadError
 import com.gu.scanamo.query.UniqueKey
@@ -38,25 +39,29 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
     val userPurchasePersistenceTransformer: UserPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(clock)
     val mockAmazonCloudWatch: AmazonCloudWatch = mock[AmazonCloudWatch]
     val cloudWatchImpl: CloudWatchImpl = new CloudWatchImpl("", "lambdaname", mockAmazonCloudWatch)
-    val expectedApiGatewayRequest: Array[Byte] = mapper.writeValueAsBytes(ApiGatewayLambdaRequest(LambdaRequest(Some(mapper.writeValueAsString(ValidateExample.successValidateRequest)), Map())))
-    val expectedUserPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId = userPurchasePersistenceTransformer.transform(UserPurchasesByUserIdAndAppId(
-      s"vendorUdid~${ValidateExample.successValidateRequest.userIds.vendorUdid}", ValidateExample.successValidateRequest.appInfo.id, Set(UserPurchase(
-        "uk.co.guardian.gce.plusobserver.1monthsub",
-        "20000001746150",
-        UserPurchaseInterval("2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z")))))
+    val expectedApiGatewayRequest: Array[Byte] = mapper.writeValueAsBytes(
+      ApiGatewayLambdaRequest(LambdaRequest(Some(mapper.writeValueAsString(successValidateRequest)), Map())))
+    val expectedUserPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId = userPurchasePersistenceTransformer.transform(
+      UserPurchasesByUserIdAndAppId(
+        s"vendorUdid~${successValidateRequest.userIds.vendorUdid}", successValidateRequest.appInfo.id, Set(UserPurchase(
+          "uk.co.guardian.gce.plusobserver.1monthsub",
+          "20000001746150",
+          UserPurchaseInterval("2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z")))))
 
     val fetchAppStoreResponsesImpl: FetchAppStoreResponsesImpl = new FetchAppStoreResponsesImpl(
       (receiptData: String) => {
-        Set(ValidateExample.successValidateRequestTransaction.receipt, AppStoreExample.successAsAppStoreResponse.latest_receipt.get) must contain(receiptData)
+        Set(ValidateExample.successValidateRequestTransaction.receipt, successAsAppStoreResponse.latest_receipt.get) must contain(receiptData)
         Future.successful {
-          Some(AppStoreExample.successAsAppStoreResponse)
+          Some(successAsAppStoreResponse)
         }
       },
       cloudWatchImpl, duration.Duration(1, TimeUnit.MINUTES))
 
     val userPurchasePersistenceImpl: UserPurchasePersistenceImpl = new UserPurchasePersistenceImpl(
       new ScanamaoUserPurchasesStringsByUserIdColonAppId {
-        override def put(userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
+        override def put(
+          userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId
+        ): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
           userPurchasesStringsByUserIdColonAppId.copy(ttl = 0) must beEqualTo(expectedUserPurchasesStringsByUserIdColonAppId.copy(ttl = 0))
           None
         }

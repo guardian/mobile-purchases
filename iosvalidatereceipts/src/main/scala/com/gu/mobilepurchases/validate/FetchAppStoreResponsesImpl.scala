@@ -10,7 +10,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext, Future }
 
 trait FetchAppStoreResponses {
-  def fetchAllValidatedTransactions(remainingReceipts: Set[String]): Set[AppStoreResponse]
+  def fetchAllValidatedTransactions(remainingReceipts: Set[String]): Map[String, AppStoreResponse]
 }
 
 class FetchAppStoreResponsesImpl(
@@ -21,12 +21,12 @@ class FetchAppStoreResponsesImpl(
   private val logger: Logger = LogManager.getLogger(classOf[FetchAppStoreResponsesImpl])
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
 
-  def fetchAllValidatedTransactions(receipts: Set[String]): Set[AppStoreResponse] = {
+  def fetchAllValidatedTransactions(receipts: Set[String]): Map[String, AppStoreResponse] = {
     val timer: Timer = cloudWatch.startTimer("fetch-all-timer")
-    val futureResponse: Future[Set[AppStoreResponse]] = fetchAppStoreResponsesFuture(receipts, Set(), Set()).transform(
-      (success: Set[AppStoreResponse]) => {
+    val futureResponse: Future[Map[String, AppStoreResponse]] = fetchAppStoreResponsesFuture(receipts, Map()).transform(
+      (success: Map[String, Option[AppStoreResponse]]) => {
         timer.succeed
-        success
+        success.filter(_._2.nonEmpty).mapValues(_.get)
       },
       (failure: Throwable) => {
         timer.fail
@@ -39,29 +39,33 @@ class FetchAppStoreResponsesImpl(
 
   private def fetchAppStoreResponsesFuture(
     remainingReceipts: Set[String],
-    processedReceipts: Set[String],
-    existingAppStoreResponses: Set[AppStoreResponse]
-  ): Future[Set[AppStoreResponse]] = {
-    val unprocessedReceipts: Set[String] = remainingReceipts.filterNot((receiptData: String) => processedReceipts.contains(receiptData))
+    fetchedReceipts: Map[String, Option[AppStoreResponse]]
+  ): Future[Map[String, Option[AppStoreResponse]]] = {
+    val unprocessedReceipts: Set[String] = remainingReceipts.diff(fetchedReceipts.keySet)
     if (unprocessedReceipts.isEmpty) {
-      cloudWatch.queueMetric("fetch-all-total", existingAppStoreResponses.size, StandardUnit.Count)
-      Future.successful(existingAppStoreResponses)
+      cloudWatch.queueMetric("fetch-all-total", fetchedReceipts.size, StandardUnit.Count)
+      Future.successful(fetchedReceipts)
     } else {
-      val eventualMaybeAppStoreResponses: Seq[Future[Option[AppStoreResponse]]] = unprocessedReceipts.toSeq.map(futureAppStoreResponse)
-      val eventualMaybeAppStoreResponsesSeq: Future[Seq[Option[AppStoreResponse]]] = Future.sequence(eventualMaybeAppStoreResponses)
-      val eventualAppStoreResponses: Future[Set[AppStoreResponse]] = eventualMaybeAppStoreResponsesSeq.map((_: Seq[Option[AppStoreResponse]]).flatten.toSet)
-      eventualAppStoreResponses.flatMap((appStoreResponses: Set[AppStoreResponse]) => {
+      asyncFetchReceipts(unprocessedReceipts).flatMap((appStoreResponses: Map[String, Option[AppStoreResponse]]) => {
+        val latestReceiptsReturned: Set[String] = appStoreResponses.values.flatten.flatMap((_: AppStoreResponse).latest_receipt).toSet
+        val latestReceiptsToFetch: Set[String] = latestReceiptsReturned.diff(unprocessedReceipts)
+        val updatedFetchedReceipts: Map[String, Option[AppStoreResponse]] = appStoreResponses ++ fetchedReceipts
         fetchAppStoreResponsesFuture(
-          appStoreResponses.toSeq.flatMap((_: AppStoreResponse).latest_receipt.toSeq).toSet,
-          processedReceipts ++ unprocessedReceipts,
-          appStoreResponses ++ existingAppStoreResponses
+          latestReceiptsToFetch,
+          updatedFetchedReceipts
         )
       })
     }
   }
 
-  private def futureAppStoreResponse(receipt: String): Future[Option[AppStoreResponse]] = {
-    appStore.send(receipt)
-
+  private def asyncFetchReceipts(unprocessedReceipts: Set[String]): Future[Map[String, Option[AppStoreResponse]]] = {
+    val eventualResponses: Future[Seq[(String, Option[AppStoreResponse])]] = Future.sequence(unprocessedReceipts
+      .toSeq
+      .map((receipt: String) =>
+        appStore.send(receipt).map((maybeResponse: Option[AppStoreResponse]) => receipt -> maybeResponse)
+      )
+    )
+    eventualResponses.map((_: Seq[(String, Option[AppStoreResponse])]).toMap)
   }
+
 }
