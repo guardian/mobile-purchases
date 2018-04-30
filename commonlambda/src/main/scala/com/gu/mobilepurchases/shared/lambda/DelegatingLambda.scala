@@ -47,9 +47,9 @@ class DelegatingLambda(
   def apply(lambdaRequest: LambdaRequest): LambdaResponse = {
     val triedLambdaAndDelegate: (Try[LambdaResponse], Try[LambdaResponse]) = tryAndTimeoutLambdaAndDelegate(lambdaRequest)
     triedLambdaAndDelegate match {
-      case (Success(lambda), Success(delegate)) => {
-        logMetadataDifference(lambdaRequest, lambda, delegate)
-        delegateComparator.apply(lambdaRequest, lambda, delegate)
+      case (Success(lambdaResponse), Success(delegateResponse)) => {
+        logMetadataDifference(lambdaRequest, lambdaResponse, delegateResponse)
+        delegateComparator.apply(lambdaRequest, lambdaResponse, delegateResponse)
 
       }
       case (Failure(lambdaThrowable), Success(delegate)) => {

@@ -66,9 +66,9 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
         }
       }
       case (Some(userPurchasesResponse), _) => {
-        val lambdaPurchasesQuanitty: Double = userPurchasesResponse.purchases.size
-        cloudWatch.queueMetric(lambdaDiffMetricName, lambdaPurchasesQuanitty, StandardUnit.Count)
-        cloudWatch.queueMetric(returnedMetricName, lambdaPurchasesQuanitty, StandardUnit.Count)
+        val lambdaPurchasesQuantity: Double = userPurchasesResponse.purchases.size
+        cloudWatch.queueMetric(lambdaDiffMetricName, lambdaPurchasesQuantity, StandardUnit.Count)
+        cloudWatch.queueMetric(returnedMetricName, lambdaPurchasesQuantity, StandardUnit.Count)
         lambdaResponse
       }
       case (_, Some(userPurchasesResponse)) => {
