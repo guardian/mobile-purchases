@@ -4,6 +4,7 @@ import java.time.{ Clock, Instant, ZonedDateTime }
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.services.dynamodbv2.{ AmazonDynamoDBAsync, AmazonDynamoDBAsyncClient }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.userpurchases.UserPurchase
 import com.gu.scanamo.Scanamo.exec
@@ -83,33 +84,52 @@ class UserPurchasePersistenceTransformer(clock: Clock) {
 
 class UserPurchasePersistenceImpl(
     scanamoClient: ScanamaoUserPurchasesStringsByUserIdColonAppId,
-    userPurchasePersistenceTransformer: UserPurchasePersistenceTransformer
+    userPurchasePersistenceTransformer: UserPurchasePersistenceTransformer,
+    cloudWatch: CloudWatchMetrics
 ) extends UserPurchasePersistence {
 
   private val logger: Logger = LogManager.getLogger(classOf[UserPurchasePersistenceImpl])
 
   override def write(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] = {
+    val writeTimer: Timer = cloudWatch.startTimer("purchases-write")
     if (userPurchasesByUserId.purchases.isEmpty) {
       Success(None)
     } else {
       scanamoClient.put(userPurchasePersistenceTransformer.transform(userPurchasesByUserId)) match {
-        case Some(Right(u))    => Success(Some(UserPurchasesByUserIdAndAppId(u)))
-        case Some(Left(error)) => Failure(new IllegalStateException(s"$error"))
-        case None              => Success(None)
+        case Some(Right(u)) => {
+          writeTimer.succeed
+          Success(Some(UserPurchasesByUserIdAndAppId(u)))
+        }
+        case Some(Left(error)) => {
+          writeTimer.fail
+          Failure(new IllegalStateException(s"$error"))
+        }
+        case None => {
+          writeTimer.succeed
+          Success(None)
+        }
       }
     }
   }
 
   override def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]] = {
+    val readTimer: Timer = cloudWatch.startTimer("purchases-read")
     val key: String = s"$userId:$appId"
-    logger.info(s"Looking for {}", key)
     scanamoClient.get('userIdColonAppId -> key) match {
-      case Some(Right(u)) =>
+      case Some(Right(u)) => {
         val userPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId = UserPurchasesByUserIdAndAppId(u)
-        logger.info(s"Found {}", userPurchasesByUserIdAndAppId)
+        readTimer.succeed
         Success(Some(userPurchasesByUserIdAndAppId))
-      case Some(Left(error)) => Failure(new IllegalStateException(s"$error"))
-      case None              => Success(None)
+
+      }
+      case Some(Left(error)) => {
+        readTimer.fail
+        Failure(new IllegalStateException(s"$error"))
+      }
+      case None => {
+        readTimer.succeed
+        Success(None)
+      }
     }
   }
 }

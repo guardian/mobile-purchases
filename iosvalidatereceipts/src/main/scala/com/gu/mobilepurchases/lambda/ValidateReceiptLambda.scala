@@ -27,7 +27,7 @@ object ValidateReceiptLambda {
           new AppStoreImpl(AppStoreConfig(ssmConfig.config, ssmConfig.stage), client, cloudWatch), cloudWatch, timeout),
         new TransactionPersistenceImpl(new UserPurchasePersistenceImpl(
           ScanamaoUserPurchasesStringsByUserIdColonAppIdImpl(UserPurchaseConfig(ssmConfig.app, ssmConfig.stage, ssmConfig.stack)),
-          new UserPurchasePersistenceTransformer(clock)
+          new UserPurchasePersistenceTransformer(clock), cloudWatch
         ), new UserPurchaseFilterExpiredImpl())
       )),
     "Error initialising validate receipts controller",

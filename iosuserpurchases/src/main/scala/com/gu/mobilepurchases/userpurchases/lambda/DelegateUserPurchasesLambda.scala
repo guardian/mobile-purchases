@@ -101,7 +101,7 @@ object DelegateUserPurchasesLambda {
       case Success(url) => {
         logger.info(s"Delegating to $url")
         new DelegatingLambda(
-          UserPurchasesLambda.userPurchasesController(ssmConfig, clock),
+          UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch),
           new DelegateUserPurchasesLambdaRequestMapper(url),
           new DelegateUserPurchasesLambdaComparator(cloudWatch),
           GlobalOkHttpClient.defaultHttpClient,
@@ -111,7 +111,7 @@ object DelegateUserPurchasesLambda {
       }
       case Failure(_: ConfigException.Missing) => {
         logger.info(s"Not delegating")
-        UserPurchasesLambda.userPurchasesController(ssmConfig, clock)
+        UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch)
       }
       case Failure(t: Throwable) => {
         logger.info("Unexpected config error")

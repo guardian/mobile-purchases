@@ -4,13 +4,15 @@ import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
 import java.time.Clock.systemUTC
 import java.time.ZoneOffset.UTC
 import java.time.{ Clock, Duration, ZonedDateTime }
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.apple.AppStoreExample.successAsAppStoreResponse
 import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
 import com.gu.mobilepurchases.persistence.{ TransactionPersistenceImpl, UserPurchaseFilterExpiredImpl }
-import com.gu.mobilepurchases.shared.cloudwatch.CloudWatchImpl
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchImpl, CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.applicationJsonMediaType
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.OkHttpClientTestUtils.testOkHttpResponse
@@ -57,6 +59,13 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       },
       cloudWatchImpl, duration.Duration(1, TimeUnit.MINUTES))
 
+    val cloudWatchMetrics: CloudWatchMetrics = new CloudWatchMetrics {
+      override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date): Boolean = ???
+
+      override def startTimer(metricName: String): Timer = mock[Timer]
+
+      override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ???
+    }
     val userPurchasePersistenceImpl: UserPurchasePersistenceImpl = new UserPurchasePersistenceImpl(
       new ScanamaoUserPurchasesStringsByUserIdColonAppId {
         override def put(
@@ -67,7 +76,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
         }
 
         override def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = None
-      }, userPurchasePersistenceTransformer)
+      }, userPurchasePersistenceTransformer, cloudWatchMetrics)
 
     val validateReceiptsController: ValidateReceiptsController = new ValidateReceiptsController(new ValidateReceiptsRouteImpl(
       new ValidateReceiptsTransformAppStoreResponseImpl(),

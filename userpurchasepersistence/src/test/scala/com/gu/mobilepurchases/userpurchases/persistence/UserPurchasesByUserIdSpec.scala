@@ -1,7 +1,10 @@
 package com.gu.mobilepurchases.userpurchases.persistence
 
 import java.time.{ Clock, Instant, ZoneOffset }
+import java.util.Date
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
 import com.gu.scanamo.error.DynamoReadError
@@ -32,7 +35,13 @@ class UserPurchasesByUserIdSpec extends Specification with Mockito {
         override def put(userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = ???
 
         override def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = ???
-      }, userPurchasePersistenceTransformer)
+      }, userPurchasePersistenceTransformer, new CloudWatchMetrics {
+        override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date): Boolean = ???
+
+        override def startTimer(metricName: String): Timer = mock[Timer]
+
+        override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ???
+      })
 
       mapper.readTree(
         userPurchasePersistenceTransformer.transform(exampleUserPurchaseByUsedID).purchases

@@ -1,8 +1,11 @@
 package com.gu.mobilepurchases.userpurchases.persistence
 
 import java.time.{ Clock, Instant, ZoneOffset }
+import java.util.Date
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.amazonaws.services.dynamodbv2.model._
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
 import com.gu.scanamo.error.{ DynamoReadError, MissingProperty }
 import com.gu.scanamo.query.UniqueKey
@@ -14,6 +17,13 @@ import scala.util.{ Failure, Success }
 class UserPurchasePersistenceImplSpec extends Specification with Mockito {
   val instant = Instant.now()
   "UserPurchasePersistenceImpl" should {
+    val cloudWatchMetrics: CloudWatchMetrics = new CloudWatchMetrics {
+      override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, date: Date): Boolean = ???
+
+      override def startTimer(metricName: String): Timer = mock[Timer]
+
+      override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ???
+    }
     val purchase: UserPurchase = UserPurchase(
       "testProductId", "testWebOrderLineItemId", UserPurchaseInterval("testStart", "testEnd")
     )
@@ -21,6 +31,7 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
     "write success" in {
       val mockClock: Clock = buildMockClock
       val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(mockClock)
+
       new UserPurchasePersistenceImpl(new ScanamaoUserPurchasesStringsByUserIdColonAppId {
         override def put(userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
           userPurchasesStringsByUserIdColonAppId must beEqualTo(userPurchasePersistenceTransformer.transform(userPurchasesByUserIdAndAppId))
@@ -28,7 +39,7 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
         }
 
         override def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = None
-      }, userPurchasePersistenceTransformer).write(userPurchasesByUserIdAndAppId) must beEqualTo(Success(None))
+      }, userPurchasePersistenceTransformer, cloudWatchMetrics).write(userPurchasesByUserIdAndAppId) must beEqualTo(Success(None))
     }
     "write fail" in {
       val mockClock: Clock = buildMockClock
@@ -42,7 +53,7 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
 
         override def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = None
 
-      }, userPurchasePersistenceTransformer).write(userPurchasesByUserIdAndAppId) must beAnInstanceOf[Failure[_]]
+      }, userPurchasePersistenceTransformer, cloudWatchMetrics).write(userPurchasesByUserIdAndAppId) must beAnInstanceOf[Failure[_]]
     }
 
     "read success" in {
@@ -57,7 +68,7 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
           key.asAVMap must beEqualTo(Map("userIdColonAppId" -> new AttributeValue("testUserId:testAppId")))
           Some(Right(userPurchasesStringsByUserIdColonAppId))
         }
-      }, userPurchasePersistenceTransformer).read("testUserId", "testAppId") must beEqualTo(Success(Some(userPurchasesByUserIdAndAppId)))
+      }, userPurchasePersistenceTransformer, cloudWatchMetrics).read("testUserId", "testAppId") must beEqualTo(Success(Some(userPurchasesByUserIdAndAppId)))
     }
     "read failure" in {
       val mockClock: Clock = buildMockClock
@@ -70,7 +81,7 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
           key.asAVMap must beEqualTo(Map("userIdColonAppId" -> new AttributeValue("testUserId:testAppId")))
           Some(Left(MissingProperty))
         }
-      }, userPurchasePersistenceTransformer).read("testUserId", "testAppId") must beAnInstanceOf[Failure[_]]
+      }, userPurchasePersistenceTransformer, cloudWatchMetrics).read("testUserId", "testAppId") must beAnInstanceOf[Failure[_]]
     }
   }
 
