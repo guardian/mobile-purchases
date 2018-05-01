@@ -53,7 +53,6 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsyn
   def sendABatch(bufferOfMetrics: util.ArrayList[MetricDatum]): Option[Future[PutMetricDataResult]] = {
 
     if (!bufferOfMetrics.isEmpty) {
-      val batchNumber: Long = atomicLong.incrementAndGet()
       val request: PutMetricDataRequest = new PutMetricDataRequest()
         .withNamespace(s"mobile-purchases/$stage/$lambdaname")
         .withMetricData(bufferOfMetrics)
