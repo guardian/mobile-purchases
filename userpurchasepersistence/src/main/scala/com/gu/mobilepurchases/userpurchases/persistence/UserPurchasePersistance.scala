@@ -119,7 +119,6 @@ class UserPurchasePersistenceImpl(
         val userPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId = UserPurchasesByUserIdAndAppId(u)
         readTimer.succeed
         Success(Some(userPurchasesByUserIdAndAppId))
-
       }
       case Some(Left(error)) => {
         readTimer.fail

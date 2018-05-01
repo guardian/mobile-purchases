@@ -38,7 +38,7 @@ sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Ins
 class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsync) extends CloudWatch {
   private val atomicLong: AtomicLong = new AtomicLong(0)
   private val logger: Logger = LogManager.getLogger(classOf[CloudWatchImpl])
-  implicit private  val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
+  implicit private val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   private val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
 
   def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Boolean = {
@@ -53,17 +53,14 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsyn
   def sendABatch(bufferOfMetrics: util.ArrayList[MetricDatum]): Option[Future[PutMetricDataResult]] = {
 
     if (!bufferOfMetrics.isEmpty) {
-      val batchNumber: Long = atomicLong.incrementAndGet()
-      logger.info(s"Sending $batchNumber:${bufferOfMetrics.size} metrics")
       val request: PutMetricDataRequest = new PutMetricDataRequest()
         .withNamespace(s"mobile-purchases/$stage/$lambdaname")
         .withMetricData(bufferOfMetrics)
       val promise: Promise[PutMetricDataResult] = Promise[PutMetricDataResult]
       val value: AsyncHandler[PutMetricDataRequest, PutMetricDataResult] = new AsyncHandler[PutMetricDataRequest, PutMetricDataResult] {
         override def onError(exception: Exception): Unit = promise.failure(exception)
-
         override def onSuccess(request: PutMetricDataRequest, result: PutMetricDataResult): Unit = {
-          logger.info(s"Sent $batchNumber:${bufferOfMetrics.size} metrics")
+
           promise.success(result)
         }
       }

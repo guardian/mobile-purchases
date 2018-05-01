@@ -20,6 +20,7 @@ class UserPurchasesImpl(
 
   override def findPurchases(userPurchasesRequest: UserPurchasesRequest): UserPurchasesResponse = {
     UserPurchasesResponse(userPurchasesRequest.userIds
+      .filter(_.startsWith("vendorUdid~"))
       .map(userPurchasePersistence.read(_: String, userPurchasesRequest.appId))
       .flatMap {
         case Success(userPurchasesByUserIdAndAppId) => userPurchasesByUserIdAndAppId.map((_: UserPurchasesByUserIdAndAppId).purchases).getOrElse(Set())

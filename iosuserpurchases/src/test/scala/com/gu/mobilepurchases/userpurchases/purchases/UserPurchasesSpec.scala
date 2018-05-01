@@ -25,7 +25,7 @@ object UserPurchasesSpec {
     randomString <- genCommonAscii
     orderIdsStartsAndEnds <- Gen.mapOf[String, Set[(String, String, String)]](
       Gen.zip[String, Set[(String, String, String)]](
-        genCommonAscii,
+        genCommonAscii.map("vendorUdid~".concat(_: String)),
         Gen.containerOf[Set, (String, String, String)](for {
           randomPurchaseString <- genCommonAscii
         } yield (

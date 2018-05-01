@@ -2,6 +2,12 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: 'Mobile Purchases DynamoDB'
 
 Parameters:
+  ReadCapacityUnits:
+    Description: DynamoDb Read Capacity Units
+    Type: Number
+  WriteCapacityUnits:
+    Description: DynamoDb Write Capacity Units
+    Type: Number
   Stack:
     Description: Stack name
     Type: String
@@ -26,8 +32,8 @@ Resources:
         - AttributeName: userIdColonAppId
           KeyType: HASH
       ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
+        ReadCapacityUnits: !Ref ReadCapacityUnits
+        WriteCapacityUnits: !Ref WriteCapacityUnits
       SSESpecification:
         SSEEnabled: true
       TimeToLiveSpecification:
