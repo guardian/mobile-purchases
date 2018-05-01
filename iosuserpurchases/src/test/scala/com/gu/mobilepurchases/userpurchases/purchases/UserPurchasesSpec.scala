@@ -15,23 +15,24 @@ import scala.util.{ Failure, Success, Try }
 case class AppIdWithUserPurchasesByUserId(appId: String, userPurchases: Map[String, Set[UserPurchase]])
 
 object UserPurchasesSpec {
-  def emptyOrSuffix(random: String, suffix: String) = if (random.isEmpty) {
+  def emptyOrApply(random: String, stringFunc: (String => String)): String = if (random.isEmpty) {
     random
   } else {
-    s"$random$suffix"
+    stringFunc(random)
+
   }
 
   def genMatchingAppIdWithUserPurchasesByUserId: Gen[AppIdWithUserPurchasesByUserId] = for {
     randomString <- genCommonAscii
     orderIdsStartsAndEnds <- Gen.mapOf[String, Set[(String, String, String)]](
       Gen.zip[String, Set[(String, String, String)]](
-        genCommonAscii,
+        genCommonAscii.map("vendorUdid~".concat(_: String)),
         Gen.containerOf[Set, (String, String, String)](for {
           randomPurchaseString <- genCommonAscii
         } yield (
-          emptyOrSuffix(randomPurchaseString, "webOrderLineItemId"),
-          emptyOrSuffix(randomPurchaseString, "start"),
-          emptyOrSuffix(randomPurchaseString, "end")))))
+          emptyOrApply(randomPurchaseString, (_: String).concat("webOrderLineItemId")),
+          emptyOrApply(randomPurchaseString, (_: String).concat("start")),
+          emptyOrApply(randomPurchaseString, (_: String).concat("end"))))))
   } yield AppIdWithUserPurchasesByUserId(randomString, orderIdsStartsAndEnds.mapValues(
     (_: Set[(String, String, String)]).map((v: (String, String, String)) =>
       UserPurchase(randomString, v._1, UserPurchaseInterval(v._2, v._3)))))
