@@ -3,7 +3,6 @@ package com.gu.mobilepurchases.shared.cloudwatch
 import java.time.{ Duration, Instant }
 import java.util
 import java.util.Date
-import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.{ ConcurrentLinkedQueue, TimeUnit }
 
 import com.amazonaws.handlers.AsyncHandler
@@ -36,7 +35,7 @@ sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Ins
 }
 
 class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsync) extends CloudWatch {
-  private val atomicLong: AtomicLong = new AtomicLong(0)
+
   private val logger: Logger = LogManager.getLogger(classOf[CloudWatchImpl])
   implicit private val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   private val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
@@ -60,7 +59,6 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsyn
       val value: AsyncHandler[PutMetricDataRequest, PutMetricDataResult] = new AsyncHandler[PutMetricDataRequest, PutMetricDataResult] {
         override def onError(exception: Exception): Unit = promise.failure(exception)
         override def onSuccess(request: PutMetricDataRequest, result: PutMetricDataResult): Unit = {
-
           promise.success(result)
         }
       }
