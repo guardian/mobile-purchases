@@ -5,7 +5,7 @@ package com.gu.mobilepurchases.userpurchases.lambda
 import java.time.Clock
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
-import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchAsync, AmazonCloudWatchAsyncClientBuilder, AmazonCloudWatchClientBuilder }
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
 import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient
@@ -101,7 +101,7 @@ object DelegateUserPurchasesLambda {
       case Success(url) => {
         logger.info(s"Delegating to $url")
         new DelegatingLambda(
-          UserPurchasesLambda.userPurchasesController(ssmConfig, clock),
+          UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch),
           new DelegateUserPurchasesLambdaRequestMapper(url),
           new DelegateUserPurchasesLambdaComparator(cloudWatch),
           GlobalOkHttpClient.defaultHttpClient,
@@ -111,7 +111,7 @@ object DelegateUserPurchasesLambda {
       }
       case Failure(_: ConfigException.Missing) => {
         logger.info(s"Not delegating")
-        UserPurchasesLambda.userPurchasesController(ssmConfig, clock)
+        UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch)
       }
       case Failure(t: Throwable) => {
         logger.info("Unexpected config error")
@@ -122,7 +122,7 @@ object DelegateUserPurchasesLambda {
 }
 
 class DelegateUserPurchasesLambda(ssmConfig: SsmConfig, clock: Clock, cloudWatch: CloudWatch) extends AwsLambda(DelegateUserPurchasesLambda.delegateIfConfigured(ssmConfig, clock, cloudWatch), cloudWatch = cloudWatch) {
-  def this(ssmConfig: SsmConfig, clock: Clock, amazonCloudWatch: AmazonCloudWatch) = this(ssmConfig, clock, new CloudWatchImpl(ssmConfig.stage, userPurchasesName, amazonCloudWatch))
-  def this() = this(SsmConfigLoader(), Clock.systemUTC(), AmazonCloudWatchClientBuilder.defaultClient())
+  def this(ssmConfig: SsmConfig, clock: Clock, amazonCloudWatch: AmazonCloudWatchAsync) = this(ssmConfig, clock, new CloudWatchImpl(ssmConfig.stage, userPurchasesName, amazonCloudWatch))
+  def this() = this(SsmConfigLoader(), Clock.systemUTC(), AmazonCloudWatchAsyncClientBuilder.defaultClient())
 }
 

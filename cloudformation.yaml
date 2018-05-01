@@ -193,7 +193,7 @@ Resources:
           App: !Sub ${App}
       Description: Validates purchases
       MemorySize: 320
-      Timeout: 300
+      Timeout: 45
       Events:
         PostApi:
           Type: Api
@@ -219,7 +219,7 @@ Resources:
           App: !Sub ${App}
       Description: Gets user purchases
       MemorySize: 320
-      Timeout: 300
+      Timeout: 45
       Events:
         GetApi:
           Type: Api

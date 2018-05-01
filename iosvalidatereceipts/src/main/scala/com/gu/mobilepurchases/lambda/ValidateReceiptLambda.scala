@@ -3,7 +3,7 @@ package com.gu.mobilepurchases.lambda
 import java.time.Clock
 import java.util.concurrent.TimeUnit
 
-import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchClientBuilder }
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchAsync, AmazonCloudWatchAsyncClientBuilder, AmazonCloudWatchClientBuilder }
 import com.gu.mobilepurchases.apple.{ AppStoreConfig, AppStoreImpl }
 import com.gu.mobilepurchases.persistence.{ TransactionPersistenceImpl, UserPurchaseFilterExpiredImpl }
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl, CloudWatchMetrics }
@@ -27,7 +27,7 @@ object ValidateReceiptLambda {
           new AppStoreImpl(AppStoreConfig(ssmConfig.config, ssmConfig.stage), client, cloudWatch), cloudWatch, timeout),
         new TransactionPersistenceImpl(new UserPurchasePersistenceImpl(
           ScanamaoUserPurchasesStringsByUserIdColonAppIdImpl(UserPurchaseConfig(ssmConfig.app, ssmConfig.stage, ssmConfig.stack)),
-          new UserPurchasePersistenceTransformer(clock)
+          new UserPurchasePersistenceTransformer(clock), cloudWatch
         ), new UserPurchaseFilterExpiredImpl())
       )),
     "Error initialising validate receipts controller",
@@ -37,9 +37,9 @@ object ValidateReceiptLambda {
 class ValidateReceiptLambda(ssmConfig: SsmConfig, client: OkHttpClient, cloudWatch: CloudWatch, clock: Clock, timeout: Duration) extends AwsLambda(
   ValidateReceiptLambda.validateReceipts(ssmConfig, client, cloudWatch, clock, timeout), cloudWatch =
     cloudWatch) {
-  def this(ssmConfig: SsmConfig, client: OkHttpClient, amazonCloudWatch: AmazonCloudWatch, clock: Clock, timeout: Duration) =
+  def this(ssmConfig: SsmConfig, client: OkHttpClient, amazonCloudWatch: AmazonCloudWatchAsync, clock: Clock, timeout: Duration) =
 
     this(ssmConfig, client, new CloudWatchImpl(ssmConfig.stage, ValidateReceiptLambda.validateReceiptsName, amazonCloudWatch), clock, timeout)
 
-  def this() = this(SsmConfigLoader(), GlobalOkHttpClient.defaultHttpClient, AmazonCloudWatchClientBuilder.defaultClient(), Clock.systemUTC(), Duration(270, TimeUnit.SECONDS))
+  def this() = this(SsmConfigLoader(), GlobalOkHttpClient.defaultHttpClient, AmazonCloudWatchAsyncClientBuilder.defaultClient(), Clock.systemUTC(), Duration(270, TimeUnit.SECONDS))
 }

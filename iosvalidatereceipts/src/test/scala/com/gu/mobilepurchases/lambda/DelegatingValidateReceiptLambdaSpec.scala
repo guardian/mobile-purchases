@@ -4,13 +4,15 @@ import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
 import java.time.Clock.systemUTC
 import java.time.ZoneOffset.UTC
 import java.time.{ Clock, Duration, ZonedDateTime }
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
-import com.amazonaws.services.cloudwatch.AmazonCloudWatch
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchAsync }
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.gu.mobilepurchases.apple.AppStoreExample.successAsAppStoreResponse
 import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
 import com.gu.mobilepurchases.persistence.{ TransactionPersistenceImpl, UserPurchaseFilterExpiredImpl }
-import com.gu.mobilepurchases.shared.cloudwatch.CloudWatchImpl
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchImpl, CloudWatchImplSpec, CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.applicationJsonMediaType
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.OkHttpClientTestUtils.testOkHttpResponse
@@ -37,7 +39,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
   "DelegatingValidateReceiptLambda" should {
     val clock: Clock = Clock.offset(systemUTC(), Duration.between(ZonedDateTime.now(UTC), ZonedDateTime.parse("2012-11-06T13:24:36.000Z").minusHours(2)))
     val userPurchasePersistenceTransformer: UserPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(clock)
-    val mockAmazonCloudWatch: AmazonCloudWatch = mock[AmazonCloudWatch]
+    val mockAmazonCloudWatch: AmazonCloudWatchAsync = CloudWatchImplSpec.mockSuccessfullySendMetrics(_ => ())
     val cloudWatchImpl: CloudWatchImpl = new CloudWatchImpl("", "lambdaname", mockAmazonCloudWatch)
     val expectedApiGatewayRequest: Array[Byte] = mapper.writeValueAsBytes(
       ApiGatewayLambdaRequest(LambdaRequest(Some(mapper.writeValueAsString(successValidateRequest)), Map())))
@@ -67,7 +69,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
         }
 
         override def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = None
-      }, userPurchasePersistenceTransformer)
+      }, userPurchasePersistenceTransformer, cloudWatchImpl)
 
     val validateReceiptsController: ValidateReceiptsController = new ValidateReceiptsController(new ValidateReceiptsRouteImpl(
       new ValidateReceiptsTransformAppStoreResponseImpl(),

@@ -139,6 +139,7 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWa
             promise.success(appStoreResponse)
           }
           case Failure(throwable) => {
+            logger.warn(s"appstore failure", throwable)
             timer.fail
             promise.failure(throwable)
           }
