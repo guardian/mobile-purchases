@@ -54,16 +54,14 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsyn
 
     if (!bufferOfMetrics.isEmpty) {
       val batchNumber: Long = atomicLong.incrementAndGet()
-      logger.info(s"Sending $batchNumber:${bufferOfMetrics.size} metrics")
       val request: PutMetricDataRequest = new PutMetricDataRequest()
         .withNamespace(s"mobile-purchases/$stage/$lambdaname")
         .withMetricData(bufferOfMetrics)
       val promise: Promise[PutMetricDataResult] = Promise[PutMetricDataResult]
       val value: AsyncHandler[PutMetricDataRequest, PutMetricDataResult] = new AsyncHandler[PutMetricDataRequest, PutMetricDataResult] {
         override def onError(exception: Exception): Unit = promise.failure(exception)
-
         override def onSuccess(request: PutMetricDataRequest, result: PutMetricDataResult): Unit = {
-          logger.info(s"Sent $batchNumber:${bufferOfMetrics.size} metrics")
+
           promise.success(result)
         }
       }
