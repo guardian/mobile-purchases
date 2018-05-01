@@ -56,10 +56,10 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           cloudWatch.queueMetric(lambdaDiffMetricName, lambdaExtraQuantity, StandardUnit.Count)
           cloudWatch.queueMetric(delegateDiffMetricName, delegateExtraQuantity, StandardUnit.Count)
           if (lambdaPurchaseSet.nonEmpty) {
-            logger.warn(s"Missing Lambda purchases for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
             cloudWatch.queueMetric(returnedMetricName, lambdaPurchaseSet.size, StandardUnit.Count)
             lambdaResponse
           } else {
+            logger.warn(s"Missing Lambda purchases for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
             cloudWatch.queueMetric(returnedMetricName, delegatePurchaseSet.size, StandardUnit.Count)
             delegateResponse
           }
