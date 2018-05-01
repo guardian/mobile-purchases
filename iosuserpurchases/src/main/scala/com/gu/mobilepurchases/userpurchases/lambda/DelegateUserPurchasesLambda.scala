@@ -49,7 +49,6 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           cloudWatch.queueMetric(returnedMetricName, lambdaUserPurchasesResponse.purchases.size, StandardUnit.Count)
           lambdaResponse
         } else {
-          logger.warn(s"Missing Lambda purchases for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
           val delegatePurchaseSet: Set[UserPurchase] = delegateUserPurchasesResponse.purchases
           val lambdaPurchaseSet: Set[UserPurchase] = lambdaUserPurchasesResponse.purchases
           val lambdaExtraQuantity: Int = lambdaPurchaseSet.diff(delegatePurchaseSet).size
@@ -57,6 +56,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           cloudWatch.queueMetric(lambdaDiffMetricName, lambdaExtraQuantity, StandardUnit.Count)
           cloudWatch.queueMetric(delegateDiffMetricName, delegateExtraQuantity, StandardUnit.Count)
           if (lambdaPurchaseSet.nonEmpty) {
+            logger.warn(s"Missing Lambda purchases for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
             cloudWatch.queueMetric(returnedMetricName, lambdaPurchaseSet.size, StandardUnit.Count)
             lambdaResponse
           } else {
