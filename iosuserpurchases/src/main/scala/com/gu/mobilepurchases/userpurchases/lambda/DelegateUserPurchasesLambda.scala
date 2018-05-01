@@ -53,7 +53,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           val delegatePurchaseSet: Set[UserPurchase] = delegateUserPurchasesResponse.purchases
           val lambdaPurchaseSet: Set[UserPurchase] = lambdaUserPurchasesResponse.purchases
           val lambdaExtraQuantity: Int = lambdaPurchaseSet.diff(delegatePurchaseSet).size
-          val delegateExtraQuantity: Int = lambdaPurchaseSet.diff(lambdaPurchaseSet).size
+          val delegateExtraQuantity: Int = delegatePurchaseSet.diff(lambdaPurchaseSet).size
           cloudWatch.queueMetric(lambdaDiffMetricName, lambdaExtraQuantity, StandardUnit.Count)
           cloudWatch.queueMetric(delegateDiffMetricName, delegateExtraQuantity, StandardUnit.Count)
           if (lambdaPurchaseSet.nonEmpty) {
