@@ -90,7 +90,7 @@ Resources:
         swagger: "2.0"
         info:
           version: "1.0.0"
-          title: !Ref App
+          title: !Sub ${App}-${Stage}
         paths:
           "/validateReceipts":
             post:

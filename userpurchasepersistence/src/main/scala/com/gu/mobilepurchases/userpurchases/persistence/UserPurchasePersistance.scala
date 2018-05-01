@@ -117,8 +117,10 @@ class UserPurchasePersistenceImpl(
     scanamoClient.get('userIdColonAppId -> key) match {
       case Some(Right(u)) => {
         val userPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId = UserPurchasesByUserIdAndAppId(u)
+        val somePurchases: Success[Some[UserPurchasesByUserIdAndAppId]] = Success(Some(userPurchasesByUserIdAndAppId))
+
         readTimer.succeed
-        Success(Some(userPurchasesByUserIdAndAppId))
+        somePurchases
 
       }
       case Some(Left(error)) => {
@@ -126,6 +128,7 @@ class UserPurchasePersistenceImpl(
         Failure(new IllegalStateException(s"$error"))
       }
       case None => {
+        logger.info(s"Missing $key")
         readTimer.succeed
         Success(None)
       }
