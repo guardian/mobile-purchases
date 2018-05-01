@@ -77,6 +77,7 @@ class LambdaApiGatewayImpl(function: (LambdaRequest => LambdaResponse)) extends 
   private val logger: Logger = LogManager.getLogger(classOf[LambdaApiGateway])
   def execute(input: InputStream, output: OutputStream): Unit = {
     try {
+
       mapper.writeValue(output, objectReadAndClose(input) match {
         case Right(apiGatewayLambdaRequest) =>
           if (apiGatewayLambdaRequest.isBase64Encoded) {

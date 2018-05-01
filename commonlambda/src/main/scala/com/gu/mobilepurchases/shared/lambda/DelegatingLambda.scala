@@ -7,7 +7,7 @@ import java.util.concurrent.{ TimeUnit, TimeoutException }
 import com.fasterxml.jackson.databind.JsonNode
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, Timer }
 import com.gu.mobilepurchases.shared.external.{ Jackson, Parallelism }
-import okhttp3.{ Call, Callback, OkHttpClient, Request, Response }
+import okhttp3.{ Call, Callback, OkHttpClient, Request, Response, ResponseBody }
 import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.collection.JavaConverters._
@@ -113,22 +113,34 @@ class DelegatingLambda(
     val timer: Timer = cloudWatch.startTimer(s"${delegateLambdaConfig.lambdaName}-delegate")
     httpClient.newCall(toHttpRequest(lambdaRequest)).enqueue(new Callback {
       override def onFailure(call: Call, e: IOException): Unit = {
+
         timer.fail
         promise.failure(e)
       }
 
       override def onResponse(call: Call, response: Response): Unit = {
-        if (DelegatingLambda.goodStatus(response.code())) {
-          timer.succeed
-        } else {
-          timer.fail
-        }
-        promise.success(
+        val maybeResponseBody: Option[ResponseBody] = Option(response.body())
+        Try {
           LambdaResponse(
             response.code(),
-            Option(response.body()).map(_.bytes()).map(new String(_, StandardCharsets.UTF_8)),
+            maybeResponseBody.map(_.bytes()).map(new String(_, StandardCharsets.UTF_8)),
             response.headers().toMultimap.asScala.toMap.mapValues(_.asScala.last))
-        )
+        } match {
+          case Success(lambdaResponse) => {
+            if (DelegatingLambda.goodStatus(lambdaResponse.statusCode)) {
+              timer.succeed
+            } else {
+              timer.fail
+            }
+            promise.success(lambdaResponse)
+          }
+          case Failure(t) => {
+            timer.fail
+            promise.failure(t)
+          }
+        }
+        maybeResponseBody.map(_.close())
+
       }
     })
     promise.future

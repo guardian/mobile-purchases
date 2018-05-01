@@ -8,7 +8,7 @@ import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, Parallelism }
 import com.typesafe.config.Config
-import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody, Response }
+import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody, Response, ResponseBody }
 import org.apache.logging.log4j.{ LogManager, Logger }
 import org.apache.logging.log4j.LogManager.getLogger
 
@@ -131,8 +131,9 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWa
 
       override def onResponse(call: Call, response: Response): Unit = {
         cloudWatch.meterHttpStatusResponses("appstore-code", response.code())
-        Try {
-          mapper.readValue[AppStoreResponse](response.body().bytes())
+        val maybeBody = Option(response.body())
+        val tryReadResponse: promise.type = Try {
+          maybeBody.map(body => mapper.readValue[AppStoreResponse](body.bytes())).getOrElse(throw new IllegalStateException("No appstore body"))
         } match {
           case Success(appStoreResponse: AppStoreResponse) => {
             timer.succeed
@@ -144,6 +145,7 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWa
             promise.failure(throwable)
           }
         }
+        maybeBody.map((_: ResponseBody).close)
       }
     })
     delegateToSandboxIfNeeded(

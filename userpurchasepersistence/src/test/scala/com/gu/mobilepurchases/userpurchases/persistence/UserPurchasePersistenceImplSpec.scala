@@ -72,7 +72,6 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
     }
     "read failure" in {
       val mockClock: Clock = buildMockClock
-
       val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(mockClock)
       new UserPurchasePersistenceImpl(new ScanamaoUserPurchasesStringsByUserIdColonAppId {
         override def put(t: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = ???
