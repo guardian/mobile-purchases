@@ -120,6 +120,7 @@ class UserPurchasePersistenceImpl(
         val somePurchases: Success[Some[UserPurchasesByUserIdAndAppId]] = Success(Some(userPurchasesByUserIdAndAppId))
 
         readTimer.succeed
+        logger.info(s"Found $key - ${userPurchasesByUserIdAndAppId.purchases.size}")
         somePurchases
 
       }
