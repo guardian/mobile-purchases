@@ -8,7 +8,7 @@ import com.gu.mobilepurchases.shared.external.HttpStatusCodes
 import com.gu.mobilepurchases.shared.external.HttpStatusCodes.{ badRequest, okCode }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.{ LambdaRequest, LambdaResponse }
-import com.gu.mobilepurchases.validate.ValidateReceiptsController.{ errorHeaders, successHeaders }
+import com.gu.mobilepurchases.validate.ValidateReceiptsController.{ errorHeaders, serverError, successHeaders }
 import org.apache.http.HttpHeaders
 import org.apache.http.entity.ContentType
 import org.apache.logging.log4j.{ LogManager, Logger }
@@ -38,12 +38,13 @@ case class ValidateResponse(transactions: Set[ValidatedTransaction])
 object ValidateReceiptsController {
   val errorHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.TEXT_PLAIN.withCharset(StandardCharsets.UTF_8).toString)
   val successHeaders: Map[String, String] = Map(HttpHeaders.CONTENT_TYPE -> ContentType.APPLICATION_JSON.toString)
-
+  private val serverError: LambdaResponse = LambdaResponse(HttpStatusCodes.internalServerError, Some("Failed to process request"), errorHeaders)
 }
 
 class ValidateReceiptsController(
     validateReceiptsRoute: ValidateReceiptsRoute
 ) extends Function[LambdaRequest, LambdaResponse] {
+
   private val logger: Logger = LogManager.getLogger(classOf[ValidateReceiptsController])
 
   def apply(lambdaRequest: LambdaRequest): LambdaResponse =
@@ -61,9 +62,10 @@ class ValidateReceiptsController(
     }
 
   private def routeValidRequest(validateRequest: ValidateRequest): LambdaResponse = {
+
     validateReceiptsRoute.route(validateRequest).map((validateResponse: ValidateResponse) => LambdaResponse(
       okCode, Some(mapper.writeValueAsString(validateResponse)), successHeaders))
-      .getOrElse(LambdaResponse(HttpStatusCodes.internalServerError, Some("Failed to process request"), errorHeaders)
-      )
+      .getOrElse(serverError)
+
   }
 }
