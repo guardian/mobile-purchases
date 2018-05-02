@@ -47,7 +47,7 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
   assemblyJarName := s"${name.value}.jar"
 )
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
-  val awsVersion: String = "1.11.315"
+  val awsVersion: String = "1.11.320"
   val specsVersion: String = "4.0.3"
   val log4j2Version: String = "2.10.0"
   val jacksonVersion: String = "2.9.5"
@@ -108,7 +108,7 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
     organization := "com.gu",
     description := "Validate Receipts",
     version := "1.0",
-    scalaVersion := "2.12.5",
+    scalaVersion := "2.12.6",
     scalacOptions ++= Seq(
       "-deprecation",
       "-encoding", "UTF-8",

@@ -192,7 +192,7 @@ Resources:
           Stack: !Ref Stack
           App: !Sub ${App}
       Description: Validates purchases
-      MemorySize: 320
+      MemorySize: 448
       Timeout: 45
       Events:
         PostApi:
@@ -218,7 +218,7 @@ Resources:
           Stack: !Ref Stack
           App: !Sub ${App}
       Description: Gets user purchases
-      MemorySize: 320
+      MemorySize: 448
       Timeout: 45
       Events:
         GetApi:
