@@ -15,6 +15,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
 import scala.util.{ Failure, Success, Try }
 
+case class LambdaDelegateResponseTried(lambda: Try[LambdaResponse], delegate: Try[LambdaResponse])
+case class LambdaDelegateResponse(lambda: LambdaResponse, delegate: LambdaResponse)
+
 object DelegatingLambda {
   def goodStatus(statusCode: Int): Boolean = {
     statusCode >= 200 && statusCode < 300
@@ -23,6 +26,9 @@ object DelegatingLambda {
 
 trait DelegateComparator {
   def apply(lambdaRequest: LambdaRequest, lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse
+  def logLambdaOnly(lambdaResponse: LambdaResponse): Unit
+  def logDelegateOnly(lambdaResponse: LambdaResponse): Unit
+  def logNothingReturned(): Unit
 
 }
 
@@ -54,15 +60,18 @@ class DelegatingLambda(
       }
       case (Failure(lambdaThrowable), Success(delegate)) => {
         logger.warn(s"Lambda failed for $lambdaRequest", lambdaThrowable)
+        delegateComparator.logDelegateOnly(delegate)
         delegate
       }
       case (Success(lambda), Failure(delegateThrowable)) => {
         logger.warn(s"Delegate failed for $lambdaRequest", delegateThrowable)
+        delegateComparator.logLambdaOnly(lambda)
         lambda
       }
       case (Failure(lambdaThrowable), Failure(delegateThrowable)) => {
         logger.warn(s"Delegate Failure, but both failed for $lambdaRequest", delegateThrowable)
         logger.warn(s"Lambda Failure, but both failed for $lambdaRequest", lambdaThrowable)
+        delegateComparator.logNothingReturned()
         throw delegateThrowable
       }
     }
