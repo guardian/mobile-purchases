@@ -4,15 +4,13 @@ import java.io.{ ByteArrayInputStream, ByteArrayOutputStream }
 import java.time.Clock.systemUTC
 import java.time.ZoneOffset.UTC
 import java.time.{ Clock, Duration, ZonedDateTime }
-import java.util.Date
 import java.util.concurrent.TimeUnit
 
-import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchAsync }
-import com.amazonaws.services.cloudwatch.model.StandardUnit
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync
 import com.gu.mobilepurchases.apple.AppStoreExample.successAsAppStoreResponse
 import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
 import com.gu.mobilepurchases.persistence.{ TransactionPersistenceImpl, UserPurchaseFilterExpiredImpl }
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchImpl, CloudWatchImplSpec, CloudWatchMetrics, Timer }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchImpl, CloudWatchImplSpec }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.applicationJsonMediaType
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.OkHttpClientTestUtils.testOkHttpResponse
@@ -202,7 +200,6 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
             mockCall.enqueue(any[Callback]()) answers {
               (_: Any) match {
                 case (callback: Callback) =>
-
                   callback.onResponse(mockCall, testOkHttpResponse(request, 200, Some(applicationJsonMediaType),
                     Some(mapper.writeValueAsBytes(ValidateResponse(delegateTransactions))), Map("headerkey" -> "headerValue")))
               }

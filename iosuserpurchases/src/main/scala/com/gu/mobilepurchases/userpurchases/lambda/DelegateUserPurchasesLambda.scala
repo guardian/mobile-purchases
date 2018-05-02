@@ -13,9 +13,11 @@ import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodStatus
 import com.gu.mobilepurchases.shared.lambda.{ AwsLambda, DelegateComparator, DelegateLambdaConfig, DelegatingLambda, LambdaRequest, LambdaResponse }
 import com.gu.mobilepurchases.userpurchases.UserPurchase
+import com.gu.mobilepurchases.userpurchases.controller.UserPurchasesController
+import com.gu.mobilepurchases.userpurchases.lambda.DelegateUserPurchasesLambda.delegateIfConfigured
 import com.gu.mobilepurchases.userpurchases.lambda.UserPurchasesLambda.userPurchasesName
 import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesResponse
-import com.typesafe.config.ConfigException
+import com.typesafe.config.{ Config, ConfigException }
 import okhttp3.Request
 import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URIBuilder
@@ -47,7 +49,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           cloudWatch.queueMetric(lambdaDiffMetricName, 0, StandardUnit.Count)
           cloudWatch.queueMetric(delegateDiffMetricName, 0, StandardUnit.Count)
           cloudWatch.queueMetric(returnedMetricName, lambdaUserPurchasesResponse.purchases.size, StandardUnit.Count)
-          lambdaResponse
+          delegateResponse
         } else {
           val delegatePurchaseSet: Set[UserPurchase] = delegateUserPurchasesResponse.purchases
           val lambdaPurchaseSet: Set[UserPurchase] = lambdaUserPurchasesResponse.purchases
@@ -55,13 +57,13 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           val delegateExtraQuantity: Int = delegatePurchaseSet.diff(lambdaPurchaseSet).size
           cloudWatch.queueMetric(lambdaDiffMetricName, lambdaExtraQuantity, StandardUnit.Count)
           cloudWatch.queueMetric(delegateDiffMetricName, delegateExtraQuantity, StandardUnit.Count)
-          if (lambdaPurchaseSet.nonEmpty) {
+          if (delegatePurchaseSet.nonEmpty) {
             cloudWatch.queueMetric(returnedMetricName, lambdaPurchaseSet.size, StandardUnit.Count)
-            lambdaResponse
-          } else {
-            logger.warn(s"Missing Lambda purchases for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
-            cloudWatch.queueMetric(returnedMetricName, delegatePurchaseSet.size, StandardUnit.Count)
             delegateResponse
+          } else {
+            logger.warn(s"Missing Delegate purchases for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
+            cloudWatch.queueMetric(returnedMetricName, delegatePurchaseSet.size, StandardUnit.Count)
+            lambdaResponse
           }
         }
       }
@@ -93,15 +95,20 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
 
 object DelegateUserPurchasesLambda {
 
-  def delegateIfConfigured(ssmConfig: SsmConfig, clock: Clock, cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
+  def delegateIfConfigured(
+    config: Config,
+    userPurchasesController: UserPurchasesController,
+
+    cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
     val logger: Logger = LogManager.getLogger(classOf[DelegateUserPurchasesLambda])
     Try {
-      ssmConfig.config.getString("delegate.userpurchasesurl")
+      config.getString("delegate.userpurchasesurl")
     } match {
       case Success(url) => {
         logger.info(s"Delegating to $url")
+
         new DelegatingLambda(
-          UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch),
+          userPurchasesController,
           new DelegateUserPurchasesLambdaRequestMapper(url),
           new DelegateUserPurchasesLambdaComparator(cloudWatch),
           GlobalOkHttpClient.defaultHttpClient,
@@ -111,7 +118,7 @@ object DelegateUserPurchasesLambda {
       }
       case Failure(_: ConfigException.Missing) => {
         logger.info(s"Not delegating")
-        UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch)
+        userPurchasesController
       }
       case Failure(t: Throwable) => {
         logger.info("Unexpected config error")
@@ -121,7 +128,16 @@ object DelegateUserPurchasesLambda {
   }
 }
 
-class DelegateUserPurchasesLambda(ssmConfig: SsmConfig, clock: Clock, cloudWatch: CloudWatch) extends AwsLambda(DelegateUserPurchasesLambda.delegateIfConfigured(ssmConfig, clock, cloudWatch), cloudWatch = cloudWatch) {
+class DelegateUserPurchasesLambda(
+    config: Config,
+    userPurchasesController: UserPurchasesController,
+
+    cloudWatch: CloudWatch) extends AwsLambda(delegateIfConfigured(
+  config,
+  userPurchasesController,
+
+  cloudWatch), cloudWatch = cloudWatch) {
+  def this(ssmConfig: SsmConfig, clock: Clock, cloudWatch: CloudWatch) = this(ssmConfig.config, UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch), cloudWatch)
   def this(ssmConfig: SsmConfig, clock: Clock, amazonCloudWatch: AmazonCloudWatchAsync) = this(ssmConfig, clock, new CloudWatchImpl(ssmConfig.stage, userPurchasesName, amazonCloudWatch))
   def this() = this(SsmConfigLoader(), Clock.systemUTC(), AmazonCloudWatchAsyncClientBuilder.defaultClient())
 }

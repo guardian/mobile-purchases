@@ -51,7 +51,7 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
         if (lambdaValidateResponse.equals(delegateValidateResponse)) {
           cloudWatch.queueMetric(lambdaDiffMetricName, 0, StandardUnit.Count)
           cloudWatch.queueMetric(delegateDiffMetricsName, 0, StandardUnit.Count)
-          lambdaResponse
+          delegateResponse
         } else {
           val lambdaTransactions: Set[ValidatedTransaction] = lambdaValidateResponse.transactions
           val delegateTransactions: Set[ValidatedTransaction] = delegateValidateResponse.transactions
@@ -60,13 +60,12 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
           }
           val lambdaExtraQuantity: Int = lambdaTransactions.diff(delegateTransactions).size
           val delegateExtraQuantity: Int = delegateTransactions.diff(lambdaTransactions).size
-
           cloudWatch.queueMetric(lambdaDiffMetricName, lambdaExtraQuantity, StandardUnit.Count)
           cloudWatch.queueMetric(delegateDiffMetricsName, delegateExtraQuantity, StandardUnit.Count)
-          if (lambdaExtraQuantity >= delegateExtraQuantity) {
-            lambdaResponse
-          } else {
+          if (delegateTransactions.nonEmpty) {
             delegateResponse
+          } else {
+            lambdaResponse
           }
         }
 
