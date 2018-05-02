@@ -84,9 +84,7 @@ class LambdaApiGatewayImpl(function: (LambdaRequest => LambdaResponse)) extends 
             ApiGatewayLambdaResponse(LambdaResponse(HttpStatusCodes.badRequest, Some("Binary content not supported"), Map("Content-Type" -> "text/plain")))
           } else {
             val lambdaRequest: LambdaRequest = LambdaRequest(apiGatewayLambdaRequest)
-            logger.info(lambdaRequest)
             val lambdaResponse: LambdaResponse = function(lambdaRequest)
-            logger.info(lambdaResponse)
             ApiGatewayLambdaResponse(lambdaResponse)
           }
         case Left(_) => ApiGatewayLambdaResponse(internalServerError)
