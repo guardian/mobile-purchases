@@ -144,7 +144,6 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
 }
 
 object DelegatingValidateReceiptLambda {
-
   def delegateIfConfigured(
     config: Config,
     validateReceiptsController: ValidateReceiptsController,
@@ -172,25 +171,34 @@ object DelegatingValidateReceiptLambda {
     }
   }
 
+  lazy val ssmConfig = SsmConfigLoader()
+  lazy val cloudwatch: CloudWatchImpl = {
+    val amazonCloudWatch: AmazonCloudWatchAsync = AmazonCloudWatchAsyncClientBuilder.defaultClient()
+    new CloudWatchImpl(ssmConfig.stage, validateReceiptsName, amazonCloudWatch)
+  }
+  lazy val lambda: (LambdaRequest => LambdaResponse) = delegateIfConfigured(ssmConfig.config, ValidateReceiptLambda.validateReceipts(ssmConfig, defaultHttpClient, cloudwatch, Clock.systemUTC(), Duration(240, TimeUnit.SECONDS)), defaultHttpClient, cloudwatch)
+
 }
 
 class DelegatingValidateReceiptLambda(
+    lambda: (LambdaRequest => LambdaResponse),
+    cloudWatch: CloudWatch
+) extends AwsLambda(lambda, cloudWatch = cloudWatch) {
+  def this(
     config: Config,
     controller: ValidateReceiptsController,
     client: OkHttpClient,
-    cloudWatch: CloudWatch
+    cloudWatch: CloudWatch) = this(DelegatingValidateReceiptLambda.delegateIfConfigured(config, controller, client, cloudWatch), cloudWatch)
 
-) extends AwsLambda(DelegatingValidateReceiptLambda.delegateIfConfigured(config, controller, client, cloudWatch), cloudWatch = cloudWatch) {
   def this(ssmConfig: SsmConfig, client: OkHttpClient, cloudWatch: CloudWatch, clock: Clock, lamdaTimeout: Duration) = this(
     ssmConfig.config,
     ValidateReceiptLambda.validateReceipts(ssmConfig, client, cloudWatch, clock, lamdaTimeout),
     client, cloudWatch
   )
 
-  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatchAsync, clock: Clock, lambdaTimeout: Duration) = this(ssmConfig, defaultHttpClient, new CloudWatchImpl(ssmConfig.stage, validateReceiptsName, amazonCloudWatch), clock, lambdaTimeout)
-
   def this() {
-    this(SsmConfigLoader(), AmazonCloudWatchAsyncClientBuilder.defaultClient(), Clock.systemUTC(), Duration(240, TimeUnit.SECONDS))
+    this(DelegatingValidateReceiptLambda.lambda, DelegatingValidateReceiptLambda.cloudwatch)
+
   }
 
 }
