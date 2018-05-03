@@ -4,9 +4,8 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.{ TimeUnit, TimeoutException }
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, Timer }
-import com.gu.mobilepurchases.shared.external.{ Jackson, Parallelism }
+import com.gu.mobilepurchases.shared.external.Parallelism
 import okhttp3.{ Call, Callback, OkHttpClient, Request, Response, ResponseBody }
 import org.apache.logging.log4j.{ LogManager, Logger }
 

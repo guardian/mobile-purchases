@@ -113,7 +113,7 @@ object AppStoreConfig {
 case class AppStoreConfig(password: String, appStoreEnv: AppStoreEnv)
 
 trait AppStore {
-  def send(receiptData: String): Future[Option[AppStoreResponse]]
+  def send(receiptData: String): Future[AppStoreResponse]
 }
 
 class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWatch: CloudWatchMetrics) extends AppStore {
@@ -157,9 +157,9 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWa
     )
   }
 
-  override def send(receiptData: String): Future[Option[AppStoreResponse]] = {
+  override def send(receiptData: String): Future[AppStoreResponse] = {
     sendOrOverride(receiptData, false)
-      .transform((appStoreResponseAttempt: Try[AppStoreResponse]) => Success(appStoreResponseAttempt.toOption))
+
   }
 
   private def buildRequest(receiptData: String, sandboxSentToProtection: Boolean): Request = {

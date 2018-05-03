@@ -1,7 +1,7 @@
 package com.gu.mobilepurchases.model
 
 import java.time.Instant.ofEpochMilli
-import java.time.{ Instant, ZoneOffset, ZonedDateTime }
+import java.time.{ ZoneOffset, ZonedDateTime }
 
 import com.gu.mobilepurchases.model.ValidatedTransactionSpec.sampleValidatedTransaction
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii

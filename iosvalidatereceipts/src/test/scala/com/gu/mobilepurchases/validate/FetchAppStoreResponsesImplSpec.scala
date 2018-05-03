@@ -1,7 +1,6 @@
 package com.gu.mobilepurchases.validate
 
 import java.time.Instant
-import java.util.Date
 import java.util.concurrent.{ ConcurrentLinkedQueue, TimeUnit }
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
@@ -14,8 +13,8 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.{ ExecutionContext, Future }
 
 class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with Mockito {
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
@@ -36,7 +35,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
     "Single AppStoreResponse with no nested receipts" in {
       new FetchAppStoreResponsesImpl((receiptData: String) => Future.successful {
         receiptData must beEqualTo("test")
-        Some(responseWithoutNestedReceipts)
+        responseWithoutNestedReceipts
 
       }, ignoreCloudWatch, minuteDuration).fetchAllValidatedTransactions(Set("test")) must beEqualTo(Map("test" -> responseWithoutNestedReceipts))
     }
@@ -44,13 +43,13 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
       val responseWithNestedReceipts: AppStoreResponse = responseWithoutNestedReceipts.copy(latest_receipt = Some("testInner"))
       new FetchAppStoreResponsesImpl((receiptData: String) => {
         Future.successful {
-          Some(receiptData match {
+          receiptData match {
             case "testNested" => responseWithNestedReceipts
             case "testInner"  => responseWithoutNestedReceipts
             case other =>
               Set("testNested", "testInner") must contain(other)
               throw new IllegalStateException("Unexpected receipt data")
-          })
+          }
         }
       }, ignoreCloudWatch, minuteDuration).fetchAllValidatedTransactions(Set("testNested")) must beEqualTo(Map(
         "testInner" -> responseWithoutNestedReceipts,
@@ -64,10 +63,10 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
       val responses = new ConcurrentLinkedQueue[AppStoreResponse](List(responseWithNestedReceipts).asJavaCollection)
       new FetchAppStoreResponsesImpl((receiptData: String) => {
         Future.successful {
-          Some(receiptData match {
+          receiptData match {
             case "test" => responses.poll()
             case _      => throw new IllegalStateException("Unexpected receipt data")
-          })
+          }
         }
       }, ignoreCloudWatch, minuteDuration).fetchAllValidatedTransactions(Set("test")) must beEqualTo(
         Map("test" -> responseWithNestedReceipts)
@@ -81,7 +80,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
         arrived.add(receiptData)
         Thread.sleep(1000 * delay.poll())
         sent.add(receiptData)
-        Some(responseWithoutNestedReceipts)
+        responseWithoutNestedReceipts
 
       }, ignoreCloudWatch, minuteDuration).fetchAllValidatedTransactions(Set("test", "test2")) must beEqualTo(Map(
         "test" -> responseWithoutNestedReceipts,
@@ -98,7 +97,7 @@ class FetchAppStoreResponsesImplSpec extends Specification with ScalaCheck with 
           {
             new FetchAppStoreResponsesImpl((receiptData: String) =>
               Future.successful {
-                Some(rootReceiptDataWithAppStoreResponsesByReceiptData._2(receiptData))
+                rootReceiptDataWithAppStoreResponsesByReceiptData._2(receiptData)
               }, ignoreCloudWatch, minuteDuration) fetchAllValidatedTransactions Set(rootReceiptDataWithAppStoreResponsesByReceiptData._1) must beEqualTo(
               rootReceiptDataWithAppStoreResponsesByReceiptData._2
             )

@@ -15,7 +15,7 @@ _IOS receipt validation and purchase persistence_
 * send all receipts to App store and recursively fetch all receipts (latest, current, ..., everything), caching requests to avoid repetition
 * transform all app store responses into representations of whether they are valid receipts
 * attempt persistence (see Persistence)
-* return all valid receipts
+* return validated transactions matching the requests
 
 ### Persistance(see TransactionPersistenceImpl)
 * transform into the purchase representation

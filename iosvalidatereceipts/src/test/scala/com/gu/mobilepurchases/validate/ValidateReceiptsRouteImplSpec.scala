@@ -5,8 +5,6 @@ import com.gu.mobilepurchases.apple.{ AppStoreExample, AppStoreResponse }
 import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
 import com.gu.mobilepurchases.persistence.{ TransactionPersistence, UserIdWithAppId }
 import com.gu.mobilepurchases.shared.external.Jackson
-import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
-import org.scalacheck.Gen
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 
