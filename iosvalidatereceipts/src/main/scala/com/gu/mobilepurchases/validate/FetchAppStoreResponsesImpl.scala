@@ -8,6 +8,7 @@ import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 trait FetchAppStoreResponses {
   def fetchAllValidatedTransactions(remainingReceipts: Set[String]): Map[String, AppStoreResponse]
@@ -23,33 +24,35 @@ class FetchAppStoreResponsesImpl(
 
   def fetchAllValidatedTransactions(receipts: Set[String]): Map[String, AppStoreResponse] = {
     val timer: Timer = cloudWatch.startTimer("fetch-all-timer")
-    val futureResponse: Future[Map[String, AppStoreResponse]] = fetchAppStoreResponsesFuture(receipts, Map()).transform(
-      (success: Map[String, Option[AppStoreResponse]]) => {
-        timer.succeed
-        success.filter(_._2.nonEmpty).mapValues(_.get)
-      },
-      (failure: Throwable) => {
-        timer.fail
-        failure
-      })
-    Await.result(
+    val futureResponse: Future[Map[String, AppStoreResponse]] = fetchAppStoreResponsesFuture(receipts, Map())
+    Try(Await.result(
       futureResponse,
-      timeout)
+      timeout)) match {
+      case Success(transactions) => {
+        timer.succeed
+        transactions
+      }
+      case Failure(throwable) => {
+        timer.fail
+        throw throwable
+      }
+    }
+
   }
 
   private def fetchAppStoreResponsesFuture(
     remainingReceipts: Set[String],
-    fetchedReceipts: Map[String, Option[AppStoreResponse]]
-  ): Future[Map[String, Option[AppStoreResponse]]] = {
+    fetchedReceipts: Map[String, AppStoreResponse]
+  ): Future[Map[String, AppStoreResponse]] = {
     val unprocessedReceipts: Set[String] = remainingReceipts.diff(fetchedReceipts.keySet)
     if (unprocessedReceipts.isEmpty) {
       cloudWatch.queueMetric("fetch-all-total", fetchedReceipts.size, StandardUnit.Count)
       Future.successful(fetchedReceipts)
     } else {
-      asyncFetchReceipts(unprocessedReceipts).flatMap((appStoreResponses: Map[String, Option[AppStoreResponse]]) => {
-        val latestReceiptsReturned: Set[String] = appStoreResponses.values.flatten.flatMap((_: AppStoreResponse).latest_receipt).toSet
+      asyncFetchReceipts(unprocessedReceipts).flatMap((appStoreResponses: Map[String, AppStoreResponse]) => {
+        val latestReceiptsReturned: Set[String] = appStoreResponses.values.flatMap((_: AppStoreResponse).latest_receipt).toSet
         val latestReceiptsToFetch: Set[String] = latestReceiptsReturned.diff(unprocessedReceipts)
-        val updatedFetchedReceipts: Map[String, Option[AppStoreResponse]] = appStoreResponses ++ fetchedReceipts
+        val updatedFetchedReceipts: Map[String, AppStoreResponse] = appStoreResponses ++ fetchedReceipts
         fetchAppStoreResponsesFuture(
           latestReceiptsToFetch,
           updatedFetchedReceipts
@@ -58,14 +61,14 @@ class FetchAppStoreResponsesImpl(
     }
   }
 
-  private def asyncFetchReceipts(unprocessedReceipts: Set[String]): Future[Map[String, Option[AppStoreResponse]]] = {
-    val eventualResponses: Future[Seq[(String, Option[AppStoreResponse])]] = Future.sequence(unprocessedReceipts
+  private def asyncFetchReceipts(unprocessedReceipts: Set[String]): Future[Map[String, AppStoreResponse]] = {
+    val eventualResponses: Future[Seq[(String, AppStoreResponse)]] = Future.sequence(unprocessedReceipts
       .toSeq
       .map((receipt: String) =>
-        appStore.send(receipt).map((maybeResponse: Option[AppStoreResponse]) => receipt -> maybeResponse)
+        appStore.send(receipt).map((maybeResponse: AppStoreResponse) => receipt -> maybeResponse)
       )
     )
-    eventualResponses.map((_: Seq[(String, Option[AppStoreResponse])]).toMap)
+    eventualResponses.map((_: Seq[(String, AppStoreResponse)]).toMap)
   }
 
 }

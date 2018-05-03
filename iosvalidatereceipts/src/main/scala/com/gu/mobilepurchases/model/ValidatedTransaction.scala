@@ -9,6 +9,7 @@ case class ValidatedTransactionPurchase(
 )
 
 object ValidatedTransaction {
+
   def apply(
     transactionId: String,
     validated: Boolean,

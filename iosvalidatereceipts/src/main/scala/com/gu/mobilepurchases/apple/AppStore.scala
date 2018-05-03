@@ -5,12 +5,13 @@ import java.io.IOException
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.gu.mobilepurchases.apple.AutoRenewableSubsStatusCodes.SandboxReceiptSentToProductionService
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
+import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.applicationJsonMediaType
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
-import com.gu.mobilepurchases.shared.external.{ GlobalOkHttpClient, Parallelism }
+import com.gu.mobilepurchases.shared.external.Parallelism
 import com.typesafe.config.Config
 import okhttp3.{ Call, Callback, OkHttpClient, Request, RequestBody, Response, ResponseBody }
-import org.apache.logging.log4j.{ LogManager, Logger }
 import org.apache.logging.log4j.LogManager.getLogger
+import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.concurrent.Future.successful
 import scala.concurrent.{ ExecutionContext, Future, Promise }
@@ -112,14 +113,15 @@ object AppStoreConfig {
 case class AppStoreConfig(password: String, appStoreEnv: AppStoreEnv)
 
 trait AppStore {
-  def send(receiptData: String): Future[Option[AppStoreResponse]]
+  def send(receiptData: String): Future[AppStoreResponse]
 }
 
 class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWatch: CloudWatchMetrics) extends AppStore {
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   val logger: Logger = LogManager.getLogger(classOf[AppStoreImpl])
+
   def sendOrOverride(receiptData: String, sandboxSentToProtection: Boolean): Future[AppStoreResponse] = {
-    val promise = Promise[AppStoreResponse]
+    val promise: Promise[AppStoreResponse] = Promise[AppStoreResponse]
     val timer: Timer = cloudWatch.startTimer("appstore-timer")
 
     client.newCall(buildRequest(receiptData, sandboxSentToProtection)).enqueue(new Callback {
@@ -132,7 +134,7 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWa
       override def onResponse(call: Call, response: Response): Unit = {
         cloudWatch.meterHttpStatusResponses("appstore-code", response.code())
         val maybeBody = Option(response.body())
-        val tryReadResponse: promise.type = Try {
+        Try {
           maybeBody.map(body => mapper.readValue[AppStoreResponse](body.bytes())).getOrElse(throw new IllegalStateException("No appstore body"))
         } match {
           case Success(appStoreResponse: AppStoreResponse) => {
@@ -155,9 +157,9 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWa
     )
   }
 
-  override def send(receiptData: String): Future[Option[AppStoreResponse]] = {
+  override def send(receiptData: String): Future[AppStoreResponse] = {
     sendOrOverride(receiptData, false)
-      .transform((appStoreResponseAttempt: Try[AppStoreResponse]) => Success(appStoreResponseAttempt.toOption))
+
   }
 
   private def buildRequest(receiptData: String, sandboxSentToProtection: Boolean): Request = {
@@ -166,9 +168,12 @@ class AppStoreImpl(appStoreConfig: AppStoreConfig, client: OkHttpClient, cloudWa
     } else {
       appStoreConfig.appStoreEnv.url
     }
-    new Request.Builder().url(url).post(RequestBody.create(
-      GlobalOkHttpClient.applicationJsonMediaType,
-      mapper.writeValueAsBytes(AppStoreRequest(appStoreConfig.password, receiptData)))).build()
+    new Request.Builder()
+      .url(url)
+      .post(RequestBody.create(
+        applicationJsonMediaType,
+        mapper.writeValueAsBytes(AppStoreRequest(appStoreConfig.password, receiptData))))
+      .build()
   }
 
   private def delegateToSandboxIfNeeded(

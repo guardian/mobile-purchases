@@ -1,7 +1,6 @@
 package com.gu.mobilepurchases.userpurchases.persistence
 
 import java.time.{ Clock, Instant, ZoneOffset }
-import java.util.Date
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.amazonaws.services.dynamodbv2.model._

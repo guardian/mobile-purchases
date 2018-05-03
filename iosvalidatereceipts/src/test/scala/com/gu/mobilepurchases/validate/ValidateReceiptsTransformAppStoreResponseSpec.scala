@@ -3,7 +3,7 @@ package com.gu.mobilepurchases.validate
 import com.gu.mobilepurchases.apple.AppStoreExample.appStoreResponseExample
 import com.gu.mobilepurchases.apple.{ AppStoreExample, AppStoreResponse, AppStoreSpec }
 import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase, ValidatedTransactionPurchaseActiveInterval }
-import org.scalacheck.{ Arbitrary, Gen }
+import org.scalacheck.Arbitrary
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 

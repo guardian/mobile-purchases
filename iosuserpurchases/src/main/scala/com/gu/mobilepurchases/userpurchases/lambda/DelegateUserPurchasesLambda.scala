@@ -47,42 +47,83 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
     (readPurchases(lambdaResponse), readPurchases(delegateResponse)) match {
       case (Some(lambdaUserPurchasesResponse), Some(delegateUserPurchasesResponse)) => {
         if (lambdaUserPurchasesResponse.equals(delegateUserPurchasesResponse)) {
-          cloudWatch.queueMetric(lambdaDiffMetricName, 0, StandardUnit.Count)
-          cloudWatch.queueMetric(delegateDiffMetricName, 0, StandardUnit.Count)
-          cloudWatch.queueMetric(returnedMetricName, lambdaUserPurchasesResponse.purchases.size, StandardUnit.Count)
+          logDelegateExtras(0)
+          logLambdaExtras(0)
+          logReturnedQuantity(delegateUserPurchasesResponse.purchases.size)
           delegateResponse
         } else {
           val delegatePurchaseSet: Set[UserPurchase] = delegateUserPurchasesResponse.purchases
           val lambdaPurchaseSet: Set[UserPurchase] = lambdaUserPurchasesResponse.purchases
-          val lambdaExtraQuantity: Int = lambdaPurchaseSet.diff(delegatePurchaseSet).size
+
           val delegateExtraQuantity: Int = delegatePurchaseSet.diff(lambdaPurchaseSet).size
-          cloudWatch.queueMetric(lambdaDiffMetricName, lambdaExtraQuantity, StandardUnit.Count)
-          cloudWatch.queueMetric(delegateDiffMetricName, delegateExtraQuantity, StandardUnit.Count)
+          val lambdaExtraQuantity: Int = lambdaPurchaseSet.diff(delegatePurchaseSet).size
+
+          logDelegateExtras(delegateExtraQuantity)
+          logLambdaExtras(lambdaExtraQuantity)
+
           if (delegatePurchaseSet.nonEmpty) {
-            cloudWatch.queueMetric(returnedMetricName, delegatePurchaseSet.size, StandardUnit.Count)
+            logReturnedQuantity(delegatePurchaseSet.size)
             delegateResponse
           } else {
             logger.warn(s"Missing Delegate purchases for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
-            cloudWatch.queueMetric(returnedMetricName, lambdaPurchaseSet.size, StandardUnit.Count)
+            logReturnedQuantity(lambdaPurchaseSet.size)
             lambdaResponse
           }
         }
       }
       case (Some(userPurchasesResponse), _) => {
-        val lambdaPurchasesQuantity: Double = userPurchasesResponse.purchases.size
-        cloudWatch.queueMetric(lambdaDiffMetricName, lambdaPurchasesQuantity, StandardUnit.Count)
-        cloudWatch.queueMetric(returnedMetricName, lambdaPurchasesQuantity, StandardUnit.Count)
+        logOnlyLambda(userPurchasesResponse)
         lambdaResponse
       }
       case (_, Some(userPurchasesResponse)) => {
-        val delegatePurchasesQuantity: Double = userPurchasesResponse.purchases.size
-        cloudWatch.queueMetric(delegateDiffMetricName, delegatePurchasesQuantity, StandardUnit.Count)
-        cloudWatch.queueMetric(returnedMetricName, delegatePurchasesQuantity, StandardUnit.Count)
+        logOnlyDelegate(userPurchasesResponse)
         delegateResponse
       }
-      case (_, _) => delegateResponse
+      case (_, _) => {
+        logNothingReturned
+        delegateResponse
+      }
     }
 
+  }
+
+  override def logNothingReturned: Unit = {
+    logLambdaExtras(0)
+    logDelegateExtras(0)
+    logReturnedQuantity(0)
+  }
+
+  private def logReturnedQuantity(quantity: Double): Boolean = {
+    logLambdaExtras(quantity)
+  }
+
+  private def logDelegateExtras(delegateExtraQuantity: Int): Boolean = {
+    cloudWatch.queueMetric(delegateDiffMetricName, delegateExtraQuantity, StandardUnit.Count)
+  }
+
+  private def logOnlyDelegate(delegatePurchasesQuantity: Double, extraDelegateTransactions: Double): Boolean = {
+    logDelegateExtras(extraDelegateTransactions)
+    cloudWatch.queueMetric(returnedMetricName, delegatePurchasesQuantity, StandardUnit.Count)
+  }
+
+  private def logDelegateExtras(extraDelegateTransactions: Double): Boolean = {
+    cloudWatch.queueMetric(delegateDiffMetricName, extraDelegateTransactions, StandardUnit.Count)
+  }
+
+  def logOnlyLambda(userPurchasesResponse: UserPurchasesResponse): Boolean = {
+    val size: Double = userPurchasesResponse.purchases.size
+    logLambdaExtras(size)
+    logDelegateExtras(0)
+    logReturnedQuantity(size)
+  }
+  def logOnlyDelegate(userPurchasesResponse: UserPurchasesResponse): Boolean = {
+    val size: Double = userPurchasesResponse.purchases.size
+    logLambdaExtras(0)
+    logDelegateExtras(size)
+    logReturnedQuantity(size)
+  }
+  private def logLambdaExtras(extraLambdaTransactions: Double): Boolean = {
+    cloudWatch.queueMetric(lambdaDiffMetricName, extraLambdaTransactions, StandardUnit.Count)
   }
 
   def readPurchases(response: LambdaResponse): Option[UserPurchasesResponse] = Try {
@@ -92,6 +133,19 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
       None
     }
   }.toOption.flatten
+
+  override def logLambdaOnly(lambdaResponse: LambdaResponse): Unit = {
+    readPurchases(lambdaResponse).map((userPurchasesResponse: UserPurchasesResponse) => {
+      logOnlyLambda(userPurchasesResponse)
+    }).getOrElse(logNothingReturned)
+  }
+
+  override def logDelegateOnly(lambdaResponse: LambdaResponse): Unit = {
+    readPurchases(lambdaResponse).map((userPurchasesResponse: UserPurchasesResponse) => {
+      logOnlyDelegate(userPurchasesResponse)
+    }).getOrElse(logNothingReturned)
+  }
+
 }
 
 object DelegateUserPurchasesLambda {

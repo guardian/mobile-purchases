@@ -7,13 +7,14 @@ import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchImpl, CloudWatchImpl
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.OkHttpClientTestUtils.testOkHttpResponse
 import com.gu.mobilepurchases.shared.lambda.{ ApiGatewayLambdaRequest, ApiGatewayLambdaResponse, LambdaRequest, LambdaResponse }
-import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
 import com.gu.mobilepurchases.userpurchases.controller.UserPurchasesController
 import com.gu.mobilepurchases.userpurchases.purchases.{ UserPurchasesRequest, UserPurchasesResponse }
+import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
 import com.typesafe.config.{ Config, ConfigFactory }
 import okhttp3.{ Call, Callback, OkHttpClient, Request }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+
 import scala.collection.JavaConverters._
 
 class DelegateUserPurchasesLambdaSpec extends Specification with Mockito {

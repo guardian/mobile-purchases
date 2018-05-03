@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets
 import com.gu.mobilepurchases.shared.external.HttpStatusCodes
 import com.gu.mobilepurchases.shared.external.HttpStatusCodes.internalServerError
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
-
 import org.apache.commons.io.IOUtils
 import org.apache.logging.log4j.{ LogManager, Logger }
 

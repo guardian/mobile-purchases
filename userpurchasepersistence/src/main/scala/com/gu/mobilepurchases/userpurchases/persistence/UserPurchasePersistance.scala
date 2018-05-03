@@ -1,10 +1,10 @@
 package com.gu.mobilepurchases.userpurchases.persistence
 
-import java.time.{ Clock, Instant, ZonedDateTime }
+import java.time.{ Clock, ZonedDateTime }
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.services.dynamodbv2.{ AmazonDynamoDBAsync, AmazonDynamoDBAsyncClient }
-import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchMetrics, Timer }
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.userpurchases.UserPurchase
 import com.gu.scanamo.Scanamo.exec

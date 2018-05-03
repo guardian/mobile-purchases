@@ -4,9 +4,8 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.{ TimeUnit, TimeoutException }
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, Timer }
-import com.gu.mobilepurchases.shared.external.{ Jackson, Parallelism }
+import com.gu.mobilepurchases.shared.external.Parallelism
 import okhttp3.{ Call, Callback, OkHttpClient, Request, Response, ResponseBody }
 import org.apache.logging.log4j.{ LogManager, Logger }
 
@@ -14,6 +13,9 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
 import scala.util.{ Failure, Success, Try }
+
+case class LambdaDelegateResponseTried(lambda: Try[LambdaResponse], delegate: Try[LambdaResponse])
+case class LambdaDelegateResponse(lambda: LambdaResponse, delegate: LambdaResponse)
 
 object DelegatingLambda {
   def goodStatus(statusCode: Int): Boolean = {
@@ -23,6 +25,9 @@ object DelegatingLambda {
 
 trait DelegateComparator {
   def apply(lambdaRequest: LambdaRequest, lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse
+  def logLambdaOnly(lambdaResponse: LambdaResponse): Unit
+  def logDelegateOnly(lambdaResponse: LambdaResponse): Unit
+  def logNothingReturned(): Unit
 
 }
 
@@ -54,15 +59,18 @@ class DelegatingLambda(
       }
       case (Failure(lambdaThrowable), Success(delegate)) => {
         logger.warn(s"Lambda failed for $lambdaRequest", lambdaThrowable)
+        delegateComparator.logDelegateOnly(delegate)
         delegate
       }
       case (Success(lambda), Failure(delegateThrowable)) => {
         logger.warn(s"Delegate failed for $lambdaRequest", delegateThrowable)
+        delegateComparator.logLambdaOnly(lambda)
         lambda
       }
       case (Failure(lambdaThrowable), Failure(delegateThrowable)) => {
         logger.warn(s"Delegate Failure, but both failed for $lambdaRequest", delegateThrowable)
         logger.warn(s"Lambda Failure, but both failed for $lambdaRequest", lambdaThrowable)
+        delegateComparator.logNothingReturned()
         throw delegateThrowable
       }
     }

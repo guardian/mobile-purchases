@@ -3,7 +3,7 @@ package com.gu.mobilepurchases.lambda
 import java.time.Clock
 import java.util.concurrent.TimeUnit
 
-import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchAsync, AmazonCloudWatchAsyncClientBuilder, AmazonCloudWatchClientBuilder }
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatchAsync, AmazonCloudWatchAsyncClientBuilder }
 import com.gu.mobilepurchases.apple.{ AppStoreConfig, AppStoreImpl }
 import com.gu.mobilepurchases.persistence.{ TransactionPersistenceImpl, UserPurchaseFilterExpiredImpl }
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl, CloudWatchMetrics }

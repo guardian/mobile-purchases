@@ -52,7 +52,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       (receiptData: String) => {
         Set(ValidateExample.successValidateRequestTransaction.receipt, successAsAppStoreResponse.latest_receipt.get) must contain(receiptData)
         Future.successful {
-          Some(successAsAppStoreResponse)
+          successAsAppStoreResponse
         }
       },
       cloudWatchImpl, duration.Duration(1, TimeUnit.MINUTES))

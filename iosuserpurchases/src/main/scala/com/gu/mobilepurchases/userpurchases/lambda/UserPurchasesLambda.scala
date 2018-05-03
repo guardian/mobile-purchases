@@ -2,7 +2,7 @@ package com.gu.mobilepurchases.userpurchases.lambda
 
 import java.time.Clock
 
-import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchAsync, AmazonCloudWatchAsyncClientBuilder, AmazonCloudWatchClientBuilder }
+import com.amazonaws.services.cloudwatch.{ AmazonCloudWatchAsync, AmazonCloudWatchAsyncClientBuilder }
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl, CloudWatchMetrics }
 import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.Logging

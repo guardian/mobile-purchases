@@ -10,7 +10,7 @@ import com.gu.mobilepurchases.userpurchases.controller.UserPurchasesController.e
 import com.gu.mobilepurchases.userpurchases.purchases.{ UserPurchases, UserPurchasesRequest, UserPurchasesResponse }
 import org.apache.http.HttpHeaders
 import org.apache.http.entity.ContentType
-import org.apache.logging.log4j.{ LogManager, Logger }
+import org.apache.logging.log4j.LogManager
 
 import scala.util.{ Failure, Success, Try }
 

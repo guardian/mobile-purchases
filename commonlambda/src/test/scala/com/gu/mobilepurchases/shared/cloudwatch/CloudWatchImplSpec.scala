@@ -1,14 +1,13 @@
 package com.gu.mobilepurchases.shared.cloudwatch
 
 import java.util
-import java.util.concurrent.{ CompletableFuture, Future }
+import java.util.concurrent.CompletableFuture
 
 import com.amazonaws.handlers.AsyncHandler
-import com.amazonaws.services.cloudwatch.{ AmazonCloudWatch, AmazonCloudWatchAsync }
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync
 import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataRequest, PutMetricDataResult, StandardUnit }
 import org.mockito.ArgumentCaptor
 import org.specs2.mock.Mockito
-import org.specs2.mock.mockito.ArgumentCapture
 import org.specs2.mutable.Specification
 import org.specs2.specification.mutable.SpecificationFeatures
 

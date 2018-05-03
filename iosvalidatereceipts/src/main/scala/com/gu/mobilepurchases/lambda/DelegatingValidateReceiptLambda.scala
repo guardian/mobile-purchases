@@ -43,14 +43,16 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
   private val diffMetricName: String = "transactions-diff"
   private val lambdaDiffMetricName: String = s"$diffMetricName-lambda"
   private val delegateDiffMetricsName: String = s"$diffMetricName-delegate"
+  private val returnedTransactions: String = "returned-transactions"
 
   override def apply(lambdaRequest: LambdaRequest, lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse = {
     val maybeDelegateResponse: Option[ValidateResponse] = readValidateResponse(delegateResponse)
     (readValidateResponse(lambdaResponse), maybeDelegateResponse) match {
       case (Some(lambdaValidateResponse), Some(delegateValidateResponse)) => {
         if (lambdaValidateResponse.equals(delegateValidateResponse)) {
-          cloudWatch.queueMetric(lambdaDiffMetricName, 0, StandardUnit.Count)
-          cloudWatch.queueMetric(delegateDiffMetricsName, 0, StandardUnit.Count)
+          logLambdaExtras(0)
+          logDelegateExtras(0)
+          logReturnedTransactions(0)
           delegateResponse
         } else {
           val lambdaTransactions: Set[ValidatedTransaction] = lambdaValidateResponse.transactions
@@ -60,11 +62,13 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
           }
           val lambdaExtraQuantity: Int = lambdaTransactions.diff(delegateTransactions).size
           val delegateExtraQuantity: Int = delegateTransactions.diff(lambdaTransactions).size
-          cloudWatch.queueMetric(lambdaDiffMetricName, lambdaExtraQuantity, StandardUnit.Count)
-          cloudWatch.queueMetric(delegateDiffMetricsName, delegateExtraQuantity, StandardUnit.Count)
+          logLambdaExtras(lambdaExtraQuantity)
+          logDelegateExtras(delegateExtraQuantity)
           if (delegateTransactions.nonEmpty) {
+            logReturnedTransactions(delegateTransactions.size)
             delegateResponse
           } else {
+            logReturnedTransactions(lambdaTransactions.size)
             lambdaResponse
           }
         }
@@ -72,17 +76,48 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
       }
       case (Some(validateResponse), _) => {
         logger.warn(s"Validate mismatch for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
-        cloudWatch.queueMetric(lambdaDiffMetricName, validateResponse.transactions.size, StandardUnit.Count)
+        logDelegateOnly(validateResponse)
         lambdaResponse
       }
       case (_, Some(validateResponse)) => {
         logger.warn(s"Validate mismatch for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
-        cloudWatch.queueMetric(delegateDiffMetricsName, validateResponse.transactions.size, StandardUnit.Count)
+        logLambdaOnly(validateResponse)
         delegateResponse
       }
-      case (_, _) => delegateResponse
+      case (_, _) => {
+        logNothingReturned
+        delegateResponse
+      }
     }
 
+  }
+
+  private def logDelegateOnly(validateResponse: ValidateResponse): Boolean = {
+    logDelegateExtras(0)
+    logLambdaExtras(validateResponse.transactions.size)
+  }
+
+  private def logLambdaOnly(validateResponse: ValidateResponse): Boolean = {
+    logLambdaExtras(0)
+    logDelegateExtras(validateResponse.transactions.size)
+  }
+
+  override def logNothingReturned: Unit = {
+    logReturnedTransactions(0)
+    logDelegateExtras(0)
+    logLambdaExtras(0)
+  }
+
+  private def logLambdaExtras(quantity: Double): Boolean = {
+    cloudWatch.queueMetric(lambdaDiffMetricName, quantity, StandardUnit.Count)
+  }
+
+  private def logReturnedTransactions(quantity: Double): Boolean = {
+    cloudWatch.queueMetric(returnedTransactions, quantity, StandardUnit.Count)
+  }
+
+  private def logDelegateExtras(quantity: Double): Boolean = {
+    cloudWatch.queueMetric(delegateDiffMetricsName, quantity, StandardUnit.Count)
   }
 
   def readValidateResponse(response: LambdaResponse): Option[ValidateResponse] = {
@@ -95,6 +130,17 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
     }.toOption.flatten
   }
 
+  override def logLambdaOnly(lambdaResponse: LambdaResponse): Unit = {
+    readValidateResponse(lambdaResponse).map(lambdaValidateResponse => {
+      logLambdaOnly(lambdaValidateResponse)
+    }).getOrElse(logNothingReturned)
+  }
+
+  override def logDelegateOnly(deleateResponse: LambdaResponse): Unit = {
+    readValidateResponse(deleateResponse).map(deleateValidateResponse => {
+      logDelegateOnly(deleateValidateResponse)
+    }).getOrElse(logNothingReturned)
+  }
 }
 
 object DelegatingValidateReceiptLambda {
