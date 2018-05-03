@@ -181,22 +181,28 @@ object DelegateUserPurchasesLambda {
       }
     }
   }
+  lazy val cloudwatch = new CloudWatchImpl(SsmConfigLoader().stage, userPurchasesName, AmazonCloudWatchAsyncClientBuilder.defaultClient())
+  lazy val lambda = UserPurchasesLambda.userPurchasesController(SsmConfigLoader(), Clock.systemUTC(), cloudwatch)
+
 }
 
 class DelegateUserPurchasesLambda(
+    lambda: LambdaRequest => LambdaResponse,
+    cloudWatch: CloudWatch) extends AwsLambda(lambda, cloudWatch = cloudWatch) {
+  def this(
     config: Config,
     userPurchasesController: UserPurchasesController,
     okHttpClient: OkHttpClient,
-
-    cloudWatch: CloudWatch) extends AwsLambda(delegateIfConfigured(
-  config,
-  userPurchasesController,
-  okHttpClient,
-  cloudWatch), cloudWatch = cloudWatch) {
-  def this(ssmConfig: SsmConfig, clock: Clock, cloudWatch: CloudWatch) = this(ssmConfig.config, UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch), defaultHttpClient, cloudWatch)
+    cloudWatch: CloudWatch) = this(delegateIfConfigured(
+    config,
+    userPurchasesController,
+    okHttpClient,
+    cloudWatch), cloudWatch = cloudWatch)
+  def this(ssmConfig: SsmConfig, clock: Clock, cloudWatch: CloudWatch) = this(
+    ssmConfig.config, UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch), defaultHttpClient, cloudWatch)
 
   def this(ssmConfig: SsmConfig, clock: Clock, amazonCloudWatch: AmazonCloudWatchAsync) = this(ssmConfig, clock, new CloudWatchImpl(ssmConfig.stage, userPurchasesName, amazonCloudWatch))
 
-  def this() = this(SsmConfigLoader(), Clock.systemUTC(), AmazonCloudWatchAsyncClientBuilder.defaultClient())
+  def this() = this(DelegateUserPurchasesLambda.lambda, DelegateUserPurchasesLambda.cloudwatch)
 }
 
