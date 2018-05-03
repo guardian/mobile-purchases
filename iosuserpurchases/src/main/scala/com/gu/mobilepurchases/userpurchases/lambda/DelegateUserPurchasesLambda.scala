@@ -107,7 +107,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
   }
 
   private def logDelegateExtras(extraDelegateTransactions: Double): Boolean = {
-    logDelegateExtras(extraDelegateTransactions)
+    cloudWatch.queueMetric(delegateDiffMetricName, extraDelegateTransactions, StandardUnit.Count)
   }
 
   def logOnlyLambda(userPurchasesResponse: UserPurchasesResponse): Boolean = {

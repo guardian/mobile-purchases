@@ -8,6 +8,7 @@ import org.apache.logging.log4j.{ LogManager, Logger }
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 trait FetchAppStoreResponses {
   def fetchAllValidatedTransactions(remainingReceipts: Set[String]): Map[String, AppStoreResponse]
@@ -23,18 +24,21 @@ class FetchAppStoreResponsesImpl(
 
   def fetchAllValidatedTransactions(receipts: Set[String]): Map[String, AppStoreResponse] = {
     val timer: Timer = cloudWatch.startTimer("fetch-all-timer")
-    val futureResponse: Future[Map[String, AppStoreResponse]] = fetchAppStoreResponsesFuture(receipts, Map()).transform(
-      (success: Map[String, Option[AppStoreResponse]]) => {
-        timer.succeed
-        success.filter(_._2.nonEmpty).mapValues(_.get)
-      },
-      (failure: Throwable) => {
-        timer.fail
-        failure
-      })
-    Await.result(
+    val futureResponse: Future[Map[String, AppStoreResponse]] = fetchAppStoreResponsesFuture(receipts, Map())
+      .map((success: Map[String, Option[AppStoreResponse]]) => success.filter(_._2.nonEmpty).mapValues(_.get))
+    Try(Await.result(
       futureResponse,
-      timeout)
+      timeout)) match {
+      case Success(transactions) => {
+        timer.succeed
+        transactions
+      }
+      case Failure(throwable) => {
+        timer.fail
+        throw throwable
+      }
+    }
+
   }
 
   private def fetchAppStoreResponsesFuture(
