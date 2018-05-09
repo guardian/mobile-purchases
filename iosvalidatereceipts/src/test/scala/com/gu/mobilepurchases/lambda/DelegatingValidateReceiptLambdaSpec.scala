@@ -90,7 +90,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
     }
 
     "don't delegate when delegate failure" in {
-      val config: Config = ConfigFactory.parseMap(Map("delegate.validatereceiptsurl" -> "http://delegate.invalid/validateReceipts").asJava)
+      val config: Config = ConfigFactory.parseMap(Map("delegate.insecurevalidatereceiptsurl" -> "http://delegate.invalid/validateReceipts").asJava)
       val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
       val client = mock[OkHttpClient]
       val mockCall = mock[Call]
@@ -122,7 +122,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
     }
 
     "do delegate with failure of lambda" in {
-      val config: Config = ConfigFactory.parseMap(Map("delegate.validatereceiptsurl" -> "http://delegate.invalid/validateReceipts").asJava)
+      val config: Config = ConfigFactory.parseMap(Map("delegate.insecurevalidatereceiptsurl" -> "http://delegate.invalid/validateReceipts").asJava)
       val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
       val client = mock[OkHttpClient]
       val mockCall = mock[Call]
@@ -156,7 +156,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
     }
 
     "prioritise lambda over delegate when when more results" in {
-      val config: Config = ConfigFactory.parseMap(Map("delegate.validatereceiptsurl" -> "http://delegate.invalid/validateReceipts").asJava)
+      val config: Config = ConfigFactory.parseMap(Map("delegate.insecurevalidatereceiptsurl" -> "http://delegate.invalid/validateReceipts").asJava)
       val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
       val client = mock[OkHttpClient]
       val mockCall = mock[Call]
@@ -189,7 +189,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
     }
 
     "prioritise delegate over  lambda when when more results" in {
-      val config: Config = ConfigFactory.parseMap(Map("delegate.validatereceiptsurl" -> "http://delegate.invalid/validateReceipts").asJava)
+      val config: Config = ConfigFactory.parseMap(Map("delegate.insecurevalidatereceiptsurl" -> "http://delegate.invalid/validateReceipts").asJava)
       val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
       val client = mock[OkHttpClient]
       val mockCall = mock[Call]
