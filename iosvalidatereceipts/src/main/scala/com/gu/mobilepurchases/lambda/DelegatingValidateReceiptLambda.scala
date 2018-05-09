@@ -151,7 +151,7 @@ object DelegatingValidateReceiptLambda {
     okHttpClient: OkHttpClient,
     cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
     val logger: Logger = LogManager.getLogger(classOf[DelegatingValidateReceiptLambda])
-    Try(config.getString("delegate.validatereceiptsurl")) match {
+    Try(config.getString("delegate.insecurevalidatereceiptsurl")) match {
       case Success(delegateUrl) => {
         logger.info(s"Delegating to $delegateUrl")
         new DelegatingLambda(

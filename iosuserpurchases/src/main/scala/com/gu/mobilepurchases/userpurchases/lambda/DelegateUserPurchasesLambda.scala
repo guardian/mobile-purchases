@@ -94,7 +94,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
   }
 
   private def logReturnedQuantity(quantity: Double): Boolean = {
-    logLambdaExtras(quantity)
+    cloudWatch.queueMetric(returnedMetricName, quantity, StandardUnit.Count)
   }
 
   private def logDelegateExtras(delegateExtraQuantity: Int): Boolean = {
@@ -157,7 +157,7 @@ object DelegateUserPurchasesLambda {
     cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
     val logger: Logger = LogManager.getLogger(classOf[DelegateUserPurchasesLambda])
     Try {
-      config.getString("delegate.userpurchasesurl")
+      config.getString("delegate.insecureuserpurchasesurl")
     } match {
       case Success(url) => {
         logger.info(s"Delegating to $url")
