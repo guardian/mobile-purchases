@@ -52,7 +52,7 @@ class DelegateUserPurchasesLambdaSpec extends Specification with Mockito {
       mapper.readValue[UserPurchasesResponse](actualResponse.maybeBody.get) must beEqualTo(expectedLambdaResponse)
     }
     "return delegate when lambda fails" in {
-      val config: Config = ConfigFactory.parseMap(Map("delegate.userpurchasesurl" -> "http://delegate.invalid/userPurhcases").asJava)
+      val config: Config = ConfigFactory.parseMap(Map("delegate.insecureuserpurchasesurl" -> "http://delegate.invalid/userPurhcases").asJava)
 
       val userPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => throw new IllegalStateException("lambda failed"))
       val inputStream: InputStream = new ByteArrayInputStream(expectedApiGatewayRequest)
@@ -82,7 +82,7 @@ class DelegateUserPurchasesLambdaSpec extends Specification with Mockito {
     }
 
     "prefer delegate over lambda" in {
-      val config: Config = ConfigFactory.parseMap(Map("delegate.userpurchasesurl" -> "http://delegate.invalid/userPurhcases").asJava)
+      val config: Config = ConfigFactory.parseMap(Map("delegate.insecureuserpurchasesurl" -> "http://delegate.invalid/userPurhcases").asJava)
 
       val userPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => expectedLambdaResponse)
       val inputStream: InputStream = new ByteArrayInputStream(expectedApiGatewayRequest)

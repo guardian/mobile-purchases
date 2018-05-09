@@ -190,7 +190,7 @@ class DelegatingValidateReceiptLambda(
   def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatchAsync, clock: Clock, lambdaTimeout: Duration) = this(ssmConfig, defaultHttpClient, new CloudWatchImpl(ssmConfig.stage, validateReceiptsName, amazonCloudWatch), clock, lambdaTimeout)
 
   def this() {
-    this(SsmConfigLoader(), AmazonCloudWatchAsyncClientBuilder.defaultClient(), Clock.systemUTC(), Duration(240, TimeUnit.SECONDS))
+    this(SsmConfigLoader(validateReceiptsName), AmazonCloudWatchAsyncClientBuilder.defaultClient(), Clock.systemUTC(), Duration(240, TimeUnit.SECONDS))
   }
 
 }

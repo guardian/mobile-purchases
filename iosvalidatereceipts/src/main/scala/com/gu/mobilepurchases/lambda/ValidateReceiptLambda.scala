@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatchAsync, AmazonCloudWatchAsyncClientBuilder }
 import com.gu.mobilepurchases.apple.{ AppStoreConfig, AppStoreImpl }
+import com.gu.mobilepurchases.lambda.ValidateReceiptLambda.validateReceiptsName
 import com.gu.mobilepurchases.persistence.{ TransactionPersistenceImpl, UserPurchaseFilterExpiredImpl }
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl, CloudWatchMetrics }
 import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
@@ -39,7 +40,7 @@ class ValidateReceiptLambda(ssmConfig: SsmConfig, client: OkHttpClient, cloudWat
     cloudWatch) {
   def this(ssmConfig: SsmConfig, client: OkHttpClient, amazonCloudWatch: AmazonCloudWatchAsync, clock: Clock, timeout: Duration) =
 
-    this(ssmConfig, client, new CloudWatchImpl(ssmConfig.stage, ValidateReceiptLambda.validateReceiptsName, amazonCloudWatch), clock, timeout)
+    this(ssmConfig, client, new CloudWatchImpl(ssmConfig.stage, validateReceiptsName, amazonCloudWatch), clock, timeout)
 
-  def this() = this(SsmConfigLoader(), GlobalOkHttpClient.defaultHttpClient, AmazonCloudWatchAsyncClientBuilder.defaultClient(), Clock.systemUTC(), Duration(270, TimeUnit.SECONDS))
+  def this() = this(SsmConfigLoader(validateReceiptsName), GlobalOkHttpClient.defaultHttpClient, AmazonCloudWatchAsyncClientBuilder.defaultClient(), Clock.systemUTC(), Duration(270, TimeUnit.SECONDS))
 }

@@ -14,13 +14,13 @@ case class SsmConfig(
 }
 
 object SsmConfigLoader {
-  val locationFunction: PartialFunction[AppIdentity, SSMConfigurationLocation] = {
-    case identity: AwsIdentity => SSMConfigurationLocation(s"/${identity.app}/${identity.stage}/${identity.stack}")
+  def locationFunction(lambdaname: String): PartialFunction[AppIdentity, SSMConfigurationLocation] = {
+    case identity: AwsIdentity => SSMConfigurationLocation(s"/${identity.app}-${lambdaname}/${identity.stage}/${identity.stack}")
   }
-  def apply(awsIdentitySupplier: () => AppIdentity = () => AppIdentity.whoAmI(defaultAppName = "mobile-purchases")): SsmConfig = {
+  def apply(lambdaname: String, awsIdentitySupplier: () => AppIdentity = () => AppIdentity.whoAmI(defaultAppName = "mobile-purchases")): SsmConfig = {
     val identity: AppIdentity = Logging.logOnThrown(awsIdentitySupplier, "Error feature appidentity")
     val config: Config = Logging.logOnThrown(() => {
-      ConfigurationLoader.load(identity)(locationFunction)
+      ConfigurationLoader.load(identity)(locationFunction(lambdaname))
     }, "Error reading config from ssm")
     identity match {
       case awsIdentity: AwsIdentity => SsmConfig(awsIdentity.app, awsIdentity.stack, awsIdentity.stage, config)

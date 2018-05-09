@@ -197,6 +197,6 @@ class DelegateUserPurchasesLambda(
 
   def this(ssmConfig: SsmConfig, clock: Clock, amazonCloudWatch: AmazonCloudWatchAsync) = this(ssmConfig, clock, new CloudWatchImpl(ssmConfig.stage, userPurchasesName, amazonCloudWatch))
 
-  def this() = this(SsmConfigLoader(), Clock.systemUTC(), AmazonCloudWatchAsyncClientBuilder.defaultClient())
+  def this() = this(SsmConfigLoader(userPurchasesName), Clock.systemUTC(), AmazonCloudWatchAsyncClientBuilder.defaultClient())
 }
 

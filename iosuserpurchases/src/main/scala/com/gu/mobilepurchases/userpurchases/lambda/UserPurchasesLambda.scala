@@ -8,6 +8,7 @@ import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.Logging
 import com.gu.mobilepurchases.shared.lambda.AwsLambda
 import com.gu.mobilepurchases.userpurchases.controller.UserPurchasesController
+import com.gu.mobilepurchases.userpurchases.lambda.UserPurchasesLambda.userPurchasesName
 import com.gu.mobilepurchases.userpurchases.persistence.{ ScanamaoUserPurchasesStringsByUserIdColonAppIdImpl, UserPurchaseConfig, UserPurchasePersistenceImpl, UserPurchasePersistenceTransformer }
 import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesImpl
 
@@ -25,8 +26,8 @@ object UserPurchasesLambda {
 }
 
 class UserPurchasesLambda(ssmConfig: SsmConfig, cloudWatch: CloudWatch, clock: Clock) extends AwsLambda(UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch), cloudWatch = cloudWatch) {
-  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatchAsync, clock: Clock) = this(ssmConfig, new CloudWatchImpl(ssmConfig.stage, UserPurchasesLambda.userPurchasesName, amazonCloudWatch), clock)
-  def this() = this(SsmConfigLoader(), AmazonCloudWatchAsyncClientBuilder.defaultClient(), Clock.systemUTC())
+  def this(ssmConfig: SsmConfig, amazonCloudWatch: AmazonCloudWatchAsync, clock: Clock) = this(ssmConfig, new CloudWatchImpl(ssmConfig.stage, userPurchasesName, amazonCloudWatch), clock)
+  def this() = this(SsmConfigLoader(userPurchasesName), AmazonCloudWatchAsyncClientBuilder.defaultClient(), Clock.systemUTC())
 
 }
 
