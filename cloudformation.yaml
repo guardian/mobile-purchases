@@ -62,6 +62,20 @@ Resources:
                 - ssm:GetParametersByPath
               Effect: Allow
               Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}
+        - PolicyName: iosuserpurchases-config
+          PolicyDocument:
+            Statement:
+              Action:
+                - ssm:GetParametersByPath
+              Effect: Allow
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}-iosuserpurchases/${Stage}/${Stack}
+        - PolicyName: iosvalidatereceipts-config
+          PolicyDocument:
+            Statement:
+              Action:
+                - ssm:GetParametersByPath
+              Effect: Allow
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}-iosvalidatereceipts/${Stage}/${Stack}
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
