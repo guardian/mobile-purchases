@@ -7,7 +7,6 @@ import java.time.Clock
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatchAsync, AmazonCloudWatchAsyncClientBuilder }
 import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatch, CloudWatchImpl }
-import com.gu.mobilepurchases.shared.config.{ SsmConfig, SsmConfigLoader }
 import com.gu.mobilepurchases.shared.external.GlobalOkHttpClient.defaultHttpClient
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.lambda.DelegatingLambda.goodStatus
@@ -16,6 +15,7 @@ import com.gu.mobilepurchases.userpurchases.UserPurchase
 import com.gu.mobilepurchases.userpurchases.controller.UserPurchasesController
 import com.gu.mobilepurchases.userpurchases.lambda.DelegateUserPurchasesLambda.delegateIfConfigured
 import com.gu.mobilepurchases.userpurchases.lambda.UserPurchasesLambda.userPurchasesName
+import com.gu.mobilepurchases.userpurchases.persistence.UserPurchaseConfig
 import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesResponse
 import com.typesafe.config.{ Config, ConfigException }
 import okhttp3.{ OkHttpClient, Request }
@@ -151,52 +151,50 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
 object DelegateUserPurchasesLambda {
 
   def delegateIfConfigured(
-    config: Config,
+    url: String,
     userPurchasesController: UserPurchasesController,
     okHttpClient: OkHttpClient,
     cloudWatch: CloudWatch): (LambdaRequest => LambdaResponse) = {
     val logger: Logger = LogManager.getLogger(classOf[DelegateUserPurchasesLambda])
-    Try {
-      config.getString("delegate.insecureuserpurchasesurl")
-    } match {
-      case Success(url) => {
-        logger.info(s"Delegating to $url")
 
-        new DelegatingLambda(
-          userPurchasesController,
-          new DelegateUserPurchasesLambdaRequestMapper(url),
-          new DelegateUserPurchasesLambdaComparator(cloudWatch),
-          okHttpClient,
-          cloudWatch,
-          DelegateLambdaConfig(userPurchasesName)
-        )
-      }
-      case Failure(_: ConfigException.Missing) => {
-        logger.info(s"Not delegating")
-        userPurchasesController
-      }
-      case Failure(t: Throwable) => {
-        logger.info("Unexpected config error")
-        throw t
-      }
-    }
+    new DelegatingLambda(
+      userPurchasesController,
+      new DelegateUserPurchasesLambdaRequestMapper(url),
+      new DelegateUserPurchasesLambdaComparator(cloudWatch),
+      okHttpClient,
+      cloudWatch,
+      DelegateLambdaConfig(userPurchasesName)
+    )
   }
 }
 
 class DelegateUserPurchasesLambda(
-    config: Config,
+    delegateUrl: String,
     userPurchasesController: UserPurchasesController,
     okHttpClient: OkHttpClient,
 
     cloudWatch: CloudWatch) extends AwsLambda(delegateIfConfigured(
-  config,
+  delegateUrl,
   userPurchasesController,
   okHttpClient,
   cloudWatch), cloudWatch = cloudWatch) {
-  def this(ssmConfig: SsmConfig, clock: Clock, cloudWatch: CloudWatch) = this(ssmConfig.config, UserPurchasesLambda.userPurchasesController(ssmConfig, clock, cloudWatch), defaultHttpClient, cloudWatch)
+  def this(delegateUrl: String, userPurchaseConfig: UserPurchaseConfig, clock: Clock, cloudWatch: CloudWatch) = this(delegateUrl, UserPurchasesLambda.userPurchasesController(userPurchaseConfig, clock, cloudWatch), defaultHttpClient, cloudWatch)
 
-  def this(ssmConfig: SsmConfig, clock: Clock, amazonCloudWatch: AmazonCloudWatchAsync) = this(ssmConfig, clock, new CloudWatchImpl(ssmConfig.stage, userPurchasesName, amazonCloudWatch))
+  def this(delegateUrl: String, userPurchaseConfig: UserPurchaseConfig, clock: Clock, amazonCloudWatch: AmazonCloudWatchAsync) = this(delegateUrl, userPurchaseConfig, clock, new CloudWatchImpl(userPurchaseConfig.stage, userPurchasesName, amazonCloudWatch))
 
-  def this() = this(SsmConfigLoader(userPurchasesName), Clock.systemUTC(), AmazonCloudWatchAsyncClientBuilder.defaultClient())
+  def this() = this(Try {
+    val insecureuserpurchasesurl: String = System.getenv("insecureuserpurchasesurl")
+    Option(insecureuserpurchasesurl).filter(_.nonEmpty).get
+
+  } match {
+    case Success(success) => {
+      LogManager.getLogger(classOf[DelegateUserPurchasesLambda]).info(s"Delegating to $success")
+      success
+    }
+    case Failure(t: Throwable) => {
+      LogManager.getLogger(classOf[DelegateUserPurchasesLambda]).info("Unexpected config error")
+      throw t
+    }
+  }, UserPurchasesLambda.fetchUserPurchaseConfig, Clock.systemUTC(), AmazonCloudWatchAsyncClientBuilder.defaultClient())
 }
 

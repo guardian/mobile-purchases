@@ -32,6 +32,9 @@ Parameters:
   AppDNS:
     Description: DNS used by app
     Type: String
+  UserPurchasesDelegateUrl:
+    Description: URL for delgeation of user purchases
+    Type: String
 Resources:
   IosValidateReceiptsRole:
     Type: AWS::IAM::Role
@@ -230,7 +233,8 @@ Resources:
         Variables:
           Stage: !Ref Stage
           Stack: !Ref Stack
-          App: !Sub ${App}
+          App: !Ref App
+          insecureuserpurchasesurl: !Ref UserPurchasesDelegateUrl
       Description: Gets user purchases
       MemorySize: 448
       Timeout: 45
