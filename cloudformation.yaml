@@ -202,7 +202,7 @@ Resources:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-iosvalidatereceipts/${App}-iosvalidatereceipts.jar
       FunctionName: !Sub ${App}-iosvalidatereceipts-${Stage}
-      Role: MobilePurchasesLambdasRole
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
         Variables:
           Stage: !Ref Stage
@@ -228,7 +228,7 @@ Resources:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-iosuserpurchases/${App}-iosuserpurchases.jar
       FunctionName: !Sub ${App}-iosuserpurchases-${Stage}
-      Role: MobilePurchasesLambdasRole
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
         Variables:
           Stage: !Ref Stage
