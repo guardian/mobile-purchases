@@ -25,17 +25,17 @@ object ValidateExample {
     "20000034829192",
     validated = true,
     finishTransaction = true,
-    ValidatedTransactionPurchase("uk.co.guardian.gce.plusobserver.1monthsub", "20000001746150", ValidatedTransactionPurchaseActiveInterval(
-      "2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z")), 0)
+    Some(ValidatedTransactionPurchase("uk.co.guardian.gce.plusobserver.1monthsub", "20000001746150", ValidatedTransactionPurchaseActiveInterval(
+      "2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z"))), 0)
 
   def successValidatedTransaction: ValidatedTransaction = ValidatedTransaction(
     "20000034829192",
     1,
     1,
-    ValidatedTransactionPurchase(
+    Some(ValidatedTransactionPurchase(
       "uk.co.guardian.gla.1month",
       "1000000036022769",
-      ValidatedTransactionPurchaseActiveInterval("2018-03-26T12:24:23.107Z", "2018-03-26T12:29:23.107Z")),
+      ValidatedTransactionPurchaseActiveInterval("2018-03-26T12:24:23.107Z", "2018-03-26T12:29:23.107Z"))),
 
     0
   )

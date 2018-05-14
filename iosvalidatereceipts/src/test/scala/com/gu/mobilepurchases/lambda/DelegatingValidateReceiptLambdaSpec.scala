@@ -85,7 +85,9 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       val actualResponse: LambdaResponse = LambdaResponse(mapper.readValue[ApiGatewayLambdaResponse](stream.toByteArray))
 
       actualResponse.copy(maybeBody = None) must beEqualTo(LambdaResponse(200, None, Map("Content-Type" -> "application/json; charset=UTF-8")))
-      mapper.readValue[ValidateResponse](actualResponse.maybeBody.get) must beEqualTo(ValidateResponse(Set(ValidatedTransaction("20000034829192", 1, 1, ValidatedTransactionPurchase("uk.co.guardian.gce.plusobserver.1monthsub", "20000001746150", ValidatedTransactionPurchaseActiveInterval("2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z")), 0))))
+      mapper.readValue[ValidateResponse](actualResponse.maybeBody.get) must beEqualTo(ValidateResponse(Set(
+        ValidatedTransaction("20000034829192", 1, 1,
+          Some(ValidatedTransactionPurchase("uk.co.guardian.gce.plusobserver.1monthsub", "20000001746150", ValidatedTransactionPurchaseActiveInterval("2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z"))), 0))))
       there was no(client).newCall(Mockito.any[Request]())
     }
 
@@ -117,7 +119,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       val actualResponse: LambdaResponse = LambdaResponse(mapper.readValue[ApiGatewayLambdaResponse](stream.toByteArray))
       val expectedResponse: LambdaResponse = LambdaResponse(200, None, Map("Content-Type" -> "application/json; charset=UTF-8"))
       actualResponse.copy(maybeBody = None) must beEqualTo(expectedResponse)
-      mapper.readValue[ValidateResponse](actualResponse.maybeBody.get) must beEqualTo(ValidateResponse(Set(ValidatedTransaction("20000034829192", 1, 1, ValidatedTransactionPurchase("uk.co.guardian.gce.plusobserver.1monthsub", "20000001746150", ValidatedTransactionPurchaseActiveInterval("2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z")), 0))))
+      mapper.readValue[ValidateResponse](actualResponse.maybeBody.get) must beEqualTo(ValidateResponse(Set(ValidatedTransaction("20000034829192", 1, 1, Some(ValidatedTransactionPurchase("uk.co.guardian.gce.plusobserver.1monthsub", "20000001746150", ValidatedTransactionPurchaseActiveInterval("2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z"))), 0))))
       there was one(client).newCall(any[Request]())
     }
 
@@ -184,7 +186,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       val actualResponse: LambdaResponse = LambdaResponse(mapper.readValue[ApiGatewayLambdaResponse](stream.toByteArray))
       val expectedResponse: LambdaResponse = LambdaResponse(200, None, Map("Content-Type" -> "application/json; charset=UTF-8"))
       actualResponse.copy(maybeBody = None) must beEqualTo(expectedResponse)
-      mapper.readValue[ValidateResponse](actualResponse.maybeBody.get) must beEqualTo(ValidateResponse(Set(ValidatedTransaction("20000034829192", 1, 1, ValidatedTransactionPurchase("uk.co.guardian.gce.plusobserver.1monthsub", "20000001746150", ValidatedTransactionPurchaseActiveInterval("2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z")), 0))))
+      mapper.readValue[ValidateResponse](actualResponse.maybeBody.get) must beEqualTo(ValidateResponse(Set(ValidatedTransaction("20000034829192", 1, 1, Some(ValidatedTransactionPurchase("uk.co.guardian.gce.plusobserver.1monthsub", "20000001746150", ValidatedTransactionPurchaseActiveInterval("2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z"))), 0))))
       there was one(client).newCall(any[Request]())
     }
 

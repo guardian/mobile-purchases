@@ -39,7 +39,7 @@ class ValidateReceiptsRouteImpl(
       .filterKeys(validatedTransactions.contains)
       .values
       .map((_: Set[ValidatedTransaction])
-        .maxBy((_: ValidatedTransaction).purchase.activeInterval.end))
+        .maxBy((_: ValidatedTransaction).purchase.map(_.activeInterval.end).getOrElse("")))
       .toSet
   }
 

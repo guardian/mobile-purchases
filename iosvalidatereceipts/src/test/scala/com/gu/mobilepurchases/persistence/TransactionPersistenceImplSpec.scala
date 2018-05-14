@@ -36,7 +36,7 @@ class TransactionPersistenceImplSpec extends Specification with ScalaCheck {
               val userIdWithAppId: UserIdWithAppId = validateRequestWithTransactions.userIdWithAppId
               userPurchasesByUserId must beEqualTo(UserPurchasesByUserIdAndAppId(userIdWithAppId.userId, userIdWithAppId.appId,
                 validateRequestWithTransactions.transactions.map((transaction: ValidatedTransaction) => {
-                  val purchase: ValidatedTransactionPurchase = transaction.purchase
+                  val purchase: ValidatedTransactionPurchase = transaction.purchase.get
                   UserPurchase(
 
                     purchase.productId,

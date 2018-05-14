@@ -14,7 +14,7 @@ object ValidatedTransaction {
     transactionId: String,
     validated: Boolean,
     finishTransaction: Boolean,
-    purchase: ValidatedTransactionPurchase,
+    purchase: Option[ValidatedTransactionPurchase],
     appStoreStatusResponse: Long
   ): ValidatedTransaction = {
     val validatedLong: Int = if (validated) 1 else 0
@@ -27,6 +27,6 @@ case class ValidatedTransaction(
     transactionId: String,
     validated: Long,
     finishTransaction: Long,
-    purchase: ValidatedTransactionPurchase,
+    purchase: Option[ValidatedTransactionPurchase],
     appStoreStatusResponse: Long
 )
