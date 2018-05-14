@@ -4,7 +4,8 @@ import scalariform.formatter.preferences._
 
 import scala.collection.immutable
 
-val testAndCompileDependencies = "test->test;compile->compile"
+val testAndCompileDependencies: String = "test->test;compile->compile"
+val simpleConfigurationVersion: String = "1.4.3"
 
 lazy val commonlambda = project.disablePlugins(AssemblyPlugin).settings(commonSettings("commonlambda"))
 
@@ -12,7 +13,10 @@ lazy val userpurchasepersistence = project.disablePlugins(AssemblyPlugin)
   .settings(commonSettings("userpurchasepersistence"))
   .dependsOn(commonlambda % testAndCompileDependencies)
 
-lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("iosvalidatereceipts"))
+
+lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings(List(
+  libraryDependencies += "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion
+) ++ commonAssemblySettings("iosvalidatereceipts"))
   .dependsOn(userpurchasepersistence % testAndCompileDependencies)
 
 lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("iosuserpurchases"))
@@ -69,7 +73,7 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
       "com.gu" %% "scanamo" % "1.0.0-M6",
-      "com.gu" %% "simple-configuration-ssm" % "1.4.3",
+      "com.gu" %% "simple-configuration-core" % simpleConfigurationVersion,
       "org.specs2" %% "specs2-core" % specsVersion % "test",
       "org.specs2" %% "specs2-scalacheck" % specsVersion % "test",
       "org.specs2" %% "specs2-mock" % specsVersion % "test",

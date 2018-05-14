@@ -36,7 +36,7 @@ Parameters:
     Description: URL for delgeation of user purchases
     Type: String
 Resources:
-  IosValidateReceiptsRole:
+  MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -202,7 +202,7 @@ Resources:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-iosvalidatereceipts/${App}-iosvalidatereceipts.jar
       FunctionName: !Sub ${App}-iosvalidatereceipts-${Stage}
-      Role: !GetAtt IosValidateReceiptsRole.Arn
+      Role: MobilePurchasesLambdasRole
       Environment:
         Variables:
           Stage: !Ref Stage
@@ -228,7 +228,7 @@ Resources:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-iosuserpurchases/${App}-iosuserpurchases.jar
       FunctionName: !Sub ${App}-iosuserpurchases-${Stage}
-      Role: !GetAtt IosValidateReceiptsRole.Arn
+      Role: MobilePurchasesLambdasRole
       Environment:
         Variables:
           Stage: !Ref Stage
