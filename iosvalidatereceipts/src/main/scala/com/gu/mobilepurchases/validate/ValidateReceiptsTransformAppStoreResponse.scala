@@ -33,13 +33,6 @@ class ValidateReceiptsTransformAppStoreResponseImpl extends ValidateReceiptsTran
     appStoreResponse: AppStoreResponse,
     statusCodeInt: Int,
     receipt: AppStoreResponseReceipt): ValidatedTransaction = {
-    val validatedTransactionPurchase: ValidatedTransactionPurchase = ValidatedTransactionPurchase(
-      receipt.product_id,
-      receipt.web_order_line_item_id,
-      ValidatedTransactionPurchaseActiveInterval(
-        ofEpochMilli(receipt.purchase_date_ms.toLong).atZone(UTC).format(instantFormatter),
-        ofEpochMilli(receipt.expires_date.toLong).atZone(UTC).format(instantFormatter)))
-
     val statusAsLong: Long = appStoreResponse.status.toLong
 
     statusCodeInt match {
@@ -47,17 +40,22 @@ class ValidateReceiptsTransformAppStoreResponseImpl extends ValidateReceiptsTran
         receipt.transaction_id,
         validated = true,
         finishTransaction = true,
-        validatedTransactionPurchase, statusAsLong)
+        Some(ValidatedTransactionPurchase(
+          receipt.product_id,
+          receipt.web_order_line_item_id,
+          ValidatedTransactionPurchaseActiveInterval(
+            ofEpochMilli(receipt.purchase_date_ms.toLong).atZone(UTC).format(instantFormatter),
+            ofEpochMilli(receipt.expires_date.toLong).atZone(UTC).format(instantFormatter)))), statusAsLong)
       case AutoRenewableSubsStatusCodes.CouldNotReadJson |
         AutoRenewableSubsStatusCodes.MalformedReceiptData |
         AutoRenewableSubsStatusCodes.CouldNotAuthenticateReceipt => ValidatedTransaction(
         receipt.transaction_id,
         validated = false,
         finishTransaction = false,
-        validatedTransactionPurchase,
+        None,
         statusAsLong)
       case _ => ValidatedTransaction(receipt.transaction_id, validated = false, finishTransaction = true,
-        validatedTransactionPurchase, statusAsLong)
+        None, statusAsLong)
     }
   }
 }

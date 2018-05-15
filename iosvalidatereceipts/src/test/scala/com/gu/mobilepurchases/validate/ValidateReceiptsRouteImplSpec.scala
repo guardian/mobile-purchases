@@ -17,12 +17,12 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
       val validateRequest: ValidateRequest = Jackson.mapper.readValue[ValidateRequest](ValidateToAppleSpec.testRequestBytes)
       val validateResponse: ValidateResponse = Jackson.mapper.readValue[ValidateResponse](ValidateToAppleSpec.testResponseBytes)
       val extraReceiptValidateTransactions = ValidatedTransaction(
-        "1000000390101770", 1, 1, ValidatedTransactionPurchase(
-          "uk.co.guardian.gla.1month", "1000000038562242", ValidatedTransactionPurchaseActiveInterval("1970-01-01T00:00:00.002Z", "1970-01-01T00:00:00.001Z")), 21006)
+        "1000000390101770", 1, 1, Some(ValidatedTransactionPurchase(
+          "uk.co.guardian.gla.1month", "1000000038562242", ValidatedTransactionPurchaseActiveInterval("1970-01-01T00:00:00.002Z", "1970-01-01T00:00:00.001Z"))), 21006)
       val extraNestedValidatedTransaction: ValidatedTransaction = ValidatedTransaction(
         "1", 1, 1,
-        ValidatedTransactionPurchase(
-          "uk.co.guardian.gla.1month", "1234567", ValidatedTransactionPurchaseActiveInterval("2018-04-26T16:27:24.000Z", "2018-04-26T16:27:24.000Z")), 21006)
+        Some(ValidatedTransactionPurchase(
+          "uk.co.guardian.gla.1month", "1234567", ValidatedTransactionPurchaseActiveInterval("2018-04-26T16:27:24.000Z", "2018-04-26T16:27:24.000Z"))), 21006)
       val mockResponses: Map[String, AppStoreResponse] = Map(
         "ExtraReceipt" -> AppStoreExample.appStoreResponseExample.copy(
           status = "21006",

@@ -23,7 +23,7 @@ class ValidateReceiptsTransformAppStoreResponseSpec extends Specification with S
     )
     val validValidatedTransaction: ValidatedTransaction = ValidatedTransaction("transactionId", 1,
       1,
-      ValidatedTransactionPurchase("productId", "webOrderLineItemId", ValidatedTransactionPurchaseActiveInterval("2012-09-30T12:24:36.000Z", "2012-09-30T12:24:36.000Z")), 0)
+      Some(ValidatedTransactionPurchase("productId", "webOrderLineItemId", ValidatedTransactionPurchaseActiveInterval("2012-09-30T12:24:36.000Z", "2012-09-30T12:24:36.000Z"))), 0)
     val validateReceiptsTransformAppStoreResponse = new ValidateReceiptsTransformAppStoreResponseImpl()
 
     "valid receipt" in {
@@ -35,11 +35,14 @@ class ValidateReceiptsTransformAppStoreResponseSpec extends Specification with S
       transactions must beEqualTo(Set(validValidatedTransaction.copy(appStoreStatusResponse = 21006)))
     }
     "CouldNotReadJson" in {
-      val transactions: Set[ValidatedTransaction] = validateReceiptsTransformAppStoreResponse.transformAppStoreResponse(validResponse.copy(status = "21000"))
+      val transactions: Set[ValidatedTransaction] = validateReceiptsTransformAppStoreResponse.transformAppStoreResponse(
+        validResponse.copy(status = "21000"))
       transactions must beEqualTo(Set(validValidatedTransaction.copy(
         appStoreStatusResponse = 21000,
         finishTransaction = 0,
-        validated = 0
+        validated = 0,
+        purchase = None
+
       )))
     }
     "MalformedReceiptData" in {
@@ -47,7 +50,8 @@ class ValidateReceiptsTransformAppStoreResponseSpec extends Specification with S
       transactions must beEqualTo(Set(validValidatedTransaction.copy(
         appStoreStatusResponse = 21002,
         finishTransaction = 0,
-        validated = 0
+        validated = 0,
+        purchase = None
       )))
     }
 
@@ -56,20 +60,9 @@ class ValidateReceiptsTransformAppStoreResponseSpec extends Specification with S
       transactions must beEqualTo(Set(validValidatedTransaction.copy(
         appStoreStatusResponse = 21003,
         finishTransaction = 0,
-        validated = 0
+        validated = 0,
+        purchase = None
       )))
-    }
-    "scalacheck" >> {
-      implicit val arbitraryAppStoreResponse: Arbitrary[AppStoreResponse] = Arbitrary(AppStoreSpec.genLeafAppStoreResponse)
-      prop { (appStoreResponse: AppStoreResponse) =>
-        {
-          val transactions: Set[ValidatedTransaction] = validateReceiptsTransformAppStoreResponse.transformAppStoreResponse(appStoreResponse)
-          transactions must beAnInstanceOf[Set[ValidatedTransaction]]
-          transactions.size must beEqualTo(Set(appStoreResponse.latest_expired_receipt_info, appStoreResponse.latest_receipt_Info, appStoreResponse.receipt).flatMap(_.toSet).size)
-
-        }
-      }.setArbitrary(arbitraryAppStoreResponse)
-
     }
   }
 }

@@ -23,7 +23,7 @@ object UserPurchasesLambda {
   def userPurchasesController(userPurchaseConfig: UserPurchaseConfig, clock: Clock, cloudWatch: CloudWatchMetrics): UserPurchasesController = Logging.logOnThrown(() =>
     new UserPurchasesController(new UserPurchasesImpl(new UserPurchasePersistenceImpl(
       ScanamaoUserPurchasesStringsByUserIdColonAppIdImpl(
-        userPurchaseConfig), new UserPurchasePersistenceTransformer(clock), cloudWatch))), "Error instantiating UserPurchasesLambda", Some(classOf[UserPurchasesLambda]))
+        userPurchaseConfig), new UserPurchasePersistenceTransformer(clock), cloudWatch)), cloudWatch), "Error instantiating UserPurchasesLambda", Some(classOf[UserPurchasesLambda]))
 }
 
 class UserPurchasesLambda(userPurchaseConfig: UserPurchaseConfig, cloudWatch: CloudWatch, clock: Clock) extends AwsLambda(UserPurchasesLambda.userPurchasesController(userPurchaseConfig, clock, cloudWatch), cloudWatch = cloudWatch) {

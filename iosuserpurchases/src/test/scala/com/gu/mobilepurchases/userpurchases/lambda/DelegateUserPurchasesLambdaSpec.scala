@@ -27,7 +27,7 @@ class DelegateUserPurchasesLambdaSpec extends Specification with Mockito {
           "userIds" -> "gnmUdid~gia:D39DE40D-CF02-4DFC-96F7-3BF6CA2C1A25,vendorUdid~DB19C9CB-5539-4BF8-B76A-44B9BEB36E22"))))
     "return lambda failure when both fail" in {
 
-      val userPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => throw new IllegalStateException("lambda failed"))
+      val userPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => throw new IllegalStateException("lambda failed"), cloudWatchImpl)
       val inputStream: InputStream = new ByteArrayInputStream(expectedApiGatewayRequest)
       val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
       val client: OkHttpClient = mock[OkHttpClient]
@@ -54,7 +54,7 @@ class DelegateUserPurchasesLambdaSpec extends Specification with Mockito {
     val expectedDelegateResponse: UserPurchasesResponse = UserPurchasesResponse(Set(UserPurchase("delegateProductId", "delegateWebOrderLineItemid", UserPurchaseInterval("delegateStart", "delegateEnd"))))
     "return lambda success when delegate fails" in {
 
-      val userPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => expectedLambdaResponse)
+      val userPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => expectedLambdaResponse, cloudWatchImpl)
       val inputStream: InputStream = new ByteArrayInputStream(expectedApiGatewayRequest)
       val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
       val client: OkHttpClient = mock[OkHttpClient]
@@ -81,7 +81,7 @@ class DelegateUserPurchasesLambdaSpec extends Specification with Mockito {
     }
     "return delegate when lambda fails" in {
 
-      val userPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => throw new IllegalStateException("lambda failed"))
+      val userPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => throw new IllegalStateException("lambda failed"), cloudWatchImpl)
       val inputStream: InputStream = new ByteArrayInputStream(expectedApiGatewayRequest)
       val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
       val client: OkHttpClient = mock[OkHttpClient]
@@ -110,7 +110,7 @@ class DelegateUserPurchasesLambdaSpec extends Specification with Mockito {
 
     "prefer delegate over lambda" in {
 
-      val userPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => expectedLambdaResponse)
+      val userPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => expectedLambdaResponse, cloudWatchImpl)
       val inputStream: InputStream = new ByteArrayInputStream(expectedApiGatewayRequest)
       val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
       val client: OkHttpClient = mock[OkHttpClient]

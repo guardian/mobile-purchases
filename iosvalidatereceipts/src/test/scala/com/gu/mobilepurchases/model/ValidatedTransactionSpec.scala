@@ -16,7 +16,7 @@ object ValidatedTransactionSpec {
     "",
     1,
     1,
-    ValidatedTransactionPurchase("", "", ValidatedTransactionPurchaseActiveInterval("", "")), 0
+    Some(ValidatedTransactionPurchase("", "", ValidatedTransactionPurchaseActiveInterval("", ""))), 0
   )
   val genValidatedTransaction: Gen[ValidatedTransaction] = for {
     transactionId <- genCommonAscii
@@ -33,7 +33,7 @@ object ValidatedTransactionSpec {
       } yield ValidatedTransactionPurchaseActiveInterval(start, end)
     } yield ValidatedTransactionPurchase(productId, webOrderLineItemId, activeInterval)
     appStoreStatusResponse <- Arbitrary.arbitrary[Long]
-  } yield ValidatedTransaction(transactionId, validated, finishTransaction, purchase, appStoreStatusResponse)
+  } yield ValidatedTransaction(transactionId, validated, finishTransaction, Some(purchase), appStoreStatusResponse)
   val genValidatedTransactions: Gen[Set[ValidatedTransaction]] = Gen.containerOf[Set, ValidatedTransaction](genValidatedTransaction)
 }
 

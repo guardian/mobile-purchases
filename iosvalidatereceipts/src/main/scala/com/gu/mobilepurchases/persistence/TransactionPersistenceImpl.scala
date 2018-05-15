@@ -1,6 +1,6 @@
 package com.gu.mobilepurchases.persistence
 
-import com.gu.mobilepurchases.model.ValidatedTransaction
+import com.gu.mobilepurchases.model.{ ValidatedTransaction, ValidatedTransactionPurchase }
 import com.gu.mobilepurchases.userpurchases.persistence.{ UserPurchasePersistence, UserPurchasesByUserIdAndAppId }
 import com.gu.mobilepurchases.userpurchases.{ UserPurchase, UserPurchaseInterval }
 import com.gu.mobilepurchases.validate.ValidateRequest
@@ -23,7 +23,7 @@ class TransactionPersistenceImpl(
   def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[_] = {
     val userId: String = userIdWithAppId.userId
     val appId: String = userIdWithAppId.appId
-    val appStorePurchases: Set[UserPurchase] = transactions.map((transaction: ValidatedTransaction) => transformFromTransaction(transaction))
+    val appStorePurchases: Set[UserPurchase] = transactions.flatMap(_.purchase.map(transformFromTransaction))
     for {
       existingMaybeUserPurchasesByUserIdAndAppId: Option[UserPurchasesByUserIdAndAppId] <- userPurchasePersistence.read(userId, appId)
 
@@ -37,11 +37,11 @@ class TransactionPersistenceImpl(
     } yield written
   }
 
-  def transformFromTransaction(transaction: ValidatedTransaction): UserPurchase = {
+  def transformFromTransaction(transaction: ValidatedTransactionPurchase): UserPurchase = {
     UserPurchase(
-      transaction.purchase.productId,
-      transaction.purchase.webOrderLineItemId,
-      UserPurchaseInterval(transaction.purchase.activeInterval.start, transaction.purchase.activeInterval.end))
+      transaction.productId,
+      transaction.webOrderLineItemId,
+      UserPurchaseInterval(transaction.activeInterval.start, transaction.activeInterval.end))
   }
 
   def transformValidateRequest(validateReceiptRequest: ValidateRequest): UserIdWithAppId = {

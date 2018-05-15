@@ -30,6 +30,7 @@ object ValidateToAppleSpec {
 class ValidateToAppleSpec extends Specification with Mockito {
   "ValidateReceiptLambdaMockedApple" should {
     "controller works in an AwsLambda" in {
+      val cloudWatchImpl: CloudWatchImpl = new CloudWatchImpl("", "lambdaname", CloudWatchImplSpec.mockSuccessfullySendMetrics(_ => ()))
       val lambda: AwsLambda = new AwsLambda(new ValidateReceiptsController(
         (validateReceiptRequest: ValidateRequest) => {
           validateReceiptRequest must beEqualTo(ValidateRequest(
@@ -45,13 +46,13 @@ class ValidateToAppleSpec extends Specification with Mockito {
           )
 
           Success(ValidateResponse(Set(
-            ValidatedTransaction("1000000390101769", 1, 1, ValidatedTransactionPurchase("uk.co.guardian.gla.1month", "1000000038562242",
-              ValidatedTransactionPurchaseActiveInterval("2018-04-26T11:53:01.000Z", "2018-04-26T11:58:01.000Z")), 21006),
-            ValidatedTransaction("1000000390101770", 1, 1, ValidatedTransactionPurchase("uk.co.guardian.gla.1month", "1000000038562242",
-              ValidatedTransactionPurchaseActiveInterval("2018-04-26T11:53:01.000Z", "2018-04-26T11:58:01.000Z")), 21006)
+            ValidatedTransaction("1000000390101769", 1, 1, Some(ValidatedTransactionPurchase("uk.co.guardian.gla.1month", "1000000038562242",
+              ValidatedTransactionPurchaseActiveInterval("2018-04-26T11:53:01.000Z", "2018-04-26T11:58:01.000Z"))), 21006),
+            ValidatedTransaction("1000000390101770", 1, 1, Some(ValidatedTransactionPurchase("uk.co.guardian.gla.1month", "1000000038562242",
+              ValidatedTransactionPurchaseActiveInterval("2018-04-26T11:53:01.000Z", "2018-04-26T11:58:01.000Z"))), 21006)
           )))
-        }
-      ), cloudWatch = new CloudWatchImpl("", "lambdaname", CloudWatchImplSpec.mockSuccessfullySendMetrics(_ => ()))) {}
+        }, cloudWatchImpl
+      ), cloudWatch = cloudWatchImpl) {}
       val byteArrayOutputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
       lambda.handleRequest(
         new ByteArrayInputStream(mapper.writeValueAsBytes(
