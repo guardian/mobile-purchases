@@ -73,7 +73,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       new ValidateReceiptsTransformAppStoreResponseImpl(),
       fetchAppStoreResponsesImpl, new TransactionPersistenceImpl(
         userPurchasePersistenceImpl, new UserPurchaseFilterExpiredImpl(clock))
-    ))
+    ), cloudWatchImpl)
 
     "don't delegate when no delegate" in {
       val config: Config = ConfigFactory.empty()
@@ -145,7 +145,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
       }
 
       new DelegatingValidateReceiptLambda(config, new ValidateReceiptsController(
-        (validateReceiptRequest: ValidateRequest) => Failure(new IllegalStateException())),
+        (validateReceiptRequest: ValidateRequest) => Failure(new IllegalStateException()), cloudWatchImpl),
         client,
         cloudWatchImpl
       ).handleRequest(new ByteArrayInputStream(expectedApiGatewayRequest), stream, null)

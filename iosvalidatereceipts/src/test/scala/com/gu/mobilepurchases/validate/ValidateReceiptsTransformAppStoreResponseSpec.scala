@@ -64,17 +64,5 @@ class ValidateReceiptsTransformAppStoreResponseSpec extends Specification with S
         purchase = None
       )))
     }
-    "scalacheck" >> {
-      implicit val arbitraryAppStoreResponse: Arbitrary[AppStoreResponse] = Arbitrary(AppStoreSpec.genLeafAppStoreResponse)
-      prop { (appStoreResponse: AppStoreResponse) =>
-        {
-          val transactions: Set[ValidatedTransaction] = validateReceiptsTransformAppStoreResponse.transformAppStoreResponse(appStoreResponse)
-          transactions must beAnInstanceOf[Set[ValidatedTransaction]]
-          transactions.size must beEqualTo(Set(appStoreResponse.latest_expired_receipt_info, appStoreResponse.latest_receipt_Info, appStoreResponse.receipt).flatMap(_.toSet).size)
-
-        }
-      }.setArbitrary(arbitraryAppStoreResponse)
-
-    }
   }
 }

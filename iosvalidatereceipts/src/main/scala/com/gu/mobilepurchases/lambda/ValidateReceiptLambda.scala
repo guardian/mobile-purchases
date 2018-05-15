@@ -30,7 +30,7 @@ object ValidateReceiptLambda {
           ScanamaoUserPurchasesStringsByUserIdColonAppIdImpl(UserPurchaseConfig(ssmConfig.app, ssmConfig.stage, ssmConfig.stack)),
           new UserPurchasePersistenceTransformer(clock), cloudWatch
         ), new UserPurchaseFilterExpiredImpl())
-      )),
+      ), cloudWatch),
     "Error initialising validate receipts controller",
     Some(classOf[ValidateReceiptLambda]))
 }

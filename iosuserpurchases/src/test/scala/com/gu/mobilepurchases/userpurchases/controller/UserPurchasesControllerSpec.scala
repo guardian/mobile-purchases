@@ -1,6 +1,10 @@
 package com.gu.mobilepurchases.userpurchases.controller
 
+import java.time.Instant
+
+import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.fasterxml.jackson.databind.JsonNode
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.Jackson.mapper
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.{ commonAsciiChars, genCommonAscii, genStringFromChars }
 import com.gu.mobilepurchases.shared.lambda.{ LambdaRequest, LambdaResponse }
@@ -12,37 +16,45 @@ import org.specs2.matcher.Matcher
 import org.specs2.mutable.Specification
 
 class UserPurchasesControllerSpec extends Specification with ScalaCheck {
-  private val okayCode: Int = 200
-  private val emptyChars: Seq[Char] = commonAsciiChars.filter((_: Char).isWhitespace)
-  private val notEmptyChars: Seq[Char] = commonAsciiChars.filter(!(_: Char).toString.trim.isEmpty)
-  private val notEmptyNotCommaChars: Seq[Char] = notEmptyChars.filter(!(_: Char).equals(','))
-  private val genNotEmptyAsciiChars: Gen[String] = Gen.zip(genStringFromChars(notEmptyChars), oneOf(notEmptyChars)).map(
-    (seqAndItem: (String, Matcher[Seq[Char]])) => seqAndItem._1.concat(seqAndItem._2.toString))
-  private val genEmptyString: Gen[String] = genStringFromChars(emptyChars)
 
-  private val genNotCommaOrEmpty: Gen[String] = Gen.zip(genStringFromChars(notEmptyNotCommaChars), Gen.oneOf(notEmptyNotCommaChars)).map(
-    (seqAndItem: (String, Char)) => seqAndItem._1.concat(seqAndItem._2.toString))
-  private val emptyBodyString: String = """{"purchases":[]}"""
-  private val emptyBody: JsonNode = mapper.readTree(emptyBodyString)
-
-  private val genUserIds: Gen[Set[String]] = Gen.zip(genNotCommaOrEmpty, Gen.containerOf[Set, String](genNotCommaOrEmpty)).map(
-    (userIdAndSet: (String, Set[String])) => userIdAndSet._2 + userIdAndSet._1)
   "UserPurchasesController" should {
+    val cloudWatchMetrics = new CloudWatchMetrics {
+      override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Boolean = true
+
+      override def startTimer(metricName: String): Timer = ???
+
+      override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ???
+    }
+    val okayCode: Int = 200
+    val emptyChars: Seq[Char] = commonAsciiChars.filter((_: Char).isWhitespace)
+    val notEmptyChars: Seq[Char] = commonAsciiChars.filter(!(_: Char).toString.trim.isEmpty)
+    val notEmptyNotCommaChars: Seq[Char] = notEmptyChars.filter(!(_: Char).equals(','))
+    val genNotEmptyAsciiChars: Gen[String] = Gen.zip(genStringFromChars(notEmptyChars), oneOf(notEmptyChars)).map(
+      (seqAndItem: (String, Matcher[Seq[Char]])) => seqAndItem._1.concat(seqAndItem._2.toString))
+    val genEmptyString: Gen[String] = genStringFromChars(emptyChars)
+
+    val genNotCommaOrEmpty: Gen[String] = Gen.zip(genStringFromChars(notEmptyNotCommaChars), Gen.oneOf(notEmptyNotCommaChars)).map(
+      (seqAndItem: (String, Char)) => seqAndItem._1.concat(seqAndItem._2.toString))
+    val emptyBodyString: String = """{"purchases":[]}"""
+    val emptyBody: JsonNode = mapper.readTree(emptyBodyString)
+
+    val genUserIds: Gen[Set[String]] = Gen.zip(genNotCommaOrEmpty, Gen.containerOf[Set, String](genNotCommaOrEmpty)).map(
+      (userIdAndSet: (String, Set[String])) => userIdAndSet._2 + userIdAndSet._1)
     val knownGoodUserIds: (String, String) = "userIds" -> "gia:319B18F0-3B3A-40FD-9086-6DED1F566D2A,vendorUdid~5E1CFD76-48C7-40F8-8574-D7A7F25D9943"
     val knownAppId: (String, String) = "appId" -> "uk.co.guardian.iphone2"
     val expectedUserPurchaseRequest: UserPurchasesRequest = UserPurchasesRequest(
       "uk.co.guardian.iphone2", Set("gia:319B18F0-3B3A-40FD-9086-6DED1F566D2A", "vendorUdid~5E1CFD76-48C7-40F8-8574-D7A7F25D9943"))
     "missing appId" in {
       new UserPurchasesController((_: UserPurchasesRequest) =>
-        throw new IllegalStateException("Should not get this far"))(
+        throw new IllegalStateException("Should not get this far"), cloudWatchMetrics)(
         LambdaRequest(Some(""), Map("appId" -> "", knownGoodUserIds))
-      ) must beEqualTo(LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json; charset=UTF-8")))
+      ) must beEqualTo(LambdaResponse(500, Some("""Failed to process request"""), Map("Content-Type" -> "text/plain; charset=UTF-8")))
     }
     "missing userIds" in {
       new UserPurchasesController((_: UserPurchasesRequest) =>
-        throw new IllegalStateException("Should not get this far"))(
+        throw new IllegalStateException("Should not get this far"), cloudWatchMetrics)(
         LambdaRequest(Some(""), Map(knownAppId, "userIds" -> ""))
-      ) must beEqualTo(LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json; charset=UTF-8")))
+      ) must beEqualTo(LambdaResponse(500, Some("""Failed to process request"""), Map("Content-Type" -> "text/plain; charset=UTF-8")))
     }
     "found appId and userId" in {
       val controller: UserPurchasesController = new UserPurchasesController((request: UserPurchasesRequest) => {
@@ -55,7 +67,7 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
         } else {
           throw new IllegalStateException("")
         }
-      }
+      }, cloudWatchMetrics
       )
       val expectedBody: String =
         """{"purchases":[{
@@ -79,13 +91,12 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
 
     }
     "failed on  appId and userId returns empty" in {
-      new UserPurchasesController((_: UserPurchasesRequest) => UserPurchasesResponse(Set())
+      new UserPurchasesController((_: UserPurchasesRequest) => UserPurchasesResponse(Set()), cloudWatchMetrics
       )(LambdaRequest(None, Map(knownGoodUserIds, knownAppId))) must beEqualTo(
         LambdaResponse(okayCode, Some("""{"purchases":[]}"""), Map("Content-Type" -> "application/json; charset=UTF-8")))
     }
-  }
-  "ScalaCheck UserPurchasesController" should {
-    "Render empty purchases when missing appId" >> {
+
+    "ScalaCheck Render failure purchases when missing appId" >> {
       implicit val arbitraryUserIds: Arbitrary[Set[String]] = Arbitrary(genUserIds)
       implicit val emptyAppId: Arbitrary[Option[String]] = Arbitrary(Gen.option[String](genEmptyString))
       prop { (maybeAppId: Option[String], userIds: Set[String]) =>
@@ -93,30 +104,30 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
           new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => {
             userPurchasesRequest must beNull
             throw new IllegalStateException("Should not get this far")
-          })(LambdaRequest(None, Map("userIds" -> userIds.mkString(",")) ++ maybeAppId.map(
+          }, cloudWatchMetrics)(LambdaRequest(None, Map("userIds" -> userIds.mkString(",")) ++ maybeAppId.map(
             (appId: String) => Map("appId" -> appId)).getOrElse(Map()))) match {
             case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(emptyBody)
-            case resp                                      => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json; charset=UTF-8")))
+            case resp                                      => resp must beEqualTo(LambdaResponse(500, Some("""Failed to process request"""), Map("Content-Type" -> "text/plain; charset=UTF-8")))
           }
         }
       }.setArbitraries(emptyAppId, arbitraryUserIds)
     }
 
-    "Render empty purchases when missing userIds" >> {
+    "ScalaCheck Render failure purchases when missing userIds" >> {
       prop { (appId: String, maybeUserIds: Option[Set[String]]) =>
         {
           val userPurchasesControllerImpl: UserPurchasesController = new UserPurchasesController((_: UserPurchasesRequest) =>
-            throw new IllegalStateException("Should not get this far"))
+            throw new IllegalStateException("Should not get this far"), cloudWatchMetrics)
           userPurchasesControllerImpl(LambdaRequest(None, Map("appId" -> appId) ++ maybeUserIds.map(
             (userIds: Set[String]) => Map("userIds" -> userIds.mkString(","))).getOrElse(Map()))) match {
             case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(emptyBody)
-            case resp                                      => resp must beEqualTo(LambdaResponse(okayCode, Some(emptyBodyString), Map("Content-Type" -> "application/json; charset=UTF-8")))
+            case resp                                      => resp must beEqualTo(LambdaResponse(500, Some("""Failed to process request"""), Map("Content-Type" -> "text/plain; charset=UTF-8")))
           }
         }
       }.setArbitraries(Arbitrary(genNotEmptyAsciiChars), Arbitrary(Gen.option(Gen.containerOf[Set, String](genEmptyString))))
     }
 
-    "Render purchases when appId and userIds present" >> {
+    "ScalaCheck Render purchases when appId and userIds present" >> {
       implicit val arbitraryUserPurchases: Arbitrary[Set[UserPurchase]] = Arbitrary(Gen.containerOf[Set, UserPurchase] {
         for {
           productId <- genCommonAscii
@@ -137,7 +148,7 @@ class UserPurchasesControllerSpec extends Specification with ScalaCheck {
         val userPurchasesControllerImpl: UserPurchasesController = new UserPurchasesController((userPurchasesRequest: UserPurchasesRequest) => {
           userPurchasesRequest must beEqualTo(UserPurchasesRequest(appId, userIds))
           userPurchasesResponse
-        })
+        }, cloudWatchMetrics)
         userPurchasesControllerImpl(LambdaRequest(None, Map("appId" -> appId, "userIds" -> userIds.mkString(",")))) match {
           case LambdaResponse(`okayCode`, Some(body), _) => mapper.readTree(body) must beEqualTo(
             mapper.readTree(mapper.writeValueAsBytes(userPurchasesResponse)))
