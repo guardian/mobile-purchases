@@ -15,10 +15,8 @@ class UserPurchasesByUserIdSpec extends Specification with Mockito {
   val instant = Instant.now()
   "UserPurchasesByUserId" should {
     "marshall and unmarshal from json correctly" in {
-      val mockClock = mock[Clock]
-      mockClock.instant() returns instant
-      mockClock.getZone returns ZoneOffset.UTC
-      val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(mockClock)
+
+      val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer()
 
       val exampleUserPurchaseByUsedID: UserPurchasesByUserIdAndAppId = UserPurchasesByUserIdAndAppId("userId", "appId", Set(UserPurchase(
         "uk.co.guardian.iphone2",

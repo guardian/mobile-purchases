@@ -7,7 +7,7 @@ trait UserPurchaseFilterExpired {
   def filterExpired(purchases: Set[UserPurchase]): Set[UserPurchase]
 }
 
-class UserPurchaseFilterExpiredImpl(clock: Clock = Clock.systemUTC()) extends UserPurchaseFilterExpired {
+class UserPurchaseFilterExpiredImpl(clock: Clock) extends UserPurchaseFilterExpired {
   def filterExpired(purchases: Set[UserPurchase]): Set[UserPurchase] = {
     val aMonthAgo: ZonedDateTime = ZonedDateTime.now(clock).minusMonths(1)
     val transactions: Set[UserPurchase] = purchases.filter((purchase: UserPurchase) => {

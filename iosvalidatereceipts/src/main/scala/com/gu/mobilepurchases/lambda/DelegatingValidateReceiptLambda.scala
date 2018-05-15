@@ -52,7 +52,7 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
         if (lambdaValidateResponse.equals(delegateValidateResponse)) {
           logLambdaExtras(0)
           logDelegateExtras(0)
-          logReturnedTransactions(0)
+          logReturnedTransactions(lambdaValidateResponse.transactions.size)
           delegateResponse
         } else {
           val lambdaTransactions: Set[ValidatedTransaction] = lambdaValidateResponse.transactions

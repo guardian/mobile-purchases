@@ -1,6 +1,6 @@
 package com.gu.mobilepurchases.userpurchases.persistence
 
-import java.time.{ Clock, ZonedDateTime }
+import java.time.{ ZonedDateTime }
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.services.dynamodbv2.{ AmazonDynamoDBAsync, AmazonDynamoDBAsyncClient }
@@ -75,10 +75,10 @@ trait UserPurchasePersistence {
 
   def read(userId: String, appId: String): Try[Option[UserPurchasesByUserIdAndAppId]]
 }
-class UserPurchasePersistenceTransformer(clock: Clock) {
+class UserPurchasePersistenceTransformer() {
   def transform(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): UserPurchasesStringsByUserIdColonAppId = UserPurchasesStringsByUserIdColonAppId(
     s"${userPurchasesByUserId.userId}:${userPurchasesByUserId.appId}",
-    mapper.writeValueAsString(userPurchasesByUserId.purchases), ZonedDateTime.now(clock).plusMonths(6).toEpochSecond)
+    mapper.writeValueAsString(userPurchasesByUserId.purchases), ZonedDateTime.parse(userPurchasesByUserId.purchases.map(_.activeInterval.end).max).plusMonths(6).toEpochSecond)
 }
 
 class UserPurchasePersistenceImpl(

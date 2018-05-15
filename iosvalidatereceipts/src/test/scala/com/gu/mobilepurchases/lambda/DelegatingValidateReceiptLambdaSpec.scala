@@ -36,7 +36,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
   implicit val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   "DelegatingValidateReceiptLambda" should {
     val clock: Clock = Clock.offset(systemUTC(), Duration.between(ZonedDateTime.now(UTC), ZonedDateTime.parse("2012-11-06T13:24:36.000Z").minusHours(2)))
-    val userPurchasePersistenceTransformer: UserPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(clock)
+    val userPurchasePersistenceTransformer: UserPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer()
     val mockAmazonCloudWatch: AmazonCloudWatchAsync = CloudWatchImplSpec.mockSuccessfullySendMetrics(_ => ())
     val cloudWatchImpl: CloudWatchImpl = new CloudWatchImpl("", "lambdaname", mockAmazonCloudWatch)
     val expectedApiGatewayRequest: Array[Byte] = mapper.writeValueAsBytes(
