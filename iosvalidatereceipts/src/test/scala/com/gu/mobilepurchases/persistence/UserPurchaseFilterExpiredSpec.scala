@@ -37,8 +37,9 @@ object UserPurchaseFilterExpiredSpec {
 class UserPurchaseFilterExpiredSpec extends Specification with ScalaCheck {
 
   "ValidateReceiptsFilterExpired" should {
+    val clock: Clock = Clock.systemUTC()
     "filter nothing" in {
-      new UserPurchaseFilterExpiredImpl().filterExpired(Set()) must beEqualTo(Set())
+      new UserPurchaseFilterExpiredImpl(clock).filterExpired(Set()) must beEqualTo(Set())
     }
 
     "filter single expired" in {
@@ -58,7 +59,8 @@ class UserPurchaseFilterExpiredSpec extends Specification with ScalaCheck {
 
       prop { (validatedTransactions: Set[UserPurchase]) =>
         {
-          new UserPurchaseFilterExpiredImpl().filterExpired(validatedTransactions) must beEqualTo(
+
+          new UserPurchaseFilterExpiredImpl(clock).filterExpired(validatedTransactions) must beEqualTo(
             validatedTransactions.filter((purchase: UserPurchase) => {
               ZonedDateTime.parse(purchase.activeInterval.end).isAfter(time)
             })

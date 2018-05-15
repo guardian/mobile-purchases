@@ -24,12 +24,12 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
       override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ???
     }
     val purchase: UserPurchase = UserPurchase(
-      "testProductId", "testWebOrderLineItemId", UserPurchaseInterval("testStart", "testEnd")
+      "testProductId", "testWebOrderLineItemId", UserPurchaseInterval("testStart", "2018-04-26T11:58:01.000Z")
     )
     val userPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId = UserPurchasesByUserIdAndAppId("testUserId", "testAppId", Set(purchase))
     "write success" in {
-      val mockClock: Clock = buildMockClock
-      val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(mockClock)
+
+      val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer()
 
       new UserPurchasePersistenceImpl(new ScanamaoUserPurchasesStringsByUserIdColonAppId {
         override def put(userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
@@ -41,9 +41,8 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
       }, userPurchasePersistenceTransformer, cloudWatchMetrics).write(userPurchasesByUserIdAndAppId) must beEqualTo(Success(None))
     }
     "write fail" in {
-      val mockClock: Clock = buildMockClock
 
-      val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(mockClock)
+      val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer()
       new UserPurchasePersistenceImpl(new ScanamaoUserPurchasesStringsByUserIdColonAppId {
         override def put(userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
           userPurchasesStringsByUserIdColonAppId must beEqualTo(userPurchasePersistenceTransformer.transform(userPurchasesByUserIdAndAppId))
@@ -56,9 +55,8 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
     }
 
     "read success" in {
-      val mockClock: Clock = buildMockClock
 
-      val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(mockClock)
+      val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer()
       val userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId = userPurchasePersistenceTransformer.transform(userPurchasesByUserIdAndAppId)
       new UserPurchasePersistenceImpl(new ScanamaoUserPurchasesStringsByUserIdColonAppId {
         override def put(t: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = ???
@@ -70,8 +68,8 @@ class UserPurchasePersistenceImplSpec extends Specification with Mockito {
       }, userPurchasePersistenceTransformer, cloudWatchMetrics).read("testUserId", "testAppId") must beEqualTo(Success(Some(userPurchasesByUserIdAndAppId)))
     }
     "read failure" in {
-      val mockClock: Clock = buildMockClock
-      val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer(mockClock)
+
+      val userPurchasePersistenceTransformer = new UserPurchasePersistenceTransformer()
       new UserPurchasePersistenceImpl(new ScanamaoUserPurchasesStringsByUserIdColonAppId {
         override def put(t: UserPurchasesStringsByUserIdColonAppId): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = ???
 
