@@ -104,7 +104,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
     }
 
     def latestExpiryDate(purchases: Set[UserPurchase]): Option[String] = {
-      purchases.toSeq.filter(_.activeInterval.end < now).sortBy(_.activeInterval.end).lastOption.map(_.activeInterval.end)
+      purchases.toSeq.filter(_.activeInterval.end > now).sortBy(_.activeInterval.end).lastOption.map(_.activeInterval.end)
     }
 
     val maybeLatestDelegatePurchaseExpiry: Option[String] = latestExpiryDate(delegatePurchaseSet)
