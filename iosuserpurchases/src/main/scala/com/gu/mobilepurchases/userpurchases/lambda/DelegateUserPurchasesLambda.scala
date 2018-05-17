@@ -2,7 +2,7 @@
 
 package com.gu.mobilepurchases.userpurchases.lambda
 
-import java.time.Clock
+import java.time.{ Clock, ZonedDateTime }
 
 import com.amazonaws.services.cloudwatch.model.StandardUnit
 import com.amazonaws.services.cloudwatch.{ AmazonCloudWatchAsync, AmazonCloudWatchAsyncClientBuilder }
@@ -17,7 +17,6 @@ import com.gu.mobilepurchases.userpurchases.lambda.DelegateUserPurchasesLambda.d
 import com.gu.mobilepurchases.userpurchases.lambda.UserPurchasesLambda.userPurchasesName
 import com.gu.mobilepurchases.userpurchases.persistence.UserPurchaseConfig
 import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesResponse
-import com.typesafe.config.{ Config, ConfigException }
 import okhttp3.{ OkHttpClient, Request }
 import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URIBuilder
@@ -46,17 +45,22 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
   override def apply(lambdaRequest: LambdaRequest, lambdaResponse: LambdaResponse, delegateResponse: LambdaResponse): LambdaResponse = {
     (readPurchases(lambdaResponse), readPurchases(delegateResponse)) match {
       case (Some(lambdaUserPurchasesResponse), Some(delegateUserPurchasesResponse)) => {
+
         if (lambdaUserPurchasesResponse.equals(delegateUserPurchasesResponse)) {
           logDelegateExtras(0)
           logLambdaExtras(0)
           logReturnedQuantity(delegateUserPurchasesResponse.purchases.size)
           delegateResponse
         } else {
-          val delegatePurchaseSet: Set[UserPurchase] = delegateUserPurchasesResponse.purchases
-          val lambdaPurchaseSet: Set[UserPurchase] = lambdaUserPurchasesResponse.purchases
 
+          val delegatePurchaseSet: Set[UserPurchase] = delegateUserPurchasesResponse.purchases
+
+          val lambdaPurchaseSet: Set[UserPurchase] = lambdaUserPurchasesResponse.purchases
           val delegateExtraQuantity: Int = delegatePurchaseSet.diff(lambdaPurchaseSet).size
+
           val lambdaExtraQuantity: Int = lambdaPurchaseSet.diff(delegatePurchaseSet).size
+
+          compareLatestPurchases(delegatePurchaseSet, lambdaPurchaseSet)
 
           logDelegateExtras(delegateExtraQuantity)
           logLambdaExtras(lambdaExtraQuantity)
@@ -85,6 +89,47 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
       }
     }
 
+  }
+
+  private def compareLatestPurchases(delegatePurchaseSet: Set[UserPurchase], lambdaPurchaseSet: Set[UserPurchase]): AnyVal = {
+    val now: String = ZonedDateTime.now.format(UserPurchase.instantFormatter)
+    def latestLambdaNewerThanDelegate: Unit = {
+      cloudWatch.queueMetric("lambda-older-than-delegate", 1, StandardUnit.Count)
+      logger.warn("Lambda Older Than Delegate: Lambda:\n {} Delegate\n: {}", lambdaPurchaseSet: Any, delegatePurchaseSet: Any)
+    }
+
+    def latestDelegateNewerThanLambda: Unit = {
+      cloudWatch.queueMetric("delegate-older-than-lambda", 1, StandardUnit.Count)
+      logger.warn("Delegate Older Than Lambda: Delegate:\n {} Lambda\n: {}", delegatePurchaseSet: Any, lambdaPurchaseSet: Any)
+    }
+
+    def latestExpiryDate(purchases: Set[UserPurchase]): Option[String] = {
+      purchases.toSeq.filter(_.activeInterval.end < now).sortBy(_.activeInterval.end).lastOption.map(_.activeInterval.end)
+    }
+
+    val maybeLatestDelegatePurchaseExpiry: Option[String] = latestExpiryDate(delegatePurchaseSet)
+    val maybeLatestLambdaPurchaseExpiry: Option[String] = latestExpiryDate(lambdaPurchaseSet)
+    maybeLatestDelegatePurchaseExpiry match {
+      case Some(latestDelegate) => {
+        maybeLatestLambdaPurchaseExpiry match {
+          case Some(latestLambda) => {
+            if (latestDelegate > latestLambda) {
+              latestDelegateNewerThanLambda
+            } else if (latestLambda > latestDelegate) {
+              latestLambdaNewerThanDelegate
+            }
+          }
+          case None => latestDelegateNewerThanLambda
+        }
+
+      }
+      case None => {
+        maybeLatestLambdaPurchaseExpiry match {
+          case Some(_) => latestLambdaNewerThanDelegate
+          case None    => {}
+        }
+      }
+    }
   }
 
   override def logNothingReturned: Unit = {
@@ -116,12 +161,14 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
     logDelegateExtras(0)
     logReturnedQuantity(size)
   }
+
   def logOnlyDelegate(userPurchasesResponse: UserPurchasesResponse): Boolean = {
     val size: Double = userPurchasesResponse.purchases.size
     logLambdaExtras(0)
     logDelegateExtras(size)
     logReturnedQuantity(size)
   }
+
   private def logLambdaExtras(extraLambdaTransactions: Double): Boolean = {
     cloudWatch.queueMetric(lambdaDiffMetricName, extraLambdaTransactions, StandardUnit.Count)
   }
