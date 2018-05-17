@@ -50,6 +50,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           logDelegateExtras(0)
           logLambdaExtras(0)
           logReturnedQuantity(delegateUserPurchasesResponse.purchases.size)
+          latestMatched
           delegateResponse
         } else {
 
@@ -60,7 +61,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
 
           val lambdaExtraQuantity: Int = lambdaPurchaseSet.diff(delegatePurchaseSet).size
 
-          compareLatestPurchases(lambdaRequest, delegatePurchaseSet, lambdaPurchaseSet)
+          compareLatestPurchases(lambdaRequest, lambdaPurchaseSet, delegatePurchaseSet)
 
           logDelegateExtras(delegateExtraQuantity)
           logLambdaExtras(lambdaExtraQuantity)
@@ -75,12 +76,14 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           }
         }
       }
-      case (Some(userPurchasesResponse), _) => {
-        logOnlyLambda(userPurchasesResponse)
+      case (Some(lambdaUserPurchaseResponse), _) => {
+        logOnlyLambda(lambdaUserPurchaseResponse)
+        compareLatestPurchases(lambdaRequest,lambdaUserPurchaseResponse.purchases, Set())
         lambdaResponse
       }
-      case (_, Some(userPurchasesResponse)) => {
-        logOnlyDelegate(userPurchasesResponse)
+      case (_, Some(delegateUserPurchasesResponse)) => {
+        logOnlyDelegate(delegateUserPurchasesResponse)
+        compareLatestPurchases(lambdaRequest,Set(), delegateUserPurchasesResponse.purchases)
         delegateResponse
       }
       case (_, _) => {
@@ -90,8 +93,11 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
     }
 
   }
+  def latestMatched: Unit = {
+    cloudWatch.queueMetric("latest-matched", 1, StandardUnit.Count)
+  }
 
-  private def compareLatestPurchases(request: LambdaRequest, delegatePurchaseSet: Set[UserPurchase], lambdaPurchaseSet: Set[UserPurchase]): Unit = {
+  private def compareLatestPurchases(request: LambdaRequest, lambdaPurchaseSet: Set[UserPurchase],delegatePurchaseSet: Set[UserPurchase], ): Unit = {
     val now: String = ZonedDateTime.now.format(UserPurchase.instantFormatter)
     def latestLambdaNewerThanDelegate: Unit = {
       cloudWatch.queueMetric("lambda-newer-than-delegate", 1, StandardUnit.Count)
@@ -101,9 +107,6 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
     def latestDelegateNewerThanLambda: Unit = {
       cloudWatch.queueMetric("delegate-newer-than-lambda", 1, StandardUnit.Count)
       logger.warn("Delegate Newer Than Lambda: Request: {}. Delegate:\n {} Lambda\n: {}", request: Any, delegatePurchaseSet: Any, lambdaPurchaseSet: Any)
-    }
-    def latestMatched: Unit = {
-      cloudWatch.queueMetric("latest-matched", 1, StandardUnit.Count)
     }
 
     def latestExpiryDate(purchases: Set[UserPurchase]): Option[String] = {
