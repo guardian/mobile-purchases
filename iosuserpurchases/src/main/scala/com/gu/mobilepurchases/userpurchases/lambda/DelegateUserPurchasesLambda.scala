@@ -78,12 +78,12 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
       }
       case (Some(lambdaUserPurchaseResponse), _) => {
         logOnlyLambda(lambdaUserPurchaseResponse)
-        compareLatestPurchases(lambdaRequest,lambdaUserPurchaseResponse.purchases, Set())
+        compareLatestPurchases(lambdaRequest, lambdaUserPurchaseResponse.purchases, Set())
         lambdaResponse
       }
       case (_, Some(delegateUserPurchasesResponse)) => {
         logOnlyDelegate(delegateUserPurchasesResponse)
-        compareLatestPurchases(lambdaRequest,Set(), delegateUserPurchasesResponse.purchases)
+        compareLatestPurchases(lambdaRequest, Set(), delegateUserPurchasesResponse.purchases)
         delegateResponse
       }
       case (_, _) => {
@@ -97,16 +97,16 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
     cloudWatch.queueMetric("latest-matched", 1, StandardUnit.Count)
   }
 
-  private def compareLatestPurchases(request: LambdaRequest, lambdaPurchaseSet: Set[UserPurchase],delegatePurchaseSet: Set[UserPurchase], ): Unit = {
+  private def compareLatestPurchases(request: LambdaRequest, lambdaPurchaseSet: Set[UserPurchase], delegatePurchaseSet: Set[UserPurchase]): Unit = {
     val now: String = ZonedDateTime.now.format(UserPurchase.instantFormatter)
     def latestLambdaNewerThanDelegate: Unit = {
       cloudWatch.queueMetric("lambda-newer-than-delegate", 1, StandardUnit.Count)
-      logger.warn("Lambda Newer Than Delegate: Request: {}, Lambda:\n {} Delegate\n: {}", request: Any, lambdaPurchaseSet: Any, delegatePurchaseSet: Any)
+      logger.warn("Lambda Newer Than Delegate: Request: {}, \nLambda: {} \nDelegate: {}", request: Any, lambdaPurchaseSet: Any, delegatePurchaseSet: Any)
     }
 
     def latestDelegateNewerThanLambda: Unit = {
       cloudWatch.queueMetric("delegate-newer-than-lambda", 1, StandardUnit.Count)
-      logger.warn("Delegate Newer Than Lambda: Request: {}. Delegate:\n {} Lambda\n: {}", request: Any, delegatePurchaseSet: Any, lambdaPurchaseSet: Any)
+      logger.warn("Delegate Newer Than Lambda: Request: {}. \nDelegate: {} \nLambda: {}", request: Any, delegatePurchaseSet: Any, lambdaPurchaseSet: Any)
     }
 
     def latestExpiryDate(purchases: Set[UserPurchase]): Option[String] = {
@@ -119,14 +119,13 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           latestDelegateNewerThanLambda
         } else if (lambda > delegate) {
           latestLambdaNewerThanDelegate
-        }
-        else {
+        } else {
           latestMatched
         }
       }
       case (Some(_), None) => latestLambdaNewerThanDelegate
       case (None, Some(_)) => latestDelegateNewerThanLambda
-      case (None, None) => latestMatched
+      case (None, None)    => latestMatched
     }
 
   }
