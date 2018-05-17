@@ -1,5 +1,9 @@
 package com.gu.mobilepurchases.userpurchases.purchases
 
+import java.time.Instant
+
+import com.amazonaws.services.cloudwatch.model.StandardUnit
+import com.gu.mobilepurchases.shared.cloudwatch.{ CloudWatchMetrics, Timer }
 import com.gu.mobilepurchases.shared.external.ScalaCheckUtils.genCommonAscii
 import com.gu.mobilepurchases.userpurchases.persistence.{ UserPurchasePersistence, UserPurchasesByUserIdAndAppId }
 import com.gu.mobilepurchases.userpurchases.purchases.UserPurchasesSpec.genMatchingAppIdWithUserPurchasesByUserId
@@ -39,6 +43,14 @@ object UserPurchasesSpec {
 
 class UserPurchasesSpec extends Specification with ScalaCheck with Mockito {
   "UserPurchases" should {
+
+    val cloudWatchMetrics: CloudWatchMetrics = new CloudWatchMetrics {
+      override def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Boolean = true
+
+      override def startTimer(metricName: String): Timer = ???
+
+      override def meterHttpStatusResponses(metricName: String, code: Int): Unit = ???
+    }
     "find matching purchases" >> {
       implicit val arbitraryPurchasesByUserId: Arbitrary[AppIdWithUserPurchasesByUserId] = Arbitrary(genMatchingAppIdWithUserPurchasesByUserId)
       prop { (appIdWithUserPurchasesByUserId: AppIdWithUserPurchasesByUserId) =>
@@ -46,7 +58,7 @@ class UserPurchasesSpec extends Specification with ScalaCheck with Mockito {
           val userPurchasesByUserId: Map[String, Set[UserPurchase]] = appIdWithUserPurchasesByUserId.userPurchases
           val userIds: Set[String] = userPurchasesByUserId.keySet
 
-          new UserPurchasesImpl(new UserPurchasePersistence {
+          new UserPurchasesImpl(cloudWatchMetrics, new UserPurchasePersistence {
             override def write(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] =
               throw new UnsupportedOperationException
 
@@ -68,7 +80,7 @@ class UserPurchasesSpec extends Specification with ScalaCheck with Mockito {
         {
           val userPurchasesByUserId: Map[String, Set[UserPurchase]] = appIdWithUserPurchasesByUserId.userPurchases
           val userIds: Set[String] = userPurchasesByUserId.keySet
-          new UserPurchasesImpl(new UserPurchasePersistence {
+          new UserPurchasesImpl(cloudWatchMetrics, new UserPurchasePersistence {
             override def write(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] =
               throw new UnsupportedOperationException
 
@@ -86,12 +98,13 @@ class UserPurchasesSpec extends Specification with ScalaCheck with Mockito {
     "fail purchases" in {
       implicit val arbitraryAppIdWithUserPurchasesByUserId: Arbitrary[AppIdWithUserPurchasesByUserId] = Arbitrary(
         genMatchingAppIdWithUserPurchasesByUserId)
-      prop { (appIdWithUserPurchasesByUserId: AppIdWithUserPurchasesByUserId) =>
+      prop { appIdWithUserPurchasesByUserId: AppIdWithUserPurchasesByUserId =>
         {
           val mockLogger = mock[Logger]
           val userPurchasesByUserId: Map[String, Set[UserPurchase]] = appIdWithUserPurchasesByUserId.userPurchases
           val userIds: Set[String] = userPurchasesByUserId.keySet
-          new UserPurchasesImpl(new UserPurchasePersistence {
+
+          val userPurchasesImpl: UserPurchasesImpl = new UserPurchasesImpl(cloudWatchMetrics, new UserPurchasePersistence {
             override def write(userPurchasesByUserId: UserPurchasesByUserIdAndAppId): Try[Option[UserPurchasesByUserIdAndAppId]] =
               throw new UnsupportedOperationException
 
@@ -100,8 +113,16 @@ class UserPurchasesSpec extends Specification with ScalaCheck with Mockito {
               appId must beEqualTo(appIdWithUserPurchasesByUserId.appId)
               Failure(new IllegalStateException("Ignored"))
             }
-          }, mockLogger).findPurchases(UserPurchasesRequest(appIdWithUserPurchasesByUserId.appId, userIds)) must beEqualTo(UserPurchasesResponse(Set()))
-          there was exactly(appIdWithUserPurchasesByUserId.userPurchases.size)(mockLogger).warn(anyString, any[Throwable]())
+          }, mockLogger)
+          if (appIdWithUserPurchasesByUserId.userPurchases.isEmpty) {
+            userPurchasesImpl.findPurchases(UserPurchasesRequest(appIdWithUserPurchasesByUserId.appId, userIds)) must beEqualTo(UserPurchasesResponse(Set()))
+            there was no(mockLogger).warn(anyString, any[Throwable]())
+
+          } else {
+            userPurchasesImpl.findPurchases(UserPurchasesRequest(appIdWithUserPurchasesByUserId.appId, userIds)) must throwA[IllegalStateException]
+            there was exactly(1)(mockLogger).warn(anyString, any[Throwable]())
+          }
+
         }
       }.setArbitrary(arbitraryAppIdWithUserPurchasesByUserId)
     }

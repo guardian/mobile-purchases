@@ -1,5 +1,7 @@
 package com.gu.mobilepurchases.userpurchases.purchases
 
+import com.amazonaws.services.cloudwatch.model.StandardUnit
+import com.gu.mobilepurchases.shared.cloudwatch.CloudWatchMetrics
 import com.gu.mobilepurchases.userpurchases.UserPurchase
 import com.gu.mobilepurchases.userpurchases.persistence.{ UserPurchasePersistence, UserPurchasesByUserIdAndAppId }
 import org.apache.logging.log4j.{ LogManager, Logger }
@@ -15,6 +17,7 @@ trait UserPurchases {
 }
 
 class UserPurchasesImpl(
+    cloudWatchMetrics: CloudWatchMetrics,
     userPurchasePersistence: UserPurchasePersistence,
     logger: Logger = LogManager.getLogger(classOf[UserPurchasesImpl])) extends UserPurchases {
 
@@ -23,10 +26,16 @@ class UserPurchasesImpl(
       .filter((_: String).startsWith("vendorUdid~"))
       .map(userPurchasePersistence.read(_: String, userPurchasesRequest.appId))
       .flatMap {
-        case Success(userPurchasesByUserIdAndAppId) => userPurchasesByUserIdAndAppId.map((_: UserPurchasesByUserIdAndAppId).purchases).getOrElse(Set())
+        case Success(userPurchasesByUserIdAndAppId) => {
+          userPurchasesByUserIdAndAppId.map((userPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId) => {
+            val purchases: Set[UserPurchase] = userPurchasesByUserIdAndAppId.purchases
+            cloudWatchMetrics.queueMetric("purchases-quantity", purchases.size, StandardUnit.Count)
+            purchases
+          }).getOrElse(Set())
+        }
         case Failure(t) => {
           logger.warn("Unexpected error from dynamo", t)
-          None
+          throw t
         }
       })
 

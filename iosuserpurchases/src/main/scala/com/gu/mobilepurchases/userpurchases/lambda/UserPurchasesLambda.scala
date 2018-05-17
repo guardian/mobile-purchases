@@ -21,7 +21,7 @@ object UserPurchasesLambda {
   }
 
   def userPurchasesController(userPurchaseConfig: UserPurchaseConfig, clock: Clock, cloudWatch: CloudWatchMetrics): UserPurchasesController = Logging.logOnThrown(() =>
-    new UserPurchasesController(new UserPurchasesImpl(new UserPurchasePersistenceImpl(
+    new UserPurchasesController(new UserPurchasesImpl(cloudWatch, new UserPurchasePersistenceImpl(
       ScanamaoUserPurchasesStringsByUserIdColonAppIdImpl(
         userPurchaseConfig), new UserPurchasePersistenceTransformer(), cloudWatch)), cloudWatch), "Error instantiating UserPurchasesLambda", Some(classOf[UserPurchasesLambda]))
 }
