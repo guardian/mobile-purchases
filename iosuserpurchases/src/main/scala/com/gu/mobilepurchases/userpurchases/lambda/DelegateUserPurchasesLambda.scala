@@ -50,7 +50,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           logDelegateExtras(0)
           logLambdaExtras(0)
           logReturnedQuantity(delegateUserPurchasesResponse.purchases.size)
-          latestMatched
+          logLatestMatched
           delegateResponse
         } else {
 
@@ -93,39 +93,39 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
     }
 
   }
-  def latestMatched: Unit = {
+  def logLatestMatched: Unit = {
     cloudWatch.queueMetric("latest-matched", 1, StandardUnit.Count)
   }
 
   private def compareLatestPurchases(request: LambdaRequest, lambdaPurchaseSet: Set[UserPurchase], delegatePurchaseSet: Set[UserPurchase]): Unit = {
     val now: String = ZonedDateTime.now.format(UserPurchase.instantFormatter)
-    def latestLambdaNewerThanDelegate: Unit = {
+    def logLatestLambdaNewerThanDelegate: Unit = {
       cloudWatch.queueMetric("lambda-newer-than-delegate", 1, StandardUnit.Count)
       logger.warn("Lambda Newer Than Delegate: Request: {}, \nLambda: {} \nDelegate: {}", request: Any, lambdaPurchaseSet: Any, delegatePurchaseSet: Any)
     }
 
-    def latestDelegateNewerThanLambda: Unit = {
+    def logLatestDelegateNewerThanLambda: Unit = {
       cloudWatch.queueMetric("delegate-newer-than-lambda", 1, StandardUnit.Count)
       logger.warn("Delegate Newer Than Lambda: Request: {}. \nDelegate: {} \nLambda: {}", request: Any, delegatePurchaseSet: Any, lambdaPurchaseSet: Any)
     }
 
-    def latestExpiryDate(purchases: Set[UserPurchase]): Option[String] = {
+    def maybeLatestExpiryDate(purchases: Set[UserPurchase]): Option[String] = {
       purchases.toSeq.filter(_.activeInterval.end > now).sortBy(_.activeInterval.end).lastOption.map(_.activeInterval.end)
     }
 
-    (latestExpiryDate(lambdaPurchaseSet), latestExpiryDate(delegatePurchaseSet)) match {
+    (maybeLatestExpiryDate(lambdaPurchaseSet), maybeLatestExpiryDate(delegatePurchaseSet)) match {
       case (Some(lambda), Some(delegate)) => {
         if (delegate > lambda) {
-          latestDelegateNewerThanLambda
+          logLatestDelegateNewerThanLambda
         } else if (lambda > delegate) {
-          latestLambdaNewerThanDelegate
+          logLatestLambdaNewerThanDelegate
         } else {
-          latestMatched
+          logLatestMatched
         }
       }
-      case (Some(_), None) => latestLambdaNewerThanDelegate
-      case (None, Some(_)) => latestDelegateNewerThanLambda
-      case (None, None)    => latestMatched
+      case (Some(_), None) => logLatestLambdaNewerThanDelegate
+      case (None, Some(_)) => logLatestDelegateNewerThanLambda
+      case (None, None)    => logLatestMatched
     }
 
   }
