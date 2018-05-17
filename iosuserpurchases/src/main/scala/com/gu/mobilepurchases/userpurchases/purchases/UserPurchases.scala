@@ -26,18 +26,21 @@ class UserPurchasesImpl(
       .filter((_: String).startsWith("vendorUdid~"))
       .map(userPurchasePersistence.read(_: String, userPurchasesRequest.appId))
       .flatMap {
-        case Success(userPurchasesByUserIdAndAppId) => {
-          userPurchasesByUserIdAndAppId.map((userPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId) => {
-            val purchases: Set[UserPurchase] = userPurchasesByUserIdAndAppId.purchases
-            cloudWatchMetrics.queueMetric("purchases-quantity", purchases.size, StandardUnit.Count)
-            purchases
-          }).getOrElse(Set())
-        }
+        case Success(userPurchasesByUserIdAndAppId) => countAndExtractPurchaseSet(userPurchasesByUserIdAndAppId)
         case Failure(t) => {
           logger.warn("Unexpected error from dynamo", t)
           throw t
         }
       })
+
+  }
+
+  private def countAndExtractPurchaseSet(userPurchasesByUserIdAndAppId: Option[UserPurchasesByUserIdAndAppId]): Set[UserPurchase] = {
+    userPurchasesByUserIdAndAppId.map((userPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId) => {
+      val purchases: Set[UserPurchase] = userPurchasesByUserIdAndAppId.purchases
+      cloudWatchMetrics.queueMetric("purchases-quantity", purchases.size, StandardUnit.Count)
+      purchases
+    }).getOrElse(Set())
 
   }
 }
