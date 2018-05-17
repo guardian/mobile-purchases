@@ -91,7 +91,7 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
 
   }
 
-  private def compareLatestPurchases(request: LambdaRequest, delegatePurchaseSet: Set[UserPurchase], lambdaPurchaseSet: Set[UserPurchase]): AnyVal = {
+  private def compareLatestPurchases(request: LambdaRequest, delegatePurchaseSet: Set[UserPurchase], lambdaPurchaseSet: Set[UserPurchase]): Unit = {
     val now: String = ZonedDateTime.now.format(UserPurchase.instantFormatter)
     def latestLambdaNewerThanDelegate: Unit = {
       cloudWatch.queueMetric("lambda-newer-than-delegate", 1, StandardUnit.Count)
@@ -102,34 +102,30 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
       cloudWatch.queueMetric("delegate-newer-than-lambda", 1, StandardUnit.Count)
       logger.warn("Delegate Newer Than Lambda: Request: {}. Delegate:\n {} Lambda\n: {}", request: Any, delegatePurchaseSet: Any, lambdaPurchaseSet: Any)
     }
+    def latestMatched: Unit = {
+      cloudWatch.queueMetric("latest-matched", 1, StandardUnit.Count)
+    }
 
     def latestExpiryDate(purchases: Set[UserPurchase]): Option[String] = {
       purchases.toSeq.filter(_.activeInterval.end > now).sortBy(_.activeInterval.end).lastOption.map(_.activeInterval.end)
     }
 
-    val maybeLatestDelegatePurchaseExpiry: Option[String] = latestExpiryDate(delegatePurchaseSet)
-    val maybeLatestLambdaPurchaseExpiry: Option[String] = latestExpiryDate(lambdaPurchaseSet)
-    maybeLatestDelegatePurchaseExpiry match {
-      case Some(latestDelegate) => {
-        maybeLatestLambdaPurchaseExpiry match {
-          case Some(latestLambda) => {
-            if (latestDelegate > latestLambda) {
-              latestDelegateNewerThanLambda
-            } else if (latestLambda > latestDelegate) {
-              latestLambdaNewerThanDelegate
-            }
-          }
-          case None => latestDelegateNewerThanLambda
+    (latestExpiryDate(lambdaPurchaseSet), latestExpiryDate(delegatePurchaseSet)) match {
+      case (Some(lambda), Some(delegate)) => {
+        if (delegate > lambda) {
+          latestDelegateNewerThanLambda
+        } else if (lambda > delegate) {
+          latestLambdaNewerThanDelegate
         }
-
-      }
-      case None => {
-        maybeLatestLambdaPurchaseExpiry match {
-          case Some(_) => latestLambdaNewerThanDelegate
-          case None    => {}
+        else {
+          latestMatched
         }
       }
+      case (Some(_), None) => latestLambdaNewerThanDelegate
+      case (None, Some(_)) => latestDelegateNewerThanLambda
+      case (None, None) => latestMatched
     }
+
   }
 
   override def logNothingReturned: Unit = {
