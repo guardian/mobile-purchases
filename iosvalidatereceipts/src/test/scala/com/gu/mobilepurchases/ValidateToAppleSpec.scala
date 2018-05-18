@@ -34,8 +34,8 @@ class ValidateToAppleSpec extends Specification with Mockito {
       val lambda: AwsLambda = new AwsLambda(new ValidateReceiptsController(
         (validateReceiptRequest: ValidateRequest) => {
           validateReceiptRequest must beEqualTo(ValidateRequest(
-            ValidateRequestUserIds(
-              "gnmUdid", "vendorUdid"),
+            Map(
+              "gnmUdid" -> "gnmUdid", "vendorUdid" -> "vendorUdid"),
             Map("systemName" -> "iOS", "systemVersion" -> "11.3"),
             ValidateRequestAppInfo("uk.co.guardian.iphone2"),
             List(

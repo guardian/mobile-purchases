@@ -27,7 +27,7 @@ case class ValidateRequestAppInfo(id: String)
 case class ValidateRequestUserIds(gnmUdid: String, vendorUdid: String)
 
 case class ValidateRequest(
-    userIds: ValidateRequestUserIds,
+    userIds: Map[String, String],
     deviceInfo: Map[String, String],
     appInfo: ValidateRequestAppInfo,
     transactions: List[ValidateRequestTransaction],
@@ -67,12 +67,16 @@ class ValidateReceiptsController(
 
   private def routeValidRequest(validateRequest: ValidateRequest): LambdaResponse = {
 
-    validateReceiptsRoute.route(validateRequest).map((validateResponse: ValidateResponse) => LambdaResponse(
-      okCode, Some(mapper.writeValueAsString(validateResponse)), successHeaders))
-      .getOrElse({
+    validateReceiptsRoute.route(validateRequest) match {
+      case Success(validateResponse) => LambdaResponse(
+        okCode, Some(mapper.writeValueAsString(validateResponse)), successHeaders)
+      case Failure(t) => {
         cloudWatchMetrics.queueMetric("route-failed", 1, StandardUnit.Count)
+        logger.warn("Error validating", t)
         serverError
-      })
+      }
+
+    }
 
   }
 }
