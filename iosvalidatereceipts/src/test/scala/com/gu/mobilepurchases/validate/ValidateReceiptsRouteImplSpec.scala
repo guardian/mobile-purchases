@@ -72,9 +72,9 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
       new ValidateReceiptsRouteImpl(new ValidateReceiptsTransformAppStoreResponseImpl, (remainingReceipts: Set[String]) => {
         mockResponses
       }, new TransactionPersistence {
-        override def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[_] = {
+        override def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[Unit] = {
           transactions must beEqualTo(validateResponse.transactions + extraNestedValidatedTransaction + extraReceiptValidateTransactions)
-          Try(Success(""))
+          Try(())
         }
 
         override def transformValidateRequest(validateReceiptRequest: ValidateRequest): Set[UserIdWithAppId] = Set(UserIdWithAppId("userId", "appId"))

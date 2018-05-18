@@ -8,7 +8,7 @@ import com.gu.mobilepurchases.validate.ValidateRequest
 import scala.util.Try
 
 trait TransactionPersistence {
-  def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[Any]
+  def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[Unit]
 
   def transformValidateRequest(validateReceiptRequest: ValidateRequest): Set[UserIdWithAppId]
 }
@@ -20,7 +20,7 @@ class TransactionPersistenceImpl(
     userPurchaseFilterExpired: UserPurchaseFilterExpired
 ) extends TransactionPersistence {
 
-  def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[Any] = {
+  def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[Unit] = {
     val userId: String = userIdWithAppId.userId
     val appId: String = userIdWithAppId.appId
     val appStorePurchases: Set[UserPurchase] = transactions.flatMap(_.purchase.map(transformFromTransaction))
@@ -34,7 +34,7 @@ class TransactionPersistenceImpl(
       filteredPurchases = userPurchaseFilterExpired.filterExpired(allPurchases)
 
       written: Option[UserPurchasesByUserIdAndAppId] <- userPurchasePersistence.write(UserPurchasesByUserIdAndAppId(userId, appId, filteredPurchases))
-    } yield written
+    } yield ()
 
   }
 

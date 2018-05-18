@@ -45,11 +45,11 @@ class ValidateReceiptsRouteImpl(
 
   private def persist(
     validateReceiptRequest: ValidateRequest, allTransactions: Set[ValidatedTransaction]
-  ): Try[Any] = transactionPersistence.transformValidateRequest(validateReceiptRequest)
+  ): Try[Unit] = transactionPersistence.transformValidateRequest(validateReceiptRequest)
     .foldLeft(
-      Try[Any] {}
+      Try[Unit] {}
     )(
-        (lastTry: Try[Any], userIdWithAppId: UserIdWithAppId) =>
+        (lastTry: Try[Unit], userIdWithAppId: UserIdWithAppId) =>
           lastTry.flatMap(_ => transactionPersistence.persist(userIdWithAppId, allTransactions)
           )
       )
