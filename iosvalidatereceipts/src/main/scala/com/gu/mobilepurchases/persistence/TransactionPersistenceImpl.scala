@@ -8,9 +8,9 @@ import com.gu.mobilepurchases.validate.ValidateRequest
 import scala.util.Try
 
 trait TransactionPersistence {
-  def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[_]
+  def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[Any]
 
-  def transformValidateRequest(validateReceiptRequest: ValidateRequest): UserIdWithAppId
+  def transformValidateRequest(validateReceiptRequest: ValidateRequest): Set[UserIdWithAppId]
 }
 
 case class UserIdWithAppId(userId: String, appId: String)
@@ -20,7 +20,7 @@ class TransactionPersistenceImpl(
     userPurchaseFilterExpired: UserPurchaseFilterExpired
 ) extends TransactionPersistence {
 
-  def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[_] = {
+  def persist(userIdWithAppId: UserIdWithAppId, transactions: Set[ValidatedTransaction]): Try[Any] = {
     val userId: String = userIdWithAppId.userId
     val appId: String = userIdWithAppId.appId
     val appStorePurchases: Set[UserPurchase] = transactions.flatMap(_.purchase.map(transformFromTransaction))
@@ -35,6 +35,7 @@ class TransactionPersistenceImpl(
 
       written: Option[UserPurchasesByUserIdAndAppId] <- userPurchasePersistence.write(UserPurchasesByUserIdAndAppId(userId, appId, filteredPurchases))
     } yield written
+
   }
 
   def transformFromTransaction(transaction: ValidatedTransactionPurchase): UserPurchase = {
@@ -44,10 +45,8 @@ class TransactionPersistenceImpl(
       UserPurchaseInterval(transaction.activeInterval.start, transaction.activeInterval.end))
   }
 
-  def transformValidateRequest(validateReceiptRequest: ValidateRequest): UserIdWithAppId = {
+  def transformValidateRequest(validateReceiptRequest: ValidateRequest): Set[UserIdWithAppId] = {
     val appId: String = validateReceiptRequest.appInfo.id
-    val vendorUdid: String = s"vendorUdid~${validateReceiptRequest.userIds.vendorUdid}"
-    val userIdWithAppId: UserIdWithAppId = UserIdWithAppId(vendorUdid, appId)
-    userIdWithAppId
+    validateReceiptRequest.userIds.map { case (k, v) => s"$k~$v" }.map(UserIdWithAppId(_, validateReceiptRequest.appInfo.id)).toSet
   }
 }

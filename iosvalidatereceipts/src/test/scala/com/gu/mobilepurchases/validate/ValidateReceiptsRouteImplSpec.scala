@@ -77,7 +77,7 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
           Try(Success(""))
         }
 
-        override def transformValidateRequest(validateReceiptRequest: ValidateRequest): UserIdWithAppId = UserIdWithAppId("userId", "appId")
+        override def transformValidateRequest(validateReceiptRequest: ValidateRequest): Set[UserIdWithAppId] = Set(UserIdWithAppId("userId", "appId"))
       }).route(validateRequest) must beEqualTo(Success(validateResponse))
 
     }

@@ -23,7 +23,6 @@ class UserPurchasesImpl(
 
   override def findPurchases(userPurchasesRequest: UserPurchasesRequest): UserPurchasesResponse = {
     UserPurchasesResponse(userPurchasesRequest.userIds
-      .filter((_: String).startsWith("vendorUdid~"))
       .map(userPurchasePersistence.read(_: String, userPurchasesRequest.appId))
       .flatMap {
         case Success(userPurchasesByUserIdAndAppId) => countAndExtractPurchaseSet(userPurchasesByUserIdAndAppId)

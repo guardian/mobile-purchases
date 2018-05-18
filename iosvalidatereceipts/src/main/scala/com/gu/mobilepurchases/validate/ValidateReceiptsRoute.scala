@@ -43,8 +43,14 @@ class ValidateReceiptsRouteImpl(
       .toSet
   }
 
-  private def persist(validateReceiptRequest: ValidateRequest, allTransactions: Set[ValidatedTransaction]): Try[_] = {
-    val userIdWithAppId: UserIdWithAppId = transactionPersistence.transformValidateRequest(validateReceiptRequest)
-    transactionPersistence.persist(userIdWithAppId, allTransactions)
-  }
+  private def persist(
+    validateReceiptRequest: ValidateRequest, allTransactions: Set[ValidatedTransaction]
+  ): Try[Any] = transactionPersistence.transformValidateRequest(validateReceiptRequest)
+    .foldLeft(
+      Try[Any] {}
+    )(
+        (lastTry: Try[Any], userIdWithAppId: UserIdWithAppId) =>
+          lastTry.flatMap(_ => transactionPersistence.persist(userIdWithAppId, allTransactions)
+          )
+      )
 }

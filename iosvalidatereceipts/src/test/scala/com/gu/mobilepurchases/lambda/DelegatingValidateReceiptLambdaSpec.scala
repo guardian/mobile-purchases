@@ -41,12 +41,17 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
     val cloudWatchImpl: CloudWatchImpl = new CloudWatchImpl("", "lambdaname", mockAmazonCloudWatch)
     val expectedApiGatewayRequest: Array[Byte] = mapper.writeValueAsBytes(
       ApiGatewayLambdaRequest(LambdaRequest(Some(mapper.writeValueAsString(successValidateRequest)), Map())))
-    val expectedUserPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId = userPurchasePersistenceTransformer.transform(
-      UserPurchasesByUserIdAndAppId(
-        s"vendorUdid~${successValidateRequest.userIds.vendorUdid}", successValidateRequest.appInfo.id, Set(UserPurchase(
-          "uk.co.guardian.gce.plusobserver.1monthsub",
-          "20000001746150",
-          UserPurchaseInterval("2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z")))))
+    val expectedVendorUserPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId = UserPurchasesByUserIdAndAppId(
+      s"vendorUdid~${successValidateRequest.userIds("vendorUdid")}", successValidateRequest.appInfo.id, Set(UserPurchase(
+        "uk.co.guardian.gce.plusobserver.1monthsub",
+        "20000001746150",
+        UserPurchaseInterval("2012-09-30T12:24:36.000Z", "2012-11-06T13:24:36.000Z"))))
+    val expectedGnmUserPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId = expectedVendorUserPurchasesByUserIdAndAppId.copy(
+      userId = s"gnmUdid~${successValidateRequest.userIds("gnmUdid")}"
+    )
+    val expectedUserPurchasesStringsByUserIdColonAppIds: Set[UserPurchasesStringsByUserIdColonAppId] = Set(
+      expectedGnmUserPurchasesByUserIdAndAppId, expectedVendorUserPurchasesByUserIdAndAppId
+    ).map(userPurchasePersistenceTransformer.transform).map(_.copy(ttl = 0))
 
     val fetchAppStoreResponsesImpl: FetchAppStoreResponsesImpl = new FetchAppStoreResponsesImpl(
       (receiptData: String) => {
@@ -62,7 +67,7 @@ class DelegatingValidateReceiptLambdaSpec extends Specification with Mockito {
         override def put(
           userPurchasesStringsByUserIdColonAppId: UserPurchasesStringsByUserIdColonAppId
         ): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
-          userPurchasesStringsByUserIdColonAppId.copy(ttl = 0) must beEqualTo(expectedUserPurchasesStringsByUserIdColonAppId.copy(ttl = 0))
+          expectedUserPurchasesStringsByUserIdColonAppIds must contain(userPurchasesStringsByUserIdColonAppId.copy(ttl = 0))
           None
         }
 
