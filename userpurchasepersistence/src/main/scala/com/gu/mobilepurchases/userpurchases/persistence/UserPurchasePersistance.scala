@@ -66,7 +66,7 @@ class ScanamaoUserPurchasesStringsByUserIdColonAppIdImpl(
   }
 
   def get(key: UniqueKey[_]): Option[Either[DynamoReadError, UserPurchasesStringsByUserIdColonAppId]] = {
-    scanamoClient(table.get(key))
+    scanamoClient(table.consistently.get(key))
   }
 }
 
