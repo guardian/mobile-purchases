@@ -42,16 +42,16 @@ class ValidateReceiptsTransformAppStoreResponseImpl extends ValidateReceiptsTran
       statusCodeInt match {
         case AutoRenewableSubsStatusCodes.valid | AutoRenewableSubsStatusCodes.ReceiptValidButSubscriptionExpired => {
           val maybeValidatedTransactionPurchase: Option[ValidatedTransactionPurchase] = for {
-            product_id <- receipt.product_id
-            web_order_line_item_id <- receipt.web_order_line_item_id
-            expires_date <- receipt.expires_date
-            purchase_date_ms <- receipt.purchase_date_ms
+            productId <- receipt.product_id
+            webOrderLineItemId <- receipt.web_order_line_item_id
+            expiresDate <- receipt.expires_date
+            purchaseDateMs <- receipt.purchase_date_ms
           } yield ValidatedTransactionPurchase(
-            product_id,
-            web_order_line_item_id,
+            productId,
+            webOrderLineItemId,
             ValidatedTransactionPurchaseActiveInterval(
-              ofEpochMilli(purchase_date_ms.toLong).atZone(UTC).format(instantFormatter),
-              ofEpochMilli(expires_date.toLong).atZone(UTC).format(instantFormatter)))
+              ofEpochMilli(purchaseDateMs.toLong).atZone(UTC).format(instantFormatter),
+              ofEpochMilli(expiresDate.toLong).atZone(UTC).format(instantFormatter)))
           ValidatedTransaction(
             receipt.transaction_id,
             validated = maybeValidatedTransactionPurchase.isDefined,
