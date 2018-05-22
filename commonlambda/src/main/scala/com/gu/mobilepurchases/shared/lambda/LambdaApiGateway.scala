@@ -26,7 +26,7 @@ case class ApiGatewayLambdaResponse(
 object ApiGatewayLambdaRequest {
   def apply(lambdaRequest: LambdaRequest): ApiGatewayLambdaRequest = {
     val parameters: Option[Map[String, String]] = if (lambdaRequest.queryStringParameters.nonEmpty) Some(lambdaRequest.queryStringParameters) else None
-    val headers: Option[Map[String, String]] = if (lambdaRequest.headers.nonEmpty) Some(lambdaRequest.queryStringParameters) else None
+    val headers: Option[Map[String, String]] = if (lambdaRequest.headers.nonEmpty) Some(lambdaRequest.headers) else None
     ApiGatewayLambdaRequest(lambdaRequest.maybeBody, false, parameters, headers)
   }
 
