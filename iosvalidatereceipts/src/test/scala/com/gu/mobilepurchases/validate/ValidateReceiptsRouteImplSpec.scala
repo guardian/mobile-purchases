@@ -30,10 +30,10 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
           latest_receipt = Some("ExtraReceipt"),
           latest_receipt_Info = Some(AppStoreExample.appStoreResponseReceiptExample.copy(
             transaction_id = "1",
-            expires_date = "1524760044000",
-            purchase_date_ms = "1524760044000",
-            product_id = "uk.co.guardian.gla.1month",
-            web_order_line_item_id = "1234567"
+            expires_date = Some("1524760044000"),
+            purchase_date_ms = Some("1524760044000"),
+            product_id = Some("uk.co.guardian.gla.1month"),
+            web_order_line_item_id = Some("1234567")
           ))
         ),
         "ewoJInNpZ25hdHVyZSIgPSAiQXdEaWJOY280c3Y5U25QZWNRVHZucEdoRjdsZ3QrbVVJcTVIdnA2dFY4NUN4c0liUGJhWlhXdTZMVk9DS0d0ZGdYVDd4eEp4Yjl1eFpFWGdtODcyaU4yM3hXazRUaGQwOUhzQlNzV2tFZno2VWFNOEtUc2tqeDBDTFg5US9GQ0F3dFNvaFdFd256Y1lqTk93U1NkRHZnL2xxQm1sWDE1L2g2SFhCaERBdHJ4SWl4dG52S3JzeTREZ0tDamEvYnpmMTRlMzZMRnM4Ull6RmVtS0JycXNzeE5xNmRYdHNabEpsb0kyZDJsQmVyYlIyNXpVQzNnUmRMTXg2RUlWb1hIT2lranE1eEt0ejY3TDE4eGtNL0JXckdhNjNOUkhhU245L3h1NTg5QzZvUHpaVjVMcVlHTjRzYlE1UFVmTDdwb1hXUm1FVkpvQm9XSUU4ZlFFazR5WHpoUUFBQVdBTUlJRmZEQ0NCR1NnQXdJQkFnSUlEdXRYaCtlZUNZMHdEUVlKS29aSWh2Y05BUUVGQlFBd2daWXhDekFKQmdOVkJBWVRBbFZUTVJNd0VRWURWUVFLREFwQmNIQnNaU0JKYm1NdU1Td3dLZ1lEVlFRTERDTkJjSEJzWlNCWGIzSnNaSGRwWkdVZ1JHVjJaV3h2Y0dWeUlGSmxiR0YwYVc5dWN6RkVNRUlHQTFVRUF3dzdRWEJ3YkdVZ1YyOXliR1IzYVdSbElFUmxkbVZzYjNCbGNpQlNaV3hoZEdsdmJuTWdRMlZ5ZEdsbWFXTmhkR2x2YmlCQmRYUm9iM0pwZEhrd0hoY05NVFV4TVRFek1ESXhOVEE1V2hjTk1qTXdNakEzTWpFME9EUTNXakNCaVRFM01EVUdBMVVFQXd3dVRXRmpJRUZ3Y0NCVGRHOXlaU0JoYm1RZ2FWUjFibVZ6SUZOMGIzSmxJRkpsWTJWcGNIUWdVMmxuYm1sdVp6RXNNQ29HQTFVRUN3d2pRWEJ3YkdVZ1YyOXliR1IzYVdSbElFUmxkbVZzYjNCbGNpQlNaV3hoZEdsdmJuTXhFekFSQmdOVkJBb01Da0Z3Y0d4bElFbHVZeTR4Q3pBSkJnTlZCQVlUQWxWVE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBcGMrQi9TV2lnVnZXaCswajJqTWNqdUlqd0tYRUpzczl4cC9zU2cxVmh2K2tBdGVYeWpsVWJYMS9zbFFZbmNRc1VuR09aSHVDem9tNlNkWUk1YlNJY2M4L1cwWXV4c1FkdUFPcFdLSUVQaUY0MWR1MzBJNFNqWU5NV3lwb041UEM4cjBleE5LaERFcFlVcXNTNCszZEg1Z1ZrRFV0d3N3U3lvMUlnZmRZZUZScjZJd3hOaDlLQmd4SFZQTTNrTGl5a29sOVg2U0ZTdUhBbk9DNnBMdUNsMlAwSzVQQi9UNXZ5c0gxUEttUFVockFKUXAyRHQ3K21mNy93bXYxVzE2c2MxRkpDRmFKekVPUXpJNkJBdENnbDdaY3NhRnBhWWVRRUdnbUpqbTRIUkJ6c0FwZHhYUFEzM1k3MkMzWmlCN2o3QWZQNG83UTAvb21WWUh2NGdOSkl3SURBUUFCbzRJQjF6Q0NBZE13UHdZSUt3WUJCUVVIQVFFRU16QXhNQzhHQ0NzR0FRVUZCekFCaGlOb2RIUndPaTh2YjJOemNDNWhjSEJzWlM1amIyMHZiMk56Y0RBekxYZDNaSEl3TkRBZEJnTlZIUTRFRmdRVWthU2MvTVIydDUrZ2l2Uk45WTgyWGUwckJJVXdEQVlEVlIwVEFRSC9CQUl3QURBZkJnTlZIU01FR0RBV2dCU0lKeGNKcWJZWVlJdnM2N3IyUjFuRlVsU2p0ekNDQVI0R0ExVWRJQVNDQVJVd2dnRVJNSUlCRFFZS0tvWklodmRqWkFVR0FUQ0IvakNCd3dZSUt3WUJCUVVIQWdJd2diWU1nYk5TWld4cFlXNWpaU0J2YmlCMGFHbHpJR05sY25ScFptbGpZWFJsSUdKNUlHRnVlU0J3WVhKMGVTQmhjM04xYldWeklHRmpZMlZ3ZEdGdVkyVWdiMllnZEdobElIUm9aVzRnWVhCd2JHbGpZV0pzWlNCemRHRnVaR0Z5WkNCMFpYSnRjeUJoYm1RZ1kyOXVaR2wwYVc5dWN5QnZaaUIxYzJVc0lHTmxjblJwWm1sallYUmxJSEJ2YkdsamVTQmhibVFnWTJWeWRHbG1hV05oZEdsdmJpQndjbUZqZEdsalpTQnpkR0YwWlcxbGJuUnpMakEyQmdnckJnRUZCUWNDQVJZcWFIUjBjRG92TDNkM2R5NWhjSEJzWlM1amIyMHZZMlZ5ZEdsbWFXTmhkR1ZoZFhSb2IzSnBkSGt2TUE0R0ExVWREd0VCL3dRRUF3SUhnREFRQmdvcWhraUc5Mk5rQmdzQkJBSUZBREFOQmdrcWhraUc5dzBCQVFVRkFBT0NBUUVBRGFZYjB5NDk0MXNyQjI1Q2xtelQ2SXhETUlKZjRGelJqYjY5RDcwYS9DV1MyNHlGdzRCWjMrUGkxeTRGRkt3TjI3YTQvdncxTG56THJSZHJqbjhmNUhlNXNXZVZ0Qk5lcGhtR2R2aGFJSlhuWTR3UGMvem83Y1lmcnBuNFpVaGNvT0FvT3NBUU55MjVvQVE1SDNPNXlBWDk4dDUvR2lvcWJpc0IvS0FnWE5ucmZTZW1NL2oxbU9DK1JOdXhUR2Y4YmdwUHllSUdxTktYODZlT2ExR2lXb1IxWmRFV0JHTGp3Vi8xQ0tuUGFObVNBTW5CakxQNGpRQmt1bGhnd0h5dmozWEthYmxiS3RZZGFHNllRdlZNcHpjWm04dzdISG9aUS9PamJiOUlZQVlNTnBJcjdONFl0UkhhTFNQUWp2eWdhWndYRzU2QWV6bEhSVEJoTDhjVHFBPT0iOwoJInB1cmNoYXNlLWluZm8iID0gImV3b0pJbTl5YVdkcGJtRnNMWEIxY21Ob1lYTmxMV1JoZEdVdGNITjBJaUE5SUNJeU1ERTNMVEEyTFRJMklEQTBPakl4T2pRMUlFRnRaWEpwWTJFdlRHOXpYMEZ1WjJWc1pYTWlPd29KSW1sekxXbHVMV2x1ZEhKdkxXOW1abVZ5TFhCbGNtbHZaQ0lnUFNBaVptRnNjMlVpT3dvSkluQjFjbU5vWVhObExXUmhkR1V0YlhNaUlEMGdJakUxTURJeU1EUXpNRGN3TURBaU93b0pJblZ1YVhGMVpTMXBaR1Z1ZEdsbWFXVnlJaUE5SUNJNE5UZ3dPR000WlRNNFpqaGtObUk0TTJVME1UVXdPVEZpT1Raa01qRmxObVJtWm1aaU9HSTNJanNLQ1NKdmNtbG5hVzVoYkMxMGNtRnVjMkZqZEdsdmJpMXBaQ0lnUFNBaU1UQXdNREF3TURNeE1ERTBOVGc0TkNJN0Nna2laWGh3YVhKbGN5MWtZWFJsSWlBOUlDSXhOVEF5TWpBME5qQTNNREF3SWpzS0NTSjBjbUZ1YzJGamRHbHZiaTFwWkNJZ1BTQWlNVEF3TURBd01ETTVNREV3TVRjMk9TSTdDZ2tpY1hWaGJuUnBkSGtpSUQwZ0lqRWlPd29KSW5kbFlpMXZjbVJsY2kxc2FXNWxMV2wwWlcwdGFXUWlJRDBnSWpFd01EQXdNREF3TXpVNE5qYzJOakFpT3dvSkltOXlhV2RwYm1Gc0xYQjFjbU5vWVhObExXUmhkR1V0YlhNaUlEMGdJakUwT1RnME56WXhNRFV3TURBaU93b0pJblZ1YVhGMVpTMTJaVzVrYjNJdGFXUmxiblJwWm1sbGNpSWdQU0FpUkVJeE9VTTVRMEl0TlRVek9TMDBRa1k0TFVJM05rRXRORFJDT1VKRlFqTTJSVEl5SWpzS0NTSmxlSEJwY21WekxXUmhkR1V0Wm05eWJXRjBkR1ZrTFhCemRDSWdQU0FpTWpBeE55MHdPQzB3T0NBd09Eb3dNem95TnlCQmJXVnlhV05oTDB4dmMxOUJibWRsYkdWeklqc0tDU0pwZEdWdExXbGtJaUE5SUNJNE1qQTVPRFE0TWpVaU93b0pJbVY0Y0dseVpYTXRaR0YwWlMxbWIzSnRZWFIwWldRaUlEMGdJakl3TVRjdE1EZ3RNRGdnTVRVNk1ETTZNamNnUlhSakwwZE5WQ0k3Q2draWIzSnBaMmx1WVd3dGNIVnlZMmhoYzJVdFpHRjBaU0lnUFNBaU1qQXhOeTB3TmkweU5pQXhNVG95TVRvME5TQkZkR012UjAxVUlqc0tDU0p3Y205a2RXTjBMV2xrSWlBOUlDSjFheTVqYnk1bmRXRnlaR2xoYmk1bmJHRXVNVzF2Ym5Sb0lqc0tDU0p3ZFhKamFHRnpaUzFrWVhSbElpQTlJQ0l5TURFM0xUQTRMVEE0SURFME9qVTRPakkzSUVWMFl5OUhUVlFpT3dvSkltbHpMWFJ5YVdGc0xYQmxjbWx2WkNJZ1BTQWlabUZzYzJVaU93b0pJbkIxY21Ob1lYTmxMV1JoZEdVdGNITjBJaUE5SUNJeU1ERTNMVEE0TFRBNElEQTNPalU0T2pJM0lFRnRaWEpwWTJFdlRHOXpYMEZ1WjJWc1pYTWlPd29KSW1KcFpDSWdQU0FpZFdzdVkyOHVaM1ZoY21ScFlXNHVhWEJvYjI1bE1pSTdDZ2tpWW5aeWN5SWdQU0FpTVRVMk56WWlPd3A5IjsKCSJlbnZpcm9ubWVudCIgPSAiU2FuZGJveCI7CgkicG9kIiA9ICIxMDAiOwoJInNpZ25pbmctc3RhdHVzIiA9ICIwIjsKfQ==" ->
@@ -41,10 +41,10 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
             status = "21006",
             receipt = Some(AppStoreExample.appStoreResponseReceiptExample.copy(
               transaction_id = "1000000390101769",
-              expires_date = "1524743881000",
-              purchase_date_ms = "1524743581000",
-              product_id = "uk.co.guardian.gla.1month",
-              web_order_line_item_id = "1000000038562242"
+              expires_date = Some("1524743881000"),
+              purchase_date_ms = Some("1524743581000"),
+              product_id = Some("uk.co.guardian.gla.1month"),
+              web_order_line_item_id = Some("1000000038562242")
             )),
             latest_receipt_Info = None,
             latest_receipt = None
@@ -54,18 +54,18 @@ class ValidateReceiptsRouteImplSpec extends Specification with ScalaCheck {
             status = "21006",
             receipt = Some(AppStoreExample.appStoreResponseReceiptExample.copy(
               transaction_id = "1000000390101770",
-              expires_date = "1",
-              purchase_date_ms = "2",
-              product_id = "uk.co.guardian.gla.1month",
-              web_order_line_item_id = "1000000038562242"
+              expires_date = Some("1"),
+              purchase_date_ms = Some("2"),
+              product_id = Some("uk.co.guardian.gla.1month"),
+              web_order_line_item_id = Some("1000000038562242")
             )),
             latest_receipt = None,
             latest_receipt_Info = Some(AppStoreExample.appStoreResponseReceiptExample.copy(
               transaction_id = "1000000390101770",
-              expires_date = "1524743881000",
-              purchase_date_ms = "1524743581000",
-              product_id = "uk.co.guardian.gla.1month",
-              web_order_line_item_id = "1000000038562242"
+              expires_date = Some("1524743881000"),
+              purchase_date_ms = Some("1524743581000"),
+              product_id = Some("uk.co.guardian.gla.1month"),
+              web_order_line_item_id = Some("1000000038562242")
             ))
           )
       )

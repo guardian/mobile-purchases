@@ -13,11 +13,11 @@ class ValidateReceiptsTransformAppStoreResponseSpec extends Specification with S
     val validResponse: AppStoreResponse = appStoreResponseExample.copy(
       status = "0",
       receipt = Some(AppStoreExample.appStoreResponseReceiptExample.copy(
-        purchase_date_ms = "1349007876000",
-        expires_date = "1349007876000",
+        purchase_date_ms = Some("1349007876000"),
+        expires_date = Some("1349007876000"),
         transaction_id = "transactionId",
-        product_id = "productId",
-        web_order_line_item_id = "webOrderLineItemId"
+        product_id = Some("productId"),
+        web_order_line_item_id = Some("webOrderLineItemId")
 
       ))
     )

@@ -52,25 +52,15 @@ case class AppStoreRequest(
 )
 
 case class AppStoreResponseReceipt(
-    original_purchase_date_pst: String,
-    unique_identifier: String,
-    original_transaction_id: String,
-    expires_date: String,
-    app_item_id: String,
+//    unique_identifier: Option[String],
+    expires_date: Option[String],
     transaction_id: String,
-    quantity: String,
-    product_id: String,
-    bvrs: String,
-    bid: String,
-    web_order_line_item_id: String,
-    original_purchase_date_ms: String,
-    expires_date_formatted: String,
-    purchase_date: String,
-    purchase_date_ms: String,
-    expires_date_formatted_pst: String,
-    purchase_date_pst: String,
-    original_purchase_date: String,
-    item_id: String
+    product_id: Option[String],
+    web_order_line_item_id: Option[String],
+//    expires_date_formatted: Option[String],
+    purchase_date_ms: Option[String],
+//    expires_date_formatted_pst: Option[String]
+
 )
 
 case class AppStoreResponse(
