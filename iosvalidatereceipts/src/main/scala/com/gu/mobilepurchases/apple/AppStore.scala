@@ -52,15 +52,11 @@ case class AppStoreRequest(
 )
 
 case class AppStoreResponseReceipt(
-//    unique_identifier: Option[String],
     expires_date: Option[String],
     transaction_id: String,
     product_id: Option[String],
     web_order_line_item_id: Option[String],
-//    expires_date_formatted: Option[String],
-    purchase_date_ms: Option[String],
-//    expires_date_formatted_pst: Option[String]
-
+    purchase_date_ms: Option[String]
 )
 
 case class AppStoreResponse(
