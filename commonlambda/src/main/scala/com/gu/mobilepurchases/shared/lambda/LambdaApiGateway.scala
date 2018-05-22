@@ -25,9 +25,9 @@ case class ApiGatewayLambdaResponse(
 
 object ApiGatewayLambdaRequest {
   def apply(lambdaRequest: LambdaRequest): ApiGatewayLambdaRequest = {
-
     val parameters: Option[Map[String, String]] = if (lambdaRequest.queryStringParameters.nonEmpty) Some(lambdaRequest.queryStringParameters) else None
-    ApiGatewayLambdaRequest(lambdaRequest.maybeBody, false, parameters)
+    val headers: Option[Map[String, String]] = if (lambdaRequest.headers.nonEmpty) Some(lambdaRequest.headers) else None
+    ApiGatewayLambdaRequest(lambdaRequest.maybeBody, false, parameters, headers)
   }
 
 }
@@ -35,7 +35,8 @@ object ApiGatewayLambdaRequest {
 case class ApiGatewayLambdaRequest(
     body: Option[String],
     isBase64Encoded: Boolean = false,
-    queryStringParameters: Option[Map[String, String]] = None
+    queryStringParameters: Option[Map[String, String]] = None,
+    headers: Option[Map[String, String]] = None
 )
 
 object LambdaRequest {
@@ -44,11 +45,11 @@ object LambdaRequest {
       throw new UnsupportedOperationException("Binary content unsupported")
     } else {
       foundBody
-    }), apiGatewayLambdaRequest.queryStringParameters.getOrElse(Map()))
+    }), apiGatewayLambdaRequest.queryStringParameters.getOrElse(Map()), apiGatewayLambdaRequest.headers.getOrElse(Map()))
   }
 }
 
-case class LambdaRequest(maybeBody: Option[String], queryStringParameters: Map[String, String] = Map()) {}
+case class LambdaRequest(maybeBody: Option[String], queryStringParameters: Map[String, String] = Map(), headers: Map[String, String] = Map()) {}
 
 object LambdaResponse {
   def apply(apiGatewayLambdaResponse: ApiGatewayLambdaResponse): LambdaResponse = {

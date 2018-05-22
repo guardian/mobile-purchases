@@ -52,8 +52,8 @@ class ValidateReceiptsController(
 
   def apply(lambdaRequest: LambdaRequest): LambdaResponse =
     lambdaRequest match {
-      case LambdaRequest(Some(json), _) => validate(Try(mapper.readValue[ValidateRequest](json)))
-      case LambdaRequest(None, _)       => LambdaResponse(badRequest, Some("Expected a json body"), errorHeaders)
+      case LambdaRequest(Some(json), _, _) => validate(Try(mapper.readValue[ValidateRequest](json)))
+      case LambdaRequest(None, _, _)       => LambdaResponse(badRequest, Some("Expected a json body"), errorHeaders)
     }
 
   private def validate(triedRequest: Try[ValidateRequest]): LambdaResponse = triedRequest
