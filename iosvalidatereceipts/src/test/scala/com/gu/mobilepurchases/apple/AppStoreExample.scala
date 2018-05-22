@@ -9,7 +9,8 @@ object AppStoreExample {
 
   def successAsAppStoreResponse: AppStoreResponse = Jackson.mapper.readValue[AppStoreResponse](success.responseString)
   def appStoreResponseExample = AppStoreResponse("", None, None, None, None, None)
-  def appStoreResponseReceiptExample = AppStoreResponseReceipt("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
+  def appStoreResponseReceiptExample = AppStoreResponseReceipt(
+    Some(""), "", Some(""), Some(""), Some(""))
 }
 
 class AppStoreExample(folderName: String) {
