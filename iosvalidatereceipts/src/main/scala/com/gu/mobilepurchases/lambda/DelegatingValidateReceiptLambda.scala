@@ -53,7 +53,7 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
           logLambdaExtras(0)
           logDelegateExtras(0)
           logReturnedTransactions(lambdaValidateResponse.transactions.size)
-          delegateResponse
+          lambdaResponse
         } else {
           val lambdaTransactions: Set[ValidatedTransaction] = lambdaValidateResponse.transactions
           val delegateTransactions: Set[ValidatedTransaction] = delegateValidateResponse.transactions
@@ -64,12 +64,13 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
           val delegateExtraQuantity: Int = delegateTransactions.diff(lambdaTransactions).size
           logLambdaExtras(lambdaExtraQuantity)
           logDelegateExtras(delegateExtraQuantity)
-          if (delegateTransactions.nonEmpty) {
-            logReturnedTransactions(delegateTransactions.size)
-            delegateResponse
-          } else {
+          if (lambdaTransactions.nonEmpty) {
             logReturnedTransactions(lambdaTransactions.size)
             lambdaResponse
+          } else {
+            logReturnedTransactions(delegateTransactions.size)
+            delegateResponse
+
           }
         }
 
@@ -77,12 +78,12 @@ class DelegatingValidateReceiptCompators(cloudWatch: CloudWatch) extends Delegat
       case (Some(validateResponse), _) => {
         logger.warn(s"Validate mismatch for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
         logDelegateOnly(validateResponse)
-        lambdaResponse
+        delegateResponse
       }
       case (_, Some(validateResponse)) => {
         logger.warn(s"Validate mismatch for Request: $lambdaRequest \nLambda Response: $lambdaResponse \nDelegate Response: $delegateResponse")
         logLambdaOnly(validateResponse)
-        delegateResponse
+        lambdaResponse
       }
       case (_, _) => {
         logNothingReturned
