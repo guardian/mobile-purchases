@@ -96,6 +96,9 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
   def logLatestMatched: Unit = {
     cloudWatch.queueMetric("latest-matched", 1, StandardUnit.Count)
   }
+  def logNoLatest: Unit = {
+    cloudWatch.queueMetric("no-latest", 1, StandardUnit.Count)
+  }
 
   private def compareLatestPurchases(request: LambdaRequest, lambdaPurchaseSet: Set[UserPurchase], delegatePurchaseSet: Set[UserPurchase]): Unit = {
     val now: String = ZonedDateTime.now.format(UserPurchase.instantFormatter)
@@ -123,9 +126,13 @@ class DelegateUserPurchasesLambdaComparator(cloudWatch: CloudWatch) extends Dele
           logLatestMatched
         }
       }
-      case (Some(_), None) => logLatestLambdaNewerThanDelegate
-      case (None, Some(_)) => logLatestDelegateNewerThanLambda
-      case (None, None)    => logLatestMatched
+      case (Some(_), None) => {
+        logLatestLambdaNewerThanDelegate
+      }
+      case (None, Some(_)) => {
+        logLatestDelegateNewerThanLambda
+      }
+      case (None, None)    => logNoLatest
     }
 
   }
