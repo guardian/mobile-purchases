@@ -15,7 +15,10 @@ lazy val userpurchasepersistence = project.disablePlugins(AssemblyPlugin)
 
 
 lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings(List(
-  libraryDependencies += "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion
+  libraryDependencies ++= List(
+    "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
+    "com.squareup.okhttp3" % "okhttp" % "3.10.0"
+  )
 ) ++ commonAssemblySettings("iosvalidatereceipts"))
   .dependsOn(userpurchasepersistence % testAndCompileDependencies)
 
@@ -76,8 +79,7 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
       "com.gu" %% "simple-configuration-core" % simpleConfigurationVersion,
       "org.specs2" %% "specs2-core" % specsVersion % "test",
       "org.specs2" %% "specs2-scalacheck" % specsVersion % "test",
-      "org.specs2" %% "specs2-mock" % specsVersion % "test",
-      "com.squareup.okhttp3" % "okhttp" % "3.10.0"
+      "org.specs2" %% "specs2-mock" % specsVersion % "test"
 
     ),
     dependencyOverrides ++= List(
