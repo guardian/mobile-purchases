@@ -20,7 +20,7 @@ class UserPurchasesImpl(
     cloudWatchMetrics: CloudWatchMetrics,
     userPurchasePersistence: UserPurchasePersistence,
     logger: Logger = LogManager.getLogger(classOf[UserPurchasesImpl])) extends UserPurchases {
-  val emptyPurchases: Set[UserPurchase] = Set()
+  private val emptyPurchases = Set()
   override def findPurchases(userPurchasesRequest: UserPurchasesRequest): UserPurchasesResponse = {
     UserPurchasesResponse(userPurchasesRequest.userIds
       .map(userPurchasePersistence.read(_: String, userPurchasesRequest.appId))
