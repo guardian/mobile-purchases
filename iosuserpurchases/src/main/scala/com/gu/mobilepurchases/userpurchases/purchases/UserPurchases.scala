@@ -20,7 +20,7 @@ class UserPurchasesImpl(
     cloudWatchMetrics: CloudWatchMetrics,
     userPurchasePersistence: UserPurchasePersistence,
     logger: Logger = LogManager.getLogger(classOf[UserPurchasesImpl])) extends UserPurchases {
-
+  private val emptyPurchases = Set[UserPurchase]()
   override def findPurchases(userPurchasesRequest: UserPurchasesRequest): UserPurchasesResponse = {
     UserPurchasesResponse(userPurchasesRequest.userIds
       .map(userPurchasePersistence.read(_: String, userPurchasesRequest.appId))
@@ -35,11 +35,8 @@ class UserPurchasesImpl(
   }
 
   private def countAndExtractPurchaseSet(userPurchasesByUserIdAndAppId: Option[UserPurchasesByUserIdAndAppId]): Set[UserPurchase] = {
-    userPurchasesByUserIdAndAppId.map((userPurchasesByUserIdAndAppId: UserPurchasesByUserIdAndAppId) => {
-      val purchases: Set[UserPurchase] = userPurchasesByUserIdAndAppId.purchases
-      cloudWatchMetrics.queueMetric("purchases-quantity", purchases.size, StandardUnit.Count)
-      purchases
-    }).getOrElse(Set())
-
+    val purchases = userPurchasesByUserIdAndAppId.map((_: UserPurchasesByUserIdAndAppId).purchases).getOrElse(emptyPurchases)
+    cloudWatchMetrics.queueMetric("purchases-quantity", purchases.size, StandardUnit.Count)
+    purchases
   }
 }
