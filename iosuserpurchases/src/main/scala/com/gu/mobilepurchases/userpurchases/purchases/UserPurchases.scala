@@ -35,7 +35,7 @@ class UserPurchasesImpl(
   }
 
   private def countAndExtractPurchaseSet(userPurchasesByUserIdAndAppId: Option[UserPurchasesByUserIdAndAppId]): Set[UserPurchase] = {
-    val purchases: Set[UserPurchase] = userPurchasesByUserIdAndAppId.map((_: UserPurchasesByUserIdAndAppId).purchases).getOrElse(emptyPurchases)
+    val purchases = userPurchasesByUserIdAndAppId.map((_: UserPurchasesByUserIdAndAppId).purchases).getOrElse(emptyPurchases)
     cloudWatchMetrics.queueMetric("purchases-quantity", purchases.size, StandardUnit.Count)
     purchases
   }
