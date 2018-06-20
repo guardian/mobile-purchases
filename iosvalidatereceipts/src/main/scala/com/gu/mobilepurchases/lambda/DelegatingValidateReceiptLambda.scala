@@ -1,3 +1,3 @@
 package com.gu.mobilepurchases.lambda
 
-class DelegatingValidateReceiptCompators extends ValidateReceiptLambda
+class DelegatingValidateReceiptLambda extends ValidateReceiptLambda
