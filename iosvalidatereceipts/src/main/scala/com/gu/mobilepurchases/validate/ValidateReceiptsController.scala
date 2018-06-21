@@ -24,8 +24,6 @@ case class ValidateRequestTransaction(
 
 case class ValidateRequestAppInfo(id: String)
 
-case class ValidateRequestUserIds(gnmUdid: String, vendorUdid: String)
-
 case class ValidateRequest(
     userIds: Map[String, String],
     deviceInfo: Map[String, String],
