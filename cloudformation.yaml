@@ -32,9 +32,6 @@ Parameters:
   AppDNS:
     Description: DNS used by app
     Type: String
-  UserPurchasesDelegateUrl:
-    Description: URL for delgeation of user purchases
-    Type: String
 Resources:
   MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
@@ -196,7 +193,7 @@ Resources:
   IosValidateReceiptsLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: com.gu.mobilepurchases.lambda.DelegatingValidateReceiptLambda::handleRequest
+      Handler: com.gu.mobilepurchases.lambda.ValidateReceiptLambda::handleRequest
       Runtime: java8
       CodeUri:
         Bucket: !Ref DeployBucket
@@ -222,7 +219,7 @@ Resources:
   IosUserPurchasesLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: com.gu.mobilepurchases.userpurchases.lambda.DelegateUserPurchasesLambda::handleRequest
+      Handler: com.gu.mobilepurchases.userpurchases.lambda.UserPurchasesLambda::handleRequest
       Runtime: java8
       CodeUri:
         Bucket: !Ref DeployBucket
@@ -234,7 +231,6 @@ Resources:
           Stage: !Ref Stage
           Stack: !Ref Stack
           App: !Ref App
-          insecureuserpurchasesurl: !Ref UserPurchasesDelegateUrl
       Description: Gets user purchases
       MemorySize: 448
       Timeout: 45

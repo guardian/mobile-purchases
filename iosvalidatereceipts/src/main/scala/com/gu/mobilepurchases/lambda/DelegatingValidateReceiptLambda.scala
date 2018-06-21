@@ -1,3 +1,0 @@
-package com.gu.mobilepurchases.lambda
-
-class DelegatingValidateReceiptLambda extends ValidateReceiptLambda
