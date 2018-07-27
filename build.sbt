@@ -5,44 +5,9 @@ import scalariform.formatter.preferences._
 import scala.collection.immutable
 
 val testAndCompileDependencies: String = "test->test;compile->compile"
-val simpleConfigurationVersion: String = "1.4.3"
 val awsVersion: String = "1.11.375"
-val specsVersion: String = "4.0.3"
-val log4j2Version: String = "2.11.0"
-val jacksonVersion: String = "2.9.6"
-val byteBuddyVersion = "1.8.8"
-val upgradeIosvalidatereceiptsLibs = List(
-  "com.amazonaws" % "aws-java-sdk-ssm" % awsVersion,
-)
-val upgradeLibs = Seq(
-  "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
-  "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
-  "com.amazonaws" % "aws-java-sdk-core" % awsVersion,
-  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion,
+val simpleConfigurationVersion: String = "1.4.3"
 
-)
-val depOverrides = List(
-  "com.github.mpilquist" %% "simulacrum" % "0.12.0",
-  "commons-codec" % "commons-codec" % "1.11",
-  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion,
-  "joda-time" % "joda-time" % "2.9.9" exclude("javax.jms", "jms"),
-  "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
-  "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
-  "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
-  "org.slf4j" % "slf4j-api" % "1.7.25",
-  "commons-logging" % "commons-logging" % "1.2",
-  "net.bytebuddy" % "byte-buddy" % byteBuddyVersion,
-  "net.bytebuddy" % "byte-buddy-agent" % byteBuddyVersion,
-  "org.objenesis" % "objenesis" % "2.6",
-  "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
-  "org.typelevel" %% "cats-core" % "1.1.0",
-  "org.typelevel" %% "cats-free" % "1.1.0",
-  "org.typelevel" %% "cats-kernel" % "1.1.0",
-  "org.typelevel" %% "cats-macros" % "1.1.0",
-  "org.typelevel" %% "machinist" % "0.6.4",
-  "software.amazon.ion" % "ion-java" % "1.1.2"
-)
-//dependencyOverrides ++= depOverrides
 lazy val commonlambda = project.disablePlugins(AssemblyPlugin).settings(commonSettings("commonlambda"))
 
 lazy val userpurchasepersistence = project.disablePlugins(AssemblyPlugin)
@@ -50,19 +15,23 @@ lazy val userpurchasepersistence = project.disablePlugins(AssemblyPlugin)
   .dependsOn(commonlambda % testAndCompileDependencies)
 
 
-lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings(List(
-  libraryDependencies ++= List(
-    "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
-    "com.squareup.okhttp3" % "okhttp" % "3.10.0"
-  ),
-  libraryDependencies ++= upgradeIosvalidatereceiptsLibs
-) ++ commonAssemblySettings("iosvalidatereceipts"))
+lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings({
+  // these libs exist to fix reduce conflict risks or raise dependencies to an acceptable version for security reasons
+  val upgradeIosvalidatereceiptsLibs = List(
+    "com.amazonaws" % "aws-java-sdk-ssm" % awsVersion,
+  )
+  List(
+    libraryDependencies ++= List(
+      "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
+      "com.squareup.okhttp3" % "okhttp" % "3.10.0"
+    ),
+    libraryDependencies ++= upgradeIosvalidatereceiptsLibs
+  ) ++ commonAssemblySettings("iosvalidatereceipts")
+})
   .dependsOn(userpurchasepersistence % testAndCompileDependencies)
 
 lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("iosuserpurchases"))
   .dependsOn(userpurchasepersistence % testAndCompileDependencies)
-
-
 
 lazy val root = project.enablePlugins(RiffRaffArtifact).in(file(".")).aggregate(commonlambda, userpurchasepersistence, iosvalidatereceipts, iosuserpurchases)
   .settings(
@@ -91,6 +60,17 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
   assemblyJarName := s"${name.value}.jar"
 )
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
+  val specsVersion: String = "4.0.3"
+  val log4j2Version: String = "2.11.0"
+  val jacksonVersion: String = "2.9.6"
+  // these libs exist to fix reduce conflict risks or raise dependencies to an acceptable version for security reasons
+  val upgradeLibs = Seq(
+    "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
+    "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
+    "com.amazonaws" % "aws-java-sdk-core" % awsVersion,
+    "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion,
+    "org.apache.logging.log4j" % "log4j-api" % log4j2Version,
+  )
   List(
     scalariformPreferences := scalariformPreferences.value
       .setPreference(AlignSingleLineCaseStatements, true)
@@ -104,7 +84,6 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
       "com.amazonaws" % "aws-lambda-java-log4j2" % "1.1.0",
       "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
-      "org.apache.logging.log4j" % "log4j-api" % log4j2Version,
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
       "com.gu" %% "scanamo" % "1.0.0-M6",
@@ -114,7 +93,6 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]]  = {
       "org.specs2" %% "specs2-mock" % specsVersion % "test"
     ),
     libraryDependencies ++= upgradeLibs,
-//    dependencyOverrides ++= depOverrides,
     name := s"mobile-purchases-$module",
     organization := "com.gu",
     description := "Validate Receipts",
