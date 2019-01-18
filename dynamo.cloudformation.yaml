@@ -39,4 +39,11 @@ Resources:
       TimeToLiveSpecification:
         Enabled: true
         AttributeName: 'ttl'
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
 
