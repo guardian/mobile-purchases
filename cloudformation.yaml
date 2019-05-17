@@ -132,6 +132,18 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
+          "/googlepubsub":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePubSubLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                "200":
+                  "description": "200 response"
           "/healthcheck":
             get:
               responses:
@@ -189,6 +201,40 @@ Resources:
       DomainName: !Ref AppDomainName
       RestApiId: !Ref MobilePuchasesApi
       Stage: !Ref Stage
+
+
+  GooglePubSubLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: com.gu.mobilepurchases.gpubsub.Lambda::handleRequest
+      Runtime: java8
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-iosvalidatereceipts/${App}-googlepubsub.jar
+      FunctionName: !Sub ${App}-googlepubsub-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Sub ${App}
+      Description: Records play store events
+      MemorySize: 448
+      Timeout: 45
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/googlepubsub"
+            Method: POST
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
 
   IosValidateReceiptsLambda:
     Type: AWS::Serverless::Function
