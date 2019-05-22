@@ -1,3 +1,5 @@
 import { handler } from "./pubsub";
 
-handler({queryStringParameters: {secret: "MYSECRET"}, body: "body" });
+let result = handler({queryStringParameters: {secret: "MYSECRET"}, body: "body" });
+
+result.then(JSON.stringify).then(console.log);

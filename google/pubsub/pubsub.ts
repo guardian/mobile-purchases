@@ -27,7 +27,7 @@ class HTTPResponse {
     }
 }
 
-export function handler(request: HTTPRequest): HTTPResponse {
+export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
     if (request.queryStringParameters.secret === secret) {
         return new HTTPResponse(200, new HTTPHeaders(), "OK")
     } else {
