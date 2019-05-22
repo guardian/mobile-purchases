@@ -23,5 +23,5 @@ deployments:
     parameters:
       bucket: mobile-dist
       functionNames: [mobile-purchases-googlepubsub-]
-      fileName: mobile-purchases-googlepubsub.jar
+      fileName: mobile-purchases-google.zip
       prefixStack: false

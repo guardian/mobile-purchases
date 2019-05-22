@@ -19,4 +19,4 @@ pushd target
 yarn install --production
 popd
 
-zip target/google.zip target/google/*.js
+zip target/mobile-purchases-google.zip target/google/*.js
