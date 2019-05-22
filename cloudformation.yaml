@@ -218,6 +218,7 @@ Resources:
           Stage: !Ref Stage
           Stack: !Ref Stack
           App: !Sub ${App}
+          Secret: !Sub "{{resolve:ssm-secure:/purchases/${Stage}/google.pubsub.secret}}"
       Description: Records play store events
       MemorySize: 128
       Timeout: 45
