@@ -1,12 +1,37 @@
 
-
 const secret = process.env.Secret;
 
-export function handler(request: any) {
-    console.log("hello world");
-    console.log(request.body);
+interface QueryParameters {
+    secret: string
+}
+
+interface HTTPRequest {
+    body: string
+    queryStringParameters: QueryParameters
+}
+
+class HTTPHeaders {
+    "Content-Type": string = "application/json";
+    constructor() {}
+}
+
+class HTTPResponse {
+    statusCode: number;
+    headers: HTTPHeaders;
+    body: string;
+
+    constructor(statusCode: number, headers: HTTPHeaders, body: string) {
+        this.statusCode = statusCode;
+        this.headers = headers;
+        this.body = body;
+    }
+}
+
+export function handler(request: HTTPRequest): HTTPResponse {
     if (request.queryStringParameters.secret === secret) {
-        console.log("Correct")
+        return new HTTPResponse(200, new HTTPHeaders(), "OK")
+    } else {
+        return new HTTPResponse(500, new HTTPHeaders(), "Server Error")
     }
 }
 
