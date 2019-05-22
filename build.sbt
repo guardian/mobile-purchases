@@ -32,14 +32,9 @@ lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings({
 lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("iosuserpurchases"))
   .dependsOn(userpurchasepersistence % testAndCompileDependencies)
 
-lazy val googlepubsub = project
-  .dependsOn(commonlambda)
-  .enablePlugins(AssemblyPlugin)
-  .settings(commonAssemblySettings("googlepubsub"))
-
 lazy val root = project
   .enablePlugins(RiffRaffArtifact).in(file("."))
-  .aggregate(commonlambda, userpurchasepersistence, iosvalidatereceipts, iosuserpurchases, googlepubsub)
+  .aggregate(commonlambda, userpurchasepersistence, iosvalidatereceipts, iosuserpurchases)
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     scalaVersion := "2.12.5",
@@ -87,7 +82,6 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.6",
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
-      "com.amazonaws" % "aws-lambda-java-events" % "2.2.6",
       "com.amazonaws" % "aws-lambda-java-log4j2" % "1.1.0",
       "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
