@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "IOS receipt validation and purchase persistence",
   "scripts": {
-    "clean": "rm -r target",
+    "clean": "rm -r tsc-target",
     "build": "tsc",
-    "test": "jest",
-    "package": "ARTEFACT_PATH=$PWD/target VERBOSE=true riffraff-artefact"
+    "test": "jest"
   },
   "repository": {
     "type": "git",

@@ -3,7 +3,7 @@ set -e
 
 npm install -g yarn
 
-mkdir -p target
+mkdir -p tsc-target
 
 yarn install
 # Will place .js files in target
@@ -12,11 +12,11 @@ yarn run build
 
 #yarn run test
 
-cp package.json target/
+cp package.json tsc-target/
 
-pushd target
+pushd tsc-target
 # Ensures the RiffRaff package has the node_modules needed to run
 yarn install --production
 popd
 
-zip target/mobile-purchases-google.zip target/google/*.js
+zip tsc-target/mobile-purchases-google.zip tsc-target/google/*.js
