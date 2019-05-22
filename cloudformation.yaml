@@ -32,6 +32,9 @@ Parameters:
   AppDNS:
     Description: DNS used by app
     Type: String
+  GooglePubSubSecret:
+    Type: String
+    Description: The secret used by google's pubsub
 Resources:
   MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
@@ -217,8 +220,8 @@ Resources:
         Variables:
           Stage: !Ref Stage
           Stack: !Ref Stack
-          App: !Sub ${App}
-          Secret: !Sub "{{resolve:ssm-secure:/mobile-purchases-googlepubsub/${Stage}/mobile/google.pubsub.secret:1}}"
+          App: !Ref App
+          Secret: !Ref GooglePubSubSecret
       Description: Records play store events
       MemorySize: 128
       Timeout: 45
@@ -248,7 +251,7 @@ Resources:
         Variables:
           Stage: !Ref Stage
           Stack: !Ref Stack
-          App: !Sub ${App}
+          App: !Ref App
       Description: Validates purchases
       MemorySize: 448
       Timeout: 45
