@@ -34,7 +34,7 @@ lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).settings(commo
 
 lazy val root = project
   .enablePlugins(RiffRaffArtifact).in(file("."))
-  .aggregate(commonlambda, userpurchasepersistence, iosvalidatereceipts, iosuserpurchases)
+  .aggregate()
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     scalaVersion := "2.12.5",
