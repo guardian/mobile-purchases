@@ -2,8 +2,14 @@ stacks: [mobile]
 regions: [eu-west-1]
 
 deployments:
+  mobile-purchases-cloudformation:
+    type: cloud-formation
+    parameters:
+      templatePath: cloudformation.yaml
+
   mobile-purchases-iosvalidatereceipts:
     type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
     parameters:
       bucket: mobile-dist
       functionNames: [mobile-purchases-iosvalidatereceipts-]
@@ -12,6 +18,7 @@ deployments:
 
   mobile-purchases-iosuserpurchases:
     type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
     parameters:
       bucket: mobile-dist
       functionNames: [mobile-purchases-iosuserpurchases-]
@@ -20,6 +27,7 @@ deployments:
 
   mobile-purchases-googlepubsub:
     type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
     parameters:
       bucket: mobile-dist
       functionNames: [mobile-purchases-googlepubsub-]

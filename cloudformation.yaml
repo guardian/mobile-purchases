@@ -132,7 +132,7 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-          "/googlepubsub":
+          "/google/pubsub":
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -206,11 +206,11 @@ Resources:
   GooglePubSubLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: com.gu.mobilepurchases.gpubsub.Lambda::handleRequest
-      Runtime: java8
+      Handler: handler
+      Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-iosvalidatereceipts/${App}-googlepubsub.jar
+        Key: !Sub ${Stack}/${Stage}/${App}-googlepubsub/${App}-google.zip
       FunctionName: !Sub ${App}-googlepubsub-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
@@ -219,22 +219,19 @@ Resources:
           Stack: !Ref Stack
           App: !Sub ${App}
       Description: Records play store events
-      MemorySize: 448
+      MemorySize: 128
       Timeout: 45
       Events:
         PostApi:
           Type: Api
           Properties:
-            Path: "/googlepubsub"
+            Path: "/google/pubsub"
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
 
   IosValidateReceiptsLambda:
     Type: AWS::Serverless::Function
@@ -262,12 +259,9 @@ Resources:
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
 
   IosUserPurchasesLambda:
     Type: AWS::Serverless::Function
@@ -295,9 +289,6 @@ Resources:
             Method: GET
             RestApiId: !Ref MobilePuchasesApi
       Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
