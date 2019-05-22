@@ -206,7 +206,7 @@ Resources:
   GooglePubSubLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: handler
+      Handler: pubsub.handler
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
