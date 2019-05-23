@@ -32,6 +32,9 @@ Parameters:
   AppDNS:
     Description: DNS used by app
     Type: String
+  GooglePubSubSecret:
+    Type: String
+    Description: The secret used by google's pubsub
 Resources:
   MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
@@ -132,6 +135,18 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
+          "/google/pubsub":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePubSubLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                "200":
+                  "description": "200 response"
           "/healthcheck":
             get:
               responses:
@@ -190,6 +205,38 @@ Resources:
       RestApiId: !Ref MobilePuchasesApi
       Stage: !Ref Stage
 
+
+  GooglePubSubLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: pubsub.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-googlepubsub/${App}-google.zip
+      FunctionName: !Sub ${App}-googlepubsub-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+          Secret: !Ref GooglePubSubSecret
+      Description: Records play store events
+      MemorySize: 128
+      Timeout: 45
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/google/pubsub"
+            Method: POST
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
   IosValidateReceiptsLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -204,7 +251,7 @@ Resources:
         Variables:
           Stage: !Ref Stage
           Stack: !Ref Stack
-          App: !Sub ${App}
+          App: !Ref App
       Description: Validates purchases
       MemorySize: 448
       Timeout: 45
@@ -216,12 +263,9 @@ Resources:
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
 
   IosUserPurchasesLambda:
     Type: AWS::Serverless::Function
@@ -249,9 +293,6 @@ Resources:
             Method: GET
             RestApiId: !Ref MobilePuchasesApi
       Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App

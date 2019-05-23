@@ -1,0 +1,26 @@
+{
+  "name": "mobile-purchases",
+  "version": "1.0.0",
+  "description": "IOS receipt validation and purchase persistence",
+  "scripts": {
+    "clean": "rm -r tsc-target",
+    "build": "tsc",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardian/mobile-purchases.git"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/guardian/mobile-purchases/issues"
+  },
+  "homepage": "https://github.com/guardian/mobile-purchases#readme",
+  "devDependencies": {
+    "jest": "^24.8.0",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "@types/node": "^12.0.2"
+  }
+}
