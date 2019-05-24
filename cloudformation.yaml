@@ -231,9 +231,10 @@ Resources:
       MemorySize: 512
       Timeout: 45
       Events:
-        Type: Schedule
-        Properties:
-          Schedule: rate(15 minutes)
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
       Tags:
         Stage: !Ref Stage
         Stack: !Ref Stack
