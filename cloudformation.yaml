@@ -121,12 +121,9 @@ Resources:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IosValidateReceiptsLambda.Arn}/invocations
-              consumes:
-              - application/json
-              produces:
-              - application/json
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IosValidateReceiptsLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
               responses:
                 "200":
                   "description": "200 response"
@@ -135,10 +132,8 @@ Resources:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IosUserPurchasesLambda.Arn}/invocations
-              produces:
-              - application/json
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IosUserPurchasesLambda.Arn}/invocations
+              produces: [ application/json ]
               responses:
                 "200":
                   "description": "200 response"
@@ -147,10 +142,9 @@ Resources:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePubSubLambda.Arn}/invocations
-              produces:
-                - application/json
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePubSubLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
               responses:
                 "200":
                   "description": "200 response"
