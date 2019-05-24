@@ -32,11 +32,14 @@ lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings({
 lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("iosuserpurchases"))
   .dependsOn(userpurchasepersistence % testAndCompileDependencies)
 
-lazy val googleoauth = project.disablePlugins(AssemblyPlugin)
-  .settings(libraryDependencies ++= List(
+lazy val googleoauth = project.enablePlugins(AssemblyPlugin)
+  .settings(
+    commonAssemblySettings("googleoauth"),
+    libraryDependencies ++= List(
     "com.google.auth" % "google-auth-library-oauth2-http" % "0.15.0",
     "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion
-  ))
+    )
+  )
   .dependsOn(commonlambda % testAndCompileDependencies)
 
 lazy val root = project
