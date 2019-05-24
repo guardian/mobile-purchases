@@ -32,9 +32,16 @@ lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings({
 lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("iosuserpurchases"))
   .dependsOn(userpurchasepersistence % testAndCompileDependencies)
 
+lazy val googleoauth = project.disablePlugins(AssemblyPlugin)
+  .settings(libraryDependencies ++= List(
+    "com.google.auth" % "google-auth-library-oauth2-http" % "0.15.0",
+    "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion
+  ))
+  .dependsOn(commonlambda % testAndCompileDependencies)
+
 lazy val root = project
   .enablePlugins(RiffRaffArtifact).in(file("."))
-  .aggregate(commonlambda, userpurchasepersistence, iosvalidatereceipts, iosuserpurchases)
+  .aggregate(commonlambda, userpurchasepersistence, iosvalidatereceipts, iosuserpurchases, googleoauth)
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     scalaVersion := "2.12.5",
@@ -46,6 +53,7 @@ lazy val root = project
     riffRaffManifestProjectName := s"Mobile::${name.value}",
     riffRaffArtifactResources += (assembly in iosvalidatereceipts).value -> s"${(name in iosvalidatereceipts).value}/${(assembly in iosvalidatereceipts).value.getName}",
     riffRaffArtifactResources += (assembly in iosuserpurchases).value -> s"${(name in iosuserpurchases).value}/${(assembly in iosuserpurchases).value.getName}",
+    riffRaffArtifactResources += (assembly in googleoauth).value -> s"${(name in googleoauth).value}/${(assembly in googleoauth).value.getName}",
     riffRaffArtifactResources += file("tsc-target/mobile-purchases-google.zip") -> s"mobile-purchases-googlepubsub/mobile-purchases-google.zip",
     riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",
   )
