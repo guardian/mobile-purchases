@@ -1,3 +1,5 @@
+package com.gu.mobilepurchases.googleoauth.lambda
+
 import java.io.{ ByteArrayInputStream, InputStream, OutputStream }
 
 import com.amazonaws.services.lambda.runtime.Context
