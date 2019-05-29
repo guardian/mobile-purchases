@@ -234,7 +234,7 @@ Resources:
   GooglePlaySubStatusLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: pubsub.handler
+      Handler: playsubstatus.handler
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
