@@ -144,7 +144,7 @@ Resources:
           "/google/subscription/{subscriptionId}/status/{purchaseToken}":
             get:
               x-amazon-apigateway-integration:
-                httpMethod: GET
+                httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePlaySubStatusLambda.Arn}/invocations
               consumes: [ application/json ]
