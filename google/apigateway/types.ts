@@ -8,7 +8,7 @@ export interface PathParameters {
 }
 
 export interface HTTPRequest {
-    body: string
+    body?: string
     queryStringParameters?: QueryParameters
     pathParameters?: PathParameters
 }
