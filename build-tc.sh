@@ -20,4 +20,4 @@ yarn install --production
 popd
 
 cd tsc-target/google
-zip ../mobile-purchases-google.zip *.js
+zip -r ../mobile-purchases-google.zip . -i *.js
