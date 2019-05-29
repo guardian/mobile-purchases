@@ -10,6 +10,7 @@ interface GoogleResponseBody {
 export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
 
     if (request.pathParameters) {
+        console.log(`Path parameters are: ${request.pathParameters.subscriptionId} | ${request.pathParameters.purchaseToken}`);
         const url = `https://www.googleapis.com/androidpublisher/v3/applications/com.guardian/purchases/subscriptions/${request.pathParameters.subscriptionId}/tokens/${request.pathParameters.purchaseToken}`;
         const restClient = new restm.RestClient('guardian-mobile-purchases');
         return restClient.get<GoogleResponseBody>(url, { additionalHeaders: { Authorization: `Bearer ${access_token}`}})
