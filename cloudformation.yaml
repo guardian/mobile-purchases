@@ -141,6 +141,17 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
+          "/google/subscription/{subscriptionId}/status/{purchaseToken}":
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: GET
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePlaySubStatusLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
           "/healthcheck":
             get:
               responses:
