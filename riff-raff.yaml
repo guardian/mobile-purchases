@@ -25,11 +25,13 @@ deployments:
       fileName: mobile-purchases-iosuserpurchases.jar
       prefixStack: false
 
-  mobile-purchases-googlepubsub:
+  mobile-purchases-google:
     type: aws-lambda
     dependencies: [mobile-purchases-cloudformation]
     parameters:
       bucket: mobile-dist
-      functionNames: [mobile-purchases-googlepubsub-]
+      functionNames:
+        - mobile-purchases-googlepubsub-
+        - mobile-purchases-googleplaysubstatus-
       fileName: mobile-purchases-google.zip
       prefixStack: false
