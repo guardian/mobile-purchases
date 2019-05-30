@@ -1,5 +1,5 @@
 import * as restm from 'typed-rest-client/RestClient';
-import {HTTPResponseHeaders, HTTPRequest, HTTPResponse} from '../apigateway/types';
+import {HTTPResponseHeaders, HTTPRequest, HTTPResponse} from '../models/apiGatewayHttp';
 
 const access_token = process.env.AccessToken;
 

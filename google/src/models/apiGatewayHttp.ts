@@ -1,13 +1,13 @@
 export interface QueryParameters {
-    secret: string
+    [key: string]: string
 }
 
 export interface PathParameters {
-    subscriptionId: string
+    [key: string]: string
 }
 
 export interface HttpRequestHeaders {
-    "Play-Purchase-Token"?: string
+    [key: string]: string
 }
 
 export interface HTTPRequest {
@@ -33,3 +33,10 @@ export class HTTPResponse {
         this.body = body;
     }
 }
+
+export const HTTPResponses = {
+    OK: new HTTPResponse(200, new HTTPResponseHeaders(), "{\"status\": 200, \"message\": \"OK\"}"),
+    INVALID_REQUEST: new HTTPResponse(400, new HTTPResponseHeaders(), "{\"status\": 400, \"message\": \"INVALID_REQUEST\"}"),
+    UNAUTHORISED: new HTTPResponse(401, new HTTPResponseHeaders(), "{\"status\": 401, \"message\": \"UNAUTHORISED\"}"),
+    INTERNAL_ERROR: new HTTPResponse(500, new HTTPResponseHeaders(), "{\"status\": 500, \"message\": \"INTERNAL SERVER ERROR\"}")
+};
