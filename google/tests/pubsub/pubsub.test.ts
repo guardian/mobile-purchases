@@ -1,5 +1,5 @@
-import { handler } from "../src/pubsub/pubsub";
-import {HTTPResponse, HTTPResponseHeaders} from "../src/apigateway/types";
+import { handler } from "../../src/pubsub/pubsub";
+import {HTTPResponse, HTTPResponseHeaders} from "../../src/apigateway/types";
 
 test("Should return HTTP 200", () => {
     process.env['Secret'] = "MYSECRET";
