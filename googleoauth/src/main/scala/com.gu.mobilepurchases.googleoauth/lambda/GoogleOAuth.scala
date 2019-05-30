@@ -17,17 +17,22 @@ object GoogleOAuth {
 
   val logger = LogManager.getLogger
 
-  def accessToken(): Unit = for {
-    tokenAttempt <- refreshToken
-    uploadAttempt <- Try(S3Uploader.uploadTokenToS3(tokenAttempt))
-  } yield {
-    uploadAttempt match {
-      case Success(_) => logger.info("Successfully refreshed and uploaded a new token")
+  def accessToken(): Unit = {
+
+    val attempt = for {
+      tokenAttempt <- refreshToken
+      uploadAttempt <- S3Uploader.uploadTokenToS3(tokenAttempt)
+    } yield uploadAttempt
+
+    attempt match {
+      case Success(_) =>
+        logger.info("Successfully refreshed and uploaded a new token")
       case Failure(error) => {
         logger.error(s"Failed to refresh or upload a new token due to: $error")
         throw error
       }
     }
+
   }
 
   def refreshToken: Try[AccessToken] = Try {
