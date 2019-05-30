@@ -10,7 +10,7 @@ yarn install
 yarn run clean
 yarn run build
 
-#yarn run test
+yarn run test
 
 cp package.json tsc-target/
 
