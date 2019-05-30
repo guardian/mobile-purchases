@@ -10,6 +10,8 @@ import com.gu.{ AppIdentity, AwsIdentity }
 import com.typesafe.config.Config
 import org.apache.logging.log4j.LogManager
 
+import scala.util.{ Failure, Success, Try }
+
 object GoogleOAuth {
 
   def accessToken(): Unit = {
@@ -24,7 +26,10 @@ object GoogleOAuth {
 
     logger.info(s"Token will expire at ${credentials.getAccessToken().getExpirationTime}")
 
-    S3Uploader.uploadTokenToS3(credentials.getAccessToken)
+    Try(S3Uploader.uploadTokenToS3(credentials.getAccessToken)) match {
+      case Success(_)     => logger.info("Successfully uploaded new token to S3")
+      case Failure(error) => logger.error(s"Failed to upload a new token to S3 due to $error")
+    }
 
   }
 
