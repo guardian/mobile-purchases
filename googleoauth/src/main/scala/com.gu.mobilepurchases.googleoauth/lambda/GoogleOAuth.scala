@@ -4,6 +4,7 @@ import java.io.{ ByteArrayInputStream, InputStream, OutputStream }
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.model.PutObjectResult
 import com.google.auth.oauth2.{ AccessToken, GoogleCredentials }
 import com.gu.conf.{ ConfigurationLoader, SSMConfigurationLocation }
 import com.gu.{ AppIdentity, AwsIdentity }
@@ -14,23 +15,27 @@ import scala.util.{ Failure, Success, Try }
 
 object GoogleOAuth {
 
-  def accessToken(): Unit = {
+  val logger = LogManager.getLogger
 
-    val logger = LogManager.getLogger
+  def accessToken(): Unit = for {
+    tokenAttempt <- refreshToken
+    uploadAttempt <- Try(S3Uploader.uploadTokenToS3(tokenAttempt))
+  } yield {
+    uploadAttempt match {
+      case Success(_) => logger.info("Successfully refreshed and uploaded a new token")
+      case Failure(error) => {
+        logger.error(s"Failed to refresh or upload a new token due to: $error")
+        throw error
+      }
+    }
+  }
 
+  def refreshToken: Try[AccessToken] = Try {
     val credentials = GoogleCredentials
       .fromStream(new ByteArrayInputStream(fetchConfiguration.getString("google.serviceAccountJson").getBytes))
       .createScoped("https://www.googleapis.com/auth/androidpublisher")
-
-    credentials.refresh
-
-    logger.info(s"Token will expire at ${credentials.getAccessToken().getExpirationTime}")
-
-    Try(S3Uploader.uploadTokenToS3(credentials.getAccessToken)) match {
-      case Success(_)     => logger.info("Successfully uploaded new token to S3")
-      case Failure(error) => logger.error(s"Failed to upload a new token to S3 due to $error")
-    }
-
+    credentials.refresh()
+    credentials.getAccessToken
   }
 
   def fetchConfiguration(): Config = {
@@ -52,11 +57,13 @@ object S3Uploader {
 
   def accessTokenAsJsonString(accessToken: AccessToken): String = s"""{"token":"${accessToken.getTokenValue}","expiry":"${accessToken.getExpirationTime}"}"""
 
-  def uploadTokenToS3(accessToken: AccessToken): Unit = s3Client.putObject(
-    "gu-mobile-access-tokens",
-    s"${System.getenv("Stage")}/google-play-developer-api/access_token.json",
-    accessTokenAsJsonString(accessToken)
-  )
+  def uploadTokenToS3(accessToken: AccessToken): Try[PutObjectResult] = Try {
+    s3Client.putObject(
+      "gu-mobile-access-tokens",
+      s"${System.getenv("Stage")}/google-play-developer-api/access_token.json",
+      accessTokenAsJsonString(accessToken)
+    )
+  }
 
 }
 
