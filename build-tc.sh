@@ -10,7 +10,7 @@ yarn install
 yarn run clean
 yarn run build
 
-#yarn run test
+yarn run test
 
 cp package.json tsc-target/
 
@@ -19,5 +19,5 @@ pushd tsc-target
 yarn install --production
 popd
 
-cd tsc-target
-zip -r mobile-purchases-google.zip . -i *.js
+cd tsc-target/google/src
+zip -r ../../mobile-purchases-google.zip . -i *.js
