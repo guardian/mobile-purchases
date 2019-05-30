@@ -3,12 +3,11 @@ export interface QueryParameters {
 }
 
 export interface PathParameters {
-    subscriptionId: string,
-    purchaseToken: string
+    subscriptionId: string
 }
 
 export interface HttpRequestHeaders {
-    "Play-Purchase-Token": string
+    "Play-Purchase-Token"?: string
 }
 
 export interface HTTPRequest {
