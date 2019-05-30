@@ -79,6 +79,13 @@ Resources:
                 - ssm:GetParametersByPath
               Effect: Allow
               Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}-iosvalidatereceipts/${Stage}/${Stack}
+        - PolicyName: googleoauth-config
+          PolicyDocument:
+            Statement:
+              Action:
+                - ssm:GetParametersByPath
+              Effect: Allow
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/google-oauth-lambda
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
@@ -210,6 +217,33 @@ Resources:
       RestApiId: !Ref MobilePuchasesApi
       Stage: !Ref Stage
 
+  GoogleOAuthLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: com.gu.mobilepurchases.googleoauth.lambda.GoogleOAuth::handler
+      Runtime: java8
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-googleoauth/${App}-googleoauth.jar
+      FunctionName: !Sub ${App}-googleoauth-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+      Description: Fetches access tokens for the Google Play Developer API
+      MemorySize: 512
+      Timeout: 45
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
 
   GooglePubSubLambda:
     Type: AWS::Serverless::Function
