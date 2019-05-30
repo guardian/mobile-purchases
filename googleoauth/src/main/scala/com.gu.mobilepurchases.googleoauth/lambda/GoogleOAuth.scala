@@ -3,7 +3,8 @@ package com.gu.mobilepurchases.googleoauth.lambda
 import java.io.{ ByteArrayInputStream, InputStream, OutputStream }
 
 import com.amazonaws.services.lambda.runtime.Context
-import com.google.auth.oauth2.GoogleCredentials
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.google.auth.oauth2.{ AccessToken, GoogleCredentials }
 import com.gu.conf.{ ConfigurationLoader, SSMConfigurationLocation }
 import com.gu.{ AppIdentity, AwsIdentity }
 import com.typesafe.config.Config
@@ -23,6 +24,8 @@ object GoogleOAuth {
 
     logger.info(s"Token will expire at ${credentials.getAccessToken().getExpirationTime}")
 
+    S3Uploader.uploadTokenToS3(credentials.getAccessToken)
+
   }
 
   def fetchConfiguration(): Config = {
@@ -35,6 +38,20 @@ object GoogleOAuth {
   def handler(input: InputStream, output: OutputStream, context: Context): Unit = {
     accessToken()
   }
+
+}
+
+object S3Uploader {
+
+  val s3Client = AmazonS3ClientBuilder.defaultClient()
+
+  def accessTokenAsJsonString(accessToken: AccessToken): String = s"""{"token":"${accessToken.getTokenValue}","expiry":"${accessToken.getExpirationTime}"}"""
+
+  def uploadTokenToS3(accessToken: AccessToken): Unit = s3Client.putObject(
+    "gu-mobile-access-tokens",
+    s"${System.getenv("Stage")}/google-play-developer-api/access_token.json",
+    accessTokenAsJsonString(accessToken)
+  )
 
 }
 
