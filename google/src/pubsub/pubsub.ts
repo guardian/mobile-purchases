@@ -8,6 +8,20 @@ import {Region} from "../utils/appIdentity";
 
 const ONE_YEAR_IN_SECONDS = 31557600;
 
+const GOOGLE_SUBS_EVENT_TYPE: {[_: number]: string} = {
+    1: "SUBSCRIPTION_RECOVERED",
+    2: "SUBSCRIPTION_RENEWED",
+    3: "SUBSCRIPTION_CANCELED",
+    4: "SUBSCRIPTION_PURCHASED",
+    5: "SUBSCRIPTION_ON_HOLD",
+    6: "SUBSCRIPTION_IN_GRACE_PERIOD",
+    7: "SUBSCRIPTION_RESTARTED",
+    8: "SUBSCRIPTION_PRICE_CHANGE_CONFIRMED",
+    9: "SUBSCRIPTION_DEFERRED",
+    12: "SUBSCRIPTION_REVOKED",
+    13: "SUBSCRIPTION_EXPIRED"
+};
+
 const credentialProvider = new CredentialProviderChain([
     function () { return new ECSCredentials(); },
     function () { return new SharedIniFileCredentials({
@@ -44,12 +58,13 @@ async function catchingServerErrors(block: () => Promise<HTTPResponse>): Promise
 
 function toDynamoSubscriptionEvent(notification: DeveloperNotification): SubscriptionEvent {
     const eventTimestamp = new Date(Number.parseInt(notification.eventTimeMillis)).toISOString();
-    const eventType = notification.subscriptionNotification.notificationType.toString(); // TODO define a Guardian Enum for all the possible events
+    const eventType = notification.subscriptionNotification.notificationType;
+    const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] || eventType.toString();
     return new SubscriptionEvent(
         notification.subscriptionNotification.purchaseToken,
         eventTimestamp + "|" + eventType,
         eventTimestamp,
-        eventType,
+        eventTypeString,
         "android",
         notification,
         null,

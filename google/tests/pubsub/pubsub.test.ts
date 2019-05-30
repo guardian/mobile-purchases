@@ -28,7 +28,7 @@ test("Should return HTTP 200 and store the correct data in dynamo", () => {
         "PURCHASE_TOKEN",
         "2017-08-21T21:06:06.168Z|4",
         "2017-08-21T21:06:06.168Z",
-        "4",
+        "SUBSCRIPTION_PURCHASED",
         "android",
         {
             eventTimeMillis: "1503349566168",
