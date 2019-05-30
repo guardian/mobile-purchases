@@ -86,6 +86,14 @@ Resources:
                 - ssm:GetParametersByPath
               Effect: Allow
               Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/google-oauth-lambda
+        - PolicyName: google-access-tokens
+          PolicyDocument:
+            Statement:
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+              Effect: Allow
+              Resource: !Sub arn:aws:s3:::gu-mobile-access-tokens/${Stage}/google-play-developer-api/*
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
