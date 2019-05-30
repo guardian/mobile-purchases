@@ -148,6 +148,17 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
+          "/google/subscription/{subscriptionId}/status":
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePlaySubStatusLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
           "/healthcheck":
             get:
               responses:
@@ -237,7 +248,7 @@ Resources:
   GooglePubSubLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: pubsub.handler
+      Handler: google/pubsub/pubsub.handler
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
@@ -259,6 +270,36 @@ Resources:
           Properties:
             Path: "/google/pubsub"
             Method: POST
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  GooglePlaySubStatusLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: google/playsubstatus/playsubstatus.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-googlepubsub/${App}-google.zip
+      FunctionName: !Sub ${App}-googleplaysubstatus-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+      Description: Checks the status of a Play Store subscription using the Google Play Developer API
+      MemorySize: 128
+      Timeout: 45
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/google/subscription/{subscriptionId}/status"
+            Method: GET
             RestApiId: !Ref MobilePuchasesApi
       Tags:
         Stage: !Ref Stage

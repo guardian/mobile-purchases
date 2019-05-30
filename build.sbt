@@ -57,7 +57,7 @@ lazy val root = project
     riffRaffArtifactResources += (assembly in iosvalidatereceipts).value -> s"${(name in iosvalidatereceipts).value}/${(assembly in iosvalidatereceipts).value.getName}",
     riffRaffArtifactResources += (assembly in iosuserpurchases).value -> s"${(name in iosuserpurchases).value}/${(assembly in iosuserpurchases).value.getName}",
     riffRaffArtifactResources += (assembly in googleoauth).value -> s"${(name in googleoauth).value}/${(assembly in googleoauth).value.getName}",
-    riffRaffArtifactResources += file("tsc-target/mobile-purchases-google.zip") -> s"mobile-purchases-googlepubsub/mobile-purchases-google.zip",
+    riffRaffArtifactResources += file("tsc-target/mobile-purchases-google.zip") -> s"mobile-purchases-google/mobile-purchases-google.zip",
     riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",
   )
 
