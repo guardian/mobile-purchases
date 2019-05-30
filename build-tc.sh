@@ -6,6 +6,7 @@ npm install -g yarn
 mkdir -p tsc-target
 
 yarn install
+# Will place .js files in target
 yarn run clean
 
 # Will place .js files in tsc-target
