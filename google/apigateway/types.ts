@@ -7,23 +7,28 @@ export interface PathParameters {
     purchaseToken: string
 }
 
-export interface HTTPRequest {
-    body?: string
-    queryStringParameters?: QueryParameters
-    pathParameters?: PathParameters
+export interface HttpRequestHeaders {
+    "Play-Purchase-Token": string
 }
 
-export class HTTPHeaders {
+export interface HTTPRequest {
+    headers?: HttpRequestHeaders
+    queryStringParameters?: QueryParameters
+    pathParameters?: PathParameters
+    body?: string
+}
+
+export class HTTPResponseHeaders {
     "Content-Type": string = "application/json";
     constructor() {}
 }
 
 export class HTTPResponse {
     statusCode: number;
-    headers: HTTPHeaders;
+    headers: HTTPResponseHeaders;
     body: string;
 
-    constructor(statusCode: number, headers: HTTPHeaders, body: string) {
+    constructor(statusCode: number, headers: HTTPResponseHeaders, body: string) {
         this.statusCode = statusCode;
         this.headers = headers;
         this.body = body;

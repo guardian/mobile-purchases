@@ -141,7 +141,7 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-          "/google/subscription/{subscriptionId}/status/{purchaseToken}":
+          "/google/subscription/{subscriptionId}/status":
             get:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -264,7 +264,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/google/subscription/{subscriptionId}/status/{purchaseToken}"
+            Path: "/google/subscription/{subscriptionId}/status"
             Method: GET
             RestApiId: !Ref MobilePuchasesApi
       Tags:
