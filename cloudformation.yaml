@@ -97,13 +97,15 @@ Resources:
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
-                Effect: Allow
-                Action:
-                    - "dynamodb:GetItem"
-                    - "dynamodb:PutItem"
-                    - "dynamodb:UpdateItem"
-                    - "dynamodb:Query"
-                Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
+              Effect: Allow
+              Action:
+                  - "dynamodb:GetItem"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:UpdateItem"
+                  - "dynamodb:Query"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
   LogGroupValidateReceipts:
     Type: "AWS::Logs::LogGroup"
     Properties:
@@ -256,11 +258,11 @@ Resources:
   GooglePubSubLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: google/src/pubsub/pubsub.handler
+      Handler: google-pubsub.handler
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-googlepubsub/${App}-google.zip
+        Key: !Sub ${Stack}/${Stage}/${App}-google-pubsub/google-pubsub.zip
       FunctionName: !Sub ${App}-googlepubsub-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
@@ -287,11 +289,11 @@ Resources:
   GooglePlaySubStatusLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: google/src/playsubstatus/playsubstatus.handler
+      Handler: google-playsubstatus.handler
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-googlepubsub/${App}-google.zip
+        Key: !Sub ${Stack}/${Stage}/${App}-google-playsubstatus/google-playsubstatus.zip
       FunctionName: !Sub ${App}-googleplaysubstatus-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
