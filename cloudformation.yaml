@@ -36,7 +36,7 @@ Parameters:
     Type: String
     Description: The secret used by google's pubsub
 Conditions:
-  CreateProdOnlyResources: !Equals [ !Ref Stage, CODE ] # FIXME should be PROD
+  CreateProdOnlyResources: !Equals [ !Ref Stage, PROD ]
 Resources:
   MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
@@ -381,7 +381,7 @@ Resources:
     Condition: CreateProdOnlyResources
     Properties:
       AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:jacob-test # FIXME should be mobile-server-side
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:mobile-server-side
       AlarmName: !Sub mobile-purchases-${Stage}-google-oauth-token-refresh-failure
       AlarmDescription: !Sub Trigger the GoogleOAuth lambda manually to refresh the token
       ComparisonOperator: GreaterThanOrEqualToThreshold
