@@ -91,6 +91,7 @@ export async function parseAndStore(request: HTTPRequest, storingFunction: (even
                 .then((value) => {
                     return HTTPResponses.OK
                 }).catch((error) => {
+                    console.error("Unable to store event", error);
                     return HTTPResponses.INTERNAL_ERROR
                 });
 
