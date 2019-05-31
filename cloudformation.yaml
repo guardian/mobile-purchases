@@ -35,6 +35,8 @@ Parameters:
   GooglePubSubSecret:
     Type: String
     Description: The secret used by google's pubsub
+Conditions:
+  CreateProdOnlyResources: !Equals [ !Ref Stage, CODE ] # FIXME should be PROD
 Resources:
   MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
@@ -373,3 +375,22 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
+
+  GoogleTokenRefreshFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: CreateProdOnlyResources
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:jacob-test # FIXME should be mobile-server-side
+      AlarmName: !Sub Mobile Purchases ${Stage} | Failed to refresh Google OAuth Token
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref GoogleOAuthLambda
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
