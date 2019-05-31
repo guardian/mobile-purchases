@@ -106,6 +106,13 @@ Resources:
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
+        - PolicyName: Sqs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action: sqs:*
+              Resource:
+                - !GetAtt GoogleSubscriptionsQueue.Arn
   LogGroupValidateReceipts:
     Type: "AWS::Logs::LogGroup"
     Properties:
@@ -271,6 +278,7 @@ Resources:
           Stack: !Ref Stack
           App: !Ref App
           Secret: !Ref GooglePubSubSecret
+          QueueUrl: !Ref GoogleSubscriptionsQueue
       Description: Records play store events
       MemorySize: 128
       Timeout: 45
@@ -375,6 +383,18 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
+
+  GoogleSubscriptionsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-google-subscriptions-to-fetch
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
 
   GoogleTokenRefreshFailureAlarm:
     Type: AWS::CloudWatch::Alarm

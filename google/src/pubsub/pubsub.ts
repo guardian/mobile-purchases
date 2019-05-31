@@ -2,9 +2,11 @@ import {HTTPRequest, HTTPResponse, HTTPResponses} from "../models/apiGatewayHttp
 import {DeveloperNotification} from "./developerNotification";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
 import DynamoDB from 'aws-sdk/clients/dynamodb';
-import {CredentialProviderChain, SharedIniFileCredentials, ECSCredentials} from "aws-sdk";
+import Sqs from 'aws-sdk/clients/sqs';
+import {CredentialProviderChain, SharedIniFileCredentials, ECSCredentials, AWSError} from "aws-sdk";
 import {DataMapper} from '@aws/dynamodb-data-mapper';
 import {Region} from "../utils/appIdentity";
+import {PromiseResult} from "aws-sdk/lib/request";
 
 const ONE_YEAR_IN_SECONDS = 31557600;
 
@@ -30,6 +32,11 @@ const credentialProvider = new CredentialProviderChain([
 ]);
 
 const dynamo = new DynamoDB({
+    region: Region,
+    credentialProvider: credentialProvider
+});
+
+const sqs = new Sqs({
     region: Region,
     credentialProvider: credentialProvider
 });
@@ -76,7 +83,20 @@ function storeEvent(event: SubscriptionEvent): Promise<SubscriptionEvent> {
     return dynamoMapper.put({item: event}).then(result => result.item);
 }
 
-export async function parseAndStore(request: HTTPRequest, storingFunction: (event: SubscriptionEvent) => Promise<SubscriptionEvent>): Promise<HTTPResponse> {
+function sendSubscriptionId(event: SubscriptionEvent): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+    const queueUrl = process.env.QueueUrl;
+    if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+    return sqs.sendMessage({
+        QueueUrl: queueUrl,
+        MessageBody: JSON.stringify({subscriptionId: event.subscriptionId})
+    }).promise()
+}
+
+export async function parseStoreAndSend(
+    request: HTTPRequest,
+    storingFunction: (event: SubscriptionEvent) => Promise<SubscriptionEvent>,
+    sendSubscriptionIdFunction: (event: SubscriptionEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>>,
+): Promise<HTTPResponse> {
     const secret = process.env.Secret;
     return catchingServerErrors(async () => {
         if (request.queryStringParameters && request.queryStringParameters.secret === secret) {
@@ -88,6 +108,7 @@ export async function parseAndStore(request: HTTPRequest, storingFunction: (even
             const event = toDynamoSubscriptionEvent(notification);
 
             return storingFunction(event)
+                .then(ev => sendSubscriptionIdFunction(ev))
                 .then((value) => {
                     return HTTPResponses.OK
                 }).catch((error) => {
@@ -102,7 +123,7 @@ export async function parseAndStore(request: HTTPRequest, storingFunction: (even
 }
 
 export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
-    return parseAndStore(request, storeEvent)
+    return parseStoreAndSend(request, storeEvent, sendSubscriptionId)
 }
 
 
