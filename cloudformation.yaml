@@ -382,7 +382,8 @@ Resources:
     Properties:
       AlarmActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:jacob-test # FIXME should be mobile-server-side
-      AlarmName: !Sub Mobile Purchases ${Stage} | Failed to refresh Google OAuth Token
+      AlarmName: !Sub mobile-purchases-${Stage}-google-oauth-token-refresh-failure
+      AlarmDescription: !Sub Trigger the GoogleOAuth lambda manually to refresh the token
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
         - Name: FunctionName
@@ -390,7 +391,7 @@ Resources:
       EvaluationPeriods: 1
       MetricName: Errors
       Namespace: AWS/Lambda
-      Period: 300
+      Period: 60
       Statistic: Sum
       Threshold: 1
       TreatMissingData: notBreaching
