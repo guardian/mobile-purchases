@@ -62,7 +62,7 @@ function toDynamoSubscriptionEvent(notification: DeveloperNotification): Subscri
     const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] || eventType.toString();
     return new SubscriptionEvent(
         notification.subscriptionNotification.purchaseToken,
-        eventTimestamp + "|" + eventType,
+        eventTimestamp + "|" + eventTypeString,
         eventTimestamp,
         eventTypeString,
         "android",

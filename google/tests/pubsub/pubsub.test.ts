@@ -26,7 +26,7 @@ test("Should return HTTP 200 and store the correct data in dynamo", () => {
 
     const expectedSubscriptionEventInDynamo: SubscriptionEvent = new SubscriptionEvent(
         "PURCHASE_TOKEN",
-        "2017-08-21T21:06:06.168Z|4",
+        "2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED",
         "2017-08-21T21:06:06.168Z",
         "SUBSCRIPTION_PURCHASED",
         "android",
