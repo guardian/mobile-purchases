@@ -6,18 +6,20 @@ npm install -g yarn
 mkdir -p tsc-target
 
 yarn install
-# Will place .js files in target
 yarn run clean
+
+# Will place .js files in tsc-target
 yarn run build
 
 yarn run test
 
 cp package.json tsc-target/
 
-pushd tsc-target
-# Ensures the RiffRaff package has the node_modules needed to run
-yarn install --production
-popd
-
 cd tsc-target
-zip -r mobile-purchases-google.zip . -i *.js
+
+# Create the .zip which will be uploaded to AWS
+zip -r mobile-purchases-google.zip . -i /google/src/*.js
+
+# Ensure node_modules (which are required by the lambdas at runtime) are included in the .zip
+yarn install --production
+zip -u -r mobile-purchases-google.zip node_modules/*
