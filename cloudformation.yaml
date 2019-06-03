@@ -249,7 +249,7 @@ Resources:
       Runtime: java8
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-googleoauth/${App}-googleoauth.jar
+        Key: !Sub ${Stack}/${Stage}/${App}-google-oauth/${App}-google-oauth.jar
       FunctionName: !Sub ${App}-googleoauth-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
@@ -339,7 +339,7 @@ Resources:
       Runtime: java8
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-iosvalidatereceipts/${App}-iosvalidatereceipts.jar
+        Key: !Sub ${Stack}/${Stage}/${App}-ios-validate-receipts/${App}-ios-validate-receipts.jar
       FunctionName: !Sub ${App}-iosvalidatereceipts-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
@@ -369,7 +369,7 @@ Resources:
       Runtime: java8
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-iosuserpurchases/${App}-iosuserpurchases.jar
+        Key: !Sub ${Stack}/${Stage}/${App}-ios-user-purchases/${App}-ios-user-purchases.jar
       FunctionName: !Sub ${App}-iosuserpurchases-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:

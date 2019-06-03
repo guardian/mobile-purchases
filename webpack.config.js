@@ -19,7 +19,7 @@ const config = {
 };
 
 const googlePubSub = Object.assign({}, config, {
-    entry: './google/src/pubsub/pubsub.ts',
+    entry: './typescript/src/pubsub/pubsub.ts',
     output: {
         filename: 'google-pubsub.js',
         path: path.resolve(__dirname, 'tsc-target'),
@@ -28,7 +28,7 @@ const googlePubSub = Object.assign({}, config, {
 });
 
 const googlePlaySubStatus = Object.assign({}, config, {
-    entry: './google/src/playsubstatus/playsubstatus.ts',
+    entry: './typescript/src/playsubstatus/playsubstatus.ts',
     output: {
         filename: 'google-playsubstatus.js',
         path: path.resolve(__dirname, 'tsc-target'),

@@ -8,14 +8,16 @@ val testAndCompileDependencies: String = "test->test;compile->compile"
 val awsVersion: String = "1.11.375"
 val simpleConfigurationVersion: String = "1.4.3"
 
-lazy val commonlambda = project.disablePlugins(AssemblyPlugin).settings(commonSettings("commonlambda"))
+val scalaRoot = file("scala")
 
-lazy val userpurchasepersistence = project.disablePlugins(AssemblyPlugin)
-  .settings(commonSettings("userpurchasepersistence"))
-  .dependsOn(commonlambda % testAndCompileDependencies)
+lazy val common = project.in(scalaRoot / "common").disablePlugins(AssemblyPlugin).settings(commonSettings("common"))
+
+lazy val userPurchasePersistence = project.in(scalaRoot / "user-purchase-persistence").disablePlugins(AssemblyPlugin)
+  .settings(commonSettings("user-purchase-persistence"))
+  .dependsOn(common % testAndCompileDependencies)
 
 
-lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings({
+lazy val iosValidateReceipts = project.in(scalaRoot / "ios-validate-receipts").enablePlugins(AssemblyPlugin).settings({
   val upgradeIosvalidatereceiptsTransitiveDependencies = List(
     "com.amazonaws" % "aws-java-sdk-ssm" % awsVersion
   )
@@ -25,26 +27,26 @@ lazy val iosvalidatereceipts = project.enablePlugins(AssemblyPlugin).settings({
       "com.squareup.okhttp3" % "okhttp" % "3.10.0"
     ),
     libraryDependencies ++= upgradeIosvalidatereceiptsTransitiveDependencies
-  ) ++ commonAssemblySettings("iosvalidatereceipts")
+  ) ++ commonAssemblySettings("ios-validate-receipts")
 })
-  .dependsOn(userpurchasepersistence % testAndCompileDependencies)
+  .dependsOn(userPurchasePersistence % testAndCompileDependencies)
 
-lazy val iosuserpurchases = project.enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("iosuserpurchases"))
-  .dependsOn(userpurchasepersistence % testAndCompileDependencies)
+lazy val iosUserPurchases = project.in(scalaRoot / "ios-user-purchases").enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("ios-user-purchases"))
+  .dependsOn(userPurchasePersistence % testAndCompileDependencies)
 
-lazy val googleoauth = project.enablePlugins(AssemblyPlugin)
+lazy val googleOauth = project.in(scalaRoot / "google-oauth").enablePlugins(AssemblyPlugin)
   .settings(
-    commonAssemblySettings("googleoauth"),
+    commonAssemblySettings("google-oauth"),
     libraryDependencies ++= List(
     "com.google.auth" % "google-auth-library-oauth2-http" % "0.15.0",
     "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion
     )
   )
-  .dependsOn(commonlambda % testAndCompileDependencies)
+  .dependsOn(common % testAndCompileDependencies)
 
 lazy val root = project
   .enablePlugins(RiffRaffArtifact).in(file("."))
-  .aggregate(commonlambda, userpurchasepersistence, iosvalidatereceipts, iosuserpurchases, googleoauth)
+  .aggregate(common, userPurchasePersistence, iosValidateReceipts, iosUserPurchases, googleOauth)
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     scalaVersion := "2.12.5",
@@ -54,9 +56,9 @@ lazy val root = project
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
     riffRaffUploadManifestBucket := Option("riffraff-builds"),
     riffRaffManifestProjectName := s"Mobile::${name.value}",
-    riffRaffArtifactResources += (assembly in iosvalidatereceipts).value -> s"${(name in iosvalidatereceipts).value}/${(assembly in iosvalidatereceipts).value.getName}",
-    riffRaffArtifactResources += (assembly in iosuserpurchases).value -> s"${(name in iosuserpurchases).value}/${(assembly in iosuserpurchases).value.getName}",
-    riffRaffArtifactResources += (assembly in googleoauth).value -> s"${(name in googleoauth).value}/${(assembly in googleoauth).value.getName}",
+    riffRaffArtifactResources += (assembly in iosValidateReceipts).value -> s"${(name in iosValidateReceipts).value}/${(assembly in iosValidateReceipts).value.getName}",
+    riffRaffArtifactResources += (assembly in iosUserPurchases).value -> s"${(name in iosUserPurchases).value}/${(assembly in iosUserPurchases).value.getName}",
+    riffRaffArtifactResources += (assembly in googleOauth).value -> s"${(name in googleOauth).value}/${(assembly in googleOauth).value.getName}",
     riffRaffArtifactResources += file("tsc-target/google-pubsub.zip") -> s"mobile-purchases-google-pubsub/google-pubsub.zip",
     riffRaffArtifactResources += file("tsc-target/google-playsubstatus.zip") -> s"mobile-purchases-google-playsubstatus/google-playsubstatus.zip",
     riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",

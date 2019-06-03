@@ -7,22 +7,22 @@ deployments:
     parameters:
       templatePath: cloudformation.yaml
 
-  mobile-purchases-iosvalidatereceipts:
+  mobile-purchases-ios-validate-receipts:
     type: aws-lambda
     dependencies: [mobile-purchases-cloudformation]
     parameters:
       bucket: mobile-dist
       functionNames: [mobile-purchases-iosvalidatereceipts-]
-      fileName: mobile-purchases-iosvalidatereceipts.jar
+      fileName: mobile-purchases-ios-validate-receipts.jar
       prefixStack: false
 
-  mobile-purchases-iosuserpurchases:
+  mobile-purchases-ios-user-purchases:
     type: aws-lambda
     dependencies: [mobile-purchases-cloudformation]
     parameters:
       bucket: mobile-dist
       functionNames: [mobile-purchases-iosuserpurchases-]
-      fileName: mobile-purchases-iosuserpurchases.jar
+      fileName: mobile-purchases-ios-user-purchases.jar
       prefixStack: false
 
   mobile-purchases-google-pubsub:
@@ -45,11 +45,11 @@ deployments:
       fileName: google-playsubstatus.zip
       prefixStack: false
 
-  mobile-purchases-googleoauth:
+  mobile-purchases-google-oauth:
     type: aws-lambda
     dependencies: [mobile-purchases-cloudformation]
     parameters:
       bucket: mobile-dist
       functionNames: [mobile-purchases-googleoauth-]
-      fileName: mobile-purchases-googleoauth.jar
+      fileName: mobile-purchases-google-oauth.jar
       prefixStack: false
