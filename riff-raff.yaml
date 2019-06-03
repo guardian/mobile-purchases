@@ -35,6 +35,16 @@ deployments:
       fileName: google-pubsub.zip
       prefixStack: false
 
+  mobile-purchases-apple-pubsub:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames:
+        - mobile-purchases-applepubsub-
+      fileName: apple-pubsub.zip
+      prefixStack: false
+
   mobile-purchases-google-playsubstatus:
     type: aws-lambda
     dependencies: [mobile-purchases-cloudformation]
