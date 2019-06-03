@@ -5,6 +5,7 @@ import {SubscriptionEvent} from "../models/subscriptionEvent";
 export interface StatusUpdateNotification {
     environment: string,
     notification_type: string,
+    password?: string,
     original_transaction_id: string,
     cancellation_date: string,
     web_order_line_item_id: string,
@@ -22,6 +23,7 @@ export function parsePayload(body?: string): Error | StatusUpdateNotification {
     console.log(body);
     try {
         let notification = JSON.parse(body || "") as StatusUpdateNotification;
+        delete notification.password;
         return notification;
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
