@@ -107,12 +107,13 @@ export async function parseStoreAndSend(
 
             const event = toDynamoSubscriptionEvent(notification);
 
-            return storingFunction(event)
-                .then(ev => sendSubscriptionIdFunction(ev))
-                .then((value) => {
-                    return HTTPResponses.OK
-                }).catch((error) => {
-                    console.error("Unable to store event", error);
+            const queuePromise = sendSubscriptionIdFunction(event);
+            const dynamoPromise = storingFunction(event);
+
+            return Promise.all([queuePromise, dynamoPromise])
+                .then(value => HTTPResponses.OK)
+                .catch(error => {
+                    console.error("Unable to process event", error);
                     return HTTPResponses.INTERNAL_ERROR
                 });
 
