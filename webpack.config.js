@@ -19,7 +19,7 @@ const config = {
 };
 
 const googlePubSub = Object.assign({}, config, {
-    entry: './typescript/src/pubsub/pubsub.ts',
+    entry: './typescript/src/pubsub/google.ts',
     output: {
         filename: 'google-pubsub.js',
         path: path.resolve(__dirname, 'tsc-target'),
