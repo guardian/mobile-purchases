@@ -106,6 +106,21 @@ Resources:
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
+        - PolicyName: Sqs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action: sqs:*
+              Resource:
+                - !GetAtt GoogleSubscriptionsQueue.Arn
+        - PolicyName: Kms
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action: [ "kms:GenerateDataKey", "kms:Decrypt" ]
+              Resource:
+                - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0215d06c-81c4-4896-a5da-c818770ea8db
+
   LogGroupValidateReceipts:
     Type: "AWS::Logs::LogGroup"
     Properties:
@@ -271,6 +286,7 @@ Resources:
           Stack: !Ref Stack
           App: !Ref App
           Secret: !Ref GooglePubSubSecret
+          QueueUrl: !Ref GoogleSubscriptionsQueue
       Description: Records play store events
       MemorySize: 128
       Timeout: 45
@@ -375,6 +391,34 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
+
+  GoogleSubscriptionsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-google-subscriptions-to-fetch
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt GoogleSubscriptionsQueueDlq.Arn
+        maxReceiveCount: 8
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+
+  GoogleSubscriptionsQueueDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-google-subscriptions-to-fetch-dlq
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
 
   GoogleTokenRefreshFailureAlarm:
     Type: AWS::CloudWatch::Alarm

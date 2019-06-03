@@ -1,14 +1,21 @@
-import { parseAndStore } from "../../src/pubsub/pubsub";
+import { parseStoreAndSend } from "../../src/pubsub/pubsub";
 import {HTTPResponses} from "../../src/models/apiGatewayHttp";
 import {SubscriptionEvent} from "../../src/models/subscriptionEvent";
 import Mock = jest.Mock;
 
 test("Should return HTTP 200 and store the correct data in dynamo", () => {
     process.env['Secret'] = "MYSECRET";
+    process.env['QueueUrl'] = "";
 
     const mockStoreFunction: Mock<Promise<SubscriptionEvent>, SubscriptionEvent[]>  = jest.fn((event) => {
         return new Promise((resolve, reject) => {
             resolve(event);
+        });
+    });
+
+    const mockSqsFunction: Mock<Promise<any>, SubscriptionEvent[]>  = jest.fn((event) => {
+        return new Promise((resolve, reject) => {
+            resolve({});
         });
     });
 
@@ -45,9 +52,11 @@ test("Should return HTTP 200 and store the correct data in dynamo", () => {
         1724252767
     );
 
-    return parseAndStore(input, mockStoreFunction).then(result => {
+    return parseStoreAndSend(input, mockStoreFunction, mockSqsFunction).then(result => {
         expect(result).toStrictEqual(HTTPResponses.OK);
         expect(mockStoreFunction.mock.calls.length).toEqual(1);
         expect(mockStoreFunction.mock.calls[0][0]).toStrictEqual(expectedSubscriptionEventInDynamo);
+        expect(mockSqsFunction.mock.calls.length).toEqual(1);
+        expect(mockSqsFunction.mock.calls[0][0]).toStrictEqual(expectedSubscriptionEventInDynamo);
     });
 });
