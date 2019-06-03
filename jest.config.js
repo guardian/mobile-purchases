@@ -1,7 +1,7 @@
 module.exports = {
     "roots": [
-        "google/src",
-        "google/tests"
+        "typescript/src",
+        "typescript/tests"
     ],
     "transform": {
         "^.+\\.tsx?$": "ts-jest"
