@@ -84,7 +84,7 @@ deployments:
 
   mobile-subscription-export:
     type: aws-s3
-      parameters:                              #
+      parameters:                              
         bucket: mobile-dist
         cacheControl: max-age=60
         publicReadAcl: false
