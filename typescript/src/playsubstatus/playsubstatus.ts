@@ -62,7 +62,7 @@ export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
                     return new HTTPResponse(200, new HTTPResponseHeaders(), JSON.stringify(responseBody))
                 } else {
                     console.log(`Failed to establish expiry time of subscription`);
-                    return HTTPResponses.INVALID_REQUEST
+                    return HTTPResponses.NOT_FOUND
                 }
             })
             .catch(
