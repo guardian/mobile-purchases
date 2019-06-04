@@ -64,17 +64,17 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 
     const receiptInfo = notification.latest_receipt_info || notification.latest_expired_receipt_info;
 
-    return new SubscriptionEvent({
-        subscriptionId: receiptInfo.transaction_id,
-        timestampAndType: now.toISOString() + "|" + eventType,
-        timestamp: now.toISOString(),
-        eventType: eventType,
-        platform: "ios",
-        appId: receiptInfo.bid,
-        googlePayload: null,
-        applePayload: notification,
-        ttl: Math.ceil((now.getTime() / 1000) + 7 * ONE_YEAR_IN_SECONDS)
-    });
+    return new SubscriptionEvent(
+        receiptInfo.transaction_id,
+        now.toISOString() + "|" + eventType,
+        now.toISOString(),
+        eventType,
+        "ios",
+        receiptInfo.bid,
+        null,
+        notification,
+        Math.ceil((now.getTime() / 1000) + 7 * ONE_YEAR_IN_SECONDS)
+    );
 }
 
 export function toSqsEvent(event: StatusUpdateNotification): SqsEvent {
