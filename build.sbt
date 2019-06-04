@@ -31,6 +31,16 @@ lazy val iosValidateReceipts = project.in(scalaRoot / "ios-validate-receipts").e
 })
   .dependsOn(userPurchasePersistence % testAndCompileDependencies)
 
+lazy val subscriptionExport = project.in(scalaRoot / "subscription-export").enablePlugins(AssemblyPlugin).settings(
+    commonAssemblySettings("subscription-export"),
+    libraryDependencies ++= List(
+      "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
+      "com.amazonaws" % "aws-java-sdk-emr" % awsVersion
+    ),
+  )
+  .dependsOn(common % testAndCompileDependencies)
+
+
 lazy val iosUserPurchases = project.in(scalaRoot / "ios-user-purchases").enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("ios-user-purchases"))
   .dependsOn(userPurchasePersistence % testAndCompileDependencies)
 
@@ -46,7 +56,7 @@ lazy val googleOauth = project.in(scalaRoot / "google-oauth").enablePlugins(Asse
 
 lazy val root = project
   .enablePlugins(RiffRaffArtifact).in(file("."))
-  .aggregate(common, userPurchasePersistence, iosValidateReceipts, iosUserPurchases, googleOauth)
+  .aggregate(common, userPurchasePersistence, iosValidateReceipts, iosUserPurchases, googleOauth, subscriptionExport)
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     scalaVersion := "2.12.5",
@@ -64,6 +74,7 @@ lazy val root = project
     riffRaffArtifactResources += file("tsc-target/google-playsubstatus.zip") -> s"mobile-purchases-google-playsubstatus/google-playsubstatus.zip",
     riffRaffArtifactResources += file("tsc-target/link-user-subscription.zip") -> s"mobile-purchases-link-user-subscription/link-user-subscription.zip",
     riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",
+    riffRaffArtifactResources += file("subscriptionExport/scripts/export.hql") -> s"mobile-subscription-export/scripts/export.hql"
   )
 
 def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = commonSettings(module) ++ List(

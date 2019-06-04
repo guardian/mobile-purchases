@@ -72,3 +72,20 @@ deployments:
       functionNames: [mobile-purchases-link-user-subscription-]
       fileName: link-user-subscription.zip
       prefixStack: false
+      
+  mobile-purchases-subscription-export:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-subscription-export-]
+      fileName: mobile-purchases-subscription-export.jar
+      prefixStack: false
+
+  mobile-subscription-export:
+    type: aws-s3
+      parameters:                              #
+        bucket: mobile-dist
+        cacheControl: max-age=60
+        publicReadAcl: false
+        prefixPackage: true

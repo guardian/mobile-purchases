@@ -140,8 +140,7 @@ Resources:
     Properties:
       StageName: !Ref Stage
       MethodSettings: [{
-          "MetricsEnabled": True,
-          "LoggingLevel": "OFF",
+          "MetricsEnabled": True, "LoggingLevel": "OFF",
           "ResourcePath": "/*",
           "HttpMethod": "*"
       }]
