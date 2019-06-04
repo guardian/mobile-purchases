@@ -459,6 +459,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${App}-${Stage}-google-subscriptions-to-fetch-dlq
+      KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: Stage
           Value: !Ref Stage
@@ -487,6 +488,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${App}-${Stage}-apple-subscriptions-to-fetch-dlq
+      KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: Stage
           Value: !Ref Stage
