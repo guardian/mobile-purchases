@@ -75,7 +75,7 @@ export async function parseStoreAndSend<Payload, SqsEvent>(
             return Promise.all([sqsPromise, dynamoPromise])
                 .then(value => HTTPResponses.OK)
                 .catch(error => {
-                    console.error("Unable to process event", error);
+                    console.error("Unable to process event" + notification, error);
                     return HTTPResponses.INTERNAL_ERROR
                 });
 

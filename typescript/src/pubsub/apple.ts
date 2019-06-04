@@ -46,7 +46,6 @@ export interface SqsEvent {
 }
 
 export function parsePayload(body?: string): Error | StatusUpdateNotification {
-    console.log(body);
     try {
         let notification = JSON.parse(body || "") as StatusUpdateNotification;
         delete notification.password;
