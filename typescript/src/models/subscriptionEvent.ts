@@ -14,18 +14,21 @@ export class SubscriptionEvent{
     @attribute()
     platform: string;
     @attribute()
+    appId: string;
+    @attribute()
     googlePayload?: any;
     @attribute()
     applePayload?: any;
     @attribute()
     ttl: number;
 
-    constructor(subscriptionId: string, timestampAndType: string, timestamp: string, eventType: string, platform: string, googlePayload: any, applePayload: any, ttl: number) {
+    constructor(subscriptionId: string, timestampAndType: string, timestamp: string, eventType: string, platform: string, appId: string, googlePayload: any, applePayload: any, ttl: number) {
         this.subscriptionId = subscriptionId;
         this.timestampAndType = timestampAndType;
         this.timestamp = timestamp;
         this.eventType = eventType;
         this.platform = platform;
+        this.appId = appId;
         this.googlePayload = googlePayload;
         this.applePayload = applePayload;
         this.ttl = ttl;

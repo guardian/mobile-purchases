@@ -35,6 +35,9 @@ Parameters:
   GooglePubSubSecret:
     Type: String
     Description: The secret used by google's pubsub
+  ApplePubSubSecret:
+    Type: String
+    Description: The secret used by google's pubsub
 Resources:
   MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
@@ -113,6 +116,7 @@ Resources:
               Action: sqs:*
               Resource:
                 - !GetAtt GoogleSubscriptionsQueue.Arn
+                - !GetAtt AppleSubscriptionsQueue.Arn
         - PolicyName: Kms
           PolicyDocument:
             Statement:
@@ -179,6 +183,17 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePlaySubStatusLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
+          "/apple/pubsub":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApplePubSubLambda.Arn}/invocations
               consumes: [ application/json ]
               produces: [ application/json ]
               responses:
@@ -302,6 +317,38 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
+  ApplePubSubLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apple-pubsub.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-apple-pubsub/apple-pubsub.zip
+      FunctionName: !Sub ${App}-applepubsub-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+          Secret: !Ref ApplePubSubSecret
+          QueueUrl: !Ref AppleSubscriptionsQueue
+      Description: Records play store events
+      MemorySize: 128
+      Timeout: 45
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/apple/pubsub"
+            Method: POST
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
   GooglePlaySubStatusLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -412,6 +459,36 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${App}-${Stage}-google-subscriptions-to-fetch-dlq
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+
+  AppleSubscriptionsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-apple-subscriptions-to-fetch
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AppleSubscriptionsQueueDlq.Arn
+        maxReceiveCount: 8
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+
+  AppleSubscriptionsQueueDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-apple-subscriptions-to-fetch-dlq
+      KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: Stage
           Value: !Ref Stage

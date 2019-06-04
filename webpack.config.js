@@ -19,9 +19,18 @@ const config = {
 };
 
 const googlePubSub = Object.assign({}, config, {
-    entry: './typescript/src/pubsub/pubsub.ts',
+    entry: './typescript/src/pubsub/google.ts',
     output: {
         filename: 'google-pubsub.js',
+        path: path.resolve(__dirname, 'tsc-target'),
+        libraryTarget: 'commonjs'
+    }
+});
+
+const applePubSub = Object.assign({}, config, {
+    entry: './typescript/src/pubsub/apple.ts',
+    output: {
+        filename: 'apple-pubsub.js',
         path: path.resolve(__dirname, 'tsc-target'),
         libraryTarget: 'commonjs'
     }
@@ -36,4 +45,4 @@ const googlePlaySubStatus = Object.assign({}, config, {
     }
 });
 
-module.exports = [googlePubSub, googlePlaySubStatus];
+module.exports = [googlePubSub, applePubSub, googlePlaySubStatus];
