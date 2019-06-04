@@ -45,16 +45,17 @@ export function toDynamoSubscriptionEvent(notification: DeveloperNotification): 
     const eventTimestamp = new Date(Number.parseInt(notification.eventTimeMillis)).toISOString();
     const eventType = notification.subscriptionNotification.notificationType;
     const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] || eventType.toString();
-    return new SubscriptionEvent(
-        notification.subscriptionNotification.purchaseToken,
-        eventTimestamp + "|" + eventTypeString,
-        eventTimestamp,
-        eventTypeString,
-        "android",
-        notification,
-        null,
-        Math.ceil((Number.parseInt(notification.eventTimeMillis) / 1000) + 7 * ONE_YEAR_IN_SECONDS)
-    );
+    return new SubscriptionEvent({
+        subscriptionId: notification.subscriptionNotification.purchaseToken,
+        timestampAndType: eventTimestamp +"|" + eventTypeString,
+        timestamp: eventTimestamp,
+        eventType: eventTypeString,
+        platform: "android",
+        appId: notification.packageName,
+        googlePayload: notification,
+        applePayload: null,
+        ttl: Math.ceil((Number.parseInt(notification.eventTimeMillis) / 1000) + 7 * ONE_YEAR_IN_SECONDS)
+    });
 }
 
 export async function handler(request: HTTPRequest): Promise<HTTPResponse> {

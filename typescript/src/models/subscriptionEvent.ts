@@ -14,21 +14,24 @@ export class SubscriptionEvent{
     @attribute()
     platform: string;
     @attribute()
+    appId: string;
+    @attribute()
     googlePayload?: any;
     @attribute()
     applePayload?: any;
     @attribute()
     ttl: number;
 
-    constructor(subscriptionId: string, timestampAndType: string, timestamp: string, eventType: string, platform: string, googlePayload: any, applePayload: any, ttl: number) {
-        this.subscriptionId = subscriptionId;
-        this.timestampAndType = timestampAndType;
-        this.timestamp = timestamp;
-        this.eventType = eventType;
-        this.platform = platform;
-        this.googlePayload = googlePayload;
-        this.applePayload = applePayload;
-        this.ttl = ttl;
+    constructor(params: {subscriptionId: string, timestampAndType: string, timestamp: string, eventType: string, platform: string, appId: string, googlePayload: any, applePayload: any, ttl: number}) {
+        this.subscriptionId = params.subscriptionId;
+        this.timestampAndType = params.timestampAndType;
+        this.timestamp = params.timestamp;
+        this.eventType = params.eventType;
+        this.platform = params.platform;
+        this.appId = params.appId;
+        this.googlePayload = params.googlePayload;
+        this.applePayload = params.applePayload;
+        this.ttl = params.ttl;
     }
 
     get [DynamoDbTable]() {
