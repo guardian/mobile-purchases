@@ -320,7 +320,7 @@ Resources:
   ApplePubSubLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: google-pubsub.handler
+      Handler: apple-pubsub.handler
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
