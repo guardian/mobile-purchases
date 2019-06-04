@@ -41,21 +41,22 @@ function storeInDynamoImpl(event: SubscriptionEvent): Promise<SubscriptionEvent>
     return dynamoMapper.put({item: event}).then(result => result.item);
 }
 
-function sendToSqsImpl(event: SubscriptionEvent): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+function sendToSqsImpl(event: any): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
     const queueUrl = process.env.QueueUrl;
     if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
     return sqs.sendMessage({
         QueueUrl: queueUrl,
-        MessageBody: JSON.stringify({subscriptionId: event.subscriptionId})
+        MessageBody: JSON.stringify(event)
     }).promise()
 }
 
-export async function parseStoreAndSend<Payload>(
+export async function parseStoreAndSend<Payload, SqsEvent>(
     request: HTTPRequest,
     parsePayload: (body?: string) => Payload | Error,
-    toDynamoSubscriptionEvent: (payload: Payload) => SubscriptionEvent,
+    toDynamoEvent: (payload: Payload) => SubscriptionEvent,
+    toSqsEvent: (payload: Payload) => SqsEvent,
     storeInDynamo: (event: SubscriptionEvent) => Promise<SubscriptionEvent> = storeInDynamoImpl,
-    sendToSqs: (event: SubscriptionEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqsImpl,
+    sendToSqs: (event: SqsEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqsImpl,
 ): Promise<HTTPResponse> {
     const secret = process.env.Secret;
     return catchingServerErrors(async () => {
@@ -65,12 +66,13 @@ export async function parseStoreAndSend<Payload>(
                 return HTTPResponses.INVALID_REQUEST
             }
 
-            const event = toDynamoSubscriptionEvent(notification);
+            const dynamoEvent = toDynamoEvent(notification);
+            const dynamoPromise = storeInDynamo(dynamoEvent);
 
-            const queuePromise = sendToSqs(event);
-            const dynamoPromise = storeInDynamo(event);
+            const sqsEvent = toSqsEvent(notification);
+            const sqsPromise = sendToSqs(sqsEvent);
 
-            return Promise.all([queuePromise, dynamoPromise])
+            return Promise.all([sqsPromise, dynamoPromise])
                 .then(value => HTTPResponses.OK)
                 .catch(error => {
                     console.error("Unable to process event", error);

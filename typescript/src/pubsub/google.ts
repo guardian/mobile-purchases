@@ -16,6 +16,10 @@ interface SubscriptionNotification {
     subscriptionId: string
 }
 
+interface SqsEvent {
+    purchaseToken: string
+}
+
 export function parsePayload(body?: string): Error | DeveloperNotification {
     try {
         let rawNotification = Buffer.from(JSON.parse(body || "").message.data, 'base64');
@@ -40,7 +44,7 @@ const GOOGLE_SUBS_EVENT_TYPE: {[_: number]: string} = {
     13: "SUBSCRIPTION_EXPIRED"
 };
 
-export function toDynamoSubscriptionEvent(notification: DeveloperNotification): SubscriptionEvent {
+export function toDynamoEvent(notification: DeveloperNotification): SubscriptionEvent {
     const eventTimestamp = new Date(Number.parseInt(notification.eventTimeMillis)).toISOString();
     const eventType = notification.subscriptionNotification.notificationType;
     const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] || eventType.toString();
@@ -57,10 +61,15 @@ export function toDynamoSubscriptionEvent(notification: DeveloperNotification): 
     });
 }
 
+export function toSqsEvent(event: DeveloperNotification): SqsEvent {
+    return {purchaseToken: event.subscriptionNotification.purchaseToken}
+}
+
 export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
     return parseStoreAndSend(
         request,
         parsePayload,
-        toDynamoSubscriptionEvent
+        toDynamoEvent,
+        toSqsEvent
     )
 }

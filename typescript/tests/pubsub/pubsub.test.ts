@@ -1,5 +1,9 @@
 import { parseStoreAndSend } from "../../src/pubsub/pubsub";
-import {parsePayload as parseGooglePayload, toDynamoSubscriptionEvent as googlePayloadToDynamo} from "../../src/pubsub/google";
+import {
+    parsePayload as parseGooglePayload,
+    toDynamoEvent as googlePayloadToDynamo,
+    toSqsEvent as toGoogleSqsEvent
+} from "../../src/pubsub/google";
 import {HTTPResponses} from "../../src/models/apiGatewayHttp";
 import {SubscriptionEvent} from "../../src/models/subscriptionEvent";
 import Mock = jest.Mock;
@@ -15,7 +19,7 @@ describe("The google pubsub", () => {
             });
         });
 
-        const mockSqsFunction: Mock<Promise<any>, SubscriptionEvent[]>  = jest.fn((event) => {
+        const mockSqsFunction: Mock<Promise<any>, {purchaseToken: string}[]>  = jest.fn((event) => {
             return new Promise((resolve, reject) => {
                 resolve({});
             });
@@ -33,13 +37,14 @@ describe("The google pubsub", () => {
         };
         const input = {queryStringParameters: {secret: "MYSECRET"}, body: JSON.stringify(body) };
 
-        const expectedSubscriptionEventInDynamo: SubscriptionEvent = new SubscriptionEvent(
-            "PURCHASE_TOKEN",
-            "2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED",
-            "2017-08-21T21:06:06.168Z",
-            "SUBSCRIPTION_PURCHASED",
-            "android",
-            {
+        const expectedSubscriptionEventInDynamo: SubscriptionEvent = new SubscriptionEvent({
+            subscriptionId: "PURCHASE_TOKEN",
+            timestampAndType: "2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED",
+            timestamp: "2017-08-21T21:06:06.168Z",
+            eventType: "SUBSCRIPTION_PURCHASED",
+            platform: "android",
+            appId: "com.some.thing",
+            googlePayload: {
                 eventTimeMillis: "1503349566168",
                 packageName: "com.some.thing",
                 subscriptionNotification: {
@@ -50,16 +55,16 @@ describe("The google pubsub", () => {
                 },
                 version: "1.0"
             },
-            null,
-            1724252767
-        );
+            applePayload: null,
+            ttl: 1724252767
+        });
 
-        return parseStoreAndSend(input, parseGooglePayload, googlePayloadToDynamo, mockStoreFunction, mockSqsFunction).then(result => {
+        return parseStoreAndSend(input, parseGooglePayload, googlePayloadToDynamo, toGoogleSqsEvent, mockStoreFunction, mockSqsFunction).then(result => {
             expect(result).toStrictEqual(HTTPResponses.OK);
             expect(mockStoreFunction.mock.calls.length).toEqual(1);
             expect(mockStoreFunction.mock.calls[0][0]).toStrictEqual(expectedSubscriptionEventInDynamo);
             expect(mockSqsFunction.mock.calls.length).toEqual(1);
-            expect(mockSqsFunction.mock.calls[0][0]).toStrictEqual(expectedSubscriptionEventInDynamo);
+            expect(mockSqsFunction.mock.calls[0][0]).toStrictEqual({purchaseToken: "PURCHASE_TOKEN"});
         });
     });
 });

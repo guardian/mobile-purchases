@@ -39,6 +39,11 @@ export interface StatusUpdateNotification {
     expiration_intent: string
 }
 
+export interface SqsEvent {
+    transactionId: string,
+    receipt: string
+}
+
 export function parsePayload(body?: string): Error | StatusUpdateNotification {
     console.log(body);
     try {
@@ -52,7 +57,7 @@ export function parsePayload(body?: string): Error | StatusUpdateNotification {
 }
 
 
-export function toDynamoSubscriptionEvent(notification: StatusUpdateNotification): SubscriptionEvent {
+export function toDynamoEvent(notification: StatusUpdateNotification): SubscriptionEvent {
     const now = new Date();
     const eventType = notification.notification_type;
 
@@ -71,10 +76,20 @@ export function toDynamoSubscriptionEvent(notification: StatusUpdateNotification
     });
 }
 
+export function toSqsEvent(event: StatusUpdateNotification): SqsEvent {
+    const receiptInfo = event.latest_receipt_info || event.latest_expired_receipt_info;
+    const receipt = event.latest_receipt || event.latest_receipt;
+    return {
+        transactionId: receiptInfo.transaction_id,
+        receipt: receipt
+    }
+}
+
 export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
     return parseStoreAndSend(
         request,
         parsePayload,
-        toDynamoSubscriptionEvent
+        toDynamoEvent,
+        toSqsEvent
     )
 }
