@@ -1,9 +1,9 @@
 package com.gu.mobile.subscription.export.config
 
-import com.gu.{AppIdentity, AwsIdentity}
-import com.gu.conf.{ConfigurationLoader, SSMConfigurationLocation}
+import com.gu.{ AppIdentity, AwsIdentity }
+import com.gu.conf.{ ConfigurationLoader, SSMConfigurationLocation }
 import com.typesafe.config.Config
-import org.apache.logging.log4j.{LogManager, Logger}
+import org.apache.logging.log4j.{ LogManager, Logger }
 
 class Configuration {
 
@@ -21,7 +21,5 @@ class Configuration {
         SSMConfigurationLocation(path = path)
     }
   }
-
-  val hqlScript 
 
 }

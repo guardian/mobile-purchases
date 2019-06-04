@@ -1,9 +1,9 @@
 package com.gu.mobile.subscription.export
 
-import com.amazonaws.auth.{AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
+import com.amazonaws.auth.{ AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain }
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.regions.DefaultAwsRegionProviderChain
-import org.apache.logging.log4j.{LogManager, Logger}
+import org.apache.logging.log4j.{ LogManager, Logger }
 
 object Lambda {
 
@@ -14,5 +14,4 @@ object Lambda {
     DefaultAWSCredentialsProviderChain.getInstance()
   )
 
-  
 }
