@@ -9,7 +9,7 @@ class Configuration {
 
   private val logger: Logger = LogManager.getLogger(this.getClass)
 
-  val appName = Option(System.getenv("App")).getOrElse(sys.error("No app name set. Lambda will not run"))
+  val appName = Option(System.getenv("App")).getOrElse("mobile-subscription-export")
 
   private val conf: Config = {
     val identity = AppIdentity.whoAmI(defaultAppName = appName)
@@ -22,4 +22,7 @@ class Configuration {
     }
   }
 
+  val hqlS3ScriptLocation = conf.getString("s3.hqlLocation")
+  val s3LogLocation = conf.getString("s3.logBucket")
+  val emrKeyPairName = conf.getString("emr.keyPair")
 }

@@ -4,7 +4,7 @@ CREATE EXTERNAL TABLE ddb_saved_articles_S{hiveconf:stage}
      version STRING)
   STORED BY 'org.apache.hadoop.hive.dynamodb.DynamoDBStorageHandler'
   TBLPROPERTIES(
-     "dynamodb.table.name" = "mobile-save-for-later-S{hiveconf:stage}-articless",
+     "dynamodb.table.name" = "mobile-save-for-later-S{hiveconf:stage}-articles",
      "dynamodb.column.mapping"="user_id:UserId,articles:articles,version:version"
   );
 
