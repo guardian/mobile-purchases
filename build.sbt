@@ -94,6 +94,7 @@ lazy val root = project
     riffRaffArtifactResources += file("tsc-target/link-user-subscription.zip") -> s"mobile-purchases-link-user-subscription/link-user-subscription.zip",
     riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",
     riffRaffArtifactResources ++= listFilesInPackage(file(s"${scalaRoot}/subscription-export/scripts"))
+  )
 
 def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = commonSettings(module) ++ List(
   publishArtifact in(Compile, packageDoc) := false,
