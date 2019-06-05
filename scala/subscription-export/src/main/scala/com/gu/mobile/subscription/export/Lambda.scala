@@ -35,7 +35,7 @@ object Lambda {
     .withActionOnFailure("TERMINATE_JOB_FLOW")
     .withHadoopJarStep(setpFactory.newInstallHiveStep())
 
-  val hive = new Application().withName("hive")
+  val hive = new Application().withName("Hive")
 
   def handler(): Unit = {
 
@@ -50,21 +50,21 @@ object Lambda {
     val runScriptStep = new StepConfig()
       .withName("Export data")
       .withActionOnFailure("TERMINATE_JOB_FLOW")
-      .withHadoopJarStep(setpFactory.newRunHiveScriptStep(config.hqlS3ScriptLocation, stage))
+      .withHadoopJarStep(setpFactory.newRunHiveScriptStep(config.hqlS3ScriptLocation, "-d", s"stage=$stage"))
 
     logger.info("Run job flow request")
 
     val runJobFlowRequest = new RunJobFlowRequest()
       .withName("Export subs via hive")
-      .withSteps(enableDebuggingStep, installHiveStep, runScriptStep)
       .withApplications(hive)
+      .withSteps(enableDebuggingStep, installHiveStep, runScriptStep)
       .withReleaseLabel("emr-5.23.0")
       .withLogUri(config.s3LogLocation)
-      .withServiceRole("EMR_Default_Role")
+      .withServiceRole("EMR_DefaultRole")
       .withJobFlowRole("EMR_EC2_DefaultRole")
       .withInstances(new JobFlowInstancesConfig()
-        .withEc2SubnetId("xxxxx") //TODO do not push
-        .withEc2KeyName("xxx") //TODO do not push
+        .withEc2SubnetId("subnet-75859517") //TODO do not push
+        .withEc2KeyName("NathanielEmrHome") //TODO do not push
         .withInstanceCount(3) //Fsck knows
         .withKeepJobFlowAliveWhenNoSteps(true)
         .withMasterInstanceType("m4.large")
@@ -73,6 +73,6 @@ object Lambda {
 
     val result = emr.runJobFlow(runJobFlowRequest)
     logger.info(s"Result: ${result.toString}")
-    //emr.shutdown()
+    emr.shutdown()
   }
 }
