@@ -1,9 +1,7 @@
-import java.io.File
-
 import sbt.{Def, project}
 import sbtassembly.MergeStrategy
-
 import scalariform.formatter.preferences._
+
 import scala.collection.immutable
 
 val testAndCompileDependencies: String = "test->test;compile->compile"
@@ -17,22 +15,6 @@ lazy val common = project.in(scalaRoot / "common").disablePlugins(AssemblyPlugin
 lazy val userPurchasePersistence = project.in(scalaRoot / "user-purchase-persistence").disablePlugins(AssemblyPlugin)
   .settings(commonSettings("user-purchase-persistence"))
   .dependsOn(common % testAndCompileDependencies)
-
-def listRegularFiles(file: File): List[File] = {
-  if (file.isDirectory) {
-    file.listFiles().toList.flatMap(listRegularFiles)
-  } else {
-    List(file)
-  }
-}
-
-def listFilesInPackage(packageName: File): List[(File, String)] = {
-  val dir = packageName.getAbsoluteFile.toPath.getParent
-
-  listRegularFiles(packageName).map { file =>
-    file -> dir.relativize(file.getAbsoluteFile.toPath).toString
-  }
-}
 
 
 lazy val iosValidateReceipts = project.in(scalaRoot / "ios-validate-receipts").enablePlugins(AssemblyPlugin).settings({
@@ -93,7 +75,8 @@ lazy val root = project
     riffRaffArtifactResources += file("tsc-target/google-playsubstatus.zip") -> s"mobile-purchases-google-playsubstatus/google-playsubstatus.zip",
     riffRaffArtifactResources += file("tsc-target/link-user-subscription.zip") -> s"mobile-purchases-link-user-subscription/link-user-subscription.zip",
     riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",
-    riffRaffArtifactResources ++= listFilesInPackage(file(s"${scalaRoot}/subscription-export/scripts"))
+    riffRaffArtifactResources += file(s"${scalaRoot}/subscription-export/scripts/CODE/export.hql") -> s"mobile-subscription-export/CODE/export.hql",
+    riffRaffArtifactResources += file(s"${scalaRoot}/subscription-export/scripts/PROD/export.hql") -> s"mobile-subscription-export/PROD/export.hql"
   )
 
 def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = commonSettings(module) ++ List(
