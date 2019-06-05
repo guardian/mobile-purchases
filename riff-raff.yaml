@@ -89,3 +89,4 @@ deployments:
       cacheControl: max-age=60
       publicReadAcl: false
       prefixPackage: true
+      prefixStage: false
