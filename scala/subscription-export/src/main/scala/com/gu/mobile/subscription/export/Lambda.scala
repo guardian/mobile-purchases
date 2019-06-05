@@ -1,5 +1,7 @@
 package com.gu.mobile.subscription.export
 
+import java.util
+
 import com.amazonaws.auth.{ AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain }
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.regions.{ DefaultAwsRegionProviderChain, Regions }
@@ -47,10 +49,11 @@ object Lambda {
       .build()
 
     logger.info(s"Set up cluster. script: ${config.hqlS3ScriptLocation}, stage: $stage")
+
     val runScriptStep = new StepConfig()
       .withName("Export data")
       .withActionOnFailure("TERMINATE_JOB_FLOW")
-      .withHadoopJarStep(setpFactory.newRunHiveScriptStep(config.hqlS3ScriptLocation, "-d", s"stage=$stage"))
+      .withHadoopJarStep(setpFactory.newRunHiveScriptStep(config.hqlS3ScriptLocation, s"-d stage= $stage"))
 
     logger.info("Run job flow request")
 

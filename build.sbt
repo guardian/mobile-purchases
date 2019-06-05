@@ -35,7 +35,7 @@ lazy val subscriptionExport = project.in(scalaRoot / "subscription-export").enab
     commonAssemblySettings("subscription-export"),
     libraryDependencies ++= List(
       "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
-      "com.amazonaws" % "aws-java-sdk-emr" % awsVersion
+      "com.amazonaws" % "aws-java-sdk-emr" % "1.11.562"
     ),
     mainClass in (Compile, run) := Some("com.gu.mobile.subscription.export.LocalRun")
   )
