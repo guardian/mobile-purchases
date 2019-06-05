@@ -15,6 +15,6 @@ CREATE EXTERNAL TABLE IF NOT EXISTS saved_articles_export
  LOCATION 's3://gu-mobile-hive-test/test';
 
 INSERT OVERWRITE TABLE  saved_articles_export
-     select * from ddb_saved_articles_code;
+     select * from ddb_saved_articles_S{hiveconf:stage};
 
 
