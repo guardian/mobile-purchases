@@ -53,7 +53,7 @@ object Lambda {
     val runScriptStep = new StepConfig()
       .withName("Export data")
       .withActionOnFailure("TERMINATE_JOB_FLOW")
-      .withHadoopJarStep(setpFactory.newRunHiveScriptStep(config.hqlS3ScriptLocation, "-d", s"stage= $stage"))
+      .withHadoopJarStep(setpFactory.newRunHiveScriptStep(config.hqlS3ScriptLocation))
 
     logger.info("Run job flow request")
 
