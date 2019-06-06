@@ -64,7 +64,7 @@ object Lambda {
       .withServiceRole("EMR_DefaultRole")
       .withJobFlowRole("EMR_EC2_DefaultRole")
       .withInstances(new JobFlowInstancesConfig()
-        .withEc2SubnetId("subnet-75859517") //TODO do not push
+        .withEc2SubnetId(config.vpcSubnetId) //TODO do not push
         .withEc2KeyName(config.emrKeyPairName) //TODO do not push
         .withInstanceCount(3) //Fsck knows
         .withKeepJobFlowAliveWhenNoSteps(false)

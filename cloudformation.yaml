@@ -93,6 +93,13 @@ Resources:
           PolicyDocument:
             Statement:
               Action:
+                - ssm:GetParametersByPath
+              Effect: Allow
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}-subscription-export/${Stage}/${Stack}
+        - PolicyName: google-access-tokens
+          PolicyDocument:
+            Statement:
+              Action:
                 - s3:GetObject
                 - s3:PutObject
               Effect: Allow
@@ -126,6 +133,20 @@ Resources:
               Action: [ "kms:GenerateDataKey", "kms:Decrypt" ]
               Resource:
                 - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0215d06c-81c4-4896-a5da-c818770ea8db
+        - PolicyName: mobile-subscriptions-export-s3
+          PolicyDocument:
+            Statement:
+              Action:
+                - s3:GetObject
+              Effect: Allow
+              Resource: !Sub arn:aws:s3:::mobile-dist/${Stage}/mobile-subscription-export-hive-scripts/*
+        - PolicyName: mobile-subscriptions-read-jar
+          PolicyDocument:
+            Statement:
+              Action:
+                - s3:GetObject
+              Effect: Allow
+              Resource: !Sub arn:aws:s3:::mobile-dist/${Stage}/mobile-subscription-export-hive-scripts/*
 
   LogGroupValidateReceipts:
     Type: "AWS::Logs::LogGroup"
@@ -613,7 +634,7 @@ Resources:
     Properties:
       ScheduleExpression: cron(0 3 * * ? *)
       Targets:
-        - Id: !Sub MobileDynamoBackup${Stage}Target
+        - Id: !Sub MobileSubscriptionExport${Stage}Target
           Arn: !GetAtt SubscriptionExportLambda.Arn
 
   SubscriptionsExportEventPermission:
