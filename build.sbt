@@ -70,6 +70,7 @@ lazy val root = project
     riffRaffArtifactResources += (assembly in iosValidateReceipts).value -> s"${(name in iosValidateReceipts).value}/${(assembly in iosValidateReceipts).value.getName}",
     riffRaffArtifactResources += (assembly in iosUserPurchases).value -> s"${(name in iosUserPurchases).value}/${(assembly in iosUserPurchases).value.getName}",
     riffRaffArtifactResources += (assembly in googleOauth).value -> s"${(name in googleOauth).value}/${(assembly in googleOauth).value.getName}",
+    riffRaffArtifactResources += (assembly in subscriptionExport).value -> s"${(name in subscriptionExport).value}/${(assembly in subscriptionExport).value.getName}",
     riffRaffArtifactResources += file("tsc-target/google-pubsub.zip") -> s"mobile-purchases-google-pubsub/google-pubsub.zip",
     riffRaffArtifactResources += file("tsc-target/apple-pubsub.zip") -> s"mobile-purchases-apple-pubsub/apple-pubsub.zip",
     riffRaffArtifactResources += file("tsc-target/google-playsubstatus.zip") -> s"mobile-purchases-google-playsubstatus/google-playsubstatus.zip",
