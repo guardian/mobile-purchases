@@ -88,6 +88,6 @@ deployments:
       bucket: mobile-dist
       cacheControl: max-age=60
       publicReadAcl: false
-      prefixPackage: false
-      prefixStack: false
+      prefixPackage: true
+      prefixStack: true
       prefixStage: false
