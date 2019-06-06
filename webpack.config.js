@@ -45,4 +45,13 @@ const googlePlaySubStatus = Object.assign({}, config, {
     }
 });
 
-module.exports = [googlePubSub, applePubSub, googlePlaySubStatus];
+const userLink = Object.assign({}, config, {
+    entry: './typescript/src/link/index.ts',
+    output: {
+        filename: 'link-user-subscription.js',
+        path: path.resolve(__dirname, 'tsc-target'),
+        libraryTarget: 'commonjs'
+    }
+});
+
+module.exports = [googlePubSub, applePubSub, googlePlaySubStatus, userLink];
