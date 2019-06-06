@@ -75,8 +75,8 @@ lazy val root = project
     riffRaffArtifactResources += file("tsc-target/google-playsubstatus.zip") -> s"mobile-purchases-google-playsubstatus/google-playsubstatus.zip",
     riffRaffArtifactResources += file("tsc-target/link-user-subscription.zip") -> s"mobile-purchases-link-user-subscription/link-user-subscription.zip",
     riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",
-    riffRaffArtifactResources += file("mobile-subscription-export-hive-scripts/CODE/export.hql") -> s"mobile-subscription-export-hive-scripts/scripts/export-CODE.hql",
-    riffRaffArtifactResources += file("mobile-subscription-export-hive-scripts/PROD/export.hql") -> s"mobile-subscription-export-hive-scripts/scripts/export-PROD.hql"
+    riffRaffArtifactResources += file("mobile-subscription-export-hive-scripts/CODE/export.hql") -> s"mobile-subscription-export-hive-scripts/CODE/export.hql",
+    riffRaffArtifactResources += file("mobile-subscription-export-hive-scripts/PROD/export.hql") -> s"mobile-subscription-export-hive-scripts/PROD/export.hql"
   )
 
 def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = commonSettings(module) ++ List(
