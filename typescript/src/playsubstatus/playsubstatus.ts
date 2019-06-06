@@ -1,5 +1,12 @@
 import * as restm from 'typed-rest-client/RestClient';
-import {HTTPResponseHeaders, HTTPRequest, HTTPResponse, HTTPResponses} from '../models/apiGatewayHttp';
+import {
+    HTTPResponseHeaders,
+    HTTPRequest,
+    HTTPResponse,
+    HTTPResponses,
+    HttpRequestHeaders,
+    PathParameters
+} from '../models/apiGatewayHttp';
 import S3 = require("aws-sdk/clients/s3");
 
 interface GoogleResponseBody {
@@ -41,13 +48,22 @@ function getAccessToken(params: S3.Types.GetObjectRequest): Promise<AccessToken>
         })
 }
 
+function getPurchaseToken(headers: HttpRequestHeaders): string {
+    return headers["Play-Purchase-Token"] || headers["play-purchase-token"]
+}
+
+function buildGoogleUrl(pathParams: PathParameters, headers: HttpRequestHeaders) {
+    const baseUrl = 'https://www.googleapis.com/androidpublisher/v3/applications/com.guardian/purchases/subscriptions';
+    return `${baseUrl}/${pathParams.subscriptionId}/tokens/${getPurchaseToken(headers)}`;
+}
+
 export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
 
     const stage = process.env.Stage;
 
-    if (request.pathParameters && request.headers && request.headers["Play-Purchase-Token"]) {
-        const url = `https://www.googleapis.com/androidpublisher/v3/applications/com.guardian/purchases/subscriptions/${request.pathParameters.subscriptionId}/tokens/${request.headers["Play-Purchase-Token"]}`;
+    if (request.pathParameters && request.headers && getPurchaseToken(request.headers)) {
         const restClient = new restm.RestClient('guardian-mobile-purchases');
+        const url = buildGoogleUrl(request.pathParameters, request.headers);
         return getAccessToken(getParams(stage || ""))
             .then(accessToken =>
                 restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
