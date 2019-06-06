@@ -25,8 +25,6 @@ object Lambda {
 
   val config = new Configuration()
 
-  val stage = Option(System.getenv("Stage")).getOrElse("CODE")
-
   val enableDebuggingStep = new StepConfig()
     .withName("Enable debugging")
     .withActionOnFailure("TERMINATE_JOB_FLOW")
@@ -48,7 +46,7 @@ object Lambda {
       .withRegion(Regions.EU_WEST_1)
       .build()
 
-    logger.info(s"Set up cluster. script: ${config.hqlS3ScriptLocation}, stage: $stage")
+    logger.info(s"Set up cluster. script: ${config.hqlS3ScriptLocation}")
 
     val runScriptStep = new StepConfig()
       .withName("Export data")
@@ -67,9 +65,9 @@ object Lambda {
       .withJobFlowRole("EMR_EC2_DefaultRole")
       .withInstances(new JobFlowInstancesConfig()
         .withEc2SubnetId("subnet-75859517") //TODO do not push
-        .withEc2KeyName("NathanielEmrHome") //TODO do not push
+        .withEc2KeyName(config.emrKeyPairName) //TODO do not push
         .withInstanceCount(3) //Fsck knows
-        .withKeepJobFlowAliveWhenNoSteps(true)
+        .withKeepJobFlowAliveWhenNoSteps(false)
         .withMasterInstanceType("m4.large")
         .withSlaveInstanceType("m4.large")
       )

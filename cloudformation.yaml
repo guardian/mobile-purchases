@@ -109,6 +109,8 @@ Resources:
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/mobile-save-for-late-${Stage}-articles #For developing the subscriptions export before the tables are in situ
+
         - PolicyName: Sqs
           PolicyDocument:
             Statement:
@@ -553,10 +555,7 @@ Resources:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:mobile-server-side
       AlarmName: !Sub mobile-purchases-${Stage}-google-oauth-token-refresh-failure
       AlarmDescription: !Sub Trigger the GoogleOAuth lambda manually to refresh the token
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref GoogleOAuthLambda
+      ComparisonOperator: GreaterThanOrEqualToThreshold+
       EvaluationPeriods: 1
       MetricName: Errors
       Namespace: AWS/Lambda
@@ -589,3 +588,44 @@ Resources:
       Statistic: Sum
       Threshold: 3
       TreatMissingData: notBreaching
+
+  SubscriptionExportLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${App}-${Stage}-subscription-export
+      Code:
+        DeployBucket:
+          Ref: DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-ios-user-purchases/${App}-ios-user-purchases.jar
+      Environment:
+        Variables:
+          App: mobile-purchases-subscriptions-export
+          Stack: !Ref Stack
+          Stage: !Ref Stage
+      Description: exports subscription data from dynamo db to the data lake
+      Handler: com.gu.mobile.subscription.export.Lambda:handler
+      MemorySize: 512
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Runtime: java8
+
+  SubscriptionExportEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: cron(0 3 * * ? *)
+      Targets:
+        - Id: !Sub MobileDynamoBackup${Stage}Target
+          Arn: !GetAtt SubscriptionExportLambda.Arn
+
+  SubscriptionsExportEventPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt SubscriptionExportLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SubscriptionExportEventRule.Arn
+
+
+
+
+
+>>>>>>> cloudform lambda

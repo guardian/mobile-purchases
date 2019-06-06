@@ -82,7 +82,7 @@ deployments:
       fileName: mobile-purchases-subscription-export.jar
       prefixStack: false
 
-  mobile-subscription-export:
+  mobile-subscription-export-hive-scripts:
     type: aws-s3
     parameters:
       bucket: mobile-dist
