@@ -139,8 +139,12 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Stage
-      MethodSettings:
-        - MetricsEnabled: true
+      MethodSettings: [{
+          "MetricsEnabled": True,
+          "LoggingLevel": "OFF",
+          "ResourcePath": "/*",
+          "HttpMethod": "*"
+      }]
       DefinitionBody:
         swagger: "2.0"
         info:
@@ -513,6 +517,31 @@ Resources:
       EvaluationPeriods: 1
       MetricName: Errors
       Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+
+  GooglePlaySubsStatus5xxErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:jacob-test #FIXME
+      AlarmName: !Sub mobile-purchases-${Stage}-play-subscription-status-check-errors
+      AlarmDescription: !Sub A high number errors are being served to the Android app when it is attempting to check Play Subscription statuses
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub ${App}-${Stage}
+        - Name: Method
+          Value: GET
+        - Name: Resource
+          Value: /google/subscription/{subscriptionId}/status
+        - Name: Stage
+          Value: !Ref Stage
+      EvaluationPeriods: 1
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
       Period: 60
       Statistic: Sum
       Threshold: 1
