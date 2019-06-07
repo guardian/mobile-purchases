@@ -139,6 +139,8 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Stage
+      MethodSettings:
+        - MetricsEnabled: true
       DefinitionBody:
         swagger: "2.0"
         info:
