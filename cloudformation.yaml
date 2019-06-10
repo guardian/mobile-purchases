@@ -185,7 +185,8 @@ Resources:
     Properties:
       StageName: !Ref Stage
       MethodSettings: [{
-          "MetricsEnabled": True, "LoggingLevel": "OFF",
+          "MetricsEnabled": True,
+          "LoggingLevel": "OFF",
           "ResourcePath": "/*",
           "HttpMethod": "*"
       }]
@@ -261,7 +262,6 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
           "/healthcheck":
             get:
               responses:
@@ -412,7 +412,6 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
-<<<<<<< 39b65a7421d1f4be96ccd294310d32538587b38b
   LinkUserToSubLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -673,9 +672,3 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
       SourceArn: !GetAtt SubscriptionExportEventRule.Arn
-
-
-
-
-
->>>>>>> cloudform lambda

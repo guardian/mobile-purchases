@@ -65,8 +65,8 @@ object Lambda {
       .withJobFlowRole("EMR_EC2_DefaultRole")
       .withVisibleToAllUsers(true)
       .withInstances(new JobFlowInstancesConfig()
-        .withEc2SubnetId(config.vpcSubnetId) //TODO do not push
-        .withEc2KeyName(config.emrKeyPairName) //TODO do not push
+        .withEc2SubnetId(config.vpcSubnetId)
+        .withEc2KeyName(config.emrKeyPairName) 
         .withInstanceCount(config.instanceCount)
         .withKeepJobFlowAliveWhenNoSteps(false)
         .withMasterInstanceType(config.masterInstanceType)
