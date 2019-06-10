@@ -444,8 +444,6 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
-=======
->>>>>>> change visability of cluster
   GooglePlaySubStatusLambda:
     Type: AWS::Serverless::Function
     Properties:
