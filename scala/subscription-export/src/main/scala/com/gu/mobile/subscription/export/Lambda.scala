@@ -53,7 +53,7 @@ object Lambda {
       .withActionOnFailure("TERMINATE_JOB_FLOW")
       .withHadoopJarStep(setpFactory.newRunHiveScriptStep(config.hqlS3ScriptLocation))
 
-    logger.info(s"Run job flow request: Vpc: *${config.vpcSubnetId}* Kp: ${config.emrKeyPairName}")
+    logger.info("Run job flow request. ")
 
     val runJobFlowRequest = new RunJobFlowRequest()
       .withName("Export subs via hive")
@@ -67,10 +67,10 @@ object Lambda {
       .withInstances(new JobFlowInstancesConfig()
         .withEc2SubnetId(config.vpcSubnetId) //TODO do not push
         .withEc2KeyName(config.emrKeyPairName) //TODO do not push
-        .withInstanceCount(3) //Fsck knows
+        .withInstanceCount(config.instanceCount)
         .withKeepJobFlowAliveWhenNoSteps(false)
-        .withMasterInstanceType("m4.large")
-        .withSlaveInstanceType("m4.large")
+        .withMasterInstanceType(config.masterInstanceType)
+        .withSlaveInstanceType(config.slaveInstanceType)
       )
 
     val result = emr.runJobFlow(runJobFlowRequest)

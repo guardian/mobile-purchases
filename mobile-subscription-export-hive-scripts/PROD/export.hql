@@ -1,10 +1,10 @@
-CREATE EXTERNAL TABLE ddb_saved_articles_CODE
+CREATE EXTERNAL TABLE ddb_saved_articles_PROD
     (user_id   STRING,
      articles  STRING,
      version STRING)
   STORED BY 'org.apache.hadoop.hive.dynamodb.DynamoDBStorageHandler'
   TBLPROPERTIES(
-     "dynamodb.table.name" = "mobile-save-for-later-CODE-articles",
+     "dynamodb.table.name" = "mobile-save-for-later-PROD-articles",
      "dynamodb.column.mapping"="user_id:UserId,articles:articles,version:version"
   );
 
@@ -15,6 +15,6 @@ CREATE EXTERNAL TABLE IF NOT EXISTS saved_articles_export
  LOCATION 's3://gu-mobile-hive-test/test';
 
 INSERT OVERWRITE TABLE  saved_articles_export
-     select * from ddb_saved_articles_CODE;
+     select * from ddb_saved_articles_PROD;
 
 

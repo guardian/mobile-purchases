@@ -26,4 +26,8 @@ class Configuration {
   val s3LogLocation = conf.getString("s3.logBucket")
   val emrKeyPairName = conf.getString("emr.keyPair")
   val vpcSubnetId = conf.getString("vpc.subnetId")
+  val masterInstanceType = conf.getString("ec2.masterInstanceType")
+  val slaveInstanceType = conf.getString("ec2.slaveInstanceType")
+  val instanceCount = conf.getInt("ec2.instanceCount")
+
 }
