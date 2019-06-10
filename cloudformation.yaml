@@ -199,6 +199,18 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
+
+          "/user/linkToSubscriptions":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LinkUserToSubLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
           "/healthcheck":
             get:
               responses:
@@ -342,6 +354,38 @@ Resources:
           Type: Api
           Properties:
             Path: "/apple/pubsub"
+            Method: POST
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  LinkUserToSubLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: link-user-subscription.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-link-user-subscription/link-user-subscription.zip
+      FunctionName: !Sub ${App}-link-user-subscription-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+          AppleQueueUrl: !Ref AppleSubscriptionsQueue
+          GoogleQueueUrl: !Ref GoogleSubscriptionsQueue
+      Description: Links users to subscriptions
+      MemorySize: 128
+      Timeout: 45
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/user/linkToSubscriptions"
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
