@@ -89,7 +89,7 @@ Resources:
                 - ssm:GetParametersByPath
               Effect: Allow
               Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/google-oauth-lambda
-        - PolicyName: google-access-tokens
+        - PolicyName: export-subscriptions
           PolicyDocument:
             Statement:
               Action:
@@ -146,7 +146,29 @@ Resources:
               Action:
                 - s3:GetObject
               Effect: Allow
-              Resource: !Sub arn:aws:s3:::mobile-dist/${Stage}/mobile-subscription-export-hive-scripts/*
+              Resource: !Sub arn:aws:s3:::mobile-dist/${Stage}/mobile-purchases/subscription-export/*
+
+        - PolicyName: mobile-subscriptions-emr
+          PolicyDocument:
+            Statement:
+              Action:
+                - elasticmapreduce:RunJobFlow
+              Effect: Allow
+              Resource: "*"
+        - PolicyName: mobile-subscriptions-iam
+          PolicyDocument:
+            Statement:
+              Action:
+                - iam:GetInstanceProfile
+                - iam:GetRole
+                - iam:PassRole
+                - iam:ListInstanceProfiles
+              Effect: Allow
+              Resource:
+                - !Sub arn:aws:iam::${AWS::AccountId}:role/EMR_DefaultRole
+                - !Sub arn:aws:iam::${AWS::AccountId}:role/EMR_EC2_DefaultRole
+                - !Sub arn:aws:iam::${AWS::AccountId}:role/EMR_AutoScaling_DefaultRole
+
 
   LogGroupValidateReceipts:
     Type: "AWS::Logs::LogGroup"
@@ -239,6 +261,7 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
+
           "/healthcheck":
             get:
               responses:
@@ -389,6 +412,7 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
+<<<<<<< 39b65a7421d1f4be96ccd294310d32538587b38b
   LinkUserToSubLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -421,6 +445,8 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
+=======
+>>>>>>> change visability of cluster
   GooglePlaySubStatusLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -576,7 +602,10 @@ Resources:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:mobile-server-side
       AlarmName: !Sub mobile-purchases-${Stage}-google-oauth-token-refresh-failure
       AlarmDescription: !Sub Trigger the GoogleOAuth lambda manually to refresh the token
-      ComparisonOperator: GreaterThanOrEqualToThreshold+
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref GoogleOAuthLambda
       EvaluationPeriods: 1
       MetricName: Errors
       Namespace: AWS/Lambda
@@ -613,19 +642,19 @@ Resources:
   SubscriptionExportLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub ${App}-${Stage}-subscription-export
+      FunctionName: !Sub ${App}-subscription-export-${Stage}
       Code:
-        DeployBucket:
-          Ref: DeployBucket
-        S3Key: !Sub ${Stack}/${Stage}/${App}-ios-user-purchases/${App}-ios-user-purchases.jar
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-subscription-export/${App}-subscription-export.jar
       Environment:
         Variables:
-          App: mobile-purchases-subscriptions-export
+          App: !Sub ${App}-subscription-export
           Stack: !Ref Stack
           Stage: !Ref Stage
       Description: exports subscription data from dynamo db to the data lake
-      Handler: com.gu.mobile.subscription.export.Lambda:handler
+      Handler: com.gu.mobile.subscription.export.Lambda::handler
       MemorySize: 512
+      Timeout: 900
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Runtime: java8
 
