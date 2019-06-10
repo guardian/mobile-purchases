@@ -53,7 +53,7 @@ object Lambda {
       .withActionOnFailure("TERMINATE_JOB_FLOW")
       .withHadoopJarStep(setpFactory.newRunHiveScriptStep(config.hqlS3ScriptLocation))
 
-    logger.info("Run job flow request")
+    logger.info(s"Run job flow request: Vpc: *${config.vpcSubnetId}* Kp: ${config.emrKeyPairName}")
 
     val runJobFlowRequest = new RunJobFlowRequest()
       .withName("Export subs via hive")
