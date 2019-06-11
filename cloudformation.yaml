@@ -651,7 +651,7 @@ Resources:
       Description: exports subscription data from dynamo db to the data lake
       Handler: com.gu.mobile.subscription.export.Lambda::handler
       MemorySize: 512
-      Timeout: 900
+      Timeout: 60
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Runtime: java8
 
