@@ -82,7 +82,11 @@ export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
                 }
             })
             .catch(
-                error =>  {
+                error => {
+                    if (error['statusCode'] === 410) {
+                        console.log(`Purchase expired a very long time ago`)
+                        return HTTPResponses.NOT_FOUND
+                    }
                     console.log(`Serving an Internal Server Error due to: ${error}`);
                     return HTTPResponses.INTERNAL_ERROR
                 }
