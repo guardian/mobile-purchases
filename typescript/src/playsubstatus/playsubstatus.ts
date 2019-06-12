@@ -83,7 +83,7 @@ export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
             })
             .catch(
                 error => {
-                    if (error['statusCode'] === 410) {
+                    if (error.statusCode === 410) {
                         console.log(`Purchase expired a very long time ago`);
                         return HTTPResponses.NOT_FOUND
                     } else {
