@@ -13,13 +13,13 @@ describe("The google pubsub", () => {
         process.env['Secret'] = "MYSECRET";
         process.env['QueueUrl'] = "";
 
-        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, SubscriptionEvent[]>  = jest.fn((event) => {
+        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]>  = jest.fn((event) => {
             return new Promise((resolve, reject) => {
                 resolve(event);
             });
         });
 
-        const mockSqsFunction: Mock<Promise<any>, {purchaseToken: string}[]>  = jest.fn((event) => {
+        const mockSqsFunction: Mock<Promise<any>, [{purchaseToken: string}]>  = jest.fn((event) => {
             return new Promise((resolve, reject) => {
                 resolve({});
             });
@@ -64,7 +64,8 @@ describe("The google pubsub", () => {
             expect(mockStoreFunction.mock.calls.length).toEqual(1);
             expect(mockStoreFunction.mock.calls[0][0]).toStrictEqual(expectedSubscriptionEventInDynamo);
             expect(mockSqsFunction.mock.calls.length).toEqual(1);
-            expect(mockSqsFunction.mock.calls[0][0]).toStrictEqual({purchaseToken: "PURCHASE_TOKEN"});
+            expect(mockSqsFunction.mock.calls[0][0]).toStrictEqual({purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"});
+
         });
     });
 });
