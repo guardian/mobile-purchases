@@ -1,5 +1,5 @@
 import S3 = require("aws-sdk/clients/s3")
-import {HttpRequestHeaders} from "../models/apiGatewayHttp";
+import {HttpRequestHeaders, PathParameters} from "../models/apiGatewayHttp";
 
 const s3: S3  = new S3();
 
@@ -26,7 +26,8 @@ export function getAccessToken(params: S3.Types.GetObjectRequest) {
         })
 }
 
-export function buildGoogleUrl(headers: HttpRequestHeaders) {
-    return
-
+export function buildGoogleUrl(subscriptionId: String, purchaseToken: String) {
+    const baseUrl = 'https://www.googleapis.com/androidpublisher/v3/applications/com.guardian/purchases/subscriptions';
+    return `${baseUrl}/${subscriptionId}/tokens/${purchaseToken}';
 }
+
