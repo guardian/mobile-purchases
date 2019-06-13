@@ -64,7 +64,7 @@ describe("The google pubsub", () => {
             expect(mockStoreFunction.mock.calls.length).toEqual(1);
             expect(mockStoreFunction.mock.calls[0][0]).toStrictEqual(expectedSubscriptionEventInDynamo);
             expect(mockSqsFunction.mock.calls.length).toEqual(1);
-            expect(mockSqsFunction.mock.calls[0][0]).toStrictEqual({purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"});
+            expect(mockSqsFunction.mock.calls[0][0]).toStrictEqual({packageName: "com.some.thing", purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"});
 
         });
     });

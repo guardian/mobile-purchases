@@ -18,6 +18,7 @@ interface SubscriptionNotification {
 }
 
 interface SqsEvent {
+    packageName: string,
     purchaseToken: string,
     subscriptionId: string
 }
@@ -65,6 +66,7 @@ export function toDynamoEvent(notification: DeveloperNotification): Subscription
 
 export function toSqsEvent(event: DeveloperNotification): SqsEvent {
     return {
+        packageName: event.packageName,
         purchaseToken: event.subscriptionNotification.purchaseToken,
         subscriptionId: event.subscriptionNotification.subscriptionId
     }
