@@ -78,7 +78,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 
 export function toSqsEvent(event: StatusUpdateNotification): SqsEvent {
     const receiptInfo = event.latest_receipt_info || event.latest_expired_receipt_info;
-    const receipt = event.latest_receipt || event.latest_receipt;
+    const receipt = event.latest_receipt || event.latest_expired_receipt;
     return {
         transactionId: receiptInfo.transaction_id,
         receipt: receipt
