@@ -2,7 +2,7 @@ import 'source-map-support/register'
 import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {ONE_YEAR_IN_SECONDS, parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
-import {AppleReceipt} from "../models/appleReceipt";
+import {AppleReceiptInfo} from "../models/appleReceiptInfo";
 
 export interface StatusUpdateNotification {
     environment: string,
@@ -12,9 +12,9 @@ export interface StatusUpdateNotification {
     cancellation_date: string,
     web_order_line_item_id: string,
     latest_receipt: string,
-    latest_receipt_info: AppleReceipt,
+    latest_receipt_info: AppleReceiptInfo,
     latest_expired_receipt: string,
-    latest_expired_receipt_info: AppleReceipt,
+    latest_expired_receipt_info: AppleReceiptInfo,
     auto_renew_status: boolean,
     auto_renew_adam_id: string,
     auto_renew_product_id: string,

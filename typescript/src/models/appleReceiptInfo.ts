@@ -1,4 +1,4 @@
-export interface AppleReceipt {
+export interface AppleReceiptInfo {
     transaction_id: string,
     bid: string,
     product_id: string,
