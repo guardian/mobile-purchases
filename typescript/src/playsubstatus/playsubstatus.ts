@@ -54,6 +54,7 @@ function getPurchaseToken(headers: HttpRequestHeaders): string {
 
 function buildGoogleUrl(pathParams: PathParameters, headers: HttpRequestHeaders) {
     const baseUrl = 'https://www.googleapis.com/androidpublisher/v3/applications/com.guardian/purchases/subscriptions';
+    console.log(`Subscription id is: ${pathParams.subscriptionId}`);
     return `${baseUrl}/${pathParams.subscriptionId}/tokens/${getPurchaseToken(headers)}`;
 }
 
