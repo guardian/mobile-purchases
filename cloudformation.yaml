@@ -599,7 +599,7 @@ Resources:
        FunctionName: !Sub ${App}-google-update-subscriptions-${Stage}
        Code:
          Bucket: !Ref DeployBucket
-         Key: !Sub ${Stack}/${Stage}/${App}-link-user-subscription/link-user-subscription.zip
+         Key: !Sub ${Stack}/${Stage}/${App}-google-update-subscriptions/google-update-subscriptions.zip
        Environment:
          Variables:
            App: !Sub ${App}

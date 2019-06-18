@@ -63,7 +63,7 @@ lazy val root = project
     riffRaffArtifactResources += file("tsc-target/apple-pubsub.zip") -> s"mobile-purchases-apple-pubsub/apple-pubsub.zip",
     riffRaffArtifactResources += file("tsc-target/google-playsubstatus.zip") -> s"mobile-purchases-google-playsubstatus/google-playsubstatus.zip",
     riffRaffArtifactResources += file("tsc-target/link-user-subscription.zip") -> s"mobile-purchases-link-user-subscription/link-user-subscription.zip",
-    riffRaffArtifactResources += file("tsc-target/updatesubs.zip") -> s"mobile-purchases-update-subscriptions/update-subscriptions.zip",
+    riffRaffArtifactResources += file("tsc-target/updatesubs.zip") -> s"mobile-purchases-update-subscriptions/google-update-subscriptions.zip",
     riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",
   )
 
