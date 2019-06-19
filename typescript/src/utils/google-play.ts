@@ -16,7 +16,7 @@ export function getParams(stage: String): S3.Types.GetObjectRequest {
 
 export function getAccessToken(params: S3.Types.GetObjectRequest) : Promise<AccessToken> {
     console.log(`Attempting to fetch access token from: Bucket: ${params.Bucket} | Key: ${params.Key}`);
-    return aws.s3.getObject(params).promise()
+    const token =  aws.s3.getObject(params).promise()
         .then( s3OutPut => {
             if(s3OutPut.Body) {
                 console.log("Got access tk");
@@ -32,6 +32,8 @@ export function getAccessToken(params: S3.Types.GetObjectRequest) : Promise<Acce
             console.log(`Failed to get access token from S3 due to: ${error}`);
             throw error
         })
+    console.log("Hello")
+    return token
 }
 
 export function buildGoogleUrl(subscriptionId: String, purchaseToken: String, packageName: String) {
