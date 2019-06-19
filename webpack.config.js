@@ -46,7 +46,7 @@ const googlePlaySubStatus = Object.assign({}, config, {
 });
 
 const userLink = Object.assign({}, config, {
-    entry: './typescript/src/link/index.ts',
+    entry: './typescript/src/link/google.ts',
     output: {
         filename: 'link-user-subscription.js',
         path: path.resolve(__dirname, 'tsc-target'),
@@ -54,14 +54,14 @@ const userLink = Object.assign({}, config, {
     }
 });
 
-const updateSubs = Object.assign({}, config, {
-    entry: '../typescripts/src/link/index.js',
+const googleUpdateSub = Object.assign({}, config, {
+    entry: '../typescripts/src/link/google.js',
     output: {
-        fileName: 'update-subscriptions.js',
+        fileName: 'goodle-update-subscriptions.js',
         path: path.resolve(__dirname, 'tsc-target'),
         libraryTarget: 'commonjs'
     }
 });
 
 
-module.exports = [googlePubSub, applePubSub, googlePlaySubStatus, userLink];
+module.exports = [googlePubSub, applePubSub, googlePlaySubStatus, userLink, googleUpdateSub

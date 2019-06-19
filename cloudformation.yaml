@@ -117,6 +117,7 @@ Resources:
               Resource:
                 - !GetAtt GoogleSubscriptionsQueue.Arn
                 - !GetAtt AppleSubscriptionsQueue.Arn
+                -  arn:aws:sqs:eu-west-1:201359054765:NathanielUpdateGoogleSubscriptionTst
         - PolicyName: Kms
           PolicyDocument:
             Statement:
@@ -590,3 +591,38 @@ Resources:
       Statistic: Sum
       Threshold: 3
       TreatMissingData: notBreaching
+
+
+  UpdateGoogleSubscriptionsLambda:
+     Type: AWS::Lambda::Function
+     Properties:
+       FunctionName: !Sub ${App}-google-update-subscriptions-${Stage}
+       Code:
+         Bucket: !Ref DeployBucket
+         Key: !Sub ${Stack}/${Stage}/${App}-link-user-subscription/link-user-subscription.zip
+       Environment:
+         Variables:
+           App: !Sub ${App}
+           Stack: !Sub ${Stack}
+           Stage: !Sub ${Stage}
+       Description: Consomes subscription data updates from google playstore from sqs and stores them in dynamo
+       Handler: goodle-update-subscriptions.handler
+       MemorySize: 128
+       Role: !GetAtt MobilePurchasesLambdasRole.Arn
+       Runtime: nodejs10.x
+
+
+  UpdateGoogleSubscriptionsEventSource:
+      Type: AWS::Lambda::EventSourceMapping
+      Properties:
+        FunctionName: UpdateGoogleSubscriptionsLambda
+        Enabled: true
+        EventSourceArn: arn:aws:sqs:eu-west-1:201359054765:NathanielUpdateGoogleSubscriptionTst
+        BatchSize: 2
+
+
+
+
+
+
+      
