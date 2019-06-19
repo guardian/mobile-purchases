@@ -1,3 +1,4 @@
+import 'source-map-support/register'
 import {HTTPRequest, HTTPResponse, HTTPResponses} from "../models/apiGatewayHttp";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
 import Sqs from 'aws-sdk/clients/sqs';
