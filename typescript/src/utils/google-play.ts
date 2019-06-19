@@ -18,8 +18,12 @@ export function getAccessToken(params: S3.Types.GetObjectRequest) : Promise<Acce
     return s3Client.getObject(params).promise()
         .then( s3OutPut => {
             if(s3OutPut.Body) {
+                console.log("Got access tk");
+
                 return JSON.parse(s3OutPut.Body.toString())
             } else {
+                console.log("token errod");
+
                 throw Error("S3 output body was not defined")
             }
         })

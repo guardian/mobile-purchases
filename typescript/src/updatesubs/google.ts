@@ -28,6 +28,7 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
             restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
         )
         .then(response => {
+            console.log("Got google data");
             if(response.result) {
                 return new SubscriptionUpdate(
                     sub.purchaseToken,
@@ -41,6 +42,7 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
             }
         })
         .catch( error => {
+            console.log("Got google data");
             throw error
         })
 }

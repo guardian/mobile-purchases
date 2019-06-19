@@ -36,6 +36,9 @@ export class Subscription {
     }
 
     get [DynamoDbTable]() {
-        return App + "-" + Stage + "-subscriptions"
+        let tableName = App + "-" + Stage + "-subscriptions";
+        console.log(`Table: ${tableName}`);
+
+        return tableName
     }
 }
