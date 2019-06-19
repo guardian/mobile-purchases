@@ -21,42 +21,42 @@ const restClient = new restm.RestClient('guardian-mobile-purchases');
 
 export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpdate> {
 
-    try {
-        const sub = JSON.parse(record.body) as GoogleSub
-        const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName)
-        return getAccessToken(getParams("CODE"))
-            .then(accessToken => {
-                console.log("Calling google")
-                return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
-            })
-            .then(response => {
-                console.log("Got google data");
-                if (response.result) {
-                    return new SubscriptionUpdate(
-                        sub.purchaseToken,
-                        response.result.startTimeMillis,
-                        response.result.expiryTimeMillis,
-                        response.result.userCancellationMillis,
-                        response.result.autoRenewing,
-                        response.result)
-                } else {
-                    throw Error("No data in google response")
-                }
-            })
-            .catch(error => {
-                console.log("Got google data");
-                throw error
-            })
-    } catch (e) {
-       console.error(`+++++++++ message: ${e}`)
-    }
+    const sub = JSON.parse(record.body) as GoogleSub
+    const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName)
+    return getAccessToken(getParams("CODE"))
+        .then(accessToken => {
+            console.log("Calling google")
+            return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
+        })
+        .then(response => {
+            console.log("Got google data");
+            if(response.result) {
+                return new SubscriptionUpdate(
+                    sub.purchaseToken,
+                    response.result.startTimeMillis,
+                    response.result.expiryTimeMillis,
+                    response.result.userCancellationMillis,
+                    response.result.autoRenewing,
+                    response.result)
+            } else {
+                throw Error("No data in google response")
+            }
+        })
+        .catch( error => {
+            console.log("Got google data");
+            throw error
+        })
 }
 
 
 
 export async function handler(event: SQSEvent) {
 
-    event.Records.forEach((record) => {
-        parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse)
-    })
+    try {
+        event.Records.forEach((record) => {
+            parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse)
+        })
+    } catch (e) {
+       console.log(`Error: ${e}`)
+    }
 }
