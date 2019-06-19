@@ -2,18 +2,6 @@ import S3 from 'aws-sdk/clients/s3'
 import {CredentialProviderChain, ECSCredentials, SharedIniFileCredentials} from "aws-sdk";
 import {Region} from "./appIdentity";
 
-const credentialProvider = new CredentialProviderChain([
-    function () { return new ECSCredentials(); },
-    function () { return new SharedIniFileCredentials({
-        profile: "mobile"
-    }); }
-]);
-
-export const s3: S3  = new S3({
-    region: Region ,
-    credentialProvider: credentialProvider
-});
-
 
 export interface AccessToken {
     token: string,
@@ -29,6 +17,19 @@ export function getParams(stage: string): S3.Types.GetObjectRequest {
 
 export function getAccessToken(params: S3.Types.GetObjectRequest): Promise<AccessToken> {
     console.log(`Attempting to fetch access token from: Bucket: ${params.Bucket} | Key: ${params.Key}`);
+    const credentialProvider = new CredentialProviderChain([
+        function () { return new ECSCredentials(); },
+        function () { return new SharedIniFileCredentials({
+            profile: "mobile"
+        }); }
+    ]);
+
+
+    const s3: S3  = new S3({
+        region: Region ,
+        credentialProvider: credentialProvider
+    });
+
     return s3.getObject(params).promise()
         .then(s3Output => {
             if (s3Output.Body) {
