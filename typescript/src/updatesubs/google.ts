@@ -22,7 +22,7 @@ const restClient = new restm.RestClient('guardian-mobile-purchases');
 export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpdate> {
 
     const sub = JSON.parse(record.body) as GoogleSub
-    const url = buildGoogleUrl(record.body, sub.purchaseToken, sub.packageName)
+    const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName)
     return getAccessToken(getParams("CODE"))
         .then(accessToken =>
             restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})

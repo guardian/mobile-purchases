@@ -598,15 +598,15 @@ Resources:
      Properties:
        FunctionName: !Sub ${App}-google-update-subscriptions-${Stage}
        Code:
-         Bucket: !Ref DeployBucket
-         Key: !Sub ${Stack}/${Stage}/${App}-google-update-subscriptions/google-update-subscriptions.zip
+         S3Bucket: !Ref DeployBucket
+         S3Key: !Sub ${Stack}/${Stage}/${App}-google-update-subscriptions/google-update-subscriptions.zip
        Environment:
          Variables:
            App: !Sub ${App}
            Stack: !Sub ${Stack}
            Stage: !Sub ${Stage}
        Description: Consomes subscription data updates from google playstore from sqs and stores them in dynamo
-       Handler: goodle-update-subscriptions.handler
+       Handler: google-update-subscriptions.handler
        MemorySize: 128
        Role: !GetAtt MobilePurchasesLambdasRole.Arn
        Runtime: nodejs10.x
