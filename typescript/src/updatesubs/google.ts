@@ -1,7 +1,9 @@
+process.on('uncaughtException', function (err) { console.log(err); })
 import {SQSEvent, SQSRecord} from 'aws-lambda'
 import * as restm from 'typed-rest-client/RestClient';
 import {buildGoogleUrl, getAccessToken, getParams, AccessToken} from "../utils/google-play";
 import {SubscriptionUpdate} from "./updatesub";
+
 import {parseAndStoreSubscriptionUpdate} from './updatesub'
 
 interface GoogleSub {
