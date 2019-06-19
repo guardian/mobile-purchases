@@ -16,7 +16,7 @@ export function getParams(stage: string): S3.Types.GetObjectRequest {
 }
 
 export function getAccessToken(params: S3.Types.GetObjectRequest): Promise<AccessToken> {
-    console.log(`Attempting to fetch access token from: Bucket: ${params.Bucket} | Key: ${params.Key}`);
+    console.log(`Attempting to fetch access token from: Bucket::: ${params.Bucket} | Key: ${params.Key}`);
     const credentialProvider = new CredentialProviderChain([
         function () { return new ECSCredentials(); },
         function () { return new SharedIniFileCredentials({
