@@ -24,9 +24,10 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
     const sub = JSON.parse(record.body) as GoogleSub
     const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName)
     return getAccessToken(getParams("CODE"))
-        .then(accessToken =>
-            restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
-        )
+        .then(accessToken => {
+            console.log("Calling google")
+            return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
+        })
         .then(response => {
             console.log("Got google data");
             if(response.result) {
