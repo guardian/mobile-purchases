@@ -1,7 +1,7 @@
 import {s3 as s3Client} from "../utils/aws"
 import S3 from 'aws-sdk/clients/s3'
 
-interface AccessToken {
+export interface AccessToken {
     token: string,
     date: Date
 }

@@ -1,6 +1,6 @@
 import {SQSEvent, SQSRecord} from 'aws-lambda'
 import * as restm from 'typed-rest-client/RestClient';
-import {buildGoogleUrl, getAccessToken, getParams} from "../utils/google-play";
+import {buildGoogleUrl, getAccessToken, getParams, AccessToken} from "../utils/google-play";
 import {SubscriptionUpdate} from "./updatesub";
 import {parseAndStoreSubscriptionUpdate} from './updatesub'
 
