@@ -28,6 +28,7 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
         const sub = JSON.parse(record.body) as GoogleSub
         const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName);
         const restClient = new restm.RestClient('guardian-mobile-purchases');
+        console.log("Stage: " + Stage)
         return getAccessToken(getParams(Stage || ""))
             .then(accessToken => {
                 console.log("Calling google")
