@@ -63,7 +63,7 @@ export async function getGoogleSubResponse(record: SQSRecord, accessToken: Acces
 export async function handler(event: SQSEvent) {
 
     const accessToken = getAccessToken(getParams(Stage || ""))
-    return accessToken.then( at => {
+    return await accessToken.then( at => {
         parseAndStoreSubscriptionUpdate(event.Records[0], at, getGoogleSubResponse )
     })
     .catch(error => {
