@@ -72,13 +72,13 @@ export async function parseAndStoreSubscriptionUpdate (
     accessToken: AccessToken,
     fetchSubscriberDetails: (record: SQSRecord, accessToken: AccessToken) => Promise<SubscriptionUpdate>
 ) {
-   fetchSubscriberDetails(sqsRecord, accessToken)
+   await fetchSubscriberDetails(sqsRecord, accessToken)
        .then(payload => {
            console.log("++ Get sup")
            getSubscription(payload.purchaseToken)
            .then( subscriptionUpdate => {
                console.log("++ Ipdate sup")
-              updateSub(payload)
+              return updateSub(payload)
             })
             .catch(err => {
                 /*
@@ -87,12 +87,13 @@ export async function parseAndStoreSubscriptionUpdate (
                  */
                 console.log("++ Create sup")
 
-                putSubscription(payload)
+                return putSubscription(payload)
             })
        } )
        .catch(
-           error => console.log(`Error retrieving payload from google: ${error}`)
-
-       )
+           error => {
+               console.log(`Error retrieving payload from google: ${error}`)
+               return new Subscription("")
+           })
 
 }

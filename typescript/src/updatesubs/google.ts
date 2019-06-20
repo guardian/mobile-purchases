@@ -4,6 +4,8 @@ import * as restm from 'typed-rest-client/RestClient';
 import {buildGoogleUrl, getAccessToken, getParams, AccessToken} from "../utils/google-play";
 import {SubscriptionUpdate} from "./updatesub";
 import {Stage} from "../utils/appIdentity";
+import {Subscription} from '../models/subscription';
+
 
 
 import {parseAndStoreSubscriptionUpdate} from './updatesub'
@@ -61,12 +63,11 @@ export async function getGoogleSubResponse(record: SQSRecord, accessToken: Acces
 export async function handler(event: SQSEvent) {
 
     const accessToken = getAccessToken(getParams(Stage || ""))
-    accessToken.then( at => {
-        event.Records.forEach((record) => {
-            parseAndStoreSubscriptionUpdate(record, at, getGoogleSubResponse)
-        })
+    return accessToken.then( at => {
+        parseAndStoreSubscriptionUpdate(event.Records[0], at, getGoogleSubResponse )
     })
-        .catch(error => {
-            console.log(`Error retrieving access token: ${error}`)
-        })
+    .catch(error => {
+        console.log(`Error retrieving access token: ${error}`)
+        throw error
+    })
 }
