@@ -1,4 +1,4 @@
-process.on('uncaughtException', function (err) { console.log(err); })
+process.on('uncaughtException', function (err) { console.log(err); })               
 import {SQSEvent, SQSRecord} from 'aws-lambda'
 import * as restm from 'typed-rest-client/RestClient';
 import {buildGoogleUrl, getAccessToken, getParams, AccessToken} from "../utils/google-play";
@@ -22,7 +22,7 @@ interface GoogleResponseBody {
 }
 
 
-export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpdate> {
+export async function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpdate> {
 
     try {
         const sub = JSON.parse(record.body) as GoogleSub
