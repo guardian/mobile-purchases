@@ -19,13 +19,13 @@ interface GoogleResponseBody {
     autoRenewing: boolean
 }
 
-const restClient = new restm.RestClient('guardian-mobile-purchases');
 
 export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpdate> {
 
     try {
         const sub = JSON.parse(record.body) as GoogleSub
-        const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName)
+        const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName);
+        const restClient = new restm.RestClient('guardian-mobile-purchases');
         return getAccessToken(getParams("CODE"))
             .then(accessToken => {
                 console.log("Calling google")
@@ -42,7 +42,7 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
                         response.result.autoRenewing,
                         response.result)
                 } else {
-                    throw Error("No data in google response")
+                    throw Error("No data in google response");
                 }
             })
             .catch( error => {
