@@ -61,8 +61,6 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
 
 export async function handler(event: SQSEvent) {
 
-        event.Records.forEach((record) => {
-            parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse)
-        })
+        await parseAndStoreSubscriptionUpdate(event.Records[0], getGoogleSubResponse)
         return "bugger";
 }
