@@ -22,18 +22,14 @@ interface GoogleResponseBody {
 }
 
 
-export async function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpdate> {
+export async function getGoogleSubResponse(record: SQSRecord, accessToken: AccessToken): Promise<SubscriptionUpdate> {
 
     try {
         const sub = JSON.parse(record.body) as GoogleSub
         const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName);
         const restClient = new restm.RestClient('guardian-mobile-purchases');
         console.log("Stage: " + Stage)
-        return getAccessToken(getParams(Stage || ""))
-            .then(accessToken => {
-                console.log("Calling google")
-                return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
-            })
+        return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
             .then(response => {
                 console.log("Got google data");
                 if(response.result) {
@@ -64,11 +60,13 @@ export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscript
 
 export async function handler(event: SQSEvent) {
 
-    try {
+    const accessToken = getAccessToken(getParams(Stage || ""))
+    accessToken.then( at => {
         event.Records.forEach((record) => {
-            parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse)
+            parseAndStoreSubscriptionUpdate(record, at, getGoogleSubResponse)
         })
-    } catch (e) {
-       console.log(`Error: ${e}`)
-    }
+    })
+        .catch(error => {
+            console.log(`Error retrieving access token: ${error}`)
+        })
 }
