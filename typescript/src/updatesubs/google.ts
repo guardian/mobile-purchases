@@ -3,6 +3,8 @@ import {SQSEvent, SQSRecord} from 'aws-lambda'
 import * as restm from 'typed-rest-client/RestClient';
 import {buildGoogleUrl, getAccessToken, getParams, AccessToken} from "../utils/google-play";
 import {SubscriptionUpdate} from "./updatesub";
+import {Stage} from "../utils/appIdentity";
+
 
 import {parseAndStoreSubscriptionUpdate} from './updatesub'
 
@@ -26,7 +28,7 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
         const sub = JSON.parse(record.body) as GoogleSub
         const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName);
         const restClient = new restm.RestClient('guardian-mobile-purchases');
-        return getAccessToken(getParams("CODE"))
+        return getAccessToken(getParams(Stage || ""))
             .then(accessToken => {
                 console.log("Calling google")
                 return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
