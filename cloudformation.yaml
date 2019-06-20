@@ -608,7 +608,7 @@ Resources:
            Stage: !Sub ${Stage}
        Description: Consomes subscription data updates from google playstore from sqs and stores them in dynamo
        Handler: google-update-subscriptions.handler
-       MemorySize: 128
+       MemorySize: 512
        Role: !GetAtt MobilePurchasesLambdasRole.Arn
        Timeout: 45
        Runtime: nodejs10.x

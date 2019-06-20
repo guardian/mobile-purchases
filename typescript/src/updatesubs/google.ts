@@ -1,12 +1,8 @@
-process.on('uncaughtException', function (err) { console.log(err); })               
+process.on('uncaughtException', function (err) { console.log(err); })
 import {SQSEvent, SQSRecord} from 'aws-lambda'
 import * as restm from 'typed-rest-client/RestClient';
 import {buildGoogleUrl, getAccessToken, getParams, AccessToken} from "../utils/google-play";
 import {SubscriptionUpdate} from "./updatesub";
-import {Stage} from "../utils/appIdentity";
-import {Subscription} from '../models/subscription';
-
-
 
 import {parseAndStoreSubscriptionUpdate} from './updatesub'
 
@@ -23,15 +19,18 @@ interface GoogleResponseBody {
     autoRenewing: boolean
 }
 
+const restClient = new restm.RestClient('guardian-mobile-purchases');
 
-export async function getGoogleSubResponse(record: SQSRecord, accessToken: AccessToken): Promise<SubscriptionUpdate> {
+export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpdate> {
 
     try {
         const sub = JSON.parse(record.body) as GoogleSub
-        const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName);
-        const restClient = new restm.RestClient('guardian-mobile-purchases');
-        console.log("Stage: " + Stage)
-        return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
+        const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName)
+        return getAccessToken(getParams("CODE"))
+            .then(accessToken => {
+                console.log("Calling google")
+                return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
+            })
             .then(response => {
                 console.log("Got google data");
                 if(response.result) {
@@ -43,7 +42,7 @@ export async function getGoogleSubResponse(record: SQSRecord, accessToken: Acces
                         response.result.autoRenewing,
                         response.result)
                 } else {
-                    throw Error("No data in google response");
+                    throw Error("No data in google response")
                 }
             })
             .catch( error => {
@@ -60,18 +59,10 @@ export async function getGoogleSubResponse(record: SQSRecord, accessToken: Acces
 
 
 
-export function handler(event: SQSEvent) {
+export async function handler(event: SQSEvent) {
 
-      async() => {
-          console.log("Hello")
-          const accessToken = getAccessToken(getParams(Stage || ""))
-          return await accessToken.then(at => {
-              parseAndStoreSubscriptionUpdate(event.Records[0], at, getGoogleSubResponse)
-          })
-          .catch(error => {
-              console.log(`Error retrieving access token: ${error}`)
-              throw error
-          })
-          console.log("See ya")
-      }
+        event.Records.forEach((record) => {
+            parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse)
+        })
+        return "bugger";
 }
