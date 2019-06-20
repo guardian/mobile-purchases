@@ -60,14 +60,18 @@ export async function getGoogleSubResponse(record: SQSRecord, accessToken: Acces
 
 
 
-export async function handler(event: SQSEvent) {
+export function handler(event: SQSEvent) {
 
-    const accessToken = getAccessToken(getParams(Stage || ""))
-    return await accessToken.then( at => {
-        parseAndStoreSubscriptionUpdate(event.Records[0], at, getGoogleSubResponse )
-    })
-    .catch(error => {
-        console.log(`Error retrieving access token: ${error}`)
-        throw error
-    })
+      async() => {
+          console.log("Hello")
+          const accessToken = getAccessToken(getParams(Stage || ""))
+          return await accessToken.then(at => {
+              parseAndStoreSubscriptionUpdate(event.Records[0], at, getGoogleSubResponse)
+          })
+          .catch(error => {
+              console.log(`Error retrieving access token: ${error}`)
+              throw error
+          })
+          console.log("See ya")
+      }
 }
