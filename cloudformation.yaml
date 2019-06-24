@@ -617,9 +617,9 @@ Resources:
   UpdateGoogleSubscriptionsEventSource:
       Type: AWS::Lambda::EventSourceMapping
       Properties:
-        FunctionName: !Ref UpdateGoogleSubscriptionsLambda
+        FunctionName: !Ref GoogleSubscriptionsQueue
         Enabled: true
-        EventSourceArn: arn:aws:sqs:eu-west-1:201359054765:NathanielUpdateGoogleSubscriptionTst
+        EventSourceArn: !GetAtt G
         BatchSize: 2
 
 

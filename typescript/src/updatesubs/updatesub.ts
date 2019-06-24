@@ -65,17 +65,14 @@ function putSubscription(subscriptionUpdate: SubscriptionUpdate): Promise<Subscr
 }
 
 
-
 export async function parseAndStoreSubscriptionUpdate (
     sqsRecord: SQSRecord,
     fetchSubscriberDetails: (record: SQSRecord) => Promise<SubscriptionUpdate>
 ) {
    return fetchSubscriberDetails(sqsRecord)
        .then(payload => {
-           console.log("++ Get sup")
            getSubscription(payload.purchaseToken)
            .then( subscriptionUpdate => {
-               console.log("++ Ipdate up")
               return updateSub(payload)
             })
             .catch(err => {
@@ -83,8 +80,6 @@ export async function parseAndStoreSubscriptionUpdate (
                    see: https://github.com/awslabs/dynamodb-data-mapper-js
                    Need to catch for a non-existant object
                  */
-                console.log("++ Create sup")
-
                 return putSubscription(payload)
             })
        } )
