@@ -56,5 +56,14 @@ export async function handler(event: SQSEvent) {
         await parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse)
     });
     
-    return Promise.all(emptyPromises);
+    return Promise.all(emptyPromises)
+        .then(value  => {
+            console.log(`Processed ${event.Records.length} subscriptions`)
+            "OK"
+        })
+        .catch(error => {
+            console.error("Error processing subsctption update: ", error)
+            return "Error"
+        })
+
 }
