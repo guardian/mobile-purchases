@@ -2,6 +2,7 @@ import {SQSRecord} from 'aws-lambda'
 import {Subscription} from '../models/subscription';
 import {dynamoMapper} from "../utils/aws";
 import {ONE_YEAR_IN_SECONDS} from "../pubsub/pubsub";
+import {AccessToken} from "../utils/google-play";
 
 function makeCancellationTime(cancellationTime: string) : string {
     if (cancellationTime) {
@@ -67,9 +68,10 @@ function putSubscription(subscriptionUpdate: SubscriptionUpdate): Promise<Subscr
 
 export async function parseAndStoreSubscriptionUpdate (
     sqsRecord: SQSRecord,
-    fetchSubscriberDetails: (record: SQSRecord) => Promise<SubscriptionUpdate>
+    futureAccessToken: Promise<AccessToken>,
+    fetchSubscriberDetails: (record: SQSRecord, accessToken: Promise<AccessToken>) => Promise<SubscriptionUpdate>
 ) {
-   return fetchSubscriberDetails(sqsRecord)
+   return fetchSubscriberDetails(sqsRecord, futureAccessToken)
        .then(payload => {
            getSubscription(payload.purchaseToken)
            .then( subscriptionUpdate => {
