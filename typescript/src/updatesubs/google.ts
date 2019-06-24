@@ -39,7 +39,7 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
                     response.result.autoRenewing,
                     response.result)
             } else {
-                throw Error("No data in google response")
+                throw Error("There was no data in google response")
             }
         })
         .catch( error => {
