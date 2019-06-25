@@ -25,7 +25,7 @@ export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscript
 
     const sub = JSON.parse(record.body) as GoogleSub
     const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName)
-    return getAccessToken(getParams("CODE"))
+    return await getAccessToken(getParams("CODE"))
         .then(accessToken => {
             return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
         })
