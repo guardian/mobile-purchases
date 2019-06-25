@@ -31,6 +31,7 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
         })
         .then(response => {
             if(response.result) {
+                console.log("Got subscription data from google")
                 return new SubscriptionUpdate(
                     sub.purchaseToken,
                     response.result.startTimeMillis,
@@ -39,6 +40,7 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
                     response.result.autoRenewing,
                     response.result)
             } else {
+                console.log("There was no data in google response")
                 throw Error("There was no data in google response")
             }
         })
