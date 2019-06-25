@@ -68,16 +68,15 @@ function putSubscription(subscriptionUpdate: SubscriptionUpdate): Promise<Subscr
 
 export async function parseAndStoreSubscriptionUpdate (
     sqsRecord: SQSRecord,
-    futureAccessToken: Promise<AccessToken>,
-    fetchSubscriberDetails: (record: SQSRecord, accessToken: Promise<AccessToken>) => Promise<SubscriptionUpdate>
+    fetchSubscriberDetails: (record: SQSRecord) => Promise<SubscriptionUpdate>
 ) {
-   return fetchSubscriberDetails(sqsRecord, futureAccessToken)
+   return fetchSubscriberDetails(sqsRecord)
        .then(payload => {
            getSubscription(payload.purchaseToken)
            .then( subscriptionUpdate => {
               console.log("Update subscription")
               return updateSub(payload)
-           })
+            })
             .catch(err => {
                 /*
                    see: https://github.com/awslabs/dynamodb-data-mapper-js
