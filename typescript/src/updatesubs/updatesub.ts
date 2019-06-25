@@ -75,13 +75,15 @@ export async function parseAndStoreSubscriptionUpdate (
        .then(payload => {
            getSubscription(payload.purchaseToken)
            .then( subscriptionUpdate => {
+              console.log("Update subscription")
               return updateSub(payload)
-            })
+           })
             .catch(err => {
                 /*
                    see: https://github.com/awslabs/dynamodb-data-mapper-js
                    Need to catch for a non-existant object
                  */
+                console.log("Put subscription")
                 return putSubscription(payload)
             })
        } )
