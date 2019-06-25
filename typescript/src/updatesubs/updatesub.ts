@@ -69,10 +69,10 @@ function putSubscription(subscriptionUpdate: SubscriptionUpdate): Promise<Subscr
 export async function parseAndStoreSubscriptionUpdate (
     sqsRecord: SQSRecord,
     fetchSubscriberDetails: (record: SQSRecord) => Promise<SubscriptionUpdate>
-) {
+) : Promise<Subscription> {
    return fetchSubscriberDetails(sqsRecord)
        .then(payload => {
-           getSubscription(payload.purchaseToken)
+         return  getSubscription(payload.purchaseToken)
            .then( subscriptionUpdate => {
               console.log("Update subscription")
               return updateSub(payload)

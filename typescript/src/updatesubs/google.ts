@@ -21,11 +21,11 @@ interface GoogleResponseBody {
 
 const restClient = new restm.RestClient('guardian-mobile-purchases');
 
-export async function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpdate> {
+export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpdate> {
 
     const sub = JSON.parse(record.body) as GoogleSub
     const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName)
-    return await getAccessToken(getParams("CODE"))
+    return getAccessToken(getParams("CODE"))
         .then(accessToken => {
             return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
         })
