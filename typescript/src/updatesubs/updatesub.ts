@@ -72,10 +72,7 @@ export async function parseAndStoreSubscriptionUpdate (
 ) : Promise<Subscription> {
    return fetchSubscriberDetails(sqsRecord)
        .then(payload => {
-         return  getSubscription(payload.purchaseToken)
-           .then( subscriptionUpdate => {
-                return putSubscription(payload)
-            })
+           return putSubscription(payload)
        } )
        .catch(
            error => {
