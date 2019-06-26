@@ -109,6 +109,7 @@ Resources:
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
         - PolicyName: Sqs
           PolicyDocument:
             Statement:
@@ -117,6 +118,7 @@ Resources:
               Resource:
                 - !GetAtt GoogleSubscriptionsQueue.Arn
                 - !GetAtt AppleSubscriptionsQueue.Arn
+                -  arn:aws:sqs:eu-west-1:201359054765:NathanielUpdateGoogleSubscriptionTst
         - PolicyName: Kms
           PolicyDocument:
             Statement:
@@ -590,3 +592,39 @@ Resources:
       Statistic: Sum
       Threshold: 3
       TreatMissingData: notBreaching
+
+
+  UpdateGoogleSubscriptionsLambda:
+     Type: AWS::Lambda::Function
+     Properties:
+       FunctionName: !Sub ${App}-google-update-subscriptions-${Stage}
+       Code:
+         S3Bucket: !Ref DeployBucket
+         S3Key: !Sub ${Stack}/${Stage}/${App}-google-update-subscriptions/google-update-subscriptions.zip
+       Environment:
+         Variables:
+           App: !Sub ${App}
+           Stack: !Sub ${Stack}
+           Stage: !Sub ${Stage}
+       Description: Consomes subscription data updates from google playstore from sqs and stores them in dynamo
+       Handler: google-update-subscriptions.handler
+       MemorySize: 512
+       Role: !GetAtt MobilePurchasesLambdasRole.Arn
+       Timeout: 45
+       Runtime: nodejs10.x
+
+
+  UpdateGoogleSubscriptionsEventSource:
+      Type: AWS::Lambda::EventSourceMapping
+      Properties:
+        FunctionName: !Ref UpdateGoogleSubscriptionsLambda
+        Enabled: true
+        EventSourceArn: arn:aws:sqs:eu-west-1:201359054765:NathanielUpdateGoogleSubscriptionTst
+        BatchSize: 1
+
+
+
+
+
+
+      

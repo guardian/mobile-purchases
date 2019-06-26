@@ -18,7 +18,9 @@ interface SubscriptionNotification {
 }
 
 interface SqsEvent {
-    purchaseToken: string
+    packageName: string,
+    purchaseToken: string,
+    subscriptionId: string
 }
 
 export function parsePayload(body?: string): Error | DeveloperNotification {
@@ -63,7 +65,11 @@ export function toDynamoEvent(notification: DeveloperNotification): Subscription
 }
 
 export function toSqsEvent(event: DeveloperNotification): SqsEvent {
-    return {purchaseToken: event.subscriptionNotification.purchaseToken}
+    return {
+        packageName: event.packageName,
+        purchaseToken: event.subscriptionNotification.purchaseToken,
+        subscriptionId: event.subscriptionNotification.subscriptionId
+    }
 }
 
 export async function handler(request: HTTPRequest): Promise<HTTPResponse> {

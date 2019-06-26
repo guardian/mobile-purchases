@@ -72,3 +72,13 @@ deployments:
       functionNames: [mobile-purchases-link-user-subscription-]
       fileName: link-user-subscription.zip
       prefixStack: false
+
+  mobile-purchases-google-update-subscriptions:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-google-update-subscriptions-]
+      fileName: google-update-subscriptions.zip
+      prefixStack: false
+
