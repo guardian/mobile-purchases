@@ -14,7 +14,7 @@ interface GoogleSub {
 interface GoogleResponseBody {
     startTimeMillis: string,
     expiryTimeMillis: string,
-    userCancellationMillis:string,
+    userCancellationTimeMillis: string,
     autoRenewing: boolean
 }
 
