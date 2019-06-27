@@ -4,6 +4,8 @@ import {buildGoogleUrl, getAccessToken, getParams, AccessToken} from "../utils/g
 import {SubscriptionUpdate} from "./updatesub";
 
 import {parseAndStoreSubscriptionUpdate} from './updatesub'
+import {Stage} from "../utils/appIdentity";
+
 
 interface GoogleSub {
     packageName: string,
@@ -24,7 +26,7 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
 
     const sub = JSON.parse(record.body) as GoogleSub
     const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName)
-    return getAccessToken(getParams("CODE"))
+    return getAccessToken(getParams(Stage))
         .then(accessToken => {
             return restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
         })
