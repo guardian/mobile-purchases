@@ -610,7 +610,7 @@ Resources:
        Handler: google-update-subscriptions.handler
        MemorySize: 512
        Role: !GetAtt MobilePurchasesLambdasRole.Arn
-       Timeout: 45
+       Timeout: 25
        Runtime: nodejs10.x
 
 
