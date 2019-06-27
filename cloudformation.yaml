@@ -118,7 +118,6 @@ Resources:
               Resource:
                 - !GetAtt GoogleSubscriptionsQueue.Arn
                 - !GetAtt AppleSubscriptionsQueue.Arn
-                -  arn:aws:sqs:eu-west-1:201359054765:NathanielUpdateGoogleSubscriptionTst
         - PolicyName: Kms
           PolicyDocument:
             Statement:
