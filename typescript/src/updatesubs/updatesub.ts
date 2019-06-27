@@ -20,15 +20,15 @@ export class SubscriptionUpdate {
     purchaseToken: string;
     startTimeMillis: string;
     expiryTimeMillis: string;
-    cancellationTimeMillis: string;
+    userCancellationTimeMillis: string;
     autoRenewing: boolean;
     payload: any;
 
-    constructor(purchaseToken: string, startTimeMillis: string, expiryTimeMillis: string, cancellationTimeMillis: string, autoRenewing: boolean, payload: any) {
+    constructor(purchaseToken: string, startTimeMillis: string, expiryTimeMillis: string, userCancellationTimeMillis: string, autoRenewing: boolean, payload: any) {
         this.purchaseToken = purchaseToken;
         this.startTimeMillis = startTimeMillis;
         this.expiryTimeMillis = expiryTimeMillis;
-        this.cancellationTimeMillis = cancellationTimeMillis;
+        this.userCancellationTimeMillis = userCancellationTimeMillis;
         this.autoRenewing = autoRenewing;
         this.payload = payload;
     }
@@ -40,24 +40,12 @@ function makeSubscription(subscriptionUpdate: SubscriptionUpdate) {
         subscriptionUpdate.purchaseToken,
         new Date(Number.parseInt(subscriptionUpdate.startTimeMillis)).toISOString(),
         new Date(Number.parseInt(subscriptionUpdate.expiryTimeMillis)).toISOString(),
-        makeCancellationTime(subscriptionUpdate.cancellationTimeMillis),
+        makeCancellationTime(subscriptionUpdate.userCancellationTimeMillis),
         subscriptionUpdate.autoRenewing,
         subscriptionUpdate,
         makeTimeToLive(new Date(Date.now()))
     );
     return subscription;
-}
-
-function getSubscription(purchaseToken: string): Promise<Subscription> {
-    return dynamoMapper.get({item: new Subscription(purchaseToken)} ).then(
-        s => s.item
-    )
-}
-
-function updateSub(subscriptionUpdate: SubscriptionUpdate): Promise<Subscription> {
-    const subscription = makeSubscription(subscriptionUpdate);
-    return dynamoMapper.update({item: subscription}).then(result => result.item)
-
 }
 
 function putSubscription(subscriptionUpdate: SubscriptionUpdate): Promise<Subscription>  {
