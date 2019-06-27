@@ -620,7 +620,7 @@ Resources:
         FunctionName: !Ref UpdateGoogleSubscriptionsLambda
         Enabled: true
         EventSourceArn: !GetAtt GoogleSubscriptionsQueue.Arn
-        BatchSize: 1
+        BatchSize: 10
 
 
 
