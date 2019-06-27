@@ -1,32 +1,12 @@
+import 'source-map-support/register'
 import {HTTPRequest, HTTPResponse, HTTPResponses} from "../models/apiGatewayHttp";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
-import DynamoDB from 'aws-sdk/clients/dynamodb';
 import Sqs from 'aws-sdk/clients/sqs';
-import {CredentialProviderChain, SharedIniFileCredentials, ECSCredentials, AWSError} from "aws-sdk";
-import {DataMapper} from '@aws/dynamodb-data-mapper';
-import {Region} from "../utils/appIdentity";
+import {AWSError} from "aws-sdk";
 import {PromiseResult} from "aws-sdk/lib/request";
+import {sqs, dynamoMapper} from "../utils/aws";
 
 export const ONE_YEAR_IN_SECONDS = 31557600;
-
-const credentialProvider = new CredentialProviderChain([
-    function () { return new ECSCredentials(); },
-    function () { return new SharedIniFileCredentials({
-        profile: "mobile"
-    }); }
-]);
-
-const dynamo = new DynamoDB({
-    region: Region,
-    credentialProvider: credentialProvider
-});
-
-const sqs = new Sqs({
-    region: Region,
-    credentialProvider: credentialProvider
-});
-
-const dynamoMapper = new DataMapper({ client: dynamo });
 
 async function catchingServerErrors(block: () => Promise<HTTPResponse>): Promise<HTTPResponse> {
     try {
