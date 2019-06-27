@@ -619,7 +619,7 @@ Resources:
       Properties:
         FunctionName: !Ref UpdateGoogleSubscriptionsLambda
         Enabled: true
-        EventSourceArn: arn:aws:sqs:eu-west-1:201359054765:NathanielUpdateGoogleSubscriptionTst
+        EventSourceArn: GoogleSubscriptionsQueue
         BatchSize: 1
 
 
