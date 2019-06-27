@@ -34,7 +34,7 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
                     sub.purchaseToken,
                     response.result.startTimeMillis,
                     response.result.expiryTimeMillis,
-                    response.result.userCancellationMillis,
+                    response.result.userCancellationTimeMillis,
                     response.result.autoRenewing,
                     response.result)
             } else {
