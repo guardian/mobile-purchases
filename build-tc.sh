@@ -3,8 +3,6 @@ set -e
 
 export NODE_OPTIONS="--max-old-space-size=2048"
 
-npm install -g yarn
-
 mkdir -p tsc-target
 
 yarn install
