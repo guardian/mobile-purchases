@@ -1,17 +1,17 @@
-import {CredentialProviderChain, ECSCredentials, SharedIniFileCredentials} from "aws-sdk";
+import {CredentialProviderChain, ECSCredentials, SharedIniFileCredentials, AWSError} from "aws-sdk";
 import {Region} from "./appIdentity";
-import {DataMapper} from "@aws/dynamodb-data-mapper";
+import {DataMapper, ItemNotFoundException} from "@aws/dynamodb-data-mapper";
 import DynamoDB from 'aws-sdk/clients/dynamodb';
 import Sqs from 'aws-sdk/clients/sqs';
-import S3 from 'aws-sdk/clients/s3'
-
+import S3 from 'aws-sdk/clients/s3';
+import {PromiseResult} from "aws-sdk/lib/request";
 
 
 const credentialProvider = new CredentialProviderChain([
     function () { return new ECSCredentials(); },
     function () { return new SharedIniFileCredentials({
         profile: "mobile"
-    }); }
+    }); }                                                                            
 ]);
 
 const aws = new DynamoDB({
@@ -30,5 +30,16 @@ export const s3: S3  = new S3({
     region: Region ,
     credentialProvider: credentialProvider
 });
+
+
+export function sendToSqsImpl(event: any): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+    const queueUrl = process.env.GoogleQueueUrl;
+    if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+    return sqs.sendMessage({
+        QueueUrl: queueUrl,
+        MessageBody: JSON.stringify(event)
+    }).promise()
+}
+
 
 

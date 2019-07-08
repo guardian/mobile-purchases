@@ -81,4 +81,3 @@ deployments:
       functionNames: [mobile-purchases-google-update-subscriptions-]
       fileName: google-update-subscriptions.zip
       prefixStack: false
-
