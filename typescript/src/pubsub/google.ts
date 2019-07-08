@@ -2,6 +2,7 @@ import 'source-map-support/register'
 import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {ONE_YEAR_IN_SECONDS, parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
+import {SqsEvent} from "../models/aws/sqs";
 
 interface DeveloperNotification {
     version: string,
@@ -17,11 +18,6 @@ interface SubscriptionNotification {
     subscriptionId: string
 }
 
-interface SqsEvent {
-    packageName: string,
-    purchaseToken: string,
-    subscriptionId: string
-}
 
 export function parsePayload(body?: string): Error | DeveloperNotification {
     try {
