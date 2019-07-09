@@ -368,7 +368,7 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
-  LinkUserToSubLambda:
+  GoogleLinkUserToSubLambda:
     Type: AWS::Serverless::Function
     Properties:
       Handler: link-user-subscription.handler

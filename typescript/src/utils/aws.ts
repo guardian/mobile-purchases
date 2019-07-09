@@ -33,7 +33,7 @@ export const s3: S3  = new S3({
 
 
 export function sendToSqsImpl(event: any): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
-    const queueUrl = process.env.GoogleQueueUrl;
+    const queueUrl = process.env.QueueUrl;
     if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
     return sqs.sendMessage({
         QueueUrl: queueUrl,
