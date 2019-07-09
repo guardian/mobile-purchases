@@ -45,10 +45,19 @@ const googlePlaySubStatus = Object.assign({}, config, {
     }
 });
 
-const userLink = Object.assign({}, config, {
-    entry: './typescript/src/link/index.ts',
+const googleUserLink = Object.assign({}, config, {
+    entry: './typescript/src/link/google.ts',
     output: {
-        filename: 'link-user-subscription.js',
+        filename: 'google-link-user-subscription.js',
+        path: path.resolve(__dirname, 'tsc-target'),
+        libraryTarget: 'commonjs'
+    }
+});
+
+const appleUserLink = Object.assign({}, config, {
+    entry: './typescript/src/link/apple.ts',
+    output: {
+        filename: 'apple-link-user-subscription.js',
         path: path.resolve(__dirname, 'tsc-target'),
         libraryTarget: 'commonjs'
     }
@@ -64,4 +73,4 @@ const googleUpdateSub = Object.assign({}, config, {
 });
 
 
-module.exports = [googlePubSub, applePubSub, googlePlaySubStatus, userLink, googleUpdateSub]
+module.exports = [googlePubSub, applePubSub, googlePlaySubStatus, googleUpdateSub, appleUserLink, googleUserLink]
