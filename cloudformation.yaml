@@ -207,61 +207,46 @@ Resources:
                 "200":
                   "description": "200 response"
 
-          "/user/google/linkToSubscriptions":
+          "/apple/linkToSubscriptions":
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoogleLinkUserToSubLambda.Arn}/invocations
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleLinkUserToSubLambda.Arn}/invocations
               consumes: [ application/json ]
               produces: [ application/json ]
               responses:
                 "200":
                   "description": "200 response"
-          "/healthcheck":
-            get:
-              responses:
-                "200":
-                  description: "200 response"
-              x-amazon-apigateway-integration:
-                type: mock
-                requestTemplates:
-                  application/json: |
-                    {
-                      "statusCode" : 200
-                    }
-                httpMethod: GET
-                responses:
-                  default:
-                    statusCode: "200"
 
-        "/user/google/linkToSubscriptions":
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoogleLinkUserToSubLambda.Arn}/invocations
-              consumes: [ application/json ]
-              produces: [ application/json ]
-              responses:
-                "200":
-                  "description": "200 response"
-        "/healthcheck":
-            get:
-              responses:
-                "200":
-                  description: "200 response"
-              x-amazon-apigateway-integration:
-                type: mock
-                requestTemplates:
-                  application/json: |
-                    {
-                      "statusCode" : 200
-                    }
-                httpMethod: GET
+          "/google/linkToSubscriptions":
+              post:
+                x-amazon-apigateway-integration:
+                  httpMethod: POST
+                  type: aws_proxy
+                  uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoogleLinkUserToSubLambda.Arn}/invocations
+                consumes: [ application/json ]
+                produces: [ application/json ]
                 responses:
-                  default:
-                    statusCode: "200"
+                  "200":
+                    "description": "200 response"
+
+          "/healthcheck":
+              get:
+                responses:
+                  "200":
+                    description: "200 response"
+                x-amazon-apigateway-integration:
+                  type: mock
+                  requestTemplates:
+                    application/json: |
+                      {
+                        "statusCode" : 200
+                      }
+                  httpMethod: GET
+                  responses:
+                    default:
+                      statusCode: "200"
 
 
   ApiDomainName:
@@ -419,7 +404,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/user/google/linkToSubscriptions"
+            Path: "/google/linkToSubscriptions"
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -450,7 +435,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/user/apple/linkToSubscriptions"
+            Path: "/apple/linkToSubscriptions"
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:

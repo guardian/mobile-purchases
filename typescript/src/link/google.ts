@@ -19,5 +19,5 @@ export function parseGoogleLinkPayload(requestBody?: string): UserSubscriptionDa
 }
 
 export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse>  {
-    return parseAndStoreLink(httpRequest, parseGoogleLinkPayload)
+    return await parseAndStoreLink(httpRequest, parseGoogleLinkPayload)
 }
