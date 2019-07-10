@@ -207,12 +207,40 @@ Resources:
                 "200":
                   "description": "200 response"
 
-          "/user/{subscriptionId}/linkToSubscriptions":
+          "/user/google/linkToSubscriptions":
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LinkUserToSubLambda.Arn}/invocations
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoogleLinkUserToSubLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
+          "/healthcheck":
+            get:
+              responses:
+                "200":
+                  description: "200 response"
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: |
+                    {
+                      "statusCode" : 200
+                    }
+                httpMethod: GET
+                responses:
+                  default:
+                    statusCode: "200"
+
+        "/user/google/linkToSubscriptions":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoogleLinkUserToSubLambda.Arn}/invocations
               consumes: [ application/json ]
               produces: [ application/json ]
               responses:
@@ -371,20 +399,19 @@ Resources:
   GoogleLinkUserToSubLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: link-user-subscription.handler
+      Handler: google-link-user-subscription.handler
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-link-user-subscription/link-user-subscription.zip
-      FunctionName: !Sub ${App}-link-user-subscription-${Stage}
+        Key: !Sub ${Stack}/${Stage}/${App}google-link-user-subscription/link-user-subscription.zip
+      FunctionName: !Sub ${App}-google-link-user-subscription-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
         Variables:
           Stage: !Ref Stage
           Stack: !Ref Stack
           App: !Ref App
-          AppleQueueUrl: !Ref AppleSubscriptionsQueue
-          GoogleQueueUrl: !Ref GoogleSubscriptionsQueue
+          QueueUrl: !Ref GoogleSubscriptionsQueue
       Description: Links users to subscriptions
       MemorySize: 128
       Timeout: 45
@@ -392,7 +419,38 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/user/linkToSubscriptions"
+            Path: "/user/google/linkToSubscriptions"
+            Method: POST
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  AppleLinkUserToSubLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apple-link-user-subscription.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-apple-link-user-subscription/apple-link-user-subscription.zip
+      FunctionName: !Sub ${App}-apple-link-user-subscription-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+          QueueUrl: !Ref AppleSubscriptionsQueue
+      Description: Links users to subscriptions
+      MemorySize: 128
+      Timeout: 45
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/user/apple/linkToSubscriptions"
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
