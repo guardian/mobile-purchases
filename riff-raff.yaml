@@ -82,7 +82,7 @@ deployments:
       fileName: apple-link-user-subscription.zip
       prefixStack: false
 
-  mobile-purchases-google-update-subscriptions:
+  mobile-purchases-google-update-subscription:
     type: aws-lambda
     dependencies: [mobile-purchases-cloudformation]
     parameters:
