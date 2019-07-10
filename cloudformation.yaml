@@ -110,6 +110,9 @@ Resources:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+
+
         - PolicyName: Sqs
           PolicyDocument:
             Statement:
@@ -118,6 +121,7 @@ Resources:
               Resource:
                 - !GetAtt GoogleSubscriptionsQueue.Arn
                 - !GetAtt AppleSubscriptionsQueue.Arn
+                -  arn:aws:sqs:eu-west-1:201359054765:NathanielUpdateGoogleSubscriptionTst
         - PolicyName: Kms
           PolicyDocument:
             Statement:

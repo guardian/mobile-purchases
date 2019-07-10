@@ -82,15 +82,14 @@ function getUserId(headers: HttpRequestHeaders) : Promise<string> {
 function enqueueUnstoredPurchaseToken(subscriptionId: string, purchaseToken: string): Promise<string> {
 
     const packageName = "com.guardian"
-    console.log("Enqueue")
 
     return getSubscription(purchaseToken).then( alreadyStored => {
         if(alreadyStored) {
             return purchaseToken
         } else {
            const sqsEvent = makeSqsEvent(packageName, purchaseToken, subscriptionId)
-           return sendToSqsImpl(sqsEvent).
-               then(queud => purchaseToken)
+           return sendToSqsImpl(sqsEvent)
+               .then(queud => purchaseToken)
                .catch(
                    error => {
                        throw error
@@ -105,12 +104,10 @@ function enqueueUnstoredPurchaseToken(subscriptionId: string, purchaseToken: str
 }
 
 function persistUserSubscriptionLinks(userId: string, userSubscriptions: UserSubscriptionData[]): Promise<string[]>  {
-    console.log("Persist")
 
     const updatedSubLinks = userSubscriptions.map( async (subscription) =>  {
         return await putUserSubscription(subscription.transactionToken, userId)
             .then( sub => {
-                console.log("Have put")
                 return enqueueUnstoredPurchaseToken(subscription.subscriptionId, subscription.transactionToken)
              })
             .catch( error => {
@@ -135,9 +132,8 @@ export async function parseAndStoreLink (
     if(httpRequest.headers && getIdentityToken(httpRequest.headers)) {
         return getUserId(httpRequest.headers)
             .then( userId => {
-                console.log("Got identity user")
                 const subscriptions = parsePayload(httpRequest.body)
-                return  persistUserSubscriptionLinks(userId, subscriptions)
+                return persistUserSubscriptionLinks(userId, subscriptions)
             })
             .then(subscriptionIds =>  {
                 return HTTPResponses.OK
