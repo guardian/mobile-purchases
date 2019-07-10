@@ -108,7 +108,7 @@ function persistUserSubscriptionLinks(userId: string, userSubscriptions: UserSub
     console.log("Persist")
 
     const updatedSubLinks = userSubscriptions.map( async (subscription) =>  {
-        return putUserSubscription(subscription.transactionToken, userId)
+        return await putUserSubscription(subscription.transactionToken, userId)
             .then( sub => {
                 console.log("Have put")
                 return enqueueUnstoredPurchaseToken(subscription.subscriptionId, subscription.transactionToken)
