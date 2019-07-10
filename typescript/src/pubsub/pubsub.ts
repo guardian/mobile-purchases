@@ -27,7 +27,7 @@ export async function parseStoreAndSend<Payload, SqsEvent>(
     toDynamoEvent: (payload: Payload) => SubscriptionEvent,
     toSqsEvent: (payload: Payload) => SqsEvent,
     storeInDynamo: (event: SubscriptionEvent) => Promise<SubscriptionEvent> = storeInDynamoImpl,
-    sendToSqs: (event: SqsEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqsImpl,
+    sendToSqs: (queueUrl: string, event: SqsEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqsImpl,
 ): Promise<HTTPResponse> {
     const secret = process.env.Secret;
     return catchingServerErrors(async () => {
@@ -36,12 +36,14 @@ export async function parseStoreAndSend<Payload, SqsEvent>(
             if (notification instanceof Error) {
                 return HTTPResponses.INVALID_REQUEST
             }
+            const queueUrl = process.env.QueueUrl;
+            if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
 
             const dynamoEvent = toDynamoEvent(notification);
             const dynamoPromise = storeInDynamo(dynamoEvent);
 
             const sqsEvent = toSqsEvent(notification);
-            const sqsPromise = sendToSqs(sqsEvent);
+            const sqsPromise = sendToSqs(queueUrl, sqsEvent);
 
             return Promise.all([sqsPromise, dynamoPromise])
                 .then(value => HTTPResponses.OK)

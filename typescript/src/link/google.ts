@@ -20,7 +20,6 @@ export function parseGoogleLinkPayload(requestBody?: string): UserSubscriptionDa
 
 export async function handler(httpRequest: HTTPRequest) {
     return parseAndStoreLink(httpRequest, parseGoogleLinkPayload)
-        .then(res => res)
         .catch( error => {
             console.log(`Error linking sub: ${error}`)
             return HTTPResponses.INTERNAL_ERROR

@@ -19,7 +19,7 @@ describe("The google pubsub", () => {
             });
         });
 
-        const mockSqsFunction: Mock<Promise<any>, [{purchaseToken: string}]>  = jest.fn((event) => {
+        const mockSqsFunction: Mock<Promise<any>, [string, {purchase7oken: string}]>  = jest.fn((qurl, event) => {
             return new Promise((resolve, reject) => {
                 resolve({});
             });

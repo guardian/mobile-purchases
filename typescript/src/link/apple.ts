@@ -6,7 +6,7 @@ import {parseGoogleLinkPayload} from "./google";
 
 type AppleSubscription = {
     reciept: string
-    subscriptionId: string
+    transactionId: string
 }
 
 type AppleLinkPayload = {
@@ -16,12 +16,11 @@ type AppleLinkPayload = {
 
 export function parseAppleLinkPayload(requestBody?: string): UserSubscriptionData[] {
     const payload = JSON.parse(requestBody || "") as AppleLinkPayload
-    return payload.subscriptions.map ( subscription => new UserSubscriptionData(subscription.reciept, subscription.subscriptionId))
+    return payload.subscriptions.map ( subscription => new UserSubscriptionData(subscription.reciept, subscription.transactionId) )
 }
 
-export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse>  {
+export async function handler(httpRequest: HTTPRequest)  {
     return parseAndStoreLink(httpRequest, parseAppleLinkPayload)
-        .then(res => res)
         .catch( error => {
             console.log(`Error linking sub: ${error}`)
             return HTTPResponses.INTERNAL_ERROR

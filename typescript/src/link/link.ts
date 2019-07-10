@@ -34,14 +34,6 @@ function getIdentityToken(headers: HttpRequestHeaders): string {
     return headers["Gu-Identity-Token"] || headers["gu-identity-token"]
 }
 
-function makeSqsEvent(packageName: string, purchaseToken: string, subscriptionId: string) : SqsEvent  {
-    return {
-        packageName: packageName,
-        purchaseToken: purchaseToken,
-        subscriptionId: subscriptionId
-    }
-}
-
 function putUserSubscription(subscriptionId: string, userId: string): Promise<UserSubscription> {
     const userSubscription = new UserSubscription(
         userId,
@@ -51,7 +43,7 @@ function putUserSubscription(subscriptionId: string, userId: string): Promise<Us
     return dynamoMapper.put({item: userSubscription}).then(result => result.item)
 }
 
-function getSubscription(purchaseToken: string): Promise<boolean> {
+function subscriptionExists(purchaseToken: string): Promise<boolean> {
     return dynamoMapper.get({item: new Subscription(purchaseToken)} ).then ( result => true )
         .catch( error => {
             if ( error.name === "ItemNotFoundException" ) {
@@ -81,20 +73,24 @@ function getUserId(headers: HttpRequestHeaders) : Promise<string> {
 
 function enqueueUnstoredPurchaseToken(subscriptionId: string, purchaseToken: string): Promise<string> {
 
+/*
+    const queueUrl = process.env.QueueUrl;
+    if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+*/
+    const queueUrl = " https://sqs.eu-west-1.amazonaws.com/201359054765/NathanielUpdateGoogleSubscriptionTst"
     const packageName = "com.guardian"
 
-    return getSubscription(purchaseToken).then( alreadyStored => {
+    return subscriptionExists(purchaseToken).then(alreadyStored => {
         if(alreadyStored) {
             return purchaseToken
         } else {
-           const sqsEvent = makeSqsEvent(packageName, purchaseToken, subscriptionId)
-           return sendToSqsImpl(sqsEvent)
+            const sqsEvent = {
+                packageName: packageName,
+                purchaseToken: purchaseToken,
+                subscriptionId: subscriptionId
+            }
+            return sendToSqsImpl(queueUrl, sqsEvent)
                .then(queud => purchaseToken)
-               .catch(
-                   error => {
-                       throw error
-                   }
-               )
         }
     })
     .catch(error => {
