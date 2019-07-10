@@ -246,7 +246,7 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-          "/healthcheck":
+        "/healthcheck":
             get:
               responses:
                 "200":
@@ -403,7 +403,7 @@ Resources:
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}google-link-user-subscription/link-user-subscription.zip
+        Key: !Sub ${Stack}/${Stage}/${App}-google-link-user-subscription/google-link-user-subscription.zip
       FunctionName: !Sub ${App}-google-link-user-subscription-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
