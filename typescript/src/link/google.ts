@@ -1,6 +1,6 @@
 import {Platform} from "../models/platform";
 import {parseAndStoreLink, UserSubscriptionData} from "./link";
-import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
+import {HTTPRequest, HTTPResponses} from "../models/apiGatewayHttp";
 import {parseAppleLinkPayload} from "./apple";
 
 type GoogleSubscription = {
@@ -18,6 +18,11 @@ export function parseGoogleLinkPayload(requestBody?: string): UserSubscriptionDa
     return payload.subscriptions.map ( subscription => new UserSubscriptionData(subscription.purchaseToken, subscription.subscriptionId))
 }
 
-export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse>  {
-    return await parseAndStoreLink(httpRequest, parseGoogleLinkPayload)
+export async function handler(httpRequest: HTTPRequest) {
+    return parseAndStoreLink(httpRequest, parseGoogleLinkPayload)
+        .then(res => res)
+        .catch( error => {
+            console.log(`Error linking sub: ${error}`)
+            return HTTPResponses.INTERNAL_ERROR
+        })
 }

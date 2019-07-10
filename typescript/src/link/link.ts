@@ -108,7 +108,7 @@ function persistUserSubscriptionLinks(userId: string, userSubscriptions: UserSub
     console.log("Persist")
 
     const updatedSubLinks = userSubscriptions.map( async (subscription) =>  {
-        return await putUserSubscription(subscription.transactionToken, userId)
+        return putUserSubscription(subscription.transactionToken, userId)
             .then( sub => {
                 console.log("Have put")
                 return enqueueUnstoredPurchaseToken(subscription.subscriptionId, subscription.transactionToken)
@@ -133,11 +133,11 @@ export async function parseAndStoreLink (
     ): Promise<HTTPResponse> {
 
     if(httpRequest.headers && getIdentityToken(httpRequest.headers)) {
-        return await getUserId(httpRequest.headers)
+        return getUserId(httpRequest.headers)
             .then( userId => {
                 console.log("Got identity user")
                 const subscriptions = parsePayload(httpRequest.body)
-                persistUserSubscriptionLinks(userId, subscriptions)
+                return  persistUserSubscriptionLinks(userId, subscriptions)
             })
             .then(subscriptionIds =>  {
                 return HTTPResponses.OK
