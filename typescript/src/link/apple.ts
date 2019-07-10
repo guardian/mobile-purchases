@@ -1,7 +1,8 @@
 import {Platform} from "../models/platform";
 import {UserSubscriptionData} from "./link";
-import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
+import {HTTPRequest, HTTPResponse, HTTPResponses} from "../models/apiGatewayHttp";
 import {parseAndStoreLink} from "./link"
+import {parseGoogleLinkPayload} from "./google";
 
 type AppleSubscription = {
     reciept: string
@@ -20,6 +21,11 @@ export function parseAppleLinkPayload(requestBody?: string): UserSubscriptionDat
 
 export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse>  {
     return parseAndStoreLink(httpRequest, parseAppleLinkPayload)
+        .then(res => res)
+        .catch( error => {
+            console.log(`Error linking sub: ${error}`)
+            return HTTPResponses.INTERNAL_ERROR
+        })
 }
 
 

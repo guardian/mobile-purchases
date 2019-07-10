@@ -35,7 +35,7 @@ export async function parseStoreAndSend<Payload, SqsEvent>(
             const notification = parsePayload(request.body);
             if (notification instanceof Error) {
                 return HTTPResponses.INVALID_REQUEST
-            }                                                                                                     7
+            }
 
             const dynamoEvent = toDynamoEvent(notification);
             const dynamoPromise = storeInDynamo(dynamoEvent);
