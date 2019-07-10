@@ -88,5 +88,5 @@ deployments:
     parameters:
       bucket: mobile-dist
       functionNames: [mobile-purchases-google-update-subscriptions-]
-      fileName: google-link-update-subscriptions.zip
+      fileName: google-update-subscriptions.zip
       prefixStack: false
