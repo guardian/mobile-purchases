@@ -32,9 +32,7 @@ export const s3: S3  = new S3({
 });
 
 
-export function sendToSqsImpl(event: any): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
-    const queueUrl = process.env.QueueUrl;
-    if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+export function sendToSqsImpl(queueUrl: string, event: any): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
     return sqs.sendMessage({
         QueueUrl: queueUrl,
         MessageBody: JSON.stringify(event)

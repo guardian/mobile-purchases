@@ -64,13 +64,22 @@ deployments:
       fileName: mobile-purchases-google-oauth.jar
       prefixStack: false
 
-  mobile-purchases-link-user-subscription:
+  mobile-purchases-google-link-user-subscription:
     type: aws-lambda
     dependencies: [mobile-purchases-cloudformation]
     parameters:
       bucket: mobile-dist
-      functionNames: [mobile-purchases-link-user-subscription-]
-      fileName: link-user-subscription.zip
+      functionNames: [mobile-purchases-google-link-user-subscription-]
+      fileName: google-link-user-subscription.zip
+      prefixStack: false
+
+  mobile-purchases-apple-link-user-subscription:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-apple-link-user-subscription-]
+      fileName: apple-link-user-subscription.zip
       prefixStack: false
 
   mobile-purchases-google-update-subscriptions:

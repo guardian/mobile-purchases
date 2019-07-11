@@ -102,14 +102,17 @@ Resources:
             Statement:
               Effect: Allow
               Action:
-                  - "dynamodb:GetItem"
-                  - "dynamodb:PutItem"
-                  - "dynamodb:UpdateItem"
-                  - "dynamodb:Query"
+                - "dynamodb:GetItem"
+                - "dynamodb:PutItem"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:Query"
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+
+
         - PolicyName: Sqs
           PolicyDocument:
             Statement:
@@ -141,11 +144,11 @@ Resources:
     Properties:
       StageName: !Ref Stage
       MethodSettings: [{
-          "MetricsEnabled": True,
-          "LoggingLevel": "OFF",
-          "ResourcePath": "/*",
-          "HttpMethod": "*"
-      }]
+                         "MetricsEnabled": True,
+                         "LoggingLevel": "OFF",
+                         "ResourcePath": "/*",
+                         "HttpMethod": "*"
+                       }]
       DefinitionBody:
         swagger: "2.0"
         info:
@@ -207,17 +210,30 @@ Resources:
                 "200":
                   "description": "200 response"
 
-          "/user/{subscriptionId}/linkToSubscriptions":
+          "/apple/linkToSubscriptions":
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LinkUserToSubLambda.Arn}/invocations
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleLinkUserToSubLambda.Arn}/invocations
               consumes: [ application/json ]
               produces: [ application/json ]
               responses:
                 "200":
                   "description": "200 response"
+
+          "/google/linkToSubscriptions":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoogleLinkUserToSubLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
+
           "/healthcheck":
             get:
               responses:
@@ -250,17 +266,17 @@ Resources:
 
 
   ApiRoute53:
-      Type: AWS::Route53::RecordSetGroup
-      Properties:
-        HostedZoneId: !Ref HostedZoneId
-        RecordSets:
-          - Name: !Ref ApiDomainName
-            Type: A
-            AliasTarget:
-              HostedZoneId: Z2FDTNDATAQYW2
-              DNSName: !GetAtt
-                - ApiDomainName
-                - DistributionDomainName
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      RecordSets:
+        - Name: !Ref ApiDomainName
+          Type: A
+          AliasTarget:
+            HostedZoneId: Z2FDTNDATAQYW2
+            DNSName: !GetAtt
+              - ApiDomainName
+              - DistributionDomainName
 
   ApiMapping:
     Type: AWS::ApiGateway::BasePathMapping
@@ -371,20 +387,19 @@ Resources:
   GoogleLinkUserToSubLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: link-user-subscription.handler
+      Handler: google-link-user-subscription.handler
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-link-user-subscription/link-user-subscription.zip
-      FunctionName: !Sub ${App}-link-user-subscription-${Stage}
+        Key: !Sub ${Stack}/${Stage}/${App}-google-link-user-subscription/google-link-user-subscription.zip
+      FunctionName: !Sub ${App}-google-link-user-subscription-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
         Variables:
           Stage: !Ref Stage
           Stack: !Ref Stack
           App: !Ref App
-          AppleQueueUrl: !Ref AppleSubscriptionsQueue
-          GoogleQueueUrl: !Ref GoogleSubscriptionsQueue
+          QueueUrl: !Ref GoogleSubscriptionsQueue
       Description: Links users to subscriptions
       MemorySize: 128
       Timeout: 45
@@ -392,7 +407,38 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/user/linkToSubscriptions"
+            Path: "/google/linkToSubscriptions"
+            Method: POST
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  AppleLinkUserToSubLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apple-link-user-subscription.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-apple-link-user-subscription/apple-link-user-subscription.zip
+      FunctionName: !Sub ${App}-apple-link-user-subscription-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+          QueueUrl: !Ref AppleSubscriptionsQueue
+      Description: Links users to subscriptions
+      MemorySize: 128
+      Timeout: 45
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/apple/linkToSubscriptions"
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -594,32 +640,32 @@ Resources:
 
 
   UpdateGoogleSubscriptionsLambda:
-     Type: AWS::Lambda::Function
-     Properties:
-       FunctionName: !Sub ${App}-google-update-subscriptions-${Stage}
-       Code:
-         S3Bucket: !Ref DeployBucket
-         S3Key: !Sub ${Stack}/${Stage}/${App}-google-update-subscriptions/google-update-subscriptions.zip
-       Environment:
-         Variables:
-           App: !Sub ${App}
-           Stack: !Sub ${Stack}
-           Stage: !Sub ${Stage}
-       Description: Consomes subscription data updates from google playstore from sqs and stores them in dynamo
-       Handler: google-update-subscriptions.handler
-       MemorySize: 512
-       Role: !GetAtt MobilePurchasesLambdasRole.Arn
-       Timeout: 25
-       Runtime: nodejs10.x
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${App}-google-update-subscriptions-${Stage}
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-google-update-subscriptions/google-update-subscriptions.zip
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: Consomes subscription data updates from google playstore from sqs and stores them in dynamo
+      Handler: google-update-subscriptions.handler
+      MemorySize: 512
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Timeout: 25
+      Runtime: nodejs10.x
 
 
   UpdateGoogleSubscriptionsEventSource:
-      Type: AWS::Lambda::EventSourceMapping
-      Properties:
-        FunctionName: !Ref UpdateGoogleSubscriptionsLambda
-        Enabled: true
-        EventSourceArn: !GetAtt GoogleSubscriptionsQueue.Arn
-        BatchSize: 10
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !Ref UpdateGoogleSubscriptionsLambda
+      Enabled: true
+      EventSourceArn: !GetAtt GoogleSubscriptionsQueue.Arn
+      BatchSize: 10
 
 
 

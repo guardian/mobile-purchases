@@ -34,14 +34,6 @@ function getIdentityToken(headers: HttpRequestHeaders): string {
     return headers["Gu-Identity-Token"] || headers["gu-identity-token"]
 }
 
-function makeSqsEvent(packageName: string, purchaseToken: string, subscriptionId: string) : SqsEvent  {
-    return {
-        packageName: packageName,
-        purchaseToken: purchaseToken,
-        subscriptionId: subscriptionId
-    }
-}
-
 function putUserSubscription(subscriptionId: string, userId: string): Promise<UserSubscription> {
     const userSubscription = new UserSubscription(
         userId,
@@ -51,7 +43,7 @@ function putUserSubscription(subscriptionId: string, userId: string): Promise<Us
     return dynamoMapper.put({item: userSubscription}).then(result => result.item)
 }
 
-function getSubscription(purchaseToken: string): Promise<boolean> {
+function subscriptionExists(purchaseToken: string): Promise<boolean> {
     return dynamoMapper.get({item: new Subscription(purchaseToken)} ).then ( result => true )
         .catch( error => {
             if ( error.name === "ItemNotFoundException" ) {
@@ -81,34 +73,39 @@ function getUserId(headers: HttpRequestHeaders) : Promise<string> {
 
 function enqueueUnstoredPurchaseToken(subscriptionId: string, purchaseToken: string): Promise<string> {
 
+    /*
+        const queueUrl = process.env.QueueUrl;
+        if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+    */
+    const queueUrl = " https://sqs.eu-west-1.amazonaws.com/201359054765/NathanielUpdateGoogleSubscriptionTst"
     const packageName = "com.guardian"
 
-    return getSubscription(purchaseToken).then( alreadyStored => {
+    return subscriptionExists(purchaseToken).then(alreadyStored => {
         if(alreadyStored) {
             return purchaseToken
         } else {
-           const sqsEvent = makeSqsEvent(packageName, purchaseToken, subscriptionId)
-           return sendToSqsImpl(sqsEvent).
-               then(queud => purchaseToken)
-               .catch(
-                   error => {
-                       throw error
-                   }
-               )
+            const sqsEvent = {
+                packageName: packageName,
+                purchaseToken: purchaseToken,
+                subscriptionId: subscriptionId
+            }
+            return sendToSqsImpl(queueUrl, sqsEvent)
+                .then(queud => purchaseToken)
         }
     })
-    .catch(error => {
-        console.log(`Error retrieving sub details ${error}`)
-        throw error
-    })
+        .catch(error => {
+            console.log(`Error retrieving sub details ${error}`)
+            throw error
+        })
 }
 
 function persistUserSubscriptionLinks(userId: string, userSubscriptions: UserSubscriptionData[]): Promise<string[]>  {
+
     const updatedSubLinks = userSubscriptions.map( async (subscription) =>  {
         return await putUserSubscription(subscription.transactionToken, userId)
             .then( sub => {
                 return enqueueUnstoredPurchaseToken(subscription.subscriptionId, subscription.transactionToken)
-             })
+            })
             .catch( error => {
                 console.log(`Error persisting subscription links. ${error}`)
                 throw error
@@ -126,13 +123,13 @@ function persistUserSubscriptionLinks(userId: string, userSubscriptions: UserSub
 export async function parseAndStoreLink (
     httpRequest: HTTPRequest,
     parsePayload: (requestBody?: string) => UserSubscriptionData[]
-    ): Promise<HTTPResponse> {
+): Promise<HTTPResponse> {
 
     if(httpRequest.headers && getIdentityToken(httpRequest.headers)) {
         return getUserId(httpRequest.headers)
             .then( userId => {
                 const subscriptions = parsePayload(httpRequest.body)
-                persistUserSubscriptionLinks(userId, subscriptions)
+                return persistUserSubscriptionLinks(userId, subscriptions)
             })
             .then(subscriptionIds =>  {
                 return HTTPResponses.OK
