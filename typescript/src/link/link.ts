@@ -73,11 +73,8 @@ function getUserId(headers: HttpRequestHeaders) : Promise<string> {
 
 function enqueueUnstoredPurchaseToken(subscriptionId: string, purchaseToken: string): Promise<string> {
 
-    /*
-        const queueUrl = process.env.QueueUrl;
-        if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
-    */
-    const queueUrl = " https://sqs.eu-west-1.amazonaws.com/201359054765/NathanielUpdateGoogleSubscriptionTst"
+    const queueUrl = process.env.QueueUrl;
+    if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
     const packageName = "com.guardian"
 
     return subscriptionExists(purchaseToken).then(alreadyStored => {
