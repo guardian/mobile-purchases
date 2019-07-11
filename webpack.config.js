@@ -45,7 +45,6 @@ const googlePlaySubStatus = Object.assign({}, config, {
     }
 });
 
-<<<<<<< HEAD
 const googleUserLink = Object.assign({}, config, {
     entry: './typescript/src/link/google.ts',
     output: {
