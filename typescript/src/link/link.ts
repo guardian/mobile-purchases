@@ -66,9 +66,6 @@ function getUserId(headers: HttpRequestHeaders) : Promise<string> {
                 throw Error("No user id found")
             }
         })
-        .catch( error => {
-            throw error
-        })
 }
 
 function enqueueUnstoredPurchaseToken(subscriptionId: string, purchaseToken: string): Promise<string> {
