@@ -54,15 +54,6 @@ const googleUserLink = Object.assign({}, config, {
     }
 });
 
-const googleUserLink = Object.assign({}, config, {
-    entry: './typescript/src/link/google.ts',
-    output: {
-        filename: 'google-link-user-subscription.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
-
 const appleUserLink = Object.assign({}, config, {
     entry: './typescript/src/link/apple.ts',
     output: {
