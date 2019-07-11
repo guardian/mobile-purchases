@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-export NODE_OPTIONS="--max-old-space-size=2048"
+export NODE_OPTIONS="--max-old-space-size=4096"
 
 mkdir -p tsc-target
 
