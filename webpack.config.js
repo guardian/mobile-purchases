@@ -55,11 +55,6 @@ const googleUserLink = Object.assign({}, config, {
     }
 });
 
-const appleUserLink = Object.assign({}, config, {
-    entry: './typescript/src/link/apple.ts',
-    output: {
-=======
-
 const googleUserLink = Object.assign({}, config, {
     entry: './typescript/src/link/google.ts',
     output: {
@@ -72,7 +67,6 @@ const googleUserLink = Object.assign({}, config, {
 const appleUserLink = Object.assign({}, config, {
     entry: './typescript/src/link/apple.ts',
     output: {
->>>>>>> origin/MSS-974/link-user-to-subscription-lambda
         filename: 'apple-link-user-subscription.js',
         path: path.resolve(__dirname, 'tsc-target'),
         libraryTarget: 'commonjs'
