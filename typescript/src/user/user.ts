@@ -39,7 +39,7 @@ class SubscriptionStatus {
       this.from = subscription.startTimeStamp;
       this.to = subscription.endTimeStamp;
       this.status = this.getStatus(subscription.endTimeStamp, subscription.cancellationTimetamp);
-      this.cancelled = subscription.cancellationTimetamp;
+      this.cancelled = subscription.cancellationTimetamp === "" ? undefined : subscription.cancellationTimetamp
    }
 }
 
