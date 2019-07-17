@@ -99,7 +99,7 @@ export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse> {
 
             })
             .then( subs => {
-                return new HTTPResponses(200, new HTTPResponseHeaders(), JSON.stringify(subs) )
+                return new HTTPResponse(200, new HTTPResponseHeaders(), JSON.stringify(subs) )
             })
             .catch( error => {
                 console.log(`Error retrieving user subscriptions: ${error}`)
