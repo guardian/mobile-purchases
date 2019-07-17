@@ -72,5 +72,14 @@ const googleUpdateSub = Object.assign({}, config, {
     }
 });
 
+const userSubscriptions = Object.assign({}, config, {
+    entry: './typescript/src/user/user.ts',
+    output: {
+        filename: 'user-subscriptions.js',
+        path: path.resolve(__dirname, 'tsc-target'),
+        libraryTarget: 'commonjs'
+    }
+})
 
-module.exports = [googlePubSub, applePubSub, googlePlaySubStatus, googleUpdateSub, appleUserLink, googleUserLink]
+
+module.exports = [googlePubSub, applePubSub, googlePlaySubStatus, googleUpdateSub, appleUserLink, googleUserLink, userSubscriptions]

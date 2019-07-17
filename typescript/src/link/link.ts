@@ -8,8 +8,7 @@ import {dynamoMapper, sendToSqsImpl} from "../utils/aws";
 import {ItemNotFoundException} from "@aws/dynamodb-data-mapper";
 import {SqsEvent} from "../models/aws/sqs";
 import {catchClause} from "@babel/types";
-
-const restClient = new restm.RestClient('guardian-mobile-purchases');
+import {getUserId, getIdentityToken} from "../utils/guIdentityApi";
 
 export class UserSubscriptionData {
     transactionToken: string;
@@ -19,19 +18,6 @@ export class UserSubscriptionData {
         this.transactionToken = transactionToken;
         this.subscriptionId = subscriptionId;
     }
-}
-
-interface UserId {
-    id: string
-}
-
-interface IdentityResponse {
-    status: string,
-    user: UserId
-}
-
-function getIdentityToken(headers: HttpRequestHeaders): string {
-    return headers["Gu-Identity-Token"] || headers["gu-identity-token"]
 }
 
 function putUserSubscription(subscriptionId: string, userId: string): Promise<UserSubscription> {
@@ -50,20 +36,6 @@ function subscriptionExists(purchaseToken: string): Promise<boolean> {
                 return false
             } else {
                 throw error
-            }
-        })
-}
-
-function getUserId(headers: HttpRequestHeaders) : Promise<string> {
-    const url = "https://id.guardianapis.com/user/me"
-    const identityToken = getIdentityToken(headers)
-    return restClient.get<IdentityResponse>(url, {additionalHeaders: {Authorization: `Bearer ${identityToken}`}})
-        .then( res => {
-            if (res.result) {
-                return res.result.user.id
-            }
-            else {
-                throw Error("No user id found")
             }
         })
 }

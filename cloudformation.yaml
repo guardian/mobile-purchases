@@ -234,6 +234,18 @@ Resources:
                 "200":
                   "description": "200 response"
 
+          "/subscriptions":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSubscriptionsLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
+
           "/healthcheck":
             get:
               responses:
@@ -668,6 +680,35 @@ Resources:
       BatchSize: 10
 
 
+  UserSubscriptionsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: user-subscriptions.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-user-subscriptions/user-subscriptions.zip
+      FunctionName: !Sub ${App}-user-subscriptions-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+      Description: Retrieves subscription details for a given user
+      MemorySize: 128
+      Timeout: 45
+      Events:
+        GetApi:
+          Type: Api
+          Properties:
+            Path: "/subscriptions"
+            Method: GET
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
 
 
 
