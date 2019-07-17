@@ -103,6 +103,7 @@ Resources:
               Effect: Allow
               Action:
                   - "dynamodb:GetItem"
+                  - "dynamodb:BatchGetItem"
                   - "dynamodb:PutItem"
                   - "dynamodb:UpdateItem"
                   - "dynamodb:Query"
@@ -235,7 +236,7 @@ Resources:
                   "description": "200 response"
 
           "/subscriptions":
-            post:
+            get:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
@@ -699,7 +700,7 @@ Resources:
       MemorySize: 128
       Timeout: 45
       Events:
-        GetApi:
+        PostApi:
           Type: Api
           Properties:
             Path: "/subscriptions"

@@ -1,4 +1,10 @@
-import {HTTPResponse, HTTPResponses, HTTPRequest, HttpRequestHeaders} from "../models/apiGatewayHttp";
+import {
+    HTTPResponse,
+    HTTPResponses,
+    HTTPRequest,
+    HttpRequestHeaders,
+    HTTPResponseHeaders
+} from "../models/apiGatewayHttp";
 import {ReadUserSubscription} from "../models/userSubscription";
 import {Subscription, ReadSubscription} from "../models/subscription";
 import * as restm from "typed-rest-client/RestClient";
@@ -93,8 +99,7 @@ export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse> {
 
             })
             .then( subs => {
-                console.log(`Subs: ${JSON.stringify(subs)}`)
-                return HTTPResponses.OK
+                return new HTTPResponses(200, new HTTPResponseHeaders(), JSON.stringify(subs) )
             })
             .catch( error => {
                 console.log(`Error retrieving user subscriptions: ${error}`)
