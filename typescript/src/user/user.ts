@@ -26,7 +26,7 @@ class SubscriptionStatus {
 
        const now = Date.now()
 
-       if (cancellelationTimestamp === "")   {
+       if (cancellelationTimestamp === "" || cancellelationTimestamp === undefined)   {
           return Date.parse(endTimeStamp) > now ? "active" : "expired"
        }
        else {
@@ -51,14 +51,13 @@ class SubscriptionStatusResponse {
         const now = Date.now()
         this.activeSubscriptions = subscriptions.filter( sub => {
             let endTime = Date.parse(sub.endTimeStamp);
-            console.log(`Ended: ${sub.endTimeStamp} Now: ${now} End: ${endTime} Keep: ${endTime > now}`)
             return endTime > now
         }).map(activeSub => activeSub.subscriptionId )
         this.subscriptions = subscriptions.map( sub => new SubscriptionStatus(sub))
     }
 }
 
-async function getUserSubscriptions(userId: string): Promise<string[]> {
+async function getUserSubscriptionIds(userId: string): Promise<string[]> {
     const subs: string[] = [];
 
     for await (const sub of dynamoMapper.query({
@@ -92,11 +91,10 @@ export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse> {
     if(httpRequest.headers && getIdentityToken(httpRequest.headers)) {
         return getUserId(httpRequest.headers)
             .then( userId => {
-                return getUserSubscriptions(userId)
+                return getUserSubscriptionIds(userId)
             })
             .then(subIds => {
                 return getSubscriptions(subIds)
-
             })
             .then( subs => {
                 return new HTTPResponse(200, new HTTPResponseHeaders(), JSON.stringify(subs) )
