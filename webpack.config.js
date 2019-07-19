@@ -83,9 +83,9 @@ const userSubscriptions = Object.assign({}, config, {
 
 
 const appleUpdateSub = Object.assign({}, config, {
-    entry: './typescript/src/updatesubs/google.ts',
+    entry: './typescript/src/updatesubs/apple.ts',
     output: {
-        filename: 'google-update-subscriptions.js',
+        filename: 'apple-update-subscriptions.js',
         path: path.resolve(__dirname, 'tsc-target'),
         libraryTarget: 'commonjs'
     }
