@@ -9,13 +9,13 @@ export interface StatusUpdateNotification {
     notification_type: string,
     password?: string,
     original_transaction_id: string,
-    cancellation_date: string,
+    cancellation_date: string,                   //This
     web_order_line_item_id: string,
     latest_receipt: string,
     latest_receipt_info: AppleReceiptInfo,
     latest_expired_receipt: string,
     latest_expired_receipt_info: AppleReceiptInfo,
-    auto_renew_status: boolean,
+    auto_renew_status: boolean,            // this
     auto_renew_adam_id: string,
     auto_renew_product_id: string,
     expiration_intent: string
