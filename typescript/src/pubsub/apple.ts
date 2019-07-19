@@ -23,7 +23,11 @@ export interface StatusUpdateNotification {
 
 export interface SqsEvent {
     transactionId: string,
-    receipt: string
+    receipt: string,
+    cancellationDate: string,
+    startDate: string,
+    endDate: string,
+    appleBody: string
 }
 
 export function parsePayload(body?: string): Error | StatusUpdateNotification {
@@ -62,7 +66,11 @@ export function toSqsEvent(event: StatusUpdateNotification): SqsEvent {
     const receipt = event.latest_receipt || event.latest_expired_receipt;
     return {
         transactionId: receiptInfo.transaction_id,
-        receipt: receipt
+        receipt: receipt,
+        cancellationDate: event.cancellation_date,
+        startDate: receiptInfo.purchase_date_ms,
+        endDate: receiptInfo.expires_date,
+        appleBody: JSON.stringify(event)
     }
 }
 
