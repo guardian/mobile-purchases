@@ -27,6 +27,7 @@ export interface SqsEvent {
     cancellationDate: string,
     startDate: string,
     endDate: string,
+    autoRenewing: boolean,
     appleBody: string
 }
 
@@ -70,6 +71,7 @@ export function toSqsEvent(event: StatusUpdateNotification): SqsEvent {
         cancellationDate: event.cancellation_date,
         startDate: receiptInfo.purchase_date_ms,
         endDate: receiptInfo.expires_date,
+        autoRenewing: event.auto_renew_status,
         appleBody: JSON.stringify(event)
     }
 }

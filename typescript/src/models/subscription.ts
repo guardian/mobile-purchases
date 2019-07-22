@@ -4,6 +4,7 @@ import {App, Stage} from "../utils/appIdentity";
 
 
 export class Subscription {
+
     @hashKey()
     subscriptionId: string;
 
@@ -20,23 +21,46 @@ export class Subscription {
     autoRenewing?: boolean;
 
     @attribute()
-    googlePayload?: any;
-
-    @attribute()
     ttl?: number;
 
-    constructor(subscriptionId: string, startTimeStamp?: string, endTimeStamp?: string, cancellationTimeStamp?: string, autoRenewing?: boolean, googlePayload?: any,  ttl?: number) {
+    constructor(subscriptionId: string, startTimeStamp?: string, endTimeStamp?: string, cancellationTimeStamp?: string, autoRenewing?: boolean, ttl?: number) {
         this.subscriptionId = subscriptionId;
-        this.startTimeStamp = startTimeStamp;
+        this.startTimeStamp = startTimeStamp
         this.endTimeStamp = endTimeStamp;
         this.cancellationTimetamp = cancellationTimeStamp;
         this.autoRenewing = autoRenewing;
-        this.googlePayload = googlePayload;
         this.ttl = ttl;
     }
 
     get [DynamoDbTable]() {
-        return `${App}-${Stage}-subscriptions`
+        return `${App}-TEST-subscriptions`
+    }
+}
+
+export class GoogleSubscription extends Subscription {
+
+    @attribute()
+    googlePayload?: any;
+
+    constructor(subscriptionId: string, startTimeStamp?: string, endTimeStamp?: string, cancellationTimeStamp?: string, autoRenewing?: boolean, googlePayload?: any,  ttl?: number) {
+        super(subscriptionId, startTimeStamp, endTimeStamp, cancellationTimeStamp, autoRenewing, ttl )
+        this.googlePayload = googlePayload;
+    }
+}
+
+export class AppleSubscription extends Subscription {
+
+    @attribute()
+    transactionId: string;
+
+    @attribute()
+    applePayload?: any;
+    
+    constructor(subscriptionId: string, transactionId: string, startTimeStamp?: string, endTimeStamp?: string, cancellationTimeStamp?: string, autoRenewing?: boolean, applePayload?: any,  ttl?: number) {
+        super(subscriptionId, startTimeStamp, endTimeStamp, cancellationTimeStamp, autoRenewing, ttl )
+        this.transactionId = transactionId;
+        this.applePayload = applePayload;
+
     }
 }
 
@@ -68,3 +92,4 @@ export class ReadSubscription {
         return `${App}-${Stage}-subscriptions`
     }
 }
+

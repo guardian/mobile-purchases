@@ -632,7 +632,7 @@ Resources:
       AlarmActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:mobile-server-side
       AlarmName: !Sub mobile-purchases-${Stage}-play-subscription-status-check-errors
-      AlarmDescription: !Sub A high number errors are being served to the Android app when it is attempting to check Play Subscription statuses
+      AlarmDescription: !Sub A high number errors are being served to the Android app when it is attempting to check Play GoogleSubscription statuses
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
         - Name: ApiName
