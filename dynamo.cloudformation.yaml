@@ -133,32 +133,6 @@ Resources:
         - Key: App
           Value: !Ref App
 
-  SubscriptionTestTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${App}-TEST-subscriptions
-      AttributeDefinitions:
-        - AttributeName: subscriptionId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: subscriptionId
-          KeyType: HASH
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      TimeToLiveSpecification:
-        Enabled: true
-        AttributeName: ttl
-      Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
-
 
 
 

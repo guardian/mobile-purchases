@@ -33,7 +33,7 @@ export class Subscription {
     }
 
     get [DynamoDbTable]() {
-        return `${App}-TEST-subscriptions`
+        return `${App}-${Stage}-subscriptions`
     }
 }
 
