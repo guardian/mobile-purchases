@@ -1,8 +1,6 @@
 import {SQSEvent, SQSRecord} from 'aws-lambda'
-import {makeCancellationTime, makeTimeToLive, SubscriptionUpdate} from "./updatesub";
+import {makeCancellationTime, makeTimeToLive, parseAndStoreSubscriptionUpdate} from "./updatesub";
 import {AppleSubscription} from "../models/subscription";
-import {parseAndStoreSubscriptionUpdate} from './updatesub'
-
 
 
 interface AppleSubUpdate {
@@ -17,8 +15,7 @@ interface AppleSubUpdate {
 
 export function makeDynamoPromise(record: SQSRecord): Promise<AppleSubscription>  {
     const sub = JSON.parse(record.body) as AppleSubUpdate
-    console.log(`+++++++++++ Sub: ${JSON.stringify(sub)}`)
-    const appleSubscription = new AppleSubscription(
+    return Promise.resolve( new AppleSubscription(
         sub.transactionId,
         sub.receipt,
         new Date(Number.parseInt(sub.startDate)).toISOString(),
@@ -27,9 +24,7 @@ export function makeDynamoPromise(record: SQSRecord): Promise<AppleSubscription>
         sub.autoRenewing,
         sub.appleBody,
         makeTimeToLive(new Date(Date.now()))
-    );
-    console.log(`+++++++++++ Apple: ${JSON.stringify(appleSubscription)}`)
-    return Promise.resolve( appleSubscription)
+    ))
 }
 
 export async function handler(event: SQSEvent) {
