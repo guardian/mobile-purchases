@@ -54,11 +54,12 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<GoogleSubscript
             if(response.result) {
                 return new GoogleSubscription(
                     sub.purchaseToken,
-                    response.result.startTimeMillis,
-                    response.result.expiryTimeMillis,
-                    response.result.userCancellationTimeMillis,
+                    new Date(Number.parseInt(response.result.startTimeMillis)).toISOString(),
+                    new Date(Number.parseInt(response.result.expiryTimeMillis)).toISOString(),
+                    makeCancellationTime(response.result.userCancellationTimeMillis),
                     response.result.autoRenewing,
-                    response.result)
+                    response.result,
+                    makeTimeToLive(new Date(Date.now())))
             } else {
                 throw Error("There was no data in google response")
             }

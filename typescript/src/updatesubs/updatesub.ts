@@ -35,6 +35,7 @@ export class SubscriptionUpdate {
 }
 
 function putSubscription(subscription: Subscription): Promise<Subscription>  {
+    console.log(`+++++++++++ Sub: ${JSON.stringify(subscription)}`)
     return dynamoMapper.put({item: subscription}).then(result => result.item)
 }
 
