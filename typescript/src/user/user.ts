@@ -20,7 +20,7 @@ class SubscriptionStatus {
    from?: string;
    to?: string;
    status: string;
-   cancelled?: string;
+   cancellationTimestamp?: string;
 
    private getStatus(endTimeStamp: string, cancellelationTimestamp?: string) {
 
@@ -30,7 +30,7 @@ class SubscriptionStatus {
           return Date.parse(endTimeStamp) > now ? "active" : "expired"
        }
        else {
-           return "cancelled"
+           return "cancellationTimestamp"
        }
    }
 
@@ -39,17 +39,17 @@ class SubscriptionStatus {
       this.from = subscription.startTimeStamp;
       this.to = subscription.endTimeStamp;
       this.status = this.getStatus(subscription.endTimeStamp, subscription.cancellationTimetamp);
-      this.cancelled = subscription.cancellationTimetamp === "" ? undefined : subscription.cancellationTimetamp
+      this.cancellationTimestamp = subscription.cancellationTimetamp === "" ? undefined : subscription.cancellationTimetamp
    }
 }
 
 class SubscriptionStatusResponse {
-    activeSubscriptions: string[];
+    activeSubscriptionIds: string[];
     subscriptions: SubscriptionStatus[]
 
     constructor(subscriptions: ReadSubscription[]) {
         const now = Date.now()
-        this.activeSubscriptions = subscriptions.filter( sub => {
+        this.activeSubscriptionIds = subscriptions.filter(sub => {
             let endTime = Date.parse(sub.endTimeStamp);
             return endTime > now
         }).map(activeSub => activeSub.subscriptionId )

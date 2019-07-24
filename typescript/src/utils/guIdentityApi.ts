@@ -19,7 +19,6 @@ export function getIdentityToken(headers: HttpRequestHeaders): string {
 export function getUserId(headers: HttpRequestHeaders): Promise<string> {
     const url = "https://id.guardianapis.com/user/me"
     const identityToken = getIdentityToken(headers)
-    console.log(`Identity token: *${identityToken}*`)
 
     return restClient.get<IdentityResponse>(url, {additionalHeaders: {Authorization: `Bearer ${identityToken}`}})
         .then( res => {
