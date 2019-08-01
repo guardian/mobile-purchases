@@ -94,12 +94,8 @@ async function getSubscriptions(subscriptionIds: string[]) : Promise<Subscriptio
 export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse> {
     if(httpRequest.headers && getIdentityToken(httpRequest.headers)) {
         return getUserId(httpRequest.headers)
-            .then( userId => {
-                return getUserSubscriptionIds(userId)
-            })
-            .then(subIds => {
-                return getSubscriptions(subIds)
-            })
+            .then( userId => getUserSubscriptionIds(userId))
+            .then(subIds => getSubscriptions(subIds))
             .then( subs => {
                 return new HTTPResponse(200, new HTTPResponseHeaders(), JSON.stringify(subs) )
             })
