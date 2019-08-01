@@ -15,14 +15,17 @@ import {tagFilter} from "aws-sdk/clients/health";
 import {subscriptionARN} from "aws-sdk/clients/sns";
 import {getUserId, getIdentityToken} from "../utils/guIdentityApi";
 
+type SubscriptionStatusEnum = "active" | "expired" | "wontRenew"
+
 class SubscriptionStatus {
    subscriptionId: string;
    from?: string;
    to?: string;
-   status: string;
+   status: SubscriptionStatusEnum;
+   autoRenewing?: boolean;
    cancelled?: string;
 
-   private getStatus(endTimeStamp: string, cancellelationTimestamp?: string) {
+   private getStatus(endTimeStamp: string, cancellelationTimestamp?: string) : SubscriptionStatusEnum{
 
        const now = Date.now()
 
@@ -30,7 +33,7 @@ class SubscriptionStatus {
           return Date.parse(endTimeStamp) > now ? "active" : "expired"
        }
        else {
-           return "cancelled"
+           return "wontRenew"
        }
    }
 
@@ -39,6 +42,7 @@ class SubscriptionStatus {
       this.from = subscription.startTimeStamp;
       this.to = subscription.endTimeStamp;
       this.status = this.getStatus(subscription.endTimeStamp, subscription.cancellationTimetamp);
+      this.autoRenewing = subscription.autoRenewing;
       this.cancelled = subscription.cancellationTimetamp === "" ? undefined : subscription.cancellationTimetamp
    }
 }
@@ -48,7 +52,7 @@ class SubscriptionStatusResponse {
     subscriptions: SubscriptionStatus[]
 
     constructor(subscriptions: ReadSubscription[]) {
-        const now = Date.now()
+        const now = Date.now();
         this.activeSubscriptions = subscriptions.filter( sub => {
             let endTime = Date.parse(sub.endTimeStamp);
             return endTime > now
