@@ -18,9 +18,34 @@ export class UserSubscription {
         this.subscriptionId = subscriptionId;
         this.creationTimestamp = creationTimestamp;
     }
+    
 
     get[DynamoDbTable]() {
         return `${App}-${Stage}-user-subscriptions`
     }
 
 }
+
+export class ReadUserSubscription {
+
+    @hashKey()
+    userId: string
+
+    @attribute()
+    subscriptionId: string
+
+    @attribute()
+    creationTimestamp: string
+
+    constructor() {
+        this.userId = ""
+        this.subscriptionId = ""
+        this.creationTimestamp = ""
+    }
+    
+    get[DynamoDbTable]() {
+        return `${App}-${Stage}-user-subscriptions`
+    }
+
+}
+

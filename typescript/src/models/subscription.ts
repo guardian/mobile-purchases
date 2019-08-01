@@ -39,3 +39,32 @@ export class Subscription {
         return `${App}-${Stage}-subscriptions`
     }
 }
+
+export class ReadSubscription {
+    @hashKey()
+    subscriptionId: string;
+
+    @attribute()
+    startTimeStamp: string;
+
+    @attribute()
+    endTimeStamp: string;
+
+    @attribute()
+    cancellationTimetamp?: string;
+
+    @attribute()
+    autoRenewing?: boolean;
+
+    constructor() {
+        this.subscriptionId = "";
+        this.startTimeStamp = "";
+        this.endTimeStamp = "";
+        this.cancellationTimetamp = ""
+        this.autoRenewing = false;
+    }
+
+    get [DynamoDbTable]() {
+        return `${App}-${Stage}-subscriptions`
+    }
+}

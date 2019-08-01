@@ -90,3 +90,12 @@ deployments:
       functionNames: [mobile-purchases-google-update-subscriptions-]
       fileName: google-update-subscriptions.zip
       prefixStack: false
+
+  mobile-purchases-user-subscriptions:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-user-subscriptions-]
+      fileName: user-subscriptions.zip
+      prefixStack: false

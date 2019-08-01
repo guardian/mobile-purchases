@@ -113,9 +113,9 @@ Resources:
         - AttributeName: userId
           AttributeType: S
       KeySchema:
-        - AttributeName: subscriptionId
-          KeyType: HASH
         - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: subscriptionId
           KeyType: RANGE
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
