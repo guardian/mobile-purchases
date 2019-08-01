@@ -51,16 +51,15 @@ export class GoogleSubscription extends Subscription {
 export class AppleSubscription extends Subscription {
 
     @attribute()
-    transactionId: string;
+    reciept: string;
 
     @attribute()
     applePayload?: any;
     
-    constructor(subscriptionId: string, transactionId: string, startTimeStamp?: string, endTimeStamp?: string, cancellationTimeStamp?: string, autoRenewing?: boolean, applePayload?: any,  ttl?: number) {
-        super(subscriptionId, startTimeStamp, endTimeStamp, cancellationTimeStamp, autoRenewing, ttl )
-        this.transactionId = transactionId;
+    constructor(transactionId: string, reciept: string, startTimeStamp?: string, endTimeStamp?: string, cancellationTimeStamp?: string, autoRenewing?: boolean, applePayload?: any,  ttl?: number) {
+        super(transactionId, startTimeStamp, endTimeStamp, cancellationTimeStamp, autoRenewing, ttl )
+        this.reciept = reciept;
         this.applePayload = applePayload;
-
     }
 }
 

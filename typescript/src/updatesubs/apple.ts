@@ -13,7 +13,7 @@ interface AppleSubUpdate {
     appleBody: string
 }
 
-export function makeDynamoPromise(record: SQSRecord): Promise<AppleSubscription>  {
+export function sqsRecorrToAppleSubscription(record: SQSRecord): Promise<AppleSubscription>  {
     const sub = JSON.parse(record.body) as AppleSubUpdate
     return Promise.resolve( new AppleSubscription(
         sub.transactionId,
@@ -29,13 +29,13 @@ export function makeDynamoPromise(record: SQSRecord): Promise<AppleSubscription>
 
 export async function handler(event: SQSEvent) {
     const emptyPromises = event.Records.map( async (record) => {
-        await parseAndStoreSubscriptionUpdate(record, makeDynamoPromise)
+        return await parseAndStoreSubscriptionUpdate(record, sqsRecorrToAppleSubscription)
     })
 
     return Promise.all(emptyPromises)
         .then( value => {
             console.log(`Processed ${event.Records.length} subscriptions`)
-            "OL"
+            "OK"
         })
         .catch(error => {
             console.error("Error processing subsctption update: ", error)
