@@ -107,5 +107,4 @@ export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse> {
     } else {
         return HTTPResponses.INTERNAL_ERROR
     }
-    
 }
