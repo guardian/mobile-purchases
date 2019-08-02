@@ -2,17 +2,11 @@ import {
     HTTPResponse,
     HTTPResponses,
     HTTPRequest,
-    HttpRequestHeaders,
     HTTPResponseHeaders
 } from "../models/apiGatewayHttp";
-import {ReadUserSubscription} from "../models/userSubscription";
 import {Subscription, ReadSubscription} from "../models/subscription";
-import * as restm from "typed-rest-client/RestClient";
-import {catchClause} from "@babel/types";
+import {ReadUserSubscription} from "../models/userSubscription";
 import {dynamoMapper} from "../utils/aws"
-import {SubscriptionUpdate} from "../updatesubs/updatesub";
-import {tagFilter} from "aws-sdk/clients/health";
-import {subscriptionARN} from "aws-sdk/clients/sns";
 import {getUserId, getIdentityToken} from "../utils/guIdentityApi";
 
 type SubscriptionStatusEnum = "active" | "expired" | "wontRenew"

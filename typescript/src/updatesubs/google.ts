@@ -5,6 +5,10 @@ import {SubscriptionUpdate} from "./updatesub";
 
 import {parseAndStoreSubscriptionUpdate} from './updatesub'
 import {Stage} from "../utils/appIdentity";
+import {Subscription} from "aws-sdk/clients/inspector";
+import {GoogleSubscription} from "../models/subscription";
+import {makeCancellationTime, makeTimeToLive} from "./updatesub";
+import {isUndefined} from "util";
 
 
 interface GoogleSub {
@@ -22,7 +26,23 @@ interface GoogleResponseBody {
 
 const restClient = new restm.RestClient('guardian-mobile-purchases');
 
-export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpdate> {
+function parseAutoRenewing(autoRenewing: string | undefined) : boolean | undefined {
+
+        if(autoRenewing) {
+            try {
+                return JSON.parse(autoRenewing)
+            } catch (e) {
+                console.log(`Error trying to parsse autorenewing boolean`)
+                return undefined;
+            }
+        }
+        else  {
+            return undefined;
+        }
+
+}
+
+export function getGoogleSubResponse(record: SQSRecord): Promise<GoogleSubscription> {
 
     const sub = JSON.parse(record.body) as GoogleSub
     const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName)
@@ -32,13 +52,14 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
         })
         .then(response => {
             if(response.result) {
-                return new SubscriptionUpdate(
+                return new GoogleSubscription(
                     sub.purchaseToken,
-                    response.result.startTimeMillis,
-                    response.result.expiryTimeMillis,
-                    response.result.userCancellationTimeMillis,
+                    new Date(Number.parseInt(response.result.startTimeMillis)).toISOString(),
+                    new Date(Number.parseInt(response.result.expiryTimeMillis)).toISOString(),
+                    makeCancellationTime(response.result.userCancellationTimeMillis),
                     response.result.autoRenewing,
-                    response.result)
+                    response.result,
+                    makeTimeToLive(new Date(Date.now())))
             } else {
                 throw Error("There was no data in google response")
             }
@@ -48,8 +69,6 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<SubscriptionUpd
         })
 
 }
-
-
 
 export async function handler(event: SQSEvent) {
     const emptyPromises = event.Records.map(async (record) => {

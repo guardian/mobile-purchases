@@ -632,7 +632,7 @@ Resources:
       AlarmActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:mobile-server-side
       AlarmName: !Sub mobile-purchases-${Stage}-play-subscription-status-check-errors
-      AlarmDescription: !Sub A high number errors are being served to the Android app when it is attempting to check Play Subscription statuses
+      AlarmDescription: !Sub A high number errors are being served to the Android app when it is attempting to check Play GoogleSubscription statuses
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
         - Name: ApiName
@@ -710,6 +710,36 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
+
+  UpdateAppleSubscriptionsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${App}-apple-update-subscriptions-${Stage}
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-apple-update-subscriptions/apple-update-subscriptions.zip
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: Consomes subscription data updates from app store from sqs and stores them in dynamo
+      Handler: apple-update-subscriptions.handler
+      MemorySize: 512
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Timeout: 25
+      Runtime: nodejs10.x
+
+
+  AppleSubscriptionsEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !Ref UpdateAppleSubscriptionsLambda
+      Enabled: true
+      EventSourceArn: !GetAtt AppleSubscriptionsQueue.Arn
+      BatchSize: 10
+
+
 
 
 

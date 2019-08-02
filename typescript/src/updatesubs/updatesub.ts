@@ -1,10 +1,10 @@
 import {SQSRecord} from 'aws-lambda'
-import {Subscription} from '../models/subscription';
+import {GoogleSubscription, Subscription} from '../models/subscription';
 import {dynamoMapper} from "../utils/aws";
 import {ONE_YEAR_IN_SECONDS} from "../pubsub/pubsub";
 import {AccessToken} from "../utils/google-play";
 
-function makeCancellationTime(cancellationTime: string) : string {
+export function makeCancellationTime(cancellationTime: string) : string {
     if (cancellationTime) {
         return new Date(Number.parseInt(cancellationTime)).toISOString()
     } else {
@@ -12,7 +12,7 @@ function makeCancellationTime(cancellationTime: string) : string {
     }
 }
 
-function makeTimeToLive(date: Date) {
+export function makeTimeToLive(date: Date) {
     return Math.ceil((date.getTime() / 1000) + 7 * ONE_YEAR_IN_SECONDS)
 }
 
@@ -34,29 +34,13 @@ export class SubscriptionUpdate {
     }
 }
 
-
-function makeSubscription(subscriptionUpdate: SubscriptionUpdate) {
-    const subscription = new Subscription(
-        subscriptionUpdate.purchaseToken,
-        new Date(Number.parseInt(subscriptionUpdate.startTimeMillis)).toISOString(),
-        new Date(Number.parseInt(subscriptionUpdate.expiryTimeMillis)).toISOString(),
-        makeCancellationTime(subscriptionUpdate.userCancellationTimeMillis),
-        subscriptionUpdate.autoRenewing,
-        subscriptionUpdate,
-        makeTimeToLive(new Date(Date.now()))
-    );
-    return subscription;
-}
-
-function putSubscription(subscriptionUpdate: SubscriptionUpdate): Promise<Subscription>  {
-    const subscription = makeSubscription(subscriptionUpdate);
+function putSubscription(subscription: Subscription): Promise<Subscription>  {
     return dynamoMapper.put({item: subscription}).then(result => result.item)
 }
 
-
 export async function parseAndStoreSubscriptionUpdate (
     sqsRecord: SQSRecord,
-    fetchSubscriberDetails: (record: SQSRecord) => Promise<SubscriptionUpdate>
+    fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription>,
 ) : Promise<Subscription> {
    return fetchSubscriberDetails(sqsRecord)
        .then(payload => {

@@ -79,7 +79,17 @@ const userSubscriptions = Object.assign({}, config, {
         path: path.resolve(__dirname, 'tsc-target'),
         libraryTarget: 'commonjs'
     }
-})
+});
 
 
-module.exports = [googlePubSub, applePubSub, googlePlaySubStatus, googleUpdateSub, appleUserLink, googleUserLink, userSubscriptions]
+const appleUpdateSub = Object.assign({}, config, {
+    entry: './typescript/src/updatesubs/apple.ts',
+    output: {
+        filename: 'apple-update-subscriptions.js',
+        path: path.resolve(__dirname, 'tsc-target'),
+        libraryTarget: 'commonjs'
+    }
+});
+
+
+module.exports = [googlePubSub, applePubSub, googlePlaySubStatus, googleUpdateSub, appleUpdateSub, appleUserLink, googleUserLink, userSubscriptions]
