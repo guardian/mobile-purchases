@@ -98,6 +98,7 @@ deployments:
       bucket: mobile-dist
       functionNames: [mobile-purchases-user-subscriptions-]
       fileName: user-subscriptions.zip
+      prefixStack: false
 
   mobile-purchases-apple-update-subscriptions:
     type: aws-lambda
