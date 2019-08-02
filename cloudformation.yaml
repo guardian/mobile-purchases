@@ -736,7 +736,7 @@ Resources:
     Properties:
       FunctionName: !Ref UpdateAppleSubscriptionsLambda
       Enabled: true
-      EventSourceArn: https://sqs.eu-west-1.amazonaws.com/201359054765/NathanielUpdateGoogleSubscriptionTst
+      EventSourceArn: !GetAtt AppleSubscriptionsQueue.Arn
       BatchSize: 10
 
 
