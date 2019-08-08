@@ -2,7 +2,7 @@ import 'source-map-support/register'
 import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {ONE_YEAR_IN_SECONDS, parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
-import {SqsEvent} from "../models/aws/sqs";
+import {GoogleSubscriptionReference} from "../models/googleSubscriptionReference";
 
 interface DeveloperNotification {
     version: string,
@@ -60,7 +60,7 @@ export function toDynamoEvent(notification: DeveloperNotification): Subscription
     );
 }
 
-export function toSqsEvent(event: DeveloperNotification): SqsEvent {
+export function toSqsEvent(event: DeveloperNotification): GoogleSubscriptionReference {
     return {
         packageName: event.packageName,
         purchaseToken: event.subscriptionNotification.purchaseToken,
