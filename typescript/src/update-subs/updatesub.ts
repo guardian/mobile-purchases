@@ -44,7 +44,7 @@ export async function parseAndStoreSubscriptionUpdate (
    return fetchSubscriberDetails(sqsRecord)
     .then(payload => putSubscription(payload))
     .catch(error => {
-       console.log(`Error retrieving payload from google: ${error}`);
+       console.log(`Error retrieving payload: ${error}`);
        throw error;
     });
 
