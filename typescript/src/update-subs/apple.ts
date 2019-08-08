@@ -7,8 +7,10 @@ import {Response} from 'node-fetch';
 import {Stage} from "../utils/appIdentity";
 import {msToFormattedString, optionalMsToFormattedString} from "../utils/dates";
 
-const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
-const environment = (Stage === "PROD") ? "Production" : "Sandbox";
+// const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
+// const environment = (Stage === "PROD") ? "Production" : "Sandbox";
+const receiptEndpoint = "https://buy.itunes.apple.com/verifyReceipt"
+const environment = "Production";
 
 interface AppleValidatedRenewalInfo {
     auto_renew_status: "0" | "1",
