@@ -63,15 +63,6 @@ const appleUserLink = Object.assign({}, config, {
     }
 });
 
-const googleUpdateSub = Object.assign({}, config, {
-    entry: './typescript/src/updatesubs/google.ts',
-    output: {
-        filename: 'google-update-subscriptions.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
-
 const userSubscriptions = Object.assign({}, config, {
     entry: './typescript/src/user/user.ts',
     output: {
@@ -81,9 +72,18 @@ const userSubscriptions = Object.assign({}, config, {
     }
 });
 
+const googleUpdateSub = Object.assign({}, config, {
+    entry: './typescript/src/update-subs/google.ts',
+    output: {
+        filename: 'google-update-subscriptions.js',
+        path: path.resolve(__dirname, 'tsc-target'),
+        libraryTarget: 'commonjs'
+    }
+});
+
 
 const appleUpdateSub = Object.assign({}, config, {
-    entry: './typescript/src/updatesubs/apple.ts',
+    entry: './typescript/src/update-subs/apple.ts',
     output: {
         filename: 'apple-update-subscriptions.js',
         path: path.resolve(__dirname, 'tsc-target'),
