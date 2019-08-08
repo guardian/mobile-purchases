@@ -13,8 +13,8 @@ interface AppleSubUpdate {
     appleBody: string
 }
 
-export function sqsRecorrToAppleSubscription(record: SQSRecord): Promise<AppleSubscription>  {
-    const sub = JSON.parse(record.body) as AppleSubUpdate
+export function sqsRecordToAppleSubscription(record: SQSRecord): Promise<AppleSubscription> {
+    const sub = JSON.parse(record.body) as AppleSubUpdate;
     return Promise.resolve( new AppleSubscription(
         sub.transactionId,
         sub.receipt,
@@ -29,7 +29,7 @@ export function sqsRecorrToAppleSubscription(record: SQSRecord): Promise<AppleSu
 
 export async function handler(event: SQSEvent) {
     const emptyPromises = event.Records.map( async (record) => {
-        return await parseAndStoreSubscriptionUpdate(record, sqsRecorrToAppleSubscription)
+        return await parseAndStoreSubscriptionUpdate(record, sqsRecordToAppleSubscription)
     })
 
     return Promise.all(emptyPromises)
