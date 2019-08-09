@@ -1,9 +1,7 @@
-import {HTTPRequest, HttpRequestHeaders, HTTPResponse, HTTPResponses} from '../models/apiGatewayHttp';
+import {HTTPRequest, HTTPResponse, HTTPResponses} from '../models/apiGatewayHttp';
 
-import * as restm from "typed-rest-client/RestClient";
 import {UserSubscription} from "../models/userSubscription";
 import {Subscription} from "../models/subscription";
-import {Platform} from "../models/platform";
 import {dynamoMapper, sendToSqsImpl} from "../utils/aws";
 import {ItemNotFoundException} from "@aws/dynamodb-data-mapper";
 import {catchClause} from "@babel/types";

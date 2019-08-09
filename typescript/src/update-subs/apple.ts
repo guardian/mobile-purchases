@@ -66,13 +66,14 @@ function toAppleSubscription(response: AppleValidationResponse, subRef: AppleSub
 
     return new AppleSubscription(
         latestReceiptInfo.original_transaction_id,
-        response.latest_receipt,
         msToFormattedString(latestReceiptInfo.original_purchase_date_ms),
         msToFormattedString(latestReceiptInfo.expires_date),
         optionalMsToFormattedString(latestReceiptInfo.cancellation_date_ms),
         autoRenewStatus,
-        response,
-        makeTimeToLive(new Date(Date.now()))
+        latestReceiptInfo.product_id,
+        makeTimeToLive(new Date(Date.now())),
+        response.latest_receipt,
+        response
     )
 }
 

@@ -49,8 +49,10 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<GoogleSubscript
                     new Date(Number.parseInt(response.result.expiryTimeMillis)).toISOString(),
                     makeCancellationTime(response.result.userCancellationTimeMillis),
                     response.result.autoRenewing,
-                    response.result,
-                    makeTimeToLive(new Date(Date.now())));
+                    sub.subscriptionId,
+                    makeTimeToLive(new Date(Date.now())),
+                    response.result
+                );
             } else {
                 throw Error("There was no data in google response");
             }
