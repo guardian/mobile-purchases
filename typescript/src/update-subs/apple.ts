@@ -23,7 +23,7 @@ interface AppleValidatedReceiptInfo {
 // there are more fields, I cherry picked what was relevant
 // https://developer.apple.com/documentation/appstorereceipts/responsebody
 interface AppleValidationResponse {
-    auto_renew_status: "0" | "1",
+    auto_renew_status: 0 | 1,
     "is-retryable": boolean,
     latest_receipt: string,
     latest_receipt_info: AppleValidatedReceiptInfo,
@@ -60,7 +60,7 @@ function toAppleSubscription(response: AppleValidationResponse, subRef: AppleSub
     const latestReceiptInfo = response.latest_receipt_info;
 
     let autoRenewStatus: boolean = false;
-    if (response.auto_renew_status === "1") {
+    if (response.auto_renew_status === 1) {
         autoRenewStatus = true;
     }
 
