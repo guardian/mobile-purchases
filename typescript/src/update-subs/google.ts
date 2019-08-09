@@ -23,7 +23,7 @@ function parseAutoRenewing(autoRenewing: string | undefined) : boolean | undefin
             try {
                 return JSON.parse(autoRenewing)
             } catch (e) {
-                console.log(`Error trying to parsse autorenewing boolean`);
+                console.log(`Error trying to parse autorenewing boolean`);
                 return undefined;
             }
         }
