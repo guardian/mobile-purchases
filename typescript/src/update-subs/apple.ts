@@ -9,7 +9,7 @@ import {msToFormattedString, optionalMsToFormattedString} from "../utils/dates";
 
 // const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
 // const environment = (Stage === "PROD") ? "Production" : "Sandbox";
-const receiptEndpoint = "https://buy.itunes.apple.com/verifyReceipt"
+const receiptEndpoint = "https://buy.itunes.apple.com/verifyReceipt";
 const environment = "Production";
 
 interface AppleValidatedReceiptInfo {
@@ -81,10 +81,7 @@ function sqsRecordToAppleSubscription(record: SQSRecord): Promise<AppleSubscript
 
     return validateReceipt(subRef)
         .then(response => response.json())
-        .then(body => {
-            console.log(body);
-            return body as AppleValidationResponse;
-        })
+        .then(body => body as AppleValidationResponse)
         .then(checkResponseStatus)
         .then(response => toAppleSubscription(response, subRef))
 }
