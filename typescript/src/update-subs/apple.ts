@@ -1,3 +1,4 @@
+import 'source-map-support/register'
 import {SQSEvent, SQSRecord} from 'aws-lambda'
 import {makeTimeToLive, parseAndStoreSubscriptionUpdate} from "./updatesub";
 import {AppleSubscription} from "../models/subscription";

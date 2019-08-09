@@ -1,3 +1,4 @@
+import 'source-map-support/register'
 import {SQSEvent, SQSRecord} from 'aws-lambda';
 import * as restm from 'typed-rest-client/RestClient';
 import {buildGoogleUrl, getAccessToken, getParams} from "../utils/google-play";
