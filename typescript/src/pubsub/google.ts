@@ -60,7 +60,7 @@ export function toDynamoEvent(notification: DeveloperNotification): Subscription
     );
 }
 
-export function toSqsEvent(event: DeveloperNotification): GoogleSubscriptionReference {
+export function toSqsSubReference(event: DeveloperNotification): GoogleSubscriptionReference {
     return {
         packageName: event.packageName,
         purchaseToken: event.subscriptionNotification.purchaseToken,
@@ -73,6 +73,6 @@ export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
         request,
         parsePayload,
         toDynamoEvent,
-        toSqsEvent
+        toSqsSubReference
     )
 }

@@ -52,7 +52,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     );
 }
 
-export function toSqsEvent(event: StatusUpdateNotification): AppleSubscriptionReference {
+export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
     const receiptInfo = event.latest_receipt_info || event.latest_expired_receipt_info;
     const receipt = event.latest_receipt || event.latest_expired_receipt;
     return {
@@ -66,6 +66,6 @@ export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
         request,
         parsePayload,
         toDynamoEvent,
-        toSqsEvent
+        toSqsSubReference
     )
 }
