@@ -16,5 +16,5 @@ if(process.argv.length == 4) {
    )
 }
 else {
-    console.log("Please run  tsc && node ./tsc-target/src/launcher/launcher.typescript. <../module/path> <payload-filename> ")
+    console.log("Please run  tsc && node ./tsc-target/src/test-launcher/test-launcher.js <../module/path> <payload-filename> ")
 }

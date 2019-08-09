@@ -2,7 +2,7 @@ import { parseStoreAndSend } from "../../src/pubsub/pubsub";
 import {
     parsePayload as parseGooglePayload,
     toDynamoEvent as googlePayloadToDynamo,
-    toSqsEvent as toGoogleSqsEvent
+    toSqsSubReference as toGoogleSqsEvent
 } from "../../src/pubsub/google";
 import {HTTPResponses} from "../../src/models/apiGatewayHttp";
 import {SubscriptionEvent} from "../../src/models/subscriptionEvent";

@@ -3,11 +3,12 @@ import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {ONE_YEAR_IN_SECONDS, parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
 import {AppleReceiptInfo} from "../models/appleReceiptInfo";
+import {AppleSubscriptionReference} from "../models/appleSubscriptionReference";
 
 export interface StatusUpdateNotification {
     environment: string,
     notification_type: string,
-    password?: string,
+    password: string,
     original_transaction_id: string,
     cancellation_date: string,
     web_order_line_item_id: string,
@@ -21,20 +22,9 @@ export interface StatusUpdateNotification {
     expiration_intent: string
 }
 
-export interface SqsEvent {
-    transactionId: string,
-    receipt: string,
-    cancellationDate: string,
-    startDate: string,
-    endDate: string,
-    autoRenewing: boolean,
-    appleBody: string
-}
-
 export function parsePayload(body?: string): Error | StatusUpdateNotification {
     try {
         let notification = JSON.parse(body || "") as StatusUpdateNotification;
-        delete notification.password;
         return notification;
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
@@ -62,17 +52,12 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     );
 }
 
-export function toSqsEvent(event: StatusUpdateNotification): SqsEvent {
+export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
     const receiptInfo = event.latest_receipt_info || event.latest_expired_receipt_info;
     const receipt = event.latest_receipt || event.latest_expired_receipt;
     return {
-        transactionId: receiptInfo.transaction_id,
-        receipt: receipt,
-        cancellationDate: event.cancellation_date,
-        startDate: receiptInfo.purchase_date_ms,
-        endDate: receiptInfo.expires_date,
-        autoRenewing: event.auto_renew_status,
-        appleBody: JSON.stringify(event)
+        password: event.password,
+        receipt: receipt
     }
 }
 
@@ -81,6 +66,6 @@ export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
         request,
         parsePayload,
         toDynamoEvent,
-        toSqsEvent
+        toSqsSubReference
     )
 }

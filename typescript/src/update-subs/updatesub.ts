@@ -1,8 +1,7 @@
 import {SQSRecord} from 'aws-lambda'
-import {GoogleSubscription, Subscription} from '../models/subscription';
+import {Subscription} from '../models/subscription';
 import {dynamoMapper} from "../utils/aws";
 import {ONE_YEAR_IN_SECONDS} from "../pubsub/pubsub";
-import {AccessToken} from "../utils/google-play";
 
 export function makeCancellationTime(cancellationTime: string) : string {
     if (cancellationTime) {
@@ -43,14 +42,10 @@ export async function parseAndStoreSubscriptionUpdate (
     fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription>,
 ) : Promise<Subscription> {
    return fetchSubscriberDetails(sqsRecord)
-       .then(payload => {
-           return putSubscription(payload)
-       } )
-       .catch(
-           error => {
-               console.log(`Error retrieving payload from google: ${error}`)
-               throw error
-           }
-       )
+    .then(payload => putSubscription(payload))
+    .catch(error => {
+       console.log(`Error retrieving payload: ${error}`);
+       throw error;
+    });
 
 }

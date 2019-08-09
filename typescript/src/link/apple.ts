@@ -1,3 +1,4 @@
+import 'source-map-support/register'
 import {Platform} from "../models/platform";
 import {UserSubscriptionData, parseAndStoreLink} from "./link";
 import {HTTPRequest, HTTPResponse, HTTPResponses} from "../models/apiGatewayHttp";
