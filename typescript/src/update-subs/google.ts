@@ -8,6 +8,7 @@ import {Stage} from "../utils/appIdentity";
 import {GoogleSubscription} from "../models/subscription";
 import {makeCancellationTime, makeTimeToLive} from "./updatesub";
 import {GoogleSubscriptionReference} from "../models/googleSubscriptionReference";
+import {ProcessingError} from "../models/processingError";
 
 interface GoogleResponseBody {
     startTimeMillis: string,
@@ -17,22 +18,6 @@ interface GoogleResponseBody {
 }
 
 const restClient = new restm.RestClient('guardian-mobile-purchases');
-
-function parseAutoRenewing(autoRenewing: string | undefined) : boolean | undefined {
-
-        if(autoRenewing) {
-            try {
-                return JSON.parse(autoRenewing)
-            } catch (e) {
-                console.log(`Error trying to parse autorenewing boolean`);
-                return undefined;
-            }
-        }
-        else  {
-            return undefined;
-        }
-
-}
 
 export function getGoogleSubResponse(record: SQSRecord): Promise<GoogleSubscription> {
 
@@ -55,28 +40,19 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<GoogleSubscript
                     response.result
                 );
             } else {
-                throw Error("There was no data in google response");
+                throw new ProcessingError("There was no data in google response", true);
             }
-        })
-        .catch( error => {
-            throw error;
         })
 
 }
 
 export async function handler(event: SQSEvent) {
-    const emptyPromises = event.Records.map(async (record) => {
-        await parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse)
-    });
+    const promises = event.Records.map(record => parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse));
     
-    return Promise.all(emptyPromises)
+    return Promise.all(promises)
         .then(value  => {
             console.log(`Processed ${event.Records.length} subscriptions`);
             return "OK";
-        })
-        .catch(error => {
-            console.error("Error processing subsctption update: ", error);
-            return "Error";
         })
 
 }

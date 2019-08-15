@@ -7,6 +7,7 @@ import fetch from 'node-fetch';
 import {Response} from 'node-fetch';
 import {Stage} from "../utils/appIdentity";
 import {msToFormattedString, optionalMsToFormattedString} from "../utils/dates";
+import {ProcessingError} from "../models/processingError";
 
 // const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
 // const environment = (Stage === "PROD") ? "Production" : "Sandbox";
@@ -38,21 +39,25 @@ function validateReceipt(subRef: AppleSubscriptionReference): Promise<Response> 
             "exclude-old-transactions": true
         })}).then(response => {
         if (!response.ok) {
-            console.error(`Impossible to validate the receipt, got ${response.status} ${response.statusText} from receiptEndpoint for ${subRef.receipt}`)
-            throw new Error("Impossible to validate receipt");
+            console.error(`Impossible to validate the receipt, got ${response.status} ${response.statusText} from receiptEndpoint for ${subRef.receipt}`);
+            throw new ProcessingError("Impossible to validate receipt", true);
         }
         return response
     })
 }
 
 function checkResponseStatus(response: AppleValidationResponse): AppleValidationResponse {
-    if (response.status != 0) {
+    if ((response.status >= 21100 && response.status <= 21199) || response["is-retryable"]) {
+        console.error(`Server error received from Apple, got status ${response.status} for ${response.latest_receipt}, will retry`);
+        throw new ProcessingError(`Server error, status ${response.status}`, true);
+    }
+    if (response.status != 0 && response.status != 21006) {
         console.error(`Invalid receipt, got status ${response.status} for ${response.latest_receipt}`);
-        throw new Error(`Invalid receipt, got status ${response.status}`);
+        throw new ProcessingError(`Invalid receipt, got status ${response.status}`);
     }
     if (!response.latest_receipt_info) {
         console.error(`No receipt info`);
-        throw new Error(`Invalid validation response, no receipt info`);
+        throw new ProcessingError(`Invalid validation response, no receipt info`);
     }
     return response;
 }
@@ -89,17 +94,11 @@ function sqsRecordToAppleSubscription(record: SQSRecord): Promise<AppleSubscript
 }
 
 export async function handler(event: SQSEvent): Promise<String> {
-    const emptyPromises = event.Records.map( record => parseAndStoreSubscriptionUpdate(record, sqsRecordToAppleSubscription));
+    const promises = event.Records.map( record => parseAndStoreSubscriptionUpdate(record, sqsRecordToAppleSubscription));
 
-    return Promise.all(emptyPromises)
+    return Promise.all(promises)
         .then( value => {
             console.log(`Processed ${event.Records.length} subscriptions`);
             return "OK";
-        })
-        .catch(error => {
-            console.error("Error processing subsctption update: ", error);
-            return "Error";
-        })
-
-
+        });
 }
