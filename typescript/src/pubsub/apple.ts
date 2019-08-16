@@ -4,6 +4,7 @@ import {ONE_YEAR_IN_SECONDS, parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
 import {AppleReceiptInfo} from "../models/appleReceiptInfo";
 import {AppleSubscriptionReference} from "../models/appleSubscriptionReference";
+import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 
 export interface StatusUpdateNotification {
     environment: string,
@@ -48,7 +49,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         receiptInfo.bid,
         null,
         notification,
-        Math.ceil((now.getTime() / 1000) + 7 * ONE_YEAR_IN_SECONDS)
+        dateToSecondTimestamp(thirtyMonths(now))
     );
 }
 
