@@ -9,6 +9,7 @@ import {GoogleSubscription} from "../models/subscription";
 import {makeCancellationTime, makeTimeToLive} from "./updatesub";
 import {GoogleSubscriptionReference} from "../models/googleSubscriptionReference";
 import {ProcessingError} from "../models/processingError";
+import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 
 interface GoogleResponseBody {
     startTimeMillis: string,
@@ -29,14 +30,15 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<GoogleSubscript
         })
         .then(response => {
             if(response.result) {
+                const expiryDate = new Date(Number.parseInt(response.result.expiryTimeMillis));
                 return new GoogleSubscription(
                     sub.purchaseToken,
                     new Date(Number.parseInt(response.result.startTimeMillis)).toISOString(),
-                    new Date(Number.parseInt(response.result.expiryTimeMillis)).toISOString(),
+                    expiryDate.toISOString(),
                     makeCancellationTime(response.result.userCancellationTimeMillis),
                     response.result.autoRenewing,
                     sub.subscriptionId,
-                    makeTimeToLive(new Date(Date.now())),
+                    dateToSecondTimestamp(thirtyMonths(expiryDate)),
                     response.result
                 );
             } else {

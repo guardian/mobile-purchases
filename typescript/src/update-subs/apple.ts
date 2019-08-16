@@ -6,7 +6,7 @@ import {AppleSubscriptionReference} from "../models/appleSubscriptionReference";
 import fetch from 'node-fetch';
 import {Response} from 'node-fetch';
 import {Stage} from "../utils/appIdentity";
-import {msToFormattedString, optionalMsToFormattedString} from "../utils/dates";
+import {dateToSecondTimestamp, msToFormattedString, optionalMsToFormattedString, thirtyMonths} from "../utils/dates";
 import {ProcessingError} from "../models/processingError";
 
 // const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
@@ -70,6 +70,8 @@ function toAppleSubscription(response: AppleValidationResponse, subRef: AppleSub
         autoRenewStatus = true;
     }
 
+    const expiryDate = new Date(Number.parseInt(latestReceiptInfo.expires_date));
+
     return new AppleSubscription(
         latestReceiptInfo.original_transaction_id,
         msToFormattedString(latestReceiptInfo.original_purchase_date_ms),
@@ -77,7 +79,7 @@ function toAppleSubscription(response: AppleValidationResponse, subRef: AppleSub
         optionalMsToFormattedString(latestReceiptInfo.cancellation_date_ms),
         autoRenewStatus,
         latestReceiptInfo.product_id,
-        makeTimeToLive(new Date(Date.now())),
+        dateToSecondTimestamp(thirtyMonths(expiryDate)),
         response.latest_receipt,
         response
     )
