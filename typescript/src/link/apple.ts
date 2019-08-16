@@ -4,7 +4,7 @@ import {UserSubscriptionData, parseAndStoreLink} from "./link";
 import {HTTPRequest, HTTPResponse, HTTPResponses} from "../models/apiGatewayHttp";
 
 type AppleSubscription = {
-    reciept: string
+    receipt: string
     transactionId: string
 }
 
@@ -15,7 +15,7 @@ type AppleLinkPayload = {
 
 export function parseAppleLinkPayload(requestBody?: string): UserSubscriptionData[] {
     const payload = JSON.parse(requestBody || "") as AppleLinkPayload
-    return payload.subscriptions.map ( subscription => new UserSubscriptionData(subscription.reciept, subscription.transactionId) )
+    return payload.subscriptions.map ( subscription => new UserSubscriptionData(subscription.receipt, subscription.transactionId) )
 }
 
 export async function handler(httpRequest: HTTPRequest)  {

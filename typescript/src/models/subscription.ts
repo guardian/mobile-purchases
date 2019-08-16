@@ -55,14 +55,14 @@ export class GoogleSubscription extends Subscription {
 export class AppleSubscription extends Subscription {
 
     @attribute()
-    reciept: string;
+    receipt: string;
 
     @attribute()
     applePayload?: any;
 
     constructor(subscriptionId: string, startTimeStamp: string, endTimeStamp: string, cancellationTimetamp: string | undefined, autoRenewing: boolean, productId: string, ttl: number, reciept: string, applePayload: any) {
         super(subscriptionId, startTimeStamp, endTimeStamp, cancellationTimetamp, autoRenewing, productId, ttl);
-        this.reciept = reciept;
+        this.receipt = reciept;
         this.applePayload = applePayload;
     }
 }
