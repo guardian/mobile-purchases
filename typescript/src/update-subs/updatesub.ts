@@ -2,6 +2,7 @@ import {SQSRecord} from 'aws-lambda'
 import {Subscription} from '../models/subscription';
 import {dynamoMapper} from "../utils/aws";
 import {ONE_YEAR_IN_SECONDS} from "../pubsub/pubsub";
+import {ProcessingError} from "../models/processingError";
 
 export function makeCancellationTime(cancellationTime: string) : string {
     if (cancellationTime) {
@@ -40,12 +41,26 @@ function putSubscription(subscription: Subscription): Promise<Subscription>  {
 export async function parseAndStoreSubscriptionUpdate (
     sqsRecord: SQSRecord,
     fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription>,
-) : Promise<Subscription> {
-   return fetchSubscriberDetails(sqsRecord)
-    .then(payload => putSubscription(payload))
-    .catch(error => {
-       console.log(`Error retrieving payload: ${error}`);
-       throw error;
-    });
+) : Promise<String> {
+    return fetchSubscriberDetails(sqsRecord)
+        .then(payload => {
+            putSubscription(payload);
+            return "OK"
+        })
+        .catch(error => {
+            if (error instanceof ProcessingError) {
+               console.error("Error processing the subscription update", error);
+               if (error.shouldRetry) {
+                   console.error("Will throw an exception to retry this message");
+                   throw error;
+               }  else {
+                   console.error("The error wasn't retryable, giving up.");
+                   return "Error, giving up"
+               }
+            } else {
+               console.error("Unexpected error, will throw to retry: ", error);
+               throw error;
+            }
+        });
 
 }
