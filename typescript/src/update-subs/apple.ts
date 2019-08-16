@@ -48,7 +48,7 @@ function validateReceipt(subRef: AppleSubscriptionReference): Promise<Response> 
 
 function checkResponseStatus(response: AppleValidationResponse): AppleValidationResponse {
     if ((response.status >= 21100 && response.status <= 21199) || response["is-retryable"]) {
-        console.error(`Server error received from Apple, got status ${response.status} for ${response.latest_receipt}, will retry`);
+        console.error(`Server error received from Apple, got status ${response.status}, will retry`);
         throw new ProcessingError(`Server error, status ${response.status}`, true);
     }
     if (response.status != 0 && response.status != 21006) {
