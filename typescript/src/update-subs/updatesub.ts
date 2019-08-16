@@ -54,6 +54,7 @@ export async function parseAndStoreSubscriptionUpdate (
                    console.error("Will throw an exception to retry this message");
                    throw error;
                }  else {
+                   console.error("The error wasn't retryable, giving up.");
                    return "Error, giving up"
                }
             } else {
