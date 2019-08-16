@@ -12,7 +12,7 @@ export function optionalMsToFormattedString(ms?: string): string | undefined {
 
 export function thirtyMonths(from: Date = new Date()): Date {
     const newDate = new Date(from.getTime());
-    newDate.setMonth(from.getMonth() + 30);
+    newDate.setUTCMonth(from.getUTCMonth() + 30);
     return newDate;
 }
 
