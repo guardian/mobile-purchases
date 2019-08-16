@@ -13,10 +13,14 @@ export class UserSubscription {
     @attribute()
     creationTimestamp: string
 
-    constructor(userId: string, subscriptionId: string, creationTimestamp: string) {
+    @attribute()
+    ttl: number;
+
+    constructor(userId: string, subscriptionId: string, creationTimestamp: string, ttl: number) {
         this.userId = userId;
         this.subscriptionId = subscriptionId;
         this.creationTimestamp = creationTimestamp;
+        this.ttl = ttl;
     }
     
 
@@ -42,7 +46,7 @@ export class ReadUserSubscription {
         this.subscriptionId = ""
         this.creationTimestamp = ""
     }
-    
+
     get[DynamoDbTable]() {
         return `${App}-${Stage}-user-subscriptions`
     }
