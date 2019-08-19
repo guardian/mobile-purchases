@@ -6,6 +6,7 @@ import {dynamoMapper, sendToSqsImpl} from "../utils/aws";
 import {ItemNotFoundException} from "@aws/dynamodb-data-mapper";
 import {catchClause} from "@babel/types";
 import {getUserId, getIdentityToken} from "../utils/guIdentityApi";
+import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 
 export class UserSubscriptionData {
     transactionToken: string;
@@ -21,7 +22,8 @@ function putUserSubscription(subscriptionId: string, userId: string): Promise<Us
     const userSubscription = new UserSubscription(
         userId,
         subscriptionId,
-        new Date(Date.now()).toISOString()
+        new Date(Date.now()).toISOString(),
+        dateToSecondTimestamp(thirtyMonths())
     )
     return dynamoMapper.put({item: userSubscription}).then(result => result.item)
 }
