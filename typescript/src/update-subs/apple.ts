@@ -9,10 +9,8 @@ import {Stage} from "../utils/appIdentity";
 import {dateToSecondTimestamp, msToFormattedString, optionalMsToFormattedString, thirtyMonths} from "../utils/dates";
 import {ProcessingError} from "../models/processingError";
 
-// const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
-// const environment = (Stage === "PROD") ? "Production" : "Sandbox";
-const receiptEndpoint = "https://buy.itunes.apple.com/verifyReceipt";
-const environment = "Production";
+const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
+const environment = (Stage === "PROD") ? "Production" : "Sandbox";
 
 interface AppleValidatedReceiptInfo {
     cancellation_date_ms?: string,
