@@ -9,7 +9,7 @@ import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 export interface StatusUpdateNotification {
     environment: string,
     notification_type: string,
-    password: string,
+    password?: string,
     original_transaction_id: string,
     cancellation_date: string,
     web_order_line_item_id: string,
@@ -26,6 +26,7 @@ export interface StatusUpdateNotification {
 export function parsePayload(body?: string): Error | StatusUpdateNotification {
     try {
         let notification = JSON.parse(body || "") as StatusUpdateNotification;
+        delete notification.password; // no need to keep that in memory
         return notification;
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
@@ -54,10 +55,8 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 }
 
 export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
-    const receiptInfo = event.latest_receipt_info || event.latest_expired_receipt_info;
     const receipt = event.latest_receipt || event.latest_expired_receipt;
     return {
-        password: event.password,
         receipt: receipt
     }
 }
