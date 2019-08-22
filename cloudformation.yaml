@@ -38,6 +38,11 @@ Parameters:
   ApplePubSubSecret:
     Type: String
     Description: The secret used by google's pubsub
+  AlarmTopic:
+    Type: String
+    Description: The ARN of the SNS topic to send all the cloudwatch alarms to
+
+
 Resources:
   MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
@@ -739,14 +744,6 @@ Resources:
       EventSourceArn: !GetAtt AppleSubscriptionsQueue.Arn
       BatchSize: 10
 
-  AppleSubscriptionDlqTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub AppleSubscriptionDlqTopic-${Stage}
-      Subscription:
-        - Endpoint: mobile.server.side@theguardian.com
-          Protocol: email
-
   AppleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -762,17 +759,9 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       Threshold: 0
       AlarmActions:
-        - Ref: AppleSubscriptionDlqTopic
+        - Ref: AlarmTopic
       InsufficientDataActions:
-        - Ref: AppleSubscriptionDlqTopic
-
-  GoogleSubscriptionDlqTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub GoogleSubscriptionDlqTopic-${Stage}
-      Subscription:
-        - Endpoint: mobile.server.side@theguardian.com
-          Protocol: email
+        - Ref: AlarmTopic
 
   GoogleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -789,9 +778,9 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       Threshold: 0
       AlarmActions:
-        - Ref: GoogleSubscriptionDlqTopic
+        - Ref: AlarmTopic
       InsufficientDataActions:
-        - Ref: GoogleSubscriptionDlqTopic
+        - Ref: AlarmTopic
 
 
 
