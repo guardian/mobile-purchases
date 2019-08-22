@@ -753,7 +753,7 @@ Resources:
       Dimensions:
         - Name: QueueName
           Value: !GetAtt 'AppleSubscriptionsQueueDlq.QueueName'
-      Period: 3600
+      Period: 3000
       Statistic: Sum
       EvaluationPeriods: 1
       ComparisonOperator: GreaterThanThreshold
@@ -772,7 +772,7 @@ Resources:
       Dimensions:
         - Name: QueueName
           Value: !GetAtt 'GoogleSubscriptionsQueueDlq.QueueName'
-      Period: 3600
+      Period: 3000
       Statistic: Sum
       EvaluationPeriods: 1
       ComparisonOperator: GreaterThanThreshold
