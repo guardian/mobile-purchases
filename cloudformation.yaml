@@ -748,8 +748,8 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: "Ensure that the apple subsciption dead letter queue is empty"
-      Namespace: !Sub mobile-purchases/${Stage}/subscriptions
-      MetricName: AppleSubscriptionDlqSize
+      Namespace: "AWS/SQS"
+      MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
           Value: !GetAtt 'AppleSubscriptionsQueueDlq.QueueName'
@@ -767,8 +767,8 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: "Ensure that the apple subsciption dead letter queue is empty"
-      Namespace: !Sub mobile-purchases/${Stage}/subscriptions
-      MetricName: GoogleSubscriptionDlqSize
+      Namespace: "AWS/SQS"
+      MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
           Value: !GetAtt 'GoogleSubscriptionsQueueDlq.QueueName'
