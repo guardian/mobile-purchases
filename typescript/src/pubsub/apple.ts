@@ -3,8 +3,8 @@ import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {ONE_YEAR_IN_SECONDS, parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
 import {AppleReceiptInfo} from "../models/appleReceiptInfo";
-import {AppleSubscriptionReference} from "../models/appleSubscriptionReference";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
+import {AppleSubscriptionReference} from "../models/subscriptionReference";
 
 export interface StatusUpdateNotification {
     environment: string,

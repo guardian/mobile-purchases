@@ -1,14 +1,14 @@
 import 'source-map-support/register'
 import {SQSEvent, SQSRecord} from 'aws-lambda'
-import {makeTimeToLive, parseAndStoreSubscriptionUpdate} from "./updatesub";
+import {parseAndStoreSubscriptionUpdate} from "./updatesub";
 import {AppleSubscription} from "../models/subscription";
-import {AppleSubscriptionReference} from "../models/appleSubscriptionReference";
 import fetch from 'node-fetch';
 import {Response} from 'node-fetch';
 import {Stage} from "../utils/appIdentity";
 import {dateToSecondTimestamp, msToFormattedString, optionalMsToFormattedString, thirtyMonths} from "../utils/dates";
 import {ProcessingError} from "../models/processingError";
 import {getConfigValue} from "../utils/ssmConfig";
+import {AppleSubscriptionReference} from "../models/subscriptionReference";
 
 const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
 

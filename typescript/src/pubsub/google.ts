@@ -2,8 +2,8 @@ import 'source-map-support/register'
 import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {ONE_YEAR_IN_SECONDS, parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
-import {GoogleSubscriptionReference} from "../models/googleSubscriptionReference";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
+import {GoogleSubscriptionReference} from "../models/subscriptionReference";
 
 interface DeveloperNotification {
     version: string,
