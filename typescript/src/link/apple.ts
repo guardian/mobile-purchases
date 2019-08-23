@@ -1,31 +1,47 @@
 import 'source-map-support/register'
 import {Platform} from "../models/platform";
-import {UserSubscriptionData, parseAndStoreLink} from "./link";
-import {HTTPRequest, HTTPResponse, HTTPResponses} from "../models/apiGatewayHttp";
+import {parseAndStoreLink, SubscriptionCheckData} from "./link";
+import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
+import {UserSubscription} from "../models/userSubscription";
+import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 
 type AppleSubscription = {
     receipt: string
-    transactionId: string
+    originalTransactionId: string
 }
 
 type AppleLinkPayload = {
     platform: Platform.DailyEdition | Platform.Ios,
-    subscriptions: [AppleSubscription]
+    subscriptions: AppleSubscription[]
 }
 
-export function parseAppleLinkPayload(requestBody?: string): UserSubscriptionData[] {
-    const payload = JSON.parse(requestBody || "") as AppleLinkPayload
-    return payload.subscriptions.map ( subscription => new UserSubscriptionData(subscription.receipt, subscription.transactionId) )
+function parseAppleLinkPayload(request: HTTPRequest): AppleLinkPayload {
+    return JSON.parse(request.body || "") as AppleLinkPayload;
 }
 
-export async function handler(httpRequest: HTTPRequest)  {
-    return parseAndStoreLink(httpRequest, parseAppleLinkPayload)
-        .catch( error => {
-            console.log(`Error linking sub: ${error}`)
-            return HTTPResponses.INTERNAL_ERROR
-        })
+function toUserSubscription(userId: string, payload: AppleLinkPayload): UserSubscription[] {
+    return payload.subscriptions.map(sub => new UserSubscription(
+        userId,
+        sub.originalTransactionId,
+        new Date().toISOString(),
+        dateToSecondTimestamp(thirtyMonths())
+    ));
 }
 
+function toSqsPayload(payload: AppleLinkPayload): SubscriptionCheckData[] {
+    return payload.subscriptions.map(sub => ({
+        subscriptionId: sub.originalTransactionId,
+        subscriptionReference: {
+            receipt: sub.receipt
+        }
+    }))
+}
 
-
-
+export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse> {
+    return parseAndStoreLink(
+        httpRequest,
+        parseAppleLinkPayload,
+        toUserSubscription,
+        toSqsPayload
+    )
+}

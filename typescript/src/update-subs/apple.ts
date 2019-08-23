@@ -1,18 +1,16 @@
 import 'source-map-support/register'
 import {SQSEvent, SQSRecord} from 'aws-lambda'
-import {makeTimeToLive, parseAndStoreSubscriptionUpdate} from "./updatesub";
+import {parseAndStoreSubscriptionUpdate} from "./updatesub";
 import {AppleSubscription} from "../models/subscription";
-import {AppleSubscriptionReference} from "../models/appleSubscriptionReference";
 import fetch from 'node-fetch';
 import {Response} from 'node-fetch';
 import {Stage} from "../utils/appIdentity";
 import {dateToSecondTimestamp, msToFormattedString, optionalMsToFormattedString, thirtyMonths} from "../utils/dates";
 import {ProcessingError} from "../models/processingError";
+import {getConfigValue} from "../utils/ssmConfig";
+import {AppleSubscriptionReference} from "../models/subscriptionReference";
 
-// const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
-// const environment = (Stage === "PROD") ? "Production" : "Sandbox";
-const receiptEndpoint = "https://buy.itunes.apple.com/verifyReceipt";
-const environment = "Production";
+const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
 
 interface AppleValidatedReceiptInfo {
     cancellation_date_ms?: string,
@@ -33,11 +31,15 @@ interface AppleValidationResponse {
 }
 
 function validateReceipt(subRef: AppleSubscriptionReference): Promise<Response> {
-    return fetch(receiptEndpoint, {method: 'POST', body: JSON.stringify({
-            "receipt-data": subRef.receipt,
-            "password": subRef.password,
-            "exclude-old-transactions": true
-        })}).then(response => {
+    return getConfigValue<string>("apple.password")
+        .then(password => {
+            const body = JSON.stringify({
+                "receipt-data": subRef.receipt,
+                "password": password,
+                "exclude-old-transactions": true
+            });
+            return fetch(receiptEndpoint, { method: 'POST', body: body});
+        }).then(response => {
         if (!response.ok) {
             console.error(`Impossible to validate the receipt, got ${response.status} ${response.statusText} from receiptEndpoint for ${subRef.receipt}`);
             throw new ProcessingError("Impossible to validate receipt", true);

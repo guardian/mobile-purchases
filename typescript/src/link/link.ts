@@ -2,111 +2,80 @@ import {HTTPRequest, HTTPResponse, HTTPResponses} from '../models/apiGatewayHttp
 
 import {UserSubscription} from "../models/userSubscription";
 import {Subscription} from "../models/subscription";
-import {dynamoMapper, sendToSqsImpl} from "../utils/aws";
+import {dynamoMapper, sqs} from "../utils/aws";
 import {ItemNotFoundException} from "@aws/dynamodb-data-mapper";
-import {catchClause} from "@babel/types";
 import {getUserId, getIdentityToken} from "../utils/guIdentityApi";
-import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
+import {SubscriptionReference} from "../models/subscriptionReference";
+import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
+import {ProcessingError} from "../models/processingError";
 
-export class UserSubscriptionData {
-    transactionToken: string;
-    subscriptionId: string;
-
-    constructor(transactionToken: string, subscriptionId: string) {
-        this.transactionToken = transactionToken;
-        this.subscriptionId = subscriptionId;
-    }
+export interface SubscriptionCheckData {
+    subscriptionId: string
+    subscriptionReference: SubscriptionReference
 }
 
-function putUserSubscription(subscriptionId: string, userId: string): Promise<UserSubscription> {
-    const userSubscription = new UserSubscription(
-        userId,
-        subscriptionId,
-        new Date(Date.now()).toISOString(),
-        dateToSecondTimestamp(thirtyMonths())
-    )
-    return dynamoMapper.put({item: userSubscription}).then(result => result.item)
-}
+async function enqueueUnstoredPurchaseToken(subChecks: SubscriptionCheckData[]): Promise<number> {
 
-function subscriptionExists(purchaseToken: string): Promise<boolean> {
-    return dynamoMapper.get({item: new Subscription(purchaseToken)} ).then ( result => true )
-        .catch( error => {
-            if ( error.name === "ItemNotFoundException" ) {
-                return false
-            } else {
-                throw error
-            }
-        })
-}
+    const dynamoResult = dynamoMapper.batchGet(subChecks.map(sub => new Subscription(sub.subscriptionId)));
 
-function enqueueUnstoredPurchaseToken(subscriptionId: string, purchaseToken: string): Promise<string> {
+    const refsToSend = subChecks.map(s => s.subscriptionId);
 
-    const queueUrl = process.env.QueueUrl;
-    if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
-    const packageName = "com.guardian"
-
-    return subscriptionExists(purchaseToken).then(alreadyStored => {
-        if(alreadyStored) {
-            return purchaseToken
-        } else {
-            const sqsEvent = {
-                packageName: packageName,
-                purchaseToken: purchaseToken,
-                subscriptionId: subscriptionId
-            }
-            return sendToSqsImpl(queueUrl, sqsEvent)
-                .then(queud => purchaseToken)
+    for await (const result of dynamoResult) {
+        const index = refsToSend.indexOf(result.subscriptionId);
+        if (index > -1) {
+            refsToSend.splice(index, 1);
         }
-    })
-        .catch(error => {
-            console.log(`Error retrieving sub details ${error}`)
-            throw error
-        })
-}
+    }
 
-function persistUserSubscriptionLinks(userId: string, userSubscriptions: UserSubscriptionData[]): Promise<string[]>  {
+    if (refsToSend.length > 0) {
+        const queueUrl = process.env.QueueUrl;
+        if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
 
-    const updatedSubLinks = userSubscriptions.map( async (subscription) =>  {
-        return await putUserSubscription(subscription.transactionToken, userId)
-            .then( sub => {
-                return enqueueUnstoredPurchaseToken(subscription.subscriptionId, subscription.transactionToken)
-            })
-            .catch( error => {
-                console.log(`Error persisting subscription links. ${error}`)
-                throw error
-            })
-    })
+        const sqsMessages: SendMessageBatchRequestEntry[] = refsToSend.map((subscriptionId, index) => ({
+            Id: index.toString(),
+            MessageBody: JSON.stringify(subscriptionId)
+        }));
 
-    return Promise.all(updatedSubLinks)
-        .then(transactionTokens => transactionTokens)
-        .catch(error => {
-            console.log(`Unable to store subscription links: ${error}`)
-            throw error
-        })
-}
-
-export async function parseAndStoreLink (
-    httpRequest: HTTPRequest,
-    parsePayload: (requestBody?: string) => UserSubscriptionData[]
-): Promise<HTTPResponse> {
-
-    if(httpRequest.headers && getIdentityToken(httpRequest.headers)) {
-        return getUserId(httpRequest.headers)
-            .then( userId => {
-                const subscriptions = parsePayload(httpRequest.body)
-                return persistUserSubscriptionLinks(userId, subscriptions)
-            })
-            .then(subscriptionIds =>  {
-                return HTTPResponses.OK
-            })
-
-            .catch(
-                error => {
-                    console.log(`Error creating subscription link: ${error}`)
-                    return HTTPResponses.INTERNAL_ERROR
-                }
-            );
+        const result = await sqs.sendMessageBatch({QueueUrl: queueUrl, Entries: sqsMessages}).promise();
+        if (result.Failed && result.Failed.length > 0) {
+            throw new ProcessingError("Unable to send all the subscription reference to SQS, will retry", true);
+        }
+        return result.Successful.length;
     } else {
-        return HTTPResponses.INVALID_REQUEST
+        return 0;
+    }
+
+}
+
+async function persistUserSubscriptionLinks(userSubscriptions: UserSubscription[]): Promise<number>  {
+    let count = 0;
+    for await (const r of dynamoMapper.batchPut(userSubscriptions)) {
+        count++;
+    }
+    return count;
+}
+
+export async function parseAndStoreLink<A, B>(
+    httpRequest: HTTPRequest,
+    parsePayload: (request: HTTPRequest) => A,
+    toUserSubscription: (userId: string, payload: A) => UserSubscription[],
+    toSqsPayload: (payload: A) => SubscriptionCheckData[]
+): Promise<HTTPResponse> {
+    try {
+        if (httpRequest.headers && getIdentityToken(httpRequest.headers)) {
+
+            const payload: A = parsePayload(httpRequest);
+            const userId = await getUserId(httpRequest.headers);
+            const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
+            const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
+            console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
+
+            return HTTPResponses.OK;
+        } else {
+            return HTTPResponses.INVALID_REQUEST
+        }
+    } catch (error) {
+        console.error("Internal Server Error", error);
+        return HTTPResponses.INTERNAL_ERROR
     }
 }

@@ -6,10 +6,10 @@ import {buildGoogleUrl, getAccessToken, getParams} from "../utils/google-play";
 import {parseAndStoreSubscriptionUpdate} from './updatesub';
 import {Stage} from "../utils/appIdentity";
 import {GoogleSubscription} from "../models/subscription";
-import {makeCancellationTime, makeTimeToLive} from "./updatesub";
-import {GoogleSubscriptionReference} from "../models/googleSubscriptionReference";
+import {makeCancellationTime} from "./updatesub";
 import {ProcessingError} from "../models/processingError";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
+import {GoogleSubscriptionReference} from "../models/subscriptionReference";
 
 interface GoogleResponseBody {
     startTimeMillis: string,

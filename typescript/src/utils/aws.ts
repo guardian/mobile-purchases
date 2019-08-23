@@ -5,6 +5,7 @@ import DynamoDB from 'aws-sdk/clients/dynamodb';
 import Sqs from 'aws-sdk/clients/sqs';
 import S3 from 'aws-sdk/clients/s3';
 import {PromiseResult} from "aws-sdk/lib/request";
+import SSM = require("aws-sdk/clients/ssm");
 
 
 const credentialProvider = new CredentialProviderChain([
@@ -27,6 +28,11 @@ export const sqs = new Sqs({
 });
 
 export const s3: S3  = new S3({
+    region: Region ,
+    credentialProvider: credentialProvider
+});
+
+export const ssm: SSM  = new SSM({
     region: Region ,
     credentialProvider: credentialProvider
 });

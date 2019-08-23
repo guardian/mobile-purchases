@@ -109,6 +109,7 @@ Resources:
               Action:
                   - "dynamodb:GetItem"
                   - "dynamodb:BatchGetItem"
+                  - "dynamodb:BatchWriteItem"
                   - "dynamodb:PutItem"
                   - "dynamodb:UpdateItem"
                   - "dynamodb:Query"

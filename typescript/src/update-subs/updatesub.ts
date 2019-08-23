@@ -12,10 +12,6 @@ export function makeCancellationTime(cancellationTime: string) : string {
     }
 }
 
-export function makeTimeToLive(date: Date) {
-    return Math.ceil((date.getTime() / 1000) + 7 * ONE_YEAR_IN_SECONDS)
-}
-
 export class SubscriptionUpdate {
     purchaseToken: string;
     startTimeMillis: string;

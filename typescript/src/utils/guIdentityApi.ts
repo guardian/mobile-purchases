@@ -13,12 +13,12 @@ interface IdentityResponse {
 }
 
 export function getIdentityToken(headers: HttpRequestHeaders): string {
-    return headers["Gu-Identity-Token"] || headers["gu-identity-token"]
+    return (headers["Authorization"] || headers["authorization"]).replace("Bearer ", "");
 }
 
 export function getUserId(headers: HttpRequestHeaders): Promise<string> {
-    const url = "https://id.guardianapis.com/user/me"
-    const identityToken = getIdentityToken(headers)
+    const url = "https://id.guardianapis.com/user/me";
+    const identityToken = getIdentityToken(headers);
 
     return restClient.get<IdentityResponse>(url, {additionalHeaders: {Authorization: `Bearer ${identityToken}`}})
         .then( res => {
