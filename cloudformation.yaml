@@ -38,6 +38,11 @@ Parameters:
   ApplePubSubSecret:
     Type: String
     Description: The secret used by google's pubsub
+  AlarmTopic:
+    Type: String
+    Description: The ARN of the SNS topic to send all the cloudwatch alarms to
+
+
 Resources:
   MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
@@ -67,7 +72,7 @@ Resources:
               Action:
                 - ssm:GetParametersByPath
               Effect: Allow
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
         - PolicyName: iosuserpurchases-config
           PolicyDocument:
             Statement:
@@ -110,13 +115,17 @@ Resources:
               Effect: Allow
               Action:
                   - "dynamodb:GetItem"
+                  - "dynamodb:BatchGetItem"
+                  - "dynamodb:BatchWriteItem"
                   - "dynamodb:PutItem"
                   - "dynamodb:UpdateItem"
                   - "dynamodb:Query"
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/mobile-save-for-late-${Stage}-articles #For developing the subscriptions export before the tables are in situ
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+
 
         - PolicyName: Sqs
           PolicyDocument:
@@ -185,11 +194,11 @@ Resources:
     Properties:
       StageName: !Ref Stage
       MethodSettings: [{
-          "MetricsEnabled": True,
-          "LoggingLevel": "OFF",
-          "ResourcePath": "/*",
-          "HttpMethod": "*"
-      }]
+                         "MetricsEnabled": True,
+                         "LoggingLevel": "OFF",
+                         "ResourcePath": "/*",
+                         "HttpMethod": "*"
+                       }]
       DefinitionBody:
         swagger: "2.0"
         info:
@@ -251,17 +260,42 @@ Resources:
                 "200":
                   "description": "200 response"
 
-          "/user/linkToSubscriptions":
+          "/apple/linkToSubscriptions":
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LinkUserToSubLambda.Arn}/invocations
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleLinkUserToSubLambda.Arn}/invocations
               consumes: [ application/json ]
               produces: [ application/json ]
               responses:
                 "200":
                   "description": "200 response"
+
+          "/google/linkToSubscriptions":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoogleLinkUserToSubLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
+
+          "/subscriptions":
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSubscriptionsLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
+
           "/healthcheck":
             get:
               responses:
@@ -294,17 +328,17 @@ Resources:
 
 
   ApiRoute53:
-      Type: AWS::Route53::RecordSetGroup
-      Properties:
-        HostedZoneId: !Ref HostedZoneId
-        RecordSets:
-          - Name: !Ref ApiDomainName
-            Type: A
-            AliasTarget:
-              HostedZoneId: Z2FDTNDATAQYW2
-              DNSName: !GetAtt
-                - ApiDomainName
-                - DistributionDomainName
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      RecordSets:
+        - Name: !Ref ApiDomainName
+          Type: A
+          AliasTarget:
+            HostedZoneId: Z2FDTNDATAQYW2
+            DNSName: !GetAtt
+              - ApiDomainName
+              - DistributionDomainName
 
   ApiMapping:
     Type: AWS::ApiGateway::BasePathMapping
@@ -412,23 +446,22 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
-  LinkUserToSubLambda:
+  GoogleLinkUserToSubLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: link-user-subscription.handler
+      Handler: google-link-user-subscription.handler
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-link-user-subscription/link-user-subscription.zip
-      FunctionName: !Sub ${App}-link-user-subscription-${Stage}
+        Key: !Sub ${Stack}/${Stage}/${App}-google-link-user-subscription/google-link-user-subscription.zip
+      FunctionName: !Sub ${App}-google-link-user-subscription-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
         Variables:
           Stage: !Ref Stage
           Stack: !Ref Stack
           App: !Ref App
-          AppleQueueUrl: !Ref AppleSubscriptionsQueue
-          GoogleQueueUrl: !Ref GoogleSubscriptionsQueue
+          QueueUrl: !Ref GoogleSubscriptionsQueue
       Description: Links users to subscriptions
       MemorySize: 128
       Timeout: 45
@@ -436,7 +469,38 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/user/linkToSubscriptions"
+            Path: "/google/linkToSubscriptions"
+            Method: POST
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  AppleLinkUserToSubLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apple-link-user-subscription.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-apple-link-user-subscription/apple-link-user-subscription.zip
+      FunctionName: !Sub ${App}-apple-link-user-subscription-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+          QueueUrl: !Ref AppleSubscriptionsQueue
+      Description: Links users to subscriptions
+      MemorySize: 128
+      Timeout: 45
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/apple/linkToSubscriptions"
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -617,7 +681,7 @@ Resources:
       AlarmActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:mobile-server-side
       AlarmName: !Sub mobile-purchases-${Stage}-play-subscription-status-check-errors
-      AlarmDescription: !Sub A high number errors are being served to the Android app when it is attempting to check Play Subscription statuses
+      AlarmDescription: !Sub A high number errors are being served to the Android app when it is attempting to check Play GoogleSubscription statuses
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
         - Name: ApiName
@@ -633,8 +697,134 @@ Resources:
       Namespace: AWS/ApiGateway
       Period: 300
       Statistic: Sum
-      Threshold: 3
+      Threshold: 10
       TreatMissingData: notBreaching
+
+
+  UpdateGoogleSubscriptionsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${App}-google-update-subscriptions-${Stage}
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-google-update-subscriptions/google-update-subscriptions.zip
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: Consomes subscription data updates from google playstore from sqs and stores them in dynamo
+      Handler: google-update-subscriptions.handler
+      MemorySize: 512
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Timeout: 25
+      Runtime: nodejs10.x
+
+
+  UpdateGoogleSubscriptionsEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !Ref UpdateGoogleSubscriptionsLambda
+      Enabled: true
+      EventSourceArn: !GetAtt GoogleSubscriptionsQueue.Arn
+      BatchSize: 10
+
+
+  UserSubscriptionsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: user-subscriptions.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-user-subscriptions/user-subscriptions.zip
+      FunctionName: !Sub ${App}-user-subscriptions-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+      Description: Retrieves subscription details for a given user
+      MemorySize: 128
+      Timeout: 45
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/subscriptions"
+            Method: GET
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  UpdateAppleSubscriptionsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${App}-apple-update-subscriptions-${Stage}
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-apple-update-subscriptions/apple-update-subscriptions.zip
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: Consomes subscription data updates from app store from sqs and stores them in dynamo
+      Handler: apple-update-subscriptions.handler
+      MemorySize: 512
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Timeout: 25
+      Runtime: nodejs10.x
+
+
+  AppleSubscriptionsEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !Ref UpdateAppleSubscriptionsLambda
+      Enabled: true
+      EventSourceArn: !GetAtt AppleSubscriptionsQueue.Arn
+      BatchSize: 10
+
+  AppleSubscriptionDlqDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Ensure that the apple subsciption dead letter queue is empty"
+      Namespace: "AWS/SQS"
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt 'AppleSubscriptionsQueueDlq.QueueName'
+      Period: 3000
+      Statistic: Sum
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      AlarmActions:
+        - Ref: AlarmTopic
+      InsufficientDataActions:
+        - Ref: AlarmTopic
+
+  GoogleSubscriptionDlqDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Ensure that the apple subsciption dead letter queue is empty"
+      Namespace: "AWS/SQS"
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt 'GoogleSubscriptionsQueueDlq.QueueName'
+      Period: 3000
+      Statistic: Sum
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      AlarmActions:
+        - Ref: AlarmTopic
+      InsufficientDataActions:
+        - Ref: AlarmTopic
 
   SubscriptionExportLambda:
     Type: AWS::Lambda::Function

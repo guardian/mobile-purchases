@@ -2,6 +2,8 @@ import 'source-map-support/register'
 import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {ONE_YEAR_IN_SECONDS, parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
+import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
+import {GoogleSubscriptionReference} from "../models/subscriptionReference";
 
 interface DeveloperNotification {
     version: string,
@@ -17,9 +19,6 @@ interface SubscriptionNotification {
     subscriptionId: string
 }
 
-interface SqsEvent {
-    purchaseToken: string
-}
 
 export function parsePayload(body?: string): Error | DeveloperNotification {
     try {
@@ -46,7 +45,8 @@ const GOOGLE_SUBS_EVENT_TYPE: {[_: number]: string} = {
 };
 
 export function toDynamoEvent(notification: DeveloperNotification): SubscriptionEvent {
-    const eventTimestamp = new Date(Number.parseInt(notification.eventTimeMillis)).toISOString();
+    const eventDate = new Date(Number.parseInt(notification.eventTimeMillis));
+    const eventTimestamp = eventDate.toISOString();
     const eventType = notification.subscriptionNotification.notificationType;
     const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] || eventType.toString();
     return new SubscriptionEvent(
@@ -58,12 +58,16 @@ export function toDynamoEvent(notification: DeveloperNotification): Subscription
         notification.packageName,
         notification,
         null,
-        Math.ceil((Number.parseInt(notification.eventTimeMillis) / 1000) + 7 * ONE_YEAR_IN_SECONDS)
+        dateToSecondTimestamp(thirtyMonths(eventDate))
     );
 }
 
-export function toSqsEvent(event: DeveloperNotification): SqsEvent {
-    return {purchaseToken: event.subscriptionNotification.purchaseToken}
+export function toSqsSubReference(event: DeveloperNotification): GoogleSubscriptionReference {
+    return {
+        packageName: event.packageName,
+        purchaseToken: event.subscriptionNotification.purchaseToken,
+        subscriptionId: event.subscriptionNotification.subscriptionId
+    }
 }
 
 export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
@@ -71,6 +75,6 @@ export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
         request,
         parsePayload,
         toDynamoEvent,
-        toSqsEvent
+        toSqsSubReference
     )
 }

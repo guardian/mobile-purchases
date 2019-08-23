@@ -2,7 +2,7 @@ import { parseStoreAndSend } from "../../src/pubsub/pubsub";
 import {
     parsePayload as parseGooglePayload,
     toDynamoEvent as googlePayloadToDynamo,
-    toSqsEvent as toGoogleSqsEvent
+    toSqsSubReference as toGoogleSqsEvent
 } from "../../src/pubsub/google";
 import {HTTPResponses} from "../../src/models/apiGatewayHttp";
 import {SubscriptionEvent} from "../../src/models/subscriptionEvent";
@@ -13,13 +13,13 @@ describe("The google pubsub", () => {
         process.env['Secret'] = "MYSECRET";
         process.env['QueueUrl'] = "";
 
-        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, SubscriptionEvent[]>  = jest.fn((event) => {
+        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]>  = jest.fn((event) => {
             return new Promise((resolve, reject) => {
                 resolve(event);
             });
         });
 
-        const mockSqsFunction: Mock<Promise<any>, {purchaseToken: string}[]>  = jest.fn((event) => {
+        const mockSqsFunction: Mock<Promise<any>, [string, {purchaseToken: string}]>  = jest.fn((queurl, event) => {
             return new Promise((resolve, reject) => {
                 resolve({});
             });
@@ -56,7 +56,7 @@ describe("The google pubsub", () => {
                 version: "1.0"
             },
             null,
-            1724252767
+            1582319167
         );
 
         return parseStoreAndSend(input, parseGooglePayload, googlePayloadToDynamo, toGoogleSqsEvent, mockStoreFunction, mockSqsFunction).then(result => {
@@ -64,7 +64,8 @@ describe("The google pubsub", () => {
             expect(mockStoreFunction.mock.calls.length).toEqual(1);
             expect(mockStoreFunction.mock.calls[0][0]).toStrictEqual(expectedSubscriptionEventInDynamo);
             expect(mockSqsFunction.mock.calls.length).toEqual(1);
-            expect(mockSqsFunction.mock.calls[0][0]).toStrictEqual({purchaseToken: "PURCHASE_TOKEN"});
+            expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual({packageName: "com.some.thing", purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"});
+
         });
     });
 });

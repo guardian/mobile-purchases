@@ -4,3 +4,4 @@
 target
 tsc-target
 node_modules
+dist

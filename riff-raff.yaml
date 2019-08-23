@@ -64,15 +64,51 @@ deployments:
       fileName: mobile-purchases-google-oauth.jar
       prefixStack: false
 
-  mobile-purchases-link-user-subscription:
+  mobile-purchases-google-link-user-subscription:
     type: aws-lambda
     dependencies: [mobile-purchases-cloudformation]
     parameters:
       bucket: mobile-dist
-      functionNames: [mobile-purchases-link-user-subscription-]
-      fileName: link-user-subscription.zip
+      functionNames: [mobile-purchases-google-link-user-subscription-]
+      fileName: google-link-user-subscription.zip
       prefixStack: false
-      
+
+  mobile-purchases-apple-link-user-subscription:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-apple-link-user-subscription-]
+      fileName: apple-link-user-subscription.zip
+      prefixStack: false
+
+  mobile-purchases-google-update-subscriptions:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-google-update-subscriptions-]
+      fileName: google-update-subscriptions.zip
+      prefixStack: false
+
+  mobile-purchases-user-subscriptions:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-user-subscriptions-]
+      fileName: user-subscriptions.zip
+      prefixStack: false
+
+  mobile-purchases-apple-update-subscriptions:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-apple-update-subscriptions-]
+      fileName: apple-update-subscriptions.zip
+      prefixStack: false
+
   mobile-purchases-subscription-export:
     type: aws-lambda
     dependencies: [mobile-purchases-cloudformation]
