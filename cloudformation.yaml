@@ -72,7 +72,7 @@ Resources:
               Action:
                 - ssm:GetParametersByPath
               Effect: Allow
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
         - PolicyName: iosuserpurchases-config
           PolicyDocument:
             Statement:
