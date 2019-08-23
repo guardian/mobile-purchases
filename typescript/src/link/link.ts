@@ -68,7 +68,7 @@ export async function parseAndStoreLink<A, B>(
             const userId = await getUserId(httpRequest.headers);
             const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
             const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
-            console.log(`Put ${insertCount} links in the DB, and send ${sqsCount} subscription refs to SQS`);
+            console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
 
             return HTTPResponses.OK;
         } else {
