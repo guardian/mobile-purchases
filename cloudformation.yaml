@@ -827,12 +827,15 @@ Resources:
               Resource: !Sub arn:aws:s3:::${SubscriptionBucket}/*
 
   ExportSubscriptionTableLambda:
-    Type: AWS::Lambda::Function
+    Type: AWS::Serverless::Function
     Properties:
+      Handler: export-subscription-tables.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
       FunctionName: !Sub ${App}-export-subscription-table-${Stage}
-      Code:
-        S3Bucket: !Ref DeployBucket
-        S3Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
+      Role: !GetAtt ExportLambdasRole.Arn
       Environment:
         Variables:
           App: !Sub ${App}
@@ -841,19 +844,28 @@ Resources:
           ExportBucket: !Ref SubscriptionBucket
           ClassName: ReadSubscription
       Description: Export subscription table to the datalake
-      Handler: export-subscription-tables.handler
       MemorySize: 512
-      Role: !GetAtt ExportLambdasRole.Arn
       Timeout: 900
-      Runtime: nodejs10.x
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(3 0 1/1 * ? *)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
 
   ExportUserSubscriptionTableLambda:
-    Type: AWS::Lambda::Function
+    Type: AWS::Serverless::Function
     Properties:
+      Handler: export-subscription-tables.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
       FunctionName: !Sub ${App}-export-user-subscription-table-${Stage}
-      Code:
-        S3Bucket: !Ref DeployBucket
-        S3Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
+      Role: !GetAtt ExportLambdasRole.Arn
       Environment:
         Variables:
           App: !Sub ${App}
@@ -862,8 +874,14 @@ Resources:
           ExportBucket: !Ref UserSubscriptionBucket
           ClassName: ReadUserSubscription
       Description: Export the user subscription table to the datalake
-      Handler: export-subscription-tables.handler
       MemorySize: 512
-      Role: !GetAtt ExportLambdasRole.Arn
       Timeout: 900
-      Runtime: nodejs10.x
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(3 0 1/1 * ? *)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
