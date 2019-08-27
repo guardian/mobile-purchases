@@ -108,3 +108,12 @@ deployments:
       functionNames: [mobile-purchases-apple-update-subscriptions-]
       fileName: apple-update-subscriptions.zip
       prefixStack: false
+
+  mobile-purchases-export-subscription-tables:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-export-subscription-tables-]
+      fileName: export-subscription-tables.zip
+      prefixStack: false

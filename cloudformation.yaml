@@ -41,7 +41,9 @@ Parameters:
   AlarmTopic:
     Type: String
     Description: The ARN of the SNS topic to send all the cloudwatch alarms to
-
+  SubscriptionBucket:
+    Type: String
+    Description: The name of the export subscription bucket
 
 Resources:
   MobilePurchasesLambdasRole:
@@ -736,7 +738,6 @@ Resources:
       Timeout: 25
       Runtime: nodejs10.x
 
-
   AppleSubscriptionsEventSource:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
@@ -783,9 +784,23 @@ Resources:
       InsufficientDataActions:
         - Ref: AlarmTopic
 
-
-
-
-
-
-
+  ExportSubscriptionTableLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${App}-export-subscription-tables-${Stage}
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          ExportBucket: !Ref SubscriptionBucket
+          ClassName: ReadSubscription
+      Description: Export subscription tables to the datalake
+      Handler: export-subscription-tables.handler
+      MemorySize: 512
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Timeout: 900
+      Runtime: nodejs10.x
