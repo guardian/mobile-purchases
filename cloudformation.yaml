@@ -784,6 +784,38 @@ Resources:
       InsufficientDataActions:
         - Ref: AlarmTopic
 
+  ExportLambdasRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - cloudwatch:putMetricData
+              Resource: "*"
+        - PolicyName: dynamo
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - "dynamodb:Scan"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+
   ExportSubscriptionTableLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -801,6 +833,6 @@ Resources:
       Description: Export subscription tables to the datalake
       Handler: export-subscription-tables.handler
       MemorySize: 512
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Role: !GetAtt ExportLambdasRole.Arn
       Timeout: 900
       Runtime: nodejs10.x

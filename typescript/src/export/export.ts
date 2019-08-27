@@ -1,3 +1,4 @@
+import 'source-map-support/register'
 import {dynamoMapper, s3} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Readable, ReadableOptions} from "stream";
