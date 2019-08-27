@@ -44,6 +44,9 @@ Parameters:
   SubscriptionBucket:
     Type: String
     Description: The name of the export subscription bucket
+  UserSubscriptionBucket:
+    Type: String
+    Description: The name of the export user subscription bucket
 
 Resources:
   MobilePurchasesLambdasRole:
@@ -815,11 +818,18 @@ Resources:
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+        - PolicyName: s3
+          PolicyDocument:
+            Statement:
+              Action:
+                - s3:PutObject
+              Effect: Allow
+              Resource: !Sub arn:aws:s3:::${SubscriptionBucket}/*
 
   ExportSubscriptionTableLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub ${App}-export-subscription-tables-${Stage}
+      FunctionName: !Sub ${App}-export-subscription-table-${Stage}
       Code:
         S3Bucket: !Ref DeployBucket
         S3Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
@@ -830,7 +840,28 @@ Resources:
           Stage: !Sub ${Stage}
           ExportBucket: !Ref SubscriptionBucket
           ClassName: ReadSubscription
-      Description: Export subscription tables to the datalake
+      Description: Export subscription table to the datalake
+      Handler: export-subscription-tables.handler
+      MemorySize: 512
+      Role: !GetAtt ExportLambdasRole.Arn
+      Timeout: 900
+      Runtime: nodejs10.x
+
+  ExportUserSubscriptionTableLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${App}-export-user-subscription-table-${Stage}
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          ExportBucket: !Ref UserSubscriptionBucket
+          ClassName: ReadUserSubscription
+      Description: Export the user subscription table to the datalake
       Handler: export-subscription-tables.handler
       MemorySize: 512
       Role: !GetAtt ExportLambdasRole.Arn

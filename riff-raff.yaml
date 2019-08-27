@@ -114,6 +114,6 @@ deployments:
     dependencies: [mobile-purchases-cloudformation]
     parameters:
       bucket: mobile-dist
-      functionNames: [mobile-purchases-export-subscription-tables-]
+      functionNames: [mobile-purchases-export-subscription-table-, mobile-purchases-export-user-subscription-table-]
       fileName: export-subscription-tables.zip
       prefixStack: false
