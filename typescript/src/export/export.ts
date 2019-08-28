@@ -5,6 +5,7 @@ import {Readable, ReadableOptions} from "stream";
 import {ScanIterator} from "@aws/dynamodb-data-mapper";
 import {ZeroArgumentsConstructor} from "@aws/dynamodb-data-marshaller";
 import {ReadUserSubscription} from "../models/userSubscription";
+import zlib from 'zlib'
 
 
 class DynamoStream<T> extends Readable {
@@ -56,10 +57,12 @@ export async function handler(): Promise<any> {
             throw new Error(`Invalid ClassName value ${className}`);
     }
 
-    const today = new Date();
-    const dateString = `${today.getUTCFullYear()}-${today.getUTCMonth()}-${today.getUTCDate()}`;
-    const filename = `data/date=${dateString}/${dateString}.json`;
-    let managedUpload = s3.upload({Bucket: bucket, Key: filename, Body: stream});
+    let zippedStream = zlib.createGzip();
+    stream.pipe(zippedStream);
+
+    const today = (new Date()).toISOString().substr(0,10);
+    const filename = `data/date=${today}/${today}.json.gz`;
+    let managedUpload = s3.upload({Bucket: bucket, Key: filename, Body: zippedStream});
 
     await managedUpload.promise();
 
