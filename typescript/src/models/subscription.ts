@@ -87,8 +87,6 @@ export class ReadSubscription {
         this.subscriptionId = "";
         this.startTimeStamp = "";
         this.endTimeStamp = "";
-        this.cancellationTimetamp = "";
-        this.autoRenewing = false;
     }
 
     get [DynamoDbTable]() {

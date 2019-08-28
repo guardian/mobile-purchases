@@ -81,7 +81,6 @@ const googleUpdateSub = Object.assign({}, config, {
     }
 });
 
-
 const appleUpdateSub = Object.assign({}, config, {
     entry: './typescript/src/update-subs/apple.ts',
     output: {
@@ -91,5 +90,23 @@ const appleUpdateSub = Object.assign({}, config, {
     }
 });
 
+const exportSubs = Object.assign({}, config, {
+    entry: './typescript/src/export/export.ts',
+    output: {
+        filename: 'export-subscription-tables.js',
+        path: path.resolve(__dirname, 'tsc-target'),
+        libraryTarget: 'commonjs'
+    }
+});
 
-module.exports = [googlePubSub, applePubSub, googlePlaySubStatus, googleUpdateSub, appleUpdateSub, appleUserLink, googleUserLink, userSubscriptions]
+module.exports = [
+    googlePubSub,
+    applePubSub,
+    googlePlaySubStatus,
+    googleUpdateSub,
+    appleUpdateSub,
+    appleUserLink,
+    googleUserLink,
+    userSubscriptions,
+    exportSubs
+];
