@@ -41,10 +41,10 @@ Parameters:
   AlarmTopic:
     Type: String
     Description: The ARN of the SNS topic to send all the cloudwatch alarms to
-  SubscriptionBucket:
+  SubscriptionExportBucket:
     Type: String
     Description: The name of the export subscription bucket
-  UserSubscriptionBucket:
+  UserSubscriptionExportBucket:
     Type: String
     Description: The name of the export user subscription bucket
 
@@ -825,8 +825,8 @@ Resources:
                 - s3:PutObject
               Effect: Allow
               Resource:
-                - !Sub arn:aws:s3:::${SubscriptionBucket}/*
-                - !Sub arn:aws:s3:::${UserSubscriptionBucket}/*
+                - !Sub arn:aws:s3:::${SubscriptionExportBucket}/*
+                - !Sub arn:aws:s3:::${UserSubscriptionExportBucket}/*
 
   ExportSubscriptionTableLambda:
     Type: AWS::Serverless::Function
@@ -843,7 +843,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
-          ExportBucket: !Ref SubscriptionBucket
+          ExportBucket: !Ref SubscriptionExportBucket
           ClassName: ReadSubscription
       Description: Export subscription table to the datalake
       MemorySize: 512
@@ -873,7 +873,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
-          ExportBucket: !Ref UserSubscriptionBucket
+          ExportBucket: !Ref UserSubscriptionExportBucket
           ClassName: ReadUserSubscription
       Description: Export the user subscription table to the datalake
       MemorySize: 512
