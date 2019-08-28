@@ -6,6 +6,7 @@ import {ScanIterator} from "@aws/dynamodb-data-mapper";
 import {ZeroArgumentsConstructor} from "@aws/dynamodb-data-marshaller";
 import {ReadUserSubscription} from "../models/userSubscription";
 import zlib from 'zlib'
+import {Stage} from "../utils/appIdentity";
 
 
 class DynamoStream<T> extends Readable {
@@ -61,7 +62,8 @@ export async function handler(): Promise<any> {
     stream.pipe(zippedStream);
 
     const today = (new Date()).toISOString().substr(0,10);
-    const filename = `data/date=${today}/${today}.json.gz`;
+    const prefix = (Stage === "PROD") ? "data" : "code-data";
+    const filename = `${prefix}/date=${today}/${today}.json.gz`;
     let managedUpload = s3.upload({Bucket: bucket, Key: filename, Body: zippedStream});
 
     await managedUpload.promise();
