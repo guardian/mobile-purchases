@@ -5,6 +5,7 @@ import {ReadUserSubscription} from "../models/userSubscription";
 import zlib from 'zlib'
 import {Stage} from "../utils/appIdentity";
 import {DynamoStream} from "./dynamoStream";
+import {plusDays} from "../utils/dates";
 
 export async function handler(): Promise<any> {
     const bucket = process.env['ExportBucket'];
@@ -26,9 +27,9 @@ export async function handler(): Promise<any> {
     let zippedStream = zlib.createGzip();
     stream.pipe(zippedStream);
 
-    const today = (new Date()).toISOString().substr(0,10);
+    const yesterday = plusDays(new Date(), -1).toISOString().substr(0,10);
     const prefix = (Stage === "PROD") ? "data" : "code-data";
-    const filename = `${prefix}/date=${today}/${today}.json.gz`;
+    const filename = `${prefix}/date=${yesterday}/${yesterday}.json.gz`;
     const managedUpload = s3.upload({
         Bucket: bucket,
         Key: filename,
