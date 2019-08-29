@@ -44,6 +44,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     return new SubscriptionEvent(
         receiptInfo.transaction_id,
         now.toISOString() + "|" + eventType,
+        now.toISOString().substr(0, 10),
         now.toISOString(),
         eventType,
         "ios",

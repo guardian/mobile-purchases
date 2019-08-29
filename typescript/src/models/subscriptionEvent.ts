@@ -2,11 +2,13 @@ import {hashKey, rangeKey, attribute} from '@aws/dynamodb-data-mapper-annotation
 import {DynamoDbTable} from "@aws/dynamodb-data-mapper";
 import {App, Stage} from "../utils/appIdentity";
 
-export class SubscriptionEvent{
+export class SubscriptionEvent {
     @hashKey()
     subscriptionId: string;
     @rangeKey()
     timestampAndType: string;
+    @attribute()
+    date: string;
     @attribute()
     timestamp: string;
     @attribute()
@@ -22,9 +24,10 @@ export class SubscriptionEvent{
     @attribute()
     ttl: number;
 
-    constructor(subscriptionId: string, timestampAndType: string, timestamp: string, eventType: string, platform: string, appId: string, googlePayload: any, applePayload: any, ttl: number) {
+    constructor(subscriptionId: string, timestampAndType: string, date: string, timestamp: string, eventType: string, platform: string, appId: string, googlePayload: any, applePayload: any, ttl: number) {
         this.subscriptionId = subscriptionId;
         this.timestampAndType = timestampAndType;
+        this.date = date;
         this.timestamp = timestamp;
         this.eventType = eventType;
         this.platform = platform;
@@ -35,6 +38,6 @@ export class SubscriptionEvent{
     }
 
     get [DynamoDbTable]() {
-        return App + "-" + Stage + "-subscription-events";
+        return App + "-" + Stage + "-subscription-events-v2";
     }
 }

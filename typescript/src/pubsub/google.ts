@@ -47,11 +47,13 @@ const GOOGLE_SUBS_EVENT_TYPE: {[_: number]: string} = {
 export function toDynamoEvent(notification: DeveloperNotification): SubscriptionEvent {
     const eventDate = new Date(Number.parseInt(notification.eventTimeMillis));
     const eventTimestamp = eventDate.toISOString();
+    const date = eventTimestamp.substr(0, 10);
     const eventType = notification.subscriptionNotification.notificationType;
     const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] || eventType.toString();
     return new SubscriptionEvent(
         notification.subscriptionNotification.purchaseToken,
         eventTimestamp + "|" + eventTypeString,
+        date,
         eventTimestamp,
         eventTypeString,
         "android",
