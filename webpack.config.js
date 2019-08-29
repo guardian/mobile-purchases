@@ -91,7 +91,7 @@ const appleUpdateSub = Object.assign({}, config, {
 });
 
 const exportSubs = Object.assign({}, config, {
-    entry: './typescript/src/export/export.ts',
+    entry: './typescript/src/export/exportSubscriptions.ts',
     output: {
         filename: 'export-subscription-tables.js',
         path: path.resolve(__dirname, 'tsc-target'),

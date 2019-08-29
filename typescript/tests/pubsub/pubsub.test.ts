@@ -40,6 +40,7 @@ describe("The google pubsub", () => {
         const expectedSubscriptionEventInDynamo: SubscriptionEvent = new SubscriptionEvent(
             "PURCHASE_TOKEN",
             "2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED",
+            "2017-08-21",
             "2017-08-21T21:06:06.168Z",
             "SUBSCRIPTION_PURCHASED",
             "android",
