@@ -1,45 +1,10 @@
 import 'source-map-support/register'
 import {dynamoMapper, s3} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
-import {Readable, ReadableOptions} from "stream";
-import {ScanIterator} from "@aws/dynamodb-data-mapper";
-import {ZeroArgumentsConstructor} from "@aws/dynamodb-data-marshaller";
 import {ReadUserSubscription} from "../models/userSubscription";
 import zlib from 'zlib'
 import {Stage} from "../utils/appIdentity";
-
-
-class DynamoStream<T> extends Readable {
-
-    iterator: ScanIterator<T>;
-
-    constructor(valueConstructor: ZeroArgumentsConstructor<T>, opts?: ReadableOptions) {
-        super(opts);
-        this.iterator = dynamoMapper.scan(valueConstructor);
-    }
-
-    readNext() {
-        this.iterator.next().then(iteratorResult => {
-            if (!iteratorResult.done) {
-                const pushResult = this.push(JSON.stringify(iteratorResult.value) + '\n');
-                if (pushResult) {
-                    this.readNext()
-                }
-            } else {
-                this.push(null);
-            }
-        });
-    }
-
-    _read(size: number): void {
-        this.readNext()
-    }
-
-    recordCount(): number {
-        return this.iterator.scannedCount;
-    }
-
-}
+import {DynamoStream} from "./dynamoStream";
 
 export async function handler(): Promise<any> {
     const bucket = process.env['ExportBucket'];
@@ -49,10 +14,10 @@ export async function handler(): Promise<any> {
     let stream = null;
     switch (className) {
         case "ReadSubscription":
-            stream = new DynamoStream(ReadSubscription);
+            stream = new DynamoStream(dynamoMapper.scan(ReadSubscription));
             break;
         case "ReadUserSubscription":
-            stream = new DynamoStream(ReadUserSubscription);
+            stream = new DynamoStream(dynamoMapper.scan(ReadUserSubscription));
             break;
         default:
             throw new Error(`Invalid ClassName value ${className}`);
