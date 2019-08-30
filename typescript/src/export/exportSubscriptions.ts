@@ -29,7 +29,12 @@ export async function handler(): Promise<any> {
     const today = (new Date()).toISOString().substr(0,10);
     const prefix = (Stage === "PROD") ? "data" : "code-data";
     const filename = `${prefix}/date=${today}/${today}.json.gz`;
-    let managedUpload = s3.upload({Bucket: bucket, Key: filename, Body: zippedStream});
+    const managedUpload = s3.upload({
+        Bucket: bucket,
+        Key: filename,
+        Body: zippedStream,
+        ACL: "bucket-owner-full-control"
+    });
 
     await managedUpload.promise();
 
