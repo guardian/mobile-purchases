@@ -41,3 +41,9 @@ export class SubscriptionEvent {
         return App + "-" + Stage + "-subscription-events-v2";
     }
 }
+
+export class ReadSubscriptionEvent extends SubscriptionEvent {
+    constructor() {
+        super("", "", "", "", "", "", "", {}, {}, 0);
+    }
+}

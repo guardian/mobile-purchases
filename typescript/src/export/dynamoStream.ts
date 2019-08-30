@@ -4,16 +4,24 @@ import {ScanIterator} from "@aws/dynamodb-data-mapper";
 export class DynamoStream<T> extends Readable {
 
     iterator: ScanIterator<T>;
+    transformItem: (t: T) => any;
 
-    constructor(iterator: ScanIterator<T>, opts?: ReadableOptions) {
+    constructor(iterator: ScanIterator<T>, transformItem?: (t: T) => any, opts?: ReadableOptions) {
         super(opts);
         this.iterator = iterator;
+        if (transformItem) {
+            this.transformItem = transformItem
+        } else {
+            this.transformItem = t => t;
+        }
+
     }
 
     readNext() {
         this.iterator.next().then(iteratorResult => {
             if (!iteratorResult.done) {
-                const pushResult = this.push(JSON.stringify(iteratorResult.value) + '\n');
+                const value = this.transformItem(iteratorResult.value);
+                const pushResult = this.push(JSON.stringify(value) + '\n');
                 if (pushResult) {
                     this.readNext()
                 }

@@ -66,14 +66,14 @@ Resources:
         - AttributeName: timestampAndType
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: date-timestamp-index
+        - IndexName: date-timestamp-index-v2
           KeySchema:
             - AttributeName: date
               KeyType: HASH
             - AttributeName: timestamp
               KeyType: RANGE
           Projection:
-            ProjectionType: KEYS_ONLY
+            ProjectionType: ALL
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       BillingMode: PAY_PER_REQUEST
