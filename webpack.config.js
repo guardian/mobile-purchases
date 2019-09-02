@@ -18,95 +18,27 @@ const config = {
     mode: 'production'
 };
 
-const googlePubSub = Object.assign({}, config, {
-    entry: './typescript/src/pubsub/google.ts',
-    output: {
-        filename: 'google-pubsub.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
+function entryPoint(sourceFile, outputFile) {
+    return Object.assign({}, config, {
+        entry: `./typescript/src/${sourceFile}`,
+        output: {
+            filename: outputFile,
+            path: path.resolve(__dirname, 'tsc-target'),
+            libraryTarget: 'commonjs'
+        }
+    });
+}
 
-const applePubSub = Object.assign({}, config, {
-    entry: './typescript/src/pubsub/apple.ts',
-    output: {
-        filename: 'apple-pubsub.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
-
-const googlePlaySubStatus = Object.assign({}, config, {
-    entry: './typescript/src/playsubstatus/playsubstatus.ts',
-    output: {
-        filename: 'google-playsubstatus.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
-
-const googleUserLink = Object.assign({}, config, {
-    entry: './typescript/src/link/google.ts',
-    output: {
-        filename: 'google-link-user-subscription.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
-
-const appleUserLink = Object.assign({}, config, {
-    entry: './typescript/src/link/apple.ts',
-    output: {
-        filename: 'apple-link-user-subscription.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
-
-const userSubscriptions = Object.assign({}, config, {
-    entry: './typescript/src/user/user.ts',
-    output: {
-        filename: 'user-subscriptions.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
-
-const googleUpdateSub = Object.assign({}, config, {
-    entry: './typescript/src/update-subs/google.ts',
-    output: {
-        filename: 'google-update-subscriptions.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
-
-const appleUpdateSub = Object.assign({}, config, {
-    entry: './typescript/src/update-subs/apple.ts',
-    output: {
-        filename: 'apple-update-subscriptions.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
-
-const exportSubs = Object.assign({}, config, {
-    entry: './typescript/src/export/exportSubscriptions.ts',
-    output: {
-        filename: 'export-subscription-tables.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
-
-const exportEvents = Object.assign({}, config, {
-    entry: './typescript/src/export/exportEvents.ts',
-    output: {
-        filename: 'export-subscription-events-table.js',
-        path: path.resolve(__dirname, 'tsc-target'),
-        libraryTarget: 'commonjs'
-    }
-});
+const googlePubSub = entryPoint('pubsub/google.ts', 'google-pubsub.js');
+const applePubSub = entryPoint('pubsub/apple.ts', 'apple-pubsub.js');
+const googlePlaySubStatus = entryPoint('playsubstatus/playsubstatus.ts', 'google-playsubstatus.js');
+const googleUserLink = entryPoint('link/google.ts', 'google-link-user-subscription.js');
+const appleUserLink = entryPoint('link/apple.ts', 'apple-link-user-subscription.js');
+const userSubscriptions = entryPoint('user/user.ts', 'user-subscriptions.js');
+const googleUpdateSub = entryPoint('update-subs/google.ts', 'google-update-subscriptions.js');
+const appleUpdateSub = entryPoint('update-subs/apple.ts', 'apple-update-subscriptions.js');
+const exportSubs = entryPoint('export/exportSubscriptions.ts', 'export-subscription-tables.js');
+const exportEvents = entryPoint('export/exportEvents.ts', 'export-subscription-events-table.js');
 
 module.exports = [
     googlePubSub,
