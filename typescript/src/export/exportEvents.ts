@@ -14,11 +14,18 @@ function cleanupEvent(subEvent: SubscriptionEvent): any {
     return subEvent;
 }
 
-export async function handler(): Promise<any> {
+interface ManualBackfillEvent {
+    date?: string;
+}
+
+export async function handler(event?: ManualBackfillEvent): Promise<any> {
     const bucket = process.env['ExportBucket'];
     if (!bucket) throw new Error('Variable ExportBucket must be set');
 
-    const yesterday = plusDays(new Date(), -1).toISOString().substr(0,10);
+    let yesterday = plusDays(new Date(), -1).toISOString().substr(0,10);
+    if (event && event.date) {
+        yesterday = event.date;
+    }
 
     const iterator = dynamoMapper.query(ReadSubscriptionEvent,{date: yesterday}, {indexName: "date-timestamp-index-v2"});
     const stream = new DynamoStream(iterator, cleanupEvent);
