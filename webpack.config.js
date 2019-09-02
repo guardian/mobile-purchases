@@ -99,6 +99,15 @@ const exportSubs = Object.assign({}, config, {
     }
 });
 
+const exportEvents = Object.assign({}, config, {
+    entry: './typescript/src/export/exportEvents.ts',
+    output: {
+        filename: 'export-subscription-events-table.js',
+        path: path.resolve(__dirname, 'tsc-target'),
+        libraryTarget: 'commonjs'
+    }
+});
+
 module.exports = [
     googlePubSub,
     applePubSub,
@@ -108,5 +117,6 @@ module.exports = [
     appleUserLink,
     googleUserLink,
     userSubscriptions,
-    exportSubs
+    exportSubs,
+    exportEvents
 ];
