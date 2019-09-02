@@ -1,7 +1,7 @@
 const path = require('path');
 
 const config = {
-    devtool: 'inline-source-map',
+    devtool: 'inline-cheap-source-map',
     module: {
         rules: [
             {
@@ -24,7 +24,7 @@ function entryPoint(sourceFile, outputFile) {
         output: {
             filename: outputFile,
             path: path.resolve(__dirname, 'tsc-target'),
-            libraryTarget: 'commonjs'
+            libraryTarget: 'commonjs2'
         }
     });
 }

@@ -1,4 +1,4 @@
-import {CredentialProviderChain, ECSCredentials, SharedIniFileCredentials, AWSError} from "aws-sdk";
+import {SharedIniFileCredentials, CredentialProviderChain, ECSCredentials, AWSError} from "aws-sdk/lib/core";
 import {Region} from "./appIdentity";
 import {DataMapper, ItemNotFoundException} from "@aws/dynamodb-data-mapper";
 import DynamoDB from 'aws-sdk/clients/dynamodb';
