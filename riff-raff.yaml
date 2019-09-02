@@ -117,3 +117,12 @@ deployments:
       functionNames: [mobile-purchases-export-subscription-table-, mobile-purchases-export-user-subscription-table-]
       fileName: export-subscription-tables.zip
       prefixStack: false
+
+  mobile-purchases-export-subscription-events-table:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      functionNames: [mobile-purchases-export-subscription-events-table-]
+      fileName: export-subscription-events-table.zip
+      prefixStack: false
