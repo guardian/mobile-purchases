@@ -30,25 +30,10 @@ export class UserSubscription {
 
 }
 
-export class ReadUserSubscription {
-
-    @hashKey()
-    userId: string
-
-    @attribute()
-    subscriptionId: string
-
-    @attribute()
-    creationTimestamp: string
+export class ReadUserSubscription extends UserSubscription {
 
     constructor() {
-        this.userId = ""
-        this.subscriptionId = ""
-        this.creationTimestamp = ""
-    }
-
-    get[DynamoDbTable]() {
-        return `${App}-${Stage}-user-subscriptions`
+        super("", "", "", 0);
     }
 
 }
