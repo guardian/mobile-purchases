@@ -1,6 +1,14 @@
 stacks: [mobile]
 regions: [eu-west-1]
 
+templates:
+  lambda:
+    type: aws-lambda
+    dependencies: [mobile-purchases-cloudformation]
+    parameters:
+      bucket: mobile-dist
+      prefixStack: false
+
 deployments:
   mobile-purchases-cloudformation:
     type: cloud-formation
@@ -8,130 +16,85 @@ deployments:
       templatePath: cloudformation.yaml
 
   mobile-purchases-ios-validate-receipts:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-iosvalidatereceipts-]
       fileName: mobile-purchases-ios-validate-receipts.jar
-      prefixStack: false
 
   mobile-purchases-ios-user-purchases:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-iosuserpurchases-]
       fileName: mobile-purchases-ios-user-purchases.jar
-      prefixStack: false
 
   mobile-purchases-google-pubsub:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
-      functionNames:
-        - mobile-purchases-googlepubsub-
+      functionNames: [mobile-purchases-googlepubsub-]
       fileName: google-pubsub.zip
-      prefixStack: false
 
   mobile-purchases-apple-pubsub:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
-      functionNames:
-        - mobile-purchases-applepubsub-
+      functionNames: [mobile-purchases-applepubsub-]
       fileName: apple-pubsub.zip
-      prefixStack: false
 
   mobile-purchases-google-playsubstatus:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
-      functionNames:
-        - mobile-purchases-googleplaysubstatus-
+      functionNames: [mobile-purchases-googleplaysubstatus-]
       fileName: google-playsubstatus.zip
-      prefixStack: false
 
   mobile-purchases-google-oauth:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-googleoauth-]
       fileName: mobile-purchases-google-oauth.jar
-      prefixStack: false
 
   mobile-purchases-google-link-user-subscription:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-google-link-user-subscription-]
       fileName: google-link-user-subscription.zip
-      prefixStack: false
 
   mobile-purchases-apple-link-user-subscription:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-apple-link-user-subscription-]
       fileName: apple-link-user-subscription.zip
-      prefixStack: false
 
   mobile-purchases-google-update-subscriptions:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-google-update-subscriptions-]
       fileName: google-update-subscriptions.zip
-      prefixStack: false
 
   mobile-purchases-user-subscriptions:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-user-subscriptions-]
       fileName: user-subscriptions.zip
-      prefixStack: false
 
   mobile-purchases-apple-update-subscriptions:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-apple-update-subscriptions-]
       fileName: apple-update-subscriptions.zip
-      prefixStack: false
 
   mobile-purchases-export-subscription-tables:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-export-subscription-table-, mobile-purchases-export-user-subscription-table-]
       fileName: export-subscription-tables.zip
-      prefixStack: false
 
   mobile-purchases-export-subscription-events-table:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-export-subscription-events-table-]
       fileName: export-subscription-events-table.zip
-      prefixStack: false
 
   mobile-purchases-delete-user-subscription:
-    type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    template: lambda
     parameters:
-      bucket: mobile-dist
       functionNames: [mobile-purchases-delete-user-subscription-]
       fileName: delete-user-subscription.zip
-      prefixStack: false
