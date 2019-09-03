@@ -947,7 +947,7 @@ Resources:
                 - logs:PutLogEvents
                 - cloudwatch:putMetricData
               Resource: "*"
-        - PolicyName: dynamo
+        - PolicyName: dynamoStream
           PolicyDocument:
             Statement:
               Effect: Allow
@@ -959,6 +959,16 @@ Resources:
               Resource:
                 - Fn::ImportValue:
                     !Sub ${App}-${Stage}-subscriptions-stream-arn
+        - PolicyName: dynamo
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - "dynamodb:Query"
+                - "dynamodb:DeleteItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
 
   DeleteUserSubscriptionLambda:
     Type: AWS::Serverless::Function

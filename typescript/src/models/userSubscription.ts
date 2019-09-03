@@ -1,4 +1,4 @@
-import {hashKey, attribute} from '@aws/dynamodb-data-mapper-annotations';
+import {hashKey, attribute, rangeKey} from '@aws/dynamodb-data-mapper-annotations';
 import {DynamoDbTable} from "@aws/dynamodb-data-mapper";
 import {App, Stage} from "../utils/appIdentity";
 
@@ -7,7 +7,7 @@ export class UserSubscription {
     @hashKey()
     userId: string;
 
-    @attribute()
+    @rangeKey()
     subscriptionId: string;
 
     @attribute()
