@@ -1,9 +1,10 @@
 import 'source-map-support/register'
-import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {ONE_YEAR_IN_SECONDS, parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {GoogleSubscriptionReference} from "../models/subscriptionReference";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {Option} from "../utils/option";
 
 interface DeveloperNotification {
     version: string,
@@ -20,7 +21,7 @@ interface SubscriptionNotification {
 }
 
 
-export function parsePayload(body?: string): Error | DeveloperNotification {
+export function parsePayload(body: Option<string>): Error | DeveloperNotification {
     try {
         let rawNotification = Buffer.from(JSON.parse(body || "").message.data, 'base64');
         return JSON.parse(rawNotification.toString()) as DeveloperNotification;
@@ -72,7 +73,7 @@ export function toSqsSubReference(event: DeveloperNotification): GoogleSubscript
     }
 }
 
-export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
+export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     return parseStoreAndSend(
         request,
         parsePayload,

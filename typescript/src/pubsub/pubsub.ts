@@ -1,14 +1,16 @@
 import 'source-map-support/register'
-import {HTTPRequest, HTTPResponse, HTTPResponses} from "../models/apiGatewayHttp";
+import {HTTPResponses} from "../models/apiGatewayHttp";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
 import Sqs from 'aws-sdk/clients/sqs';
 import {AWSError} from "aws-sdk";
 import {PromiseResult} from "aws-sdk/lib/request";
 import {sqs, dynamoMapper, sendToSqsImpl} from "../utils/aws";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {Option} from "../utils/option";
 
 export const ONE_YEAR_IN_SECONDS = 31557600;
 
-async function catchingServerErrors(block: () => Promise<HTTPResponse>): Promise<HTTPResponse> {
+async function catchingServerErrors(block: () => Promise<APIGatewayProxyResult>): Promise<APIGatewayProxyResult> {
     try {
         return block();
     } catch (e) {
@@ -22,13 +24,13 @@ function storeInDynamoImpl(event: SubscriptionEvent): Promise<SubscriptionEvent>
 }
 
 export async function parseStoreAndSend<Payload, SqsEvent>(
-    request: HTTPRequest,
-    parsePayload: (body?: string) => Payload | Error,
+    request: APIGatewayProxyEvent,
+    parsePayload: (body: Option<string>) => Payload | Error,
     toDynamoEvent: (payload: Payload) => SubscriptionEvent,
     toSqsEvent: (payload: Payload) => SqsEvent,
     storeInDynamo: (event: SubscriptionEvent) => Promise<SubscriptionEvent> = storeInDynamoImpl,
     sendToSqs: (queueUrl: string, event: SqsEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqsImpl,
-): Promise<HTTPResponse> {
+): Promise<APIGatewayProxyResult> {
     const secret = process.env.Secret;
     return catchingServerErrors(async () => {
         if (request.queryStringParameters && request.queryStringParameters.secret === secret) {

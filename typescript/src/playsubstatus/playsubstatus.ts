@@ -1,14 +1,10 @@
 import * as restm from 'typed-rest-client/RestClient';
 import {
-    HTTPResponseHeaders,
-    HTTPRequest,
-    HTTPResponse,
     HTTPResponses,
-    HttpRequestHeaders,
-    PathParameters
+    HttpRequestHeaders
 } from '../models/apiGatewayHttp';
 import {getParams, getAccessToken, buildGoogleUrl} from "../utils/google-play";
-import S3 from 'aws-sdk/clients/s3'
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 
 interface GoogleResponseBody {
     expiryTimeMillis: string
@@ -28,7 +24,7 @@ function getPurchaseToken(headers: HttpRequestHeaders): string {
     return headers["Play-Purchase-Token"] || headers["play-purchase-token"]
 }
 
-export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
+export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 
     const stage = process.env.Stage;
     const googlePackagename =  "com.guardian"
@@ -48,7 +44,7 @@ export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
                     const subscriptionHasLapsed: boolean = now > subscriptionExpiryDate;
                     const responseBody: SubscriptionStatusResponse = {"subscriptionHasLapsed": subscriptionHasLapsed, "subscriptionExpiryDate": subscriptionExpiryDate};
                     console.log(`Successfully retrieved subscription details from Play Developer API. Response body will be: ${JSON.stringify(responseBody)}`);
-                    return new HTTPResponse(200, new HTTPResponseHeaders(), JSON.stringify(responseBody))
+                    return {statusCode: 200, body: JSON.stringify(responseBody)}
                 } else {
                     console.log(`Failed to establish expiry time of subscription`);
                     return HTTPResponses.NOT_FOUND

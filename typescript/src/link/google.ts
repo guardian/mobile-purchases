@@ -1,8 +1,8 @@
 import 'source-map-support/register'
 import {Platform} from "../models/platform";
 import {parseAndStoreLink, SubscriptionCheckData} from "./link";
-import {HTTPRequest, HTTPResponses} from "../models/apiGatewayHttp";
 import {UserSubscription} from "../models/userSubscription";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 
 type GoogleSubscription = {
     purchaseToken: string
@@ -14,7 +14,7 @@ type GoogleLinkPayload = {
     subscriptions: GoogleSubscription[]
 }
 
-export function parseGoogleLinkPayload(request: HTTPRequest): GoogleLinkPayload {
+export function parseGoogleLinkPayload(request: APIGatewayProxyEvent): GoogleLinkPayload {
     return JSON.parse(request.body || "") as GoogleLinkPayload
 }
 
@@ -37,7 +37,7 @@ function toSqsPayload(payload: GoogleLinkPayload): SubscriptionCheckData[] {
     }))
 }
 
-export async function handler(httpRequest: HTTPRequest) {
+export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     return parseAndStoreLink(
         httpRequest,
         parseGoogleLinkPayload,
