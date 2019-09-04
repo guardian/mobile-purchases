@@ -34,6 +34,7 @@ const applePubSub = entryPoint('pubsub/apple.ts', 'apple-pubsub.js');
 const googlePlaySubStatus = entryPoint('playsubstatus/playsubstatus.ts', 'google-playsubstatus.js');
 const googleUserLink = entryPoint('link/google.ts', 'google-link-user-subscription.js');
 const appleUserLink = entryPoint('link/apple.ts', 'apple-link-user-subscription.js');
+const deleteLink = entryPoint('link/deleteLink.ts', 'delete-user-subscription.js');
 const userSubscriptions = entryPoint('user/user.ts', 'user-subscriptions.js');
 const googleUpdateSub = entryPoint('update-subs/google.ts', 'google-update-subscriptions.js');
 const appleUpdateSub = entryPoint('update-subs/apple.ts', 'apple-update-subscriptions.js');
@@ -48,6 +49,7 @@ module.exports = [
     appleUpdateSub,
     appleUserLink,
     googleUserLink,
+    deleteLink,
     userSubscriptions,
     exportSubs,
     exportEvents

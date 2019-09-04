@@ -3,7 +3,6 @@ import {Platform} from "../models/platform";
 import {parseAndStoreLink, SubscriptionCheckData} from "./link";
 import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {UserSubscription} from "../models/userSubscription";
-import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 
 type AppleSubscription = {
     receipt: string
@@ -23,8 +22,7 @@ function toUserSubscription(userId: string, payload: AppleLinkPayload): UserSubs
     return payload.subscriptions.map(sub => new UserSubscription(
         userId,
         sub.originalTransactionId,
-        new Date().toISOString(),
-        dateToSecondTimestamp(thirtyMonths())
+        new Date().toISOString()
     ));
 }
 
