@@ -214,6 +214,17 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
+          "/apple/subscription/status":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleSubStatusLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
           "/apple/pubsub":
             post:
               x-amazon-apigateway-integration:
@@ -477,7 +488,7 @@ Resources:
   GooglePlaySubStatusLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: google-playsubstatus.handler
+      Handler: google-subscription-status.handler
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
@@ -498,6 +509,36 @@ Resources:
           Properties:
             Path: "/google/subscription/{subscriptionId}/status"
             Method: GET
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  AppleSubStatusLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apple-subscription-status.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-apple-subscription-status/apple-subscription-status.zip
+      FunctionName: !Sub ${App}-apple-subscription-status-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+      Description: Checks the status of an Apple App store subscription using the apple API
+      MemorySize: 128
+      Timeout: 45
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/apple/subscription/status"
+            Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
         Stage: !Ref Stage
