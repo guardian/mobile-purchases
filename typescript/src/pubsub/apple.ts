@@ -1,10 +1,11 @@
 import 'source-map-support/register'
-import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {ONE_YEAR_IN_SECONDS, parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
 import {AppleReceiptInfo} from "../models/appleReceiptInfo";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {Option} from "../utils/option";
 
 export interface StatusUpdateNotification {
     environment: string,
@@ -23,7 +24,7 @@ export interface StatusUpdateNotification {
     expiration_intent: string
 }
 
-export function parsePayload(body?: string): Error | StatusUpdateNotification {
+export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
         let notification = JSON.parse(body || "") as StatusUpdateNotification;
         delete notification.password; // no need to keep that in memory
@@ -62,7 +63,7 @@ export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscri
     }
 }
 
-export async function handler(request: HTTPRequest): Promise<HTTPResponse> {
+export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
     return parseStoreAndSend(
         request,
         parsePayload,

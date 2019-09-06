@@ -7,6 +7,7 @@ import {
 import {HTTPResponses} from "../../src/models/apiGatewayHttp";
 import {SubscriptionEvent} from "../../src/models/subscriptionEvent";
 import Mock = jest.Mock;
+import {APIGatewayProxyEvent} from "aws-lambda";
 
 describe("The google pubsub", () => {
     test("Should return HTTP 200 and store the correct data in dynamo", () => {
@@ -35,7 +36,22 @@ describe("The google pubsub", () => {
             },
             subscription: 'projects/guardian.co.uk:maximal-ceiling-820/subscriptions/mobile-pubsub-code'
         };
-        const input = {queryStringParameters: {secret: "MYSECRET"}, body: JSON.stringify(body) };
+
+        const input: APIGatewayProxyEvent = {
+            queryStringParameters: {secret: "MYSECRET"},
+            body: JSON.stringify(body),
+            headers: {},
+            multiValueHeaders: {},
+            httpMethod: "POST",
+            isBase64Encoded: false,
+            path: '',
+            pathParameters: {},
+            multiValueQueryStringParameters: {},
+            // @ts-ignore
+            requestContext: null,
+            resource: '',
+
+        };
 
         const expectedSubscriptionEventInDynamo: SubscriptionEvent = new SubscriptionEvent(
             "PURCHASE_TOKEN",
@@ -66,7 +82,6 @@ describe("The google pubsub", () => {
             expect(mockStoreFunction.mock.calls[0][0]).toStrictEqual(expectedSubscriptionEventInDynamo);
             expect(mockSqsFunction.mock.calls.length).toEqual(1);
             expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual({packageName: "com.some.thing", purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"});
-
         });
     });
 });

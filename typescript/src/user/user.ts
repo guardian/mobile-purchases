@@ -1,14 +1,10 @@
 import 'source-map-support/register'
-import {
-    HTTPResponse,
-    HTTPResponses,
-    HTTPRequest,
-    HTTPResponseHeaders
-} from "../models/apiGatewayHttp";
+import {HTTPResponses} from "../models/apiGatewayHttp";
 import {Subscription, ReadSubscription} from "../models/subscription";
 import {ReadUserSubscription} from "../models/userSubscription";
 import {dynamoMapper} from "../utils/aws"
 import {getUserId, getIdentityToken} from "../utils/guIdentityApi";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 
 type SubscriptionStatusEnum = "active" | "expired" | "wontRenew"
 
@@ -86,13 +82,13 @@ async function getSubscriptions(subscriptionIds: string[]) : Promise<Subscriptio
 }
 
 
-export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse> {
+export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     if(httpRequest.headers && getIdentityToken(httpRequest.headers)) {
         return getUserId(httpRequest.headers)
             .then( userId => getUserSubscriptionIds(userId))
             .then(subIds => getSubscriptions(subIds))
             .then( subs => {
-                return new HTTPResponse(200, new HTTPResponseHeaders(), JSON.stringify(subs) )
+                return {statusCode: 200, body: JSON.stringify(subs)};
             })
             .catch( error => {
                 console.log(`Error retrieving user subscriptions: ${error}`)

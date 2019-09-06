@@ -2,67 +2,9 @@ import 'source-map-support/register'
 import {SQSEvent, SQSRecord} from 'aws-lambda'
 import {parseAndStoreSubscriptionUpdate} from "./updatesub";
 import {AppleSubscription} from "../models/subscription";
-import fetch from 'node-fetch';
-import {Response} from 'node-fetch';
-import {Stage} from "../utils/appIdentity";
 import {dateToSecondTimestamp, msToFormattedString, optionalMsToFormattedString, thirtyMonths} from "../utils/dates";
-import {ProcessingError} from "../models/processingError";
-import {getConfigValue} from "../utils/ssmConfig";
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
-
-const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
-
-interface AppleValidatedReceiptInfo {
-    cancellation_date_ms?: string,
-    expires_date: string,
-    original_purchase_date_ms: string,
-    original_transaction_id: string
-    product_id: string,
-}
-
-// there are more fields, I cherry picked what was relevant
-// https://developer.apple.com/documentation/appstorereceipts/responsebody
-interface AppleValidationResponse {
-    auto_renew_status: 0 | 1,
-    "is-retryable": boolean,
-    latest_receipt: string,
-    latest_receipt_info: AppleValidatedReceiptInfo,
-    status: number
-}
-
-function validateReceipt(subRef: AppleSubscriptionReference): Promise<Response> {
-    return getConfigValue<string>("apple.password")
-        .then(password => {
-            const body = JSON.stringify({
-                "receipt-data": subRef.receipt,
-                "password": password,
-                "exclude-old-transactions": true
-            });
-            return fetch(receiptEndpoint, { method: 'POST', body: body});
-        }).then(response => {
-        if (!response.ok) {
-            console.error(`Impossible to validate the receipt, got ${response.status} ${response.statusText} from receiptEndpoint for ${subRef.receipt}`);
-            throw new ProcessingError("Impossible to validate receipt", true);
-        }
-        return response
-    })
-}
-
-function checkResponseStatus(response: AppleValidationResponse): AppleValidationResponse {
-    if ((response.status >= 21100 && response.status <= 21199) || response["is-retryable"]) {
-        console.error(`Server error received from Apple, got status ${response.status}, will retry`);
-        throw new ProcessingError(`Server error, status ${response.status}`, true);
-    }
-    if (response.status != 0 && response.status != 21006) {
-        console.error(`Invalid receipt, got status ${response.status} for ${response.latest_receipt}`);
-        throw new ProcessingError(`Invalid receipt, got status ${response.status}`);
-    }
-    if (!response.latest_receipt_info) {
-        console.error(`No receipt info`);
-        throw new ProcessingError(`Invalid validation response, no receipt info`);
-    }
-    return response;
-}
+import {AppleValidationResponse, validateReceipt} from "../services/appleValidateReceipts";
 
 function toAppleSubscription(response: AppleValidationResponse, subRef: AppleSubscriptionReference): AppleSubscription {
     const latestReceiptInfo = response.latest_receipt_info;
@@ -90,10 +32,7 @@ function toAppleSubscription(response: AppleValidationResponse, subRef: AppleSub
 function sqsRecordToAppleSubscription(record: SQSRecord): Promise<AppleSubscription> {
     const subRef = JSON.parse(record.body) as AppleSubscriptionReference;
 
-    return validateReceipt(subRef)
-        .then(response => response.json())
-        .then(body => body as AppleValidationResponse)
-        .then(checkResponseStatus)
+    return validateReceipt(subRef.receipt)
         .then(response => toAppleSubscription(response, subRef))
 }
 

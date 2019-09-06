@@ -1,8 +1,8 @@
 import 'source-map-support/register'
 import {Platform} from "../models/platform";
 import {parseAndStoreLink, SubscriptionCheckData} from "./link";
-import {HTTPRequest, HTTPResponse} from "../models/apiGatewayHttp";
 import {UserSubscription} from "../models/userSubscription";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 
 type AppleSubscription = {
     receipt: string
@@ -14,7 +14,7 @@ type AppleLinkPayload = {
     subscriptions: AppleSubscription[]
 }
 
-function parseAppleLinkPayload(request: HTTPRequest): AppleLinkPayload {
+function parseAppleLinkPayload(request: APIGatewayProxyEvent): AppleLinkPayload {
     return JSON.parse(request.body || "") as AppleLinkPayload;
 }
 
@@ -35,7 +35,7 @@ function toSqsPayload(payload: AppleLinkPayload): SubscriptionCheckData[] {
     }))
 }
 
-export async function handler(httpRequest: HTTPRequest): Promise<HTTPResponse> {
+export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     return parseAndStoreLink(
         httpRequest,
         parseAppleLinkPayload,

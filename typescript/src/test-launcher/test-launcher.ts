@@ -5,7 +5,7 @@ if(process.argv.length == 4) {
     import(process.argv[2]).then( module => {
         module.handler(JSON.parse(rawPayload.toString()))
             .then((res: any) => {
-                console.log(`Completed: result: ${res.toString()}`)
+                console.log(`Completed: result: ${JSON.stringify(res)}`)
              })
     })
    .catch(

@@ -1,13 +1,13 @@
-import {HTTPRequest, HTTPResponse, HTTPResponses} from '../models/apiGatewayHttp';
+import {HTTPResponses} from '../models/apiGatewayHttp';
 
 import {UserSubscription} from "../models/userSubscription";
 import {Subscription} from "../models/subscription";
 import {dynamoMapper, sqs} from "../utils/aws";
-import {ItemNotFoundException} from "@aws/dynamodb-data-mapper";
 import {getUserId, getIdentityToken} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
 import {ProcessingError} from "../models/processingError";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 
 export interface SubscriptionCheckData {
     subscriptionId: string
@@ -56,11 +56,11 @@ async function persistUserSubscriptionLinks(userSubscriptions: UserSubscription[
 }
 
 export async function parseAndStoreLink<A, B>(
-    httpRequest: HTTPRequest,
-    parsePayload: (request: HTTPRequest) => A,
+    httpRequest: APIGatewayProxyEvent,
+    parsePayload: (request: APIGatewayProxyEvent) => A,
     toUserSubscription: (userId: string, payload: A) => UserSubscription[],
     toSqsPayload: (payload: A) => SubscriptionCheckData[]
-): Promise<HTTPResponse> {
+): Promise<APIGatewayProxyResult> {
     try {
         if (httpRequest.headers && getIdentityToken(httpRequest.headers)) {
 
