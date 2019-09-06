@@ -4,17 +4,27 @@ import {AppleValidationResponse, validateReceipt} from "../services/appleValidat
 import {HTTPResponses} from "../models/apiGatewayHttp";
 import {msToDate, plusDays} from "../utils/dates";
 
-type AppleSubscription = {
+interface AppleSubscription {
     receipt: string
     originalTransactionId: string
 }
 
-type AppleLinkPayload = {
-    platform: Platform.DailyEdition | Platform.Ios,
+interface AppleLinkPayload {
+    platform: Platform.DailyEdition | Platform.Ios
     subscriptions: AppleSubscription[]
 }
 
-function toResponse(validationResponse: AppleValidationResponse): any {
+interface AppleSubscriptionStatusResponse {
+    originalTransactionId: string
+    valid: boolean
+    gracePeriod: boolean
+    start: string
+    end: string
+    product: string
+    latestReceipt: string
+}
+
+function toResponse(validationResponse: AppleValidationResponse): AppleSubscriptionStatusResponse {
     const now = new Date();
 
     const receiptInfo = validationResponse.latest_receipt_info;
@@ -30,7 +40,8 @@ function toResponse(validationResponse: AppleValidationResponse): any {
         gracePeriod: gracePeriod,
         start: start.toISOString(),
         end: end.toISOString(),
-        product: receiptInfo.product_id
+        product: receiptInfo.product_id,
+        latestReceipt: validationResponse.latest_receipt
     }
 }
 
