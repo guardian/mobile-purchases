@@ -481,8 +481,8 @@ Resources:
       Runtime: nodejs10.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-google-playsubstatus/google-playsubstatus.zip
-      FunctionName: !Sub ${App}-googleplaysubstatus-${Stage}
+        Key: !Sub ${Stack}/${Stage}/${App}-google-subscription-status/google-subscription-status.zip
+      FunctionName: !Sub ${App}-google-subscription-status-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
         Variables:
