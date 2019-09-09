@@ -1,3 +1,4 @@
+import 'source-map-support/register'
 import * as restm from 'typed-rest-client/RestClient';
 import {
     HTTPResponses,

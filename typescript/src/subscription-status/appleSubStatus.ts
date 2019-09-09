@@ -1,3 +1,4 @@
+import 'source-map-support/register'
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Platform} from "../models/platform";
 import {AppleValidationResponse, validateReceipt} from "../services/appleValidateReceipts";
