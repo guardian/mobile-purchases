@@ -28,7 +28,7 @@ interface AppleSubscriptionStatusResponse {
 function toResponse(validationResponse: AppleValidationResponse): AppleSubscriptionStatusResponse {
     const now = new Date();
 
-    const receiptInfo = validationResponse.latest_receipt_info;
+    const receiptInfo = validationResponse.latestReceiptInfo;
     const start = msToDate(receiptInfo.original_purchase_date_ms);
     const end = msToDate(receiptInfo.expires_date);
     const endWithGracePeriod = plusDays(end, 30);
@@ -42,7 +42,7 @@ function toResponse(validationResponse: AppleValidationResponse): AppleSubscript
         start: start.toISOString(),
         end: end.toISOString(),
         product: receiptInfo.product_id,
-        latestReceipt: validationResponse.latest_receipt
+        latestReceipt: validationResponse.latestReceipt
     }
 }
 
