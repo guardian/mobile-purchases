@@ -14,16 +14,19 @@ function toAppleSubscription(response: AppleValidationResponse): AppleSubscripti
         autoRenewStatus = true;
     }
 
-    const expiryDate = new Date(Number.parseInt(latestReceiptInfo.expires_date));
+    let cancellationDate: string | undefined;
+    if (latestReceiptInfo.cancellationDate) {
+        cancellationDate = latestReceiptInfo.cancellationDate.toISOString()
+    }
 
     return new AppleSubscription(
-        latestReceiptInfo.original_transaction_id,
-        msToFormattedString(latestReceiptInfo.original_purchase_date_ms),
-        msToFormattedString(latestReceiptInfo.expires_date),
-        optionalMsToFormattedString(latestReceiptInfo.cancellation_date_ms),
+        latestReceiptInfo.originalTransactionId,
+        latestReceiptInfo.originalPurchaseDate.toISOString(),
+        latestReceiptInfo.expiresDate.toISOString(),
+        cancellationDate,
         autoRenewStatus,
-        latestReceiptInfo.product_id,
-        dateToSecondTimestamp(thirtyMonths(expiryDate)),
+        latestReceiptInfo.productId,
+        dateToSecondTimestamp(thirtyMonths(latestReceiptInfo.expiresDate)),
         response.latestReceipt,
         response
     )

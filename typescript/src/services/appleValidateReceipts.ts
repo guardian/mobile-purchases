@@ -3,10 +3,13 @@ import {getConfigValue} from "../utils/ssmConfig";
 import {ProcessingError} from "../models/processingError";
 import {Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
+import {msToDate, optionalMsToDate} from "../utils/dates";
+import {Option} from "../utils/option";
 
-export interface AppleValidatedReceiptInfo {
+export interface AppleValidatedReceiptServerInfo {
     cancellation_date_ms?: string,
     expires_date: string,
+    expires_date_ms?: string,
     original_purchase_date_ms: string,
     original_transaction_id: string
     product_id: string,
@@ -14,14 +17,22 @@ export interface AppleValidatedReceiptInfo {
 
 // there are more fields, I cherry picked what was relevant
 // https://developer.apple.com/library/archive/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateRemotely.html
-interface AppleValidationServerResponse {
+export interface AppleValidationServerResponse {
     auto_renew_status: 0 | 1,
-    "is-retryable": boolean,
-    latest_receipt: string,
+    "is-retryable"?: boolean,
+    latest_receipt?: string,
     // yes you've read the type well. It can both be an array or a value, good luck parsing that
-    latest_receipt_info: AppleValidatedReceiptInfo | AppleValidatedReceiptInfo[],
-    latest_expired_receipt_info: AppleValidatedReceiptInfo,
+    latest_receipt_info?: AppleValidatedReceiptServerInfo | AppleValidatedReceiptServerInfo[],
+    latest_expired_receipt_info?: AppleValidatedReceiptServerInfo,
     status: number
+}
+
+export interface AppleValidatedReceiptInfo {
+    cancellationDate: Option<Date>,
+    expiresDate: Date,
+    originalPurchaseDate: Date,
+    originalTransactionId: string
+    productId: string,
 }
 
 // this is a sanitised and more sensible version of what the response should be
@@ -72,35 +83,59 @@ function checkResponseStatus(response: AppleValidationServerResponse): AppleVali
     return response;
 }
 
-function toSensiblePayloadFormat(response: AppleValidationServerResponse, receipt: string): AppleValidationResponse {
-    let receiptInfo: AppleValidatedReceiptInfo = response.latest_expired_receipt_info;
+export function toSensiblePayloadFormat(response: AppleValidationServerResponse, receipt: string): AppleValidationResponse {
+
+    function expiryDate(receiptServerInfo: AppleValidatedReceiptServerInfo): number {
+        if (receiptServerInfo.expires_date_ms) {
+            return Number.parseInt(receiptServerInfo.expires_date_ms);
+        } else {
+            return Number.parseInt(receiptServerInfo.expires_date);
+        }
+    }
+
+    let receiptInfo: AppleValidatedReceiptServerInfo;
     if (response.latest_receipt_info) {
         if (Array.isArray(response.latest_receipt_info)) {
-            const latestReceipt = response.latest_receipt_info as AppleValidatedReceiptInfo[];
+            const latestReceipt = response.latest_receipt_info as AppleValidatedReceiptServerInfo[];
             if (latestReceipt.length == 1) {
                 receiptInfo = latestReceipt[0];
             } else if (latestReceipt.length > 1) {
                 receiptInfo = latestReceipt[0];
-                let longestSub = 0;
-                latestReceipt.forEach(sub => {
-                    if (longestSub < Number.parseInt(sub.expires_date)) {
-                        longestSub = Number.parseInt(sub.expires_date);
+                let furthestExpiry = expiryDate(latestReceipt[0]);
+                for (const sub of latestReceipt) {
+                    if (furthestExpiry < expiryDate(sub)) {
+                        furthestExpiry = expiryDate(sub);
                         receiptInfo = sub;
                     }
-                });
+                }
             } else {
                 console.error(`Invalid validation response, empty receipt info array`);
                 throw new ProcessingError(`Invalid validation response, empty receipt info array`);
             }
         } else {
-            receiptInfo = response.latest_receipt_info as AppleValidatedReceiptInfo;
+            receiptInfo = response.latest_receipt_info as AppleValidatedReceiptServerInfo;
+        }
+    } else {
+        if (response.latest_expired_receipt_info) {
+            receiptInfo = response.latest_expired_receipt_info
+        } else {
+            // should be impossible as this will be caught by checkResponseStatus
+            console.error(`No receipt info`);
+            throw new ProcessingError(`Invalid validation response, no receipt info`);
         }
     }
+
     return {
         autoRenewStatus: (response.auto_renew_status === 1),
-        isRetryable: response["is-retryable"],
+        isRetryable: response["is-retryable"] === true,
         latestReceipt: response.latest_receipt || receipt,
-        latestReceiptInfo: receiptInfo
+        latestReceiptInfo: {
+            cancellationDate: optionalMsToDate(receiptInfo.cancellation_date_ms),
+            expiresDate: new Date(expiryDate(receiptInfo)),
+            originalPurchaseDate: msToDate(receiptInfo.original_purchase_date_ms),
+            originalTransactionId: receiptInfo.original_transaction_id,
+            productId: receiptInfo.product_id,
+        }
     }
 }
 

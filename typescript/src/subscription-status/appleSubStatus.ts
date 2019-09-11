@@ -3,7 +3,7 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Platform} from "../models/platform";
 import {AppleValidationResponse, validateReceipt} from "../services/appleValidateReceipts";
 import {HTTPResponses} from "../models/apiGatewayHttp";
-import {msToDate, plusDays} from "../utils/dates";
+import {plusDays} from "../utils/dates";
 
 interface AppleSubscription {
     receipt: string
@@ -29,19 +29,18 @@ function toResponse(validationResponse: AppleValidationResponse): AppleSubscript
     const now = new Date();
 
     const receiptInfo = validationResponse.latestReceiptInfo;
-    const start = msToDate(receiptInfo.original_purchase_date_ms);
-    const end = msToDate(receiptInfo.expires_date);
+    const end = receiptInfo.expiresDate;
     const endWithGracePeriod = plusDays(end, 30);
     const valid: boolean = now.getTime() <= endWithGracePeriod.getTime();
     const gracePeriod: boolean = now.getTime() > end.getTime() && valid;
 
     return {
-        originalTransactionId: receiptInfo.original_transaction_id,
+        originalTransactionId: receiptInfo.originalTransactionId,
         valid: valid,
         gracePeriod: gracePeriod,
-        start: start.toISOString(),
+        start: receiptInfo.originalPurchaseDate.toISOString(),
         end: end.toISOString(),
-        product: receiptInfo.product_id,
+        product: receiptInfo.productId,
         latestReceipt: validationResponse.latestReceipt
     }
 }
