@@ -93,30 +93,33 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
         }
     }
 
-    let receiptInfo: AppleValidatedReceiptServerInfo;
-    if (response.latest_receipt_info) {
-        if (Array.isArray(response.latest_receipt_info)) {
-            const latestReceipt = response.latest_receipt_info as AppleValidatedReceiptServerInfo[];
-            if (latestReceipt.length == 1) {
-                receiptInfo = latestReceipt[0];
-            } else if (latestReceipt.length > 1) {
-                receiptInfo = latestReceipt.sort((r1, r2) => expiryDate(r2) - expiryDate(r1))[0]
+    function getReceiptInfo(): AppleValidatedReceiptServerInfo {
+        if (response.latest_receipt_info) {
+            if (Array.isArray(response.latest_receipt_info)) {
+                const latestReceipt = response.latest_receipt_info as AppleValidatedReceiptServerInfo[];
+                if (latestReceipt.length == 1) {
+                    return latestReceipt[0];
+                } else if (latestReceipt.length > 1) {
+                    return latestReceipt.sort((r1, r2) => expiryDate(r2) - expiryDate(r1))[0]
+                } else {
+                    console.error(`Invalid validation response, empty receipt info array`);
+                    throw new ProcessingError(`Invalid validation response, empty receipt info array`);
+                }
             } else {
-                console.error(`Invalid validation response, empty receipt info array`);
-                throw new ProcessingError(`Invalid validation response, empty receipt info array`);
+                return response.latest_receipt_info as AppleValidatedReceiptServerInfo;
             }
         } else {
-            receiptInfo = response.latest_receipt_info as AppleValidatedReceiptServerInfo;
-        }
-    } else {
-        if (response.latest_expired_receipt_info) {
-            receiptInfo = response.latest_expired_receipt_info
-        } else {
-            // should be impossible as this will be caught by checkResponseStatus
-            console.error(`No receipt info`);
-            throw new ProcessingError(`Invalid validation response, no receipt info`);
+            if (response.latest_expired_receipt_info) {
+                return response.latest_expired_receipt_info
+            } else {
+                // should be impossible as this will be caught by checkResponseStatus
+                console.error(`No receipt info`);
+                throw new ProcessingError(`Invalid validation response, no receipt info`);
+            }
         }
     }
+
+    const receiptInfo = getReceiptInfo();
 
     return {
         autoRenewStatus: (response.auto_renew_status === 1),
