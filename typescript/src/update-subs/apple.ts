@@ -6,25 +6,28 @@ import {dateToSecondTimestamp, msToFormattedString, optionalMsToFormattedString,
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
 import {AppleValidationResponse, validateReceipt} from "../services/appleValidateReceipts";
 
-function toAppleSubscription(response: AppleValidationResponse, subRef: AppleSubscriptionReference): AppleSubscription {
-    const latestReceiptInfo = response.latest_receipt_info;
+function toAppleSubscription(response: AppleValidationResponse): AppleSubscription {
+    const latestReceiptInfo = response.latestReceiptInfo;
 
     let autoRenewStatus: boolean = false;
-    if (response.auto_renew_status === 1) {
+    if (response.autoRenewStatus) {
         autoRenewStatus = true;
     }
 
-    const expiryDate = new Date(Number.parseInt(latestReceiptInfo.expires_date));
+    let cancellationDate: string | undefined;
+    if (latestReceiptInfo.cancellationDate) {
+        cancellationDate = latestReceiptInfo.cancellationDate.toISOString()
+    }
 
     return new AppleSubscription(
-        latestReceiptInfo.original_transaction_id,
-        msToFormattedString(latestReceiptInfo.original_purchase_date_ms),
-        msToFormattedString(latestReceiptInfo.expires_date),
-        optionalMsToFormattedString(latestReceiptInfo.cancellation_date_ms),
+        latestReceiptInfo.originalTransactionId,
+        latestReceiptInfo.originalPurchaseDate.toISOString(),
+        latestReceiptInfo.expiresDate.toISOString(),
+        cancellationDate,
         autoRenewStatus,
-        latestReceiptInfo.product_id,
-        dateToSecondTimestamp(thirtyMonths(expiryDate)),
-        response.latest_receipt,
+        latestReceiptInfo.productId,
+        dateToSecondTimestamp(thirtyMonths(latestReceiptInfo.expiresDate)),
+        response.latestReceipt,
         response
     )
 }
@@ -33,7 +36,7 @@ function sqsRecordToAppleSubscription(record: SQSRecord): Promise<AppleSubscript
     const subRef = JSON.parse(record.body) as AppleSubscriptionReference;
 
     return validateReceipt(subRef.receipt)
-        .then(response => toAppleSubscription(response, subRef))
+        .then(toAppleSubscription)
 }
 
 export async function handler(event: SQSEvent): Promise<String> {

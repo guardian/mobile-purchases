@@ -1,5 +1,15 @@
+import {Option} from "./option";
+
 export function msToDate(ms: string): Date {
     return new Date(Number.parseInt(ms));
+}
+
+export function optionalMsToDate(ms: Option<string> | undefined): Option<Date> {
+    if (ms) {
+        return new Date(Number.parseInt(ms));
+    } else {
+        return null;
+    }
 }
 
 export function msToFormattedString(ms: string): string {
