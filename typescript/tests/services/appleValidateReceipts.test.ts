@@ -34,7 +34,7 @@ describe("The apple validation service", () => {
     });
 
 
-    test("Should transform a dirty apple payload with an expired receipt info into a sane one", () => {
+    test("Should transform a dirty apple payload with the latest receipt info into a sane one", () => {
         const appleResponse: AppleValidationServerResponse = {
             auto_renew_status: 0,
             latest_receipt_info: {
