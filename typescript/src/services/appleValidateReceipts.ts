@@ -100,14 +100,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
             if (latestReceipt.length == 1) {
                 receiptInfo = latestReceipt[0];
             } else if (latestReceipt.length > 1) {
-                receiptInfo = latestReceipt[0];
-                let furthestExpiry = expiryDate(latestReceipt[0]);
-                for (const sub of latestReceipt) {
-                    if (furthestExpiry < expiryDate(sub)) {
-                        furthestExpiry = expiryDate(sub);
-                        receiptInfo = sub;
-                    }
-                }
+                receiptInfo = latestReceipt.sort((r1, r2) => expiryDate(r2) - expiryDate(r1))[0]
             } else {
                 console.error(`Invalid validation response, empty receipt info array`);
                 throw new ProcessingError(`Invalid validation response, empty receipt info array`);
