@@ -9,13 +9,13 @@ export class Subscription {
     subscriptionId: string;
 
     @attribute()
-    startTimeStamp?: string;
+    startTimestamp?: string;
 
     @attribute()
-    endTimeStamp?: string;
+    endTimestamp?: string;
 
     @attribute()
-    cancellationTimetamp?: string;
+    cancellationTimestamp?: string;
 
     @attribute()
     autoRenewing?: boolean;
@@ -26,11 +26,11 @@ export class Subscription {
     @attribute()
     ttl?: number;
 
-    constructor(subscriptionId: string, startTimeStamp?: string, endTimeStamp?: string, cancellationTimetamp?: string, autoRenewing?: boolean, productId?: string, ttl?: number) {
+    constructor(subscriptionId: string, startTimestamp?: string, endTimestamp?: string, cancellationTimestamp?: string, autoRenewing?: boolean, productId?: string, ttl?: number) {
         this.subscriptionId = subscriptionId;
-        this.startTimeStamp = startTimeStamp;
-        this.endTimeStamp = endTimeStamp;
-        this.cancellationTimetamp = cancellationTimetamp;
+        this.startTimestamp = startTimestamp;
+        this.endTimestamp = endTimestamp;
+        this.cancellationTimestamp = cancellationTimestamp;
         this.autoRenewing = autoRenewing;
         this.productId = productId;
         this.ttl = ttl;
@@ -46,8 +46,8 @@ export class GoogleSubscription extends Subscription {
     @attribute()
     googlePayload?: any;
 
-    constructor(subscriptionId: string, startTimeStamp: string, endTimeStamp: string, cancellationTimetamp: string | undefined, autoRenewing: boolean, productId: string, ttl: number, googlePayload: any) {
-        super(subscriptionId, startTimeStamp, endTimeStamp, cancellationTimetamp, autoRenewing, productId, ttl);
+    constructor(subscriptionId: string, startTimestamp: string, endTimestamp: string, cancellationTimestamp: string | undefined, autoRenewing: boolean, productId: string, ttl: number, googlePayload: any) {
+        super(subscriptionId, startTimestamp, endTimestamp, cancellationTimestamp, autoRenewing, productId, ttl);
         this.googlePayload = googlePayload;
     }
 }
@@ -60,8 +60,8 @@ export class AppleSubscription extends Subscription {
     @attribute()
     applePayload?: any;
 
-    constructor(subscriptionId: string, startTimeStamp: string, endTimeStamp: string, cancellationTimetamp: string | undefined, autoRenewing: boolean, productId: string, ttl: number, reciept: string, applePayload: any) {
-        super(subscriptionId, startTimeStamp, endTimeStamp, cancellationTimetamp, autoRenewing, productId, ttl);
+    constructor(subscriptionId: string, startTimestamp: string, endTimestamp: string, cancellationTimestamp: string | undefined, autoRenewing: boolean, productId: string, ttl: number, reciept: string, applePayload: any) {
+        super(subscriptionId, startTimestamp, endTimestamp, cancellationTimestamp, autoRenewing, productId, ttl);
         this.receipt = reciept;
         this.applePayload = applePayload;
     }
@@ -72,21 +72,21 @@ export class ReadSubscription {
     subscriptionId: string;
 
     @attribute()
-    startTimeStamp: string;
+    startTimestamp: string;
 
     @attribute()
-    endTimeStamp: string;
+    endTimestamp: string;
 
     @attribute()
-    cancellationTimetamp?: string;
+    cancellationTimestamp?: string;
 
     @attribute()
     autoRenewing?: boolean;
 
     constructor() {
         this.subscriptionId = "";
-        this.startTimeStamp = "";
-        this.endTimeStamp = "";
+        this.startTimestamp = "";
+        this.endTimestamp = "";
     }
 
     get [DynamoDbTable]() {
