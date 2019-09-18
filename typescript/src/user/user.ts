@@ -16,12 +16,12 @@ class SubscriptionStatus {
    autoRenewing?: boolean;
    cancellationTimestamp?: string;
 
-   private getStatus(endTimeStamp: string, cancellelationTimestamp?: string) : SubscriptionStatusEnum{
+   private getStatus(endTimestamp: string, cancellelationTimestamp?: string) : SubscriptionStatusEnum{
 
        const now = Date.now()
 
        if (cancellelationTimestamp === "" || cancellelationTimestamp === undefined)   {
-          return Date.parse(endTimeStamp) > now ? "active" : "expired"
+          return Date.parse(endTimestamp) > now ? "active" : "expired"
        }
        else {
            return "wontRenew"
@@ -30,11 +30,11 @@ class SubscriptionStatus {
 
    constructor(subscription: ReadSubscription ) {
       this.subscriptionId = subscription.subscriptionId;
-      this.from = subscription.startTimeStamp;
-      this.to = subscription.endTimeStamp;
-      this.status = this.getStatus(subscription.endTimeStamp, subscription.cancellationTimetamp);
+      this.from = subscription.startTimestamp;
+      this.to = subscription.endTimestamp;
+      this.status = this.getStatus(subscription.endTimestamp, subscription.cancellationTimestamp);
       this.autoRenewing = subscription.autoRenewing;
-      this.cancellationTimestamp = subscription.cancellationTimetamp === "" ? undefined : subscription.cancellationTimetamp
+      this.cancellationTimestamp = subscription.cancellationTimestamp === "" ? undefined : subscription.cancellationTimestamp
    }
 }
 
@@ -45,7 +45,7 @@ class SubscriptionStatusResponse {
     constructor(subscriptions: ReadSubscription[]) {
         const now = Date.now();
         this.activeSubscriptionIds = subscriptions.filter(sub => {
-            let endTime = Date.parse(sub.endTimeStamp);
+            let endTime = Date.parse(sub.endTimestamp);
             return endTime > now
         }).map(activeSub => activeSub.subscriptionId )
         this.subscriptions = subscriptions.map( sub => new SubscriptionStatus(sub))
@@ -74,8 +74,8 @@ async function getSubscriptions(subscriptionIds: string[]) : Promise<Subscriptio
     }
 
     const sortedSubs = subs.sort((subscriptionA: Subscription, subscriptionB: Subscription) => {
-        const endTimeA = subscriptionA.endTimeStamp && Date.parse(subscriptionA.endTimeStamp) || 0
-        const endTimeB = subscriptionB.endTimeStamp && Date.parse(subscriptionB.endTimeStamp) || 0
+        const endTimeA = subscriptionA.endTimestamp && Date.parse(subscriptionA.endTimestamp) || 0
+        const endTimeB = subscriptionB.endTimestamp && Date.parse(subscriptionB.endTimestamp) || 0
         return endTimeA - endTimeB
     })
     return new SubscriptionStatusResponse(sortedSubs)
