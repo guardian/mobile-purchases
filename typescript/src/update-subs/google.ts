@@ -5,7 +5,7 @@ import {buildGoogleUrl, getAccessToken, getParams} from "../utils/google-play";
 
 import {parseAndStoreSubscriptionUpdate} from './updatesub';
 import {Stage} from "../utils/appIdentity";
-import {GoogleSubscription} from "../models/subscription";
+import {Subscription} from "../models/subscription";
 import {makeCancellationTime} from "./updatesub";
 import {ProcessingError} from "../models/processingError";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
@@ -20,7 +20,7 @@ interface GoogleResponseBody {
 
 const restClient = new restm.RestClient('guardian-mobile-purchases');
 
-export function getGoogleSubResponse(record: SQSRecord): Promise<GoogleSubscription> {
+export function getGoogleSubResponse(record: SQSRecord): Promise<Subscription> {
 
     const sub = JSON.parse(record.body) as GoogleSubscriptionReference;
     const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName);
@@ -31,15 +31,17 @@ export function getGoogleSubResponse(record: SQSRecord): Promise<GoogleSubscript
         .then(response => {
             if(response.result) {
                 const expiryDate = new Date(Number.parseInt(response.result.expiryTimeMillis));
-                return new GoogleSubscription(
+                return new Subscription(
                     sub.purchaseToken,
                     new Date(Number.parseInt(response.result.startTimeMillis)).toISOString(),
                     expiryDate.toISOString(),
                     makeCancellationTime(response.result.userCancellationTimeMillis),
                     response.result.autoRenewing,
                     sub.subscriptionId,
+                    response.result,
+                    undefined,
+                    null,
                     dateToSecondTimestamp(thirtyMonths(expiryDate)),
-                    response.result
                 );
             } else {
                 throw new ProcessingError("There was no data in google response", true);

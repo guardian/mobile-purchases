@@ -1,7 +1,7 @@
 import {HTTPResponses} from '../models/apiGatewayHttp';
 
 import {UserSubscription} from "../models/userSubscription";
-import {Subscription} from "../models/subscription";
+import {ReadSubscription} from "../models/subscription";
 import {dynamoMapper, sqs} from "../utils/aws";
 import {getUserId, getIdentityToken} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
@@ -16,7 +16,7 @@ export interface SubscriptionCheckData {
 
 async function enqueueUnstoredPurchaseToken(subChecks: SubscriptionCheckData[]): Promise<number> {
 
-    const dynamoResult = dynamoMapper.batchGet(subChecks.map(sub => new Subscription(sub.subscriptionId)));
+    const dynamoResult = dynamoMapper.batchGet(subChecks.map(sub => new ReadSubscription().setSubscriptionId(sub.subscriptionId)));
 
     const refsToSend = subChecks.map(s => s.subscriptionId);
 

@@ -1,12 +1,12 @@
 import 'source-map-support/register'
 import {SQSEvent, SQSRecord} from 'aws-lambda'
 import {parseAndStoreSubscriptionUpdate} from "./updatesub";
-import {AppleSubscription} from "../models/subscription";
-import {dateToSecondTimestamp, msToFormattedString, optionalMsToFormattedString, thirtyMonths} from "../utils/dates";
+import {Subscription} from "../models/subscription";
+import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
 import {AppleValidationResponse, validateReceipt} from "../services/appleValidateReceipts";
 
-function toAppleSubscription(response: AppleValidationResponse): AppleSubscription {
+function toAppleSubscription(response: AppleValidationResponse): Subscription {
     const latestReceiptInfo = response.latestReceiptInfo;
 
     let autoRenewStatus: boolean = false;
@@ -19,20 +19,21 @@ function toAppleSubscription(response: AppleValidationResponse): AppleSubscripti
         cancellationDate = latestReceiptInfo.cancellationDate.toISOString()
     }
 
-    return new AppleSubscription(
+    return new Subscription(
         latestReceiptInfo.originalTransactionId,
         latestReceiptInfo.originalPurchaseDate.toISOString(),
         latestReceiptInfo.expiresDate.toISOString(),
         cancellationDate,
         autoRenewStatus,
         latestReceiptInfo.productId,
-        dateToSecondTimestamp(thirtyMonths(latestReceiptInfo.expiresDate)),
+        null,
         response.latestReceipt,
-        response
+        response.originalResponse,
+        dateToSecondTimestamp(thirtyMonths(latestReceiptInfo.expiresDate))
     )
 }
 
-function sqsRecordToAppleSubscription(record: SQSRecord): Promise<AppleSubscription> {
+function sqsRecordToAppleSubscription(record: SQSRecord): Promise<Subscription> {
     const subRef = JSON.parse(record.body) as AppleSubscriptionReference;
 
     return validateReceipt(subRef.receipt)
