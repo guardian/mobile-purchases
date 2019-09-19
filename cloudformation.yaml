@@ -810,8 +810,7 @@ Resources:
       Threshold: 0
       AlarmActions:
         - Ref: AlarmTopic
-      InsufficientDataActions:
-        - Ref: AlarmTopic
+      TreatMissingData: notBreaching
 
   GoogleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -829,8 +828,7 @@ Resources:
       Threshold: 0
       AlarmActions:
         - Ref: AlarmTopic
-      InsufficientDataActions:
-        - Ref: AlarmTopic
+      TreatMissingData: notBreaching
 
   ExportLambdasRole:
     Type: AWS::IAM::Role
