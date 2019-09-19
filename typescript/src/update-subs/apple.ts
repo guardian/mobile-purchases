@@ -28,7 +28,7 @@ function toAppleSubscription(response: AppleValidationResponse): Subscription {
         latestReceiptInfo.productId,
         null,
         response.latestReceipt,
-        response,
+        response.originalResponse,
         dateToSecondTimestamp(thirtyMonths(latestReceiptInfo.expiresDate))
     )
 }

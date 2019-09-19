@@ -28,6 +28,7 @@ describe("The apple validation service", () => {
                 originalTransactionId: "1234",
                 productId: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
             },
+            originalResponse: appleResponse
         };
 
         expect(toSensiblePayloadFormat(appleResponse, "cmVjZWlwdA==")).toStrictEqual(expected);
@@ -58,6 +59,7 @@ describe("The apple validation service", () => {
                 originalTransactionId: "1234",
                 productId: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
             },
+            originalResponse: appleResponse
         };
 
         expect(toSensiblePayloadFormat(appleResponse, "cmVjZWlwdA==")).toStrictEqual(expected);
@@ -87,6 +89,7 @@ describe("The apple validation service", () => {
                 originalTransactionId: "1234",
                 productId: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
             },
+            originalResponse: appleResponse
         };
 
         expect(toSensiblePayloadFormat(appleResponse, "cmVjZWlwdA==")).toStrictEqual(expected);
@@ -125,6 +128,7 @@ describe("The apple validation service", () => {
                 originalTransactionId: "1235",
                 productId: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
             },
+            originalResponse: appleResponse
         };
 
         expect(toSensiblePayloadFormat(appleResponse, "cmVjZWlwdA==")).toStrictEqual(expected);

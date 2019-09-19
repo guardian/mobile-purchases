@@ -40,7 +40,8 @@ export interface AppleValidationResponse {
     autoRenewStatus: boolean,
     isRetryable: boolean,
     latestReceipt: string,
-    latestReceiptInfo: AppleValidatedReceiptInfo
+    latestReceiptInfo: AppleValidatedReceiptInfo,
+    originalResponse: any
 }
 
 const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
@@ -131,7 +132,8 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
             originalPurchaseDate: msToDate(receiptInfo.original_purchase_date_ms),
             originalTransactionId: receiptInfo.original_transaction_id,
             productId: receiptInfo.product_id,
-        }
+        },
+        originalResponse: response
     }
 }
 
