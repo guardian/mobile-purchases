@@ -3,63 +3,32 @@ import {HTTPResponses} from "../models/apiGatewayHttp";
 import {Subscription, ReadSubscription} from "../models/subscription";
 import {ReadUserSubscription} from "../models/userSubscription";
 import {dynamoMapper} from "../utils/aws"
-import {getUserId, getIdentityToken} from "../utils/guIdentityApi";
+import {getUserId, getAuthToken} from "../utils/guIdentityApi";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {plusDays} from "../utils/dates";
+import {getConfigValue} from "../utils/ssmConfig";
 
-type SubscriptionStatusEnum = "active" | "expired" | "wontRenew"
-
-class SubscriptionStatus {
-   subscriptionId: string;
-   from?: string;
-   to?: string;
-   status: SubscriptionStatusEnum;
-   autoRenewing?: boolean;
-   cancellationTimestamp?: string;
-
-   private getStatus(endTimestamp: string, cancellelationTimestamp?: string) : SubscriptionStatusEnum{
-
-       const now = Date.now()
-
-       if (cancellelationTimestamp === "" || cancellelationTimestamp === undefined)   {
-          return Date.parse(endTimestamp) > now ? "active" : "expired"
-       }
-       else {
-           return "wontRenew"
-       }
-   }
-
-   constructor(subscription: ReadSubscription ) {
-      this.subscriptionId = subscription.subscriptionId;
-      this.from = subscription.startTimestamp;
-      this.to = subscription.endTimestamp;
-      this.status = this.getStatus(subscription.endTimestamp, subscription.cancellationTimestamp);
-      this.autoRenewing = subscription.autoRenewing;
-      this.cancellationTimestamp = subscription.cancellationTimestamp === "" ? undefined : subscription.cancellationTimestamp
-   }
+interface SubscriptionStatus {
+    subscriptionId: string
+    from: string
+    to: string
+    cancellationTimestamp?: string
+    valid: boolean
+    gracePeriod: boolean
+    autoRenewing: boolean
+    productId: string
 }
 
-class SubscriptionStatusResponse {
-    activeSubscriptionIds: string[];
+interface SubscriptionStatusResponse {
     subscriptions: SubscriptionStatus[]
-
-    constructor(subscriptions: ReadSubscription[]) {
-        const now = Date.now();
-        this.activeSubscriptionIds = subscriptions.filter(sub => {
-            let endTime = Date.parse(sub.endTimestamp);
-            return endTime > now
-        }).map(activeSub => activeSub.subscriptionId )
-        this.subscriptions = subscriptions.map( sub => new SubscriptionStatus(sub))
-    }
 }
 
 async function getUserSubscriptionIds(userId: string): Promise<string[]> {
     const subs: string[] = [];
 
-    for await (const sub of dynamoMapper.query({
-                valueConstructor: ReadUserSubscription,
-                keyCondition: {userId: userId}
-            })
-        ) {
+    const subscriptionResults = dynamoMapper.query(ReadUserSubscription, {userId: userId});
+
+    for await (const sub of subscriptionResults) {
         subs.push(sub.subscriptionId)
     }
     return subs
@@ -67,35 +36,79 @@ async function getUserSubscriptionIds(userId: string): Promise<string[]> {
 
 async function getSubscriptions(subscriptionIds: string[]) : Promise<SubscriptionStatusResponse>  {
     const subs: ReadSubscription[] = [];
-    const toGet = subscriptionIds.map( subscriptionId => Object.assign( new ReadSubscription, {subscriptionId: subscriptionId} ) )
+    const toGet = subscriptionIds.map(subscriptionId => new ReadSubscription().setSubscriptionId(subscriptionId));
 
     for await (const sub of dynamoMapper.batchGet(toGet)  ) {
         subs.push(sub)
     }
 
     const sortedSubs = subs.sort((subscriptionA: Subscription, subscriptionB: Subscription) => {
-        const endTimeA = subscriptionA.endTimestamp && Date.parse(subscriptionA.endTimestamp) || 0
-        const endTimeB = subscriptionB.endTimestamp && Date.parse(subscriptionB.endTimestamp) || 0
-        return endTimeA - endTimeB
-    })
-    return new SubscriptionStatusResponse(sortedSubs)
+        const endTimeA = subscriptionA.endTimestamp && Date.parse(subscriptionA.endTimestamp) || 0;
+        const endTimeB = subscriptionB.endTimestamp && Date.parse(subscriptionB.endTimestamp) || 0;
+        return endTimeA - endTimeB;
+    });
+
+    const now = new Date();
+
+    const subscriptionStatuses: SubscriptionStatus[] = sortedSubs.map(sub => {
+        const end = new Date(Date.parse(sub.endTimestamp));
+        const endWithGracePeriod = plusDays(end, 30);
+        const valid: boolean = now.getTime() <= endWithGracePeriod.getTime();
+        const gracePeriod: boolean = now.getTime() > end.getTime() && valid;
+
+        return {
+            subscriptionId: sub.subscriptionId,
+            from: sub.startTimestamp,
+            to: sub.endTimestamp,
+            cancellationTimestamp: sub.cancellationTimestamp,
+            valid: valid,
+            gracePeriod: gracePeriod,
+            autoRenewing: sub.autoRenewing,
+            productId: sub.productId
+        }
+    });
+
+    return {
+        subscriptions: subscriptionStatuses
+    }
 }
 
+async function apiKeyConfig(): Promise<string[]> {
+    // returning an array just in case we get more than one client one day
+    const apiKey = await getConfigValue<string>("user.api-key.0");
+    return [apiKey]
+}
 
 export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-    if(httpRequest.headers && getIdentityToken(httpRequest.headers)) {
-        return getUserId(httpRequest.headers)
-            .then( userId => getUserSubscriptionIds(userId))
-            .then(subIds => getSubscriptions(subIds))
-            .then( subs => {
-                return {statusCode: 200, body: JSON.stringify(subs)};
-            })
-            .catch( error => {
-                console.log(`Error retrieving user subscriptions: ${error}`)
-                return HTTPResponses.INTERNAL_ERROR
-            })
+    try {
+        const apiKeys = await apiKeyConfig();
+        const authToken = getAuthToken(httpRequest.headers);
 
-    } else {
+        let userId: string;
+
+        if (authToken && apiKeys.includes(authToken)) {
+            if (httpRequest.pathParameters && httpRequest.pathParameters["userId"]) {
+                userId = httpRequest.pathParameters["userId"];
+            } else {
+                return HTTPResponses.INVALID_REQUEST;
+            }
+        } else {
+            const response = await getUserId(httpRequest.headers);
+            if (response) {
+                userId = response;
+            } else {
+                return HTTPResponses.UNAUTHORISED;
+            }
+        }
+
+        const userSubscriptionIds = await getUserSubscriptionIds(userId);
+        const subscriptionStatuses = await getSubscriptions(userSubscriptionIds);
+
+        return {statusCode: 200, body: JSON.stringify(subscriptionStatuses)};
+
+    } catch (error) {
+        console.log(`Error retrieving user subscriptions: ${error}`);
         return HTTPResponses.INTERNAL_ERROR
     }
+
 }
