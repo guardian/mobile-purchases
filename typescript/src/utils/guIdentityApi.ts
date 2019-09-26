@@ -1,5 +1,6 @@
 import {HttpRequestHeaders} from "../models/apiGatewayHttp";
 import * as restm from "typed-rest-client/RestClient";
+import {Option} from "./option";
 
 const restClient = new restm.RestClient('guardian-mobile-purchases');
 
@@ -12,20 +13,19 @@ interface IdentityResponse {
     user: UserId
 }
 
-export function getIdentityToken(headers: HttpRequestHeaders): string {
+export function getAuthToken(headers: HttpRequestHeaders): string {
     return (headers["Authorization"] || headers["authorization"]).replace("Bearer ", "");
 }
 
-export function getUserId(headers: HttpRequestHeaders): Promise<string> {
+export async function getUserId(headers: HttpRequestHeaders): Promise<Option<string>> {
     const url = "https://id.guardianapis.com/user/me";
-    const identityToken = getIdentityToken(headers);
+    const identityToken = getAuthToken(headers);
 
-    return restClient.get<IdentityResponse>(url, {additionalHeaders: {Authorization: `Bearer ${identityToken}`}})
-        .then( res => {
-            if(res.result) {
-                return res.result.user.id
-            } else {
-                throw Error("No user id found")
-            }
-        })
+    const response = await restClient.get<IdentityResponse>(url, {additionalHeaders: {Authorization: `Bearer ${identityToken}`}})
+
+    if(response.result) {
+        return response.result.user.id
+    } else {
+        return null;
+    }
 }

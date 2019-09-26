@@ -261,7 +261,20 @@ Resources:
                 "200":
                   "description": "200 response"
 
-          "/subscriptions":
+          "/user/subscriptions/me":
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSubscriptionsLambda.Arn}/invocations
+              consumes: [ application/json ]
+              produces: [ application/json ]
+              responses:
+                "200":
+                  "description": "200 response"
+
+
+          "/user/subscriptions/{userId}":
             get:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -756,10 +769,16 @@ Resources:
       MemorySize: 128
       Timeout: 45
       Events:
-        PostApi:
+        DirectAccess:
           Type: Api
           Properties:
-            Path: "/subscriptions"
+            Path: "/user/subscriptions/me"
+            Method: GET
+            RestApiId: !Ref MobilePuchasesApi
+        InternalAccess:
+          Type: Api
+          Properties:
+            Path: "/user/subscriptions/{userId}"
             Method: GET
             RestApiId: !Ref MobilePuchasesApi
       Tags:
