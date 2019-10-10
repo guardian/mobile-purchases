@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
-Description: Validates mobile purchases
+Description: Exports mobile purchases data
 Parameters:
   Stack:
     Description: Stack name
@@ -29,6 +29,12 @@ Parameters:
   SubscriptionEventsExportBucket:
     Type: String
     Description: The name of the export events bucket
+  GoogleSubscriptionHistoryExportBucket:
+    Type: String
+    Description: The name of the export bucket containing the subscription history from Google
+  AppleSubscriptionHistoryExportBucket:
+    Type: String
+    Description: The name of the export bucket containing the subscription history from Apple
 
 Resources:
   ExportLambdasRole:
@@ -164,3 +170,61 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
+
+  GoogleHistoricalSubscriptionsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-google-historical-subscriptions
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt GoogleHistoricalSubscriptionsDlq.Arn
+        maxReceiveCount: 8
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+
+  GoogleHistoricalSubscriptionsDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-google-historical-subscriptions-dlq
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+
+  AppleHistoricalSubscriptionsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-apple-historical-subscriptions
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AppleHistoricalSubscriptionsDlq.Arn
+        maxReceiveCount: 8
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+
+  AppleHistoricalSubscriptionsDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-apple-historical-subscriptions-dlq
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
