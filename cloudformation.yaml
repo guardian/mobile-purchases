@@ -725,7 +725,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
-          GoogleHistoricalUrl: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-google-historical-subscriptions
+          HistoricalQueueUrl: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-google-historical-subscriptions
       Description: Consomes subscription data updates from google playstore from sqs and stores them in dynamo
       Handler: google-update-subscriptions.handler
       MemorySize: 512
@@ -791,7 +791,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
-          AppleHistoricalUrl: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-apple-historical-subscriptions
+          HistoricalQueueUrl: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-apple-historical-subscriptions
       Description: Consumes subscription data updates from app store from sqs and stores them in dynamo
       Handler: apple-update-subscriptions.handler
       MemorySize: 512

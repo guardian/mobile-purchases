@@ -34,21 +34,18 @@ function putSubscription(subscription: Subscription): Promise<Subscription> {
 }
 
 async function queueHistoricalSubscription(subscription: Subscription): Promise<void> {
-    if (subscription.googlePayload) {
-        const queueUrl = process.env.GoogleHistoricalUrl;
-        if (queueUrl === undefined) throw new Error("No GoogleHistoricalUrl env parameter provided");
-        await sendToSqs(queueUrl, subscription.googlePayload);
-    }
-    if (subscription.applePayload) {
-        const queueUrl = process.env.AppleHistoricalUrl;
-        if (queueUrl === undefined) throw new Error("No AppleHistoricalUrl env parameter provided");
-        await sendToSqs(queueUrl, subscription.applePayload);
+    const queueUrl = process.env.HistoricalQueueUrl;
+    if (queueUrl === undefined) throw new Error("No HistoricalQueueUrl env parameter provided");
+
+    const payload = subscription.googlePayload || subscription.applePayload;
+    if (payload) {
+        await sendToSqs(queueUrl, payload);
     }
 }
 
-export async function parseAndStoreSubscriptionUpdate (
+export async function parseAndStoreSubscriptionUpdate(
     sqsRecord: SQSRecord,
-    fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription>,
+    fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription>
 ) : Promise<String> {
     try {
         const subscription = await fetchSubscriberDetails(sqsRecord);
@@ -70,5 +67,4 @@ export async function parseAndStoreSubscriptionUpdate (
            throw error;
         }
     }
-
 }
