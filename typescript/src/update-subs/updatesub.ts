@@ -39,7 +39,11 @@ async function queueHistoricalSubscription(subscription: Subscription): Promise<
 
     const payload = subscription.googlePayload || subscription.applePayload;
     if (payload) {
-        await sendToSqs(queueUrl, payload);
+        await sendToSqs(queueUrl, {
+            subscriptionId: subscription.subscriptionId,
+            snapshotDate: (new Date()).toISOString(),
+            payload
+        });
     }
 }
 
