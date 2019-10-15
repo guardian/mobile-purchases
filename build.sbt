@@ -71,6 +71,7 @@ lazy val root = project
     riffRaffArtifactResources += file("tsc-target/user-subscriptions.zip") -> s"mobile-purchases-user-subscriptions/user-subscriptions.zip",
     riffRaffArtifactResources += file("tsc-target/export-subscription-tables.zip") -> s"mobile-purchases-export-subscription-tables/export-subscription-tables.zip",
     riffRaffArtifactResources += file("tsc-target/export-subscription-events-table.zip") -> s"mobile-purchases-export-subscription-events-table/export-subscription-events-table.zip",
+    riffRaffArtifactResources += file("tsc-target/export-historical-data.zip") -> s"mobile-purchases-export-historical-data/export-historical-data.zip",
     riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",
   )
 
