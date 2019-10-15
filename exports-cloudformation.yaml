@@ -228,3 +228,64 @@ Resources:
           Value: !Ref Stack
         - Key: App
           Value: !Ref App
+
+  ExportAppleHistoricalSubscriptionsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: export-historical-data.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-export-historical-data/export-historical-data.zip
+      FunctionName: !Sub ${App}-export-historical-data-${Stage}
+      Role: !GetAtt ExportLambdasRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          ExportBucket: !Ref AppleSubscriptionHistoryExportBucket
+      Description: Export the historical Apple subscriptions to the data lake
+      MemorySize: 512
+      Timeout: 900
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(3 0 1/1 * ? *)
+          Input
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+
+  ExportGoogleHistoricalSubscriptionsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: export-historical-data.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-export-historical-data/export-historical-data.zip
+      FunctionName: !Sub ${App}-export-historical-data-${Stage}
+      Role: !GetAtt ExportLambdasRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          ExportBucket: !Ref GoogleSubscriptionHistoryExportBucket
+      Description: Export the historical Google subscriptions to the data lake
+      MemorySize: 512
+      Timeout: 900
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(3 0 1/1 * ? *)
+          Input
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
