@@ -1,0 +1,166 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Validates mobile purchases
+Parameters:
+  Stack:
+    Description: Stack name
+    Type: String
+  App:
+    Description: Application name
+    Type: String
+  Stage:
+    Description: Stage name
+    Type: String
+    AllowedValues:
+      - CODE
+      - PROD
+  DeployBucket:
+    Description: Bucket where RiffRaff uploads artifacts on deploy
+    Type: String
+  AlarmTopic:
+    Type: String
+    Description: The ARN of the SNS topic to send all the cloudwatch alarms to
+  SubscriptionExportBucket:
+    Type: String
+    Description: The name of the export subscription bucket
+  UserSubscriptionExportBucket:
+    Type: String
+    Description: The name of the export user subscription bucket
+  SubscriptionEventsExportBucket:
+    Type: String
+    Description: The name of the export events bucket
+
+Resources:
+  ExportLambdasRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - cloudwatch:putMetricData
+              Resource: "*"
+        - PolicyName: dynamo
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - "dynamodb:Scan"
+                - "dynamodb:Query"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events-v2/*
+        - PolicyName: s3
+          PolicyDocument:
+            Statement:
+              Action:
+                - s3:PutObject
+                - s3:PutObjectAcl
+              Effect: Allow
+              Resource:
+                - !Sub arn:aws:s3:::${SubscriptionExportBucket}/*
+                - !Sub arn:aws:s3:::${UserSubscriptionExportBucket}/*
+                - !Sub arn:aws:s3:::${SubscriptionEventsExportBucket}/*
+
+  ExportSubscriptionTableLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: export-subscription-tables.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
+      FunctionName: !Sub ${App}-export-subscription-table-${Stage}
+      Role: !GetAtt ExportLambdasRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          ExportBucket: !Ref SubscriptionExportBucket
+          ClassName: ReadSubscription
+      Description: Export subscription table to the datalake
+      MemorySize: 512
+      Timeout: 900
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(3 0 1/1 * ? *)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  ExportUserSubscriptionTableLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: export-subscription-tables.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
+      FunctionName: !Sub ${App}-export-user-subscription-table-${Stage}
+      Role: !GetAtt ExportLambdasRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          ExportBucket: !Ref UserSubscriptionExportBucket
+          ClassName: ReadUserSubscription
+      Description: Export the user subscription table to the datalake
+      MemorySize: 512
+      Timeout: 900
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(3 0 1/1 * ? *)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  ExportUserSubscriptionEventsTableLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: export-subscription-events-table.handler
+      Runtime: nodejs10.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-events-table/export-subscription-events-table.zip
+      FunctionName: !Sub ${App}-export-subscription-events-table-${Stage}
+      Role: !GetAtt ExportLambdasRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          ExportBucket: !Ref SubscriptionEventsExportBucket
+      Description: Export the subscription event table to the datalake
+      MemorySize: 512
+      Timeout: 900
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(3 0 1/1 * ? *)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
