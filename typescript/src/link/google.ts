@@ -10,7 +10,7 @@ type GoogleSubscription = {
 }
 
 type GoogleLinkPayload = {
-    platform: Platform.Android,
+    platform: Platform.Android | Platform.AndroidPuzzles | Platform.AndroidEdition,
     subscriptions: GoogleSubscription[]
 }
 
