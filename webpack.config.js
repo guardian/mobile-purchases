@@ -55,5 +55,6 @@ module.exports = [
     deleteLink,
     userSubscriptions,
     exportSubs,
-    exportEvents
+    exportEvents,
+    exportHistoricalData
 ];
