@@ -1,6 +1,7 @@
 import {SQSRecord} from 'aws-lambda'
 import {Subscription} from '../models/subscription';
-import {dynamoMapper, sendToSqs} from "../utils/aws";
+import {dynamoMapper} from "../utils/aws";
+import {ONE_YEAR_IN_SECONDS} from "../pubsub/pubsub";
 import {ProcessingError} from "../models/processingError";
 
 export function makeCancellationTime(cancellationTime: string) : string {
@@ -29,46 +30,33 @@ export class SubscriptionUpdate {
     }
 }
 
-function putSubscription(subscription: Subscription): Promise<Subscription> {
+function putSubscription(subscription: Subscription): Promise<Subscription>  {
     return dynamoMapper.put({item: subscription}).then(result => result.item)
 }
 
-async function queueHistoricalSubscription(subscription: Subscription): Promise<void> {
-    const queueUrl = process.env.HistoricalQueueUrl;
-    if (queueUrl === undefined) throw new Error("No HistoricalQueueUrl env parameter provided");
-
-    const payload = subscription.googlePayload || subscription.applePayload;
-    if (payload) {
-        await sendToSqs(queueUrl, {
-            subscriptionId: subscription.subscriptionId,
-            snapshotDate: (new Date()).toISOString(),
-            payload
-        });
-    }
-}
-
-export async function parseAndStoreSubscriptionUpdate(
+export async function parseAndStoreSubscriptionUpdate (
     sqsRecord: SQSRecord,
-    fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription>
+    fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription>,
 ) : Promise<String> {
-    try {
-        const subscription = await fetchSubscriberDetails(sqsRecord);
-        await putSubscription(subscription);
-        await queueHistoricalSubscription(subscription);
-        return "OK"
-    } catch (error) {
-        if (error instanceof ProcessingError) {
-           console.error("Error processing the subscription update", error);
-           if (error.shouldRetry) {
-               console.error("Will throw an exception to retry this message");
+    return fetchSubscriberDetails(sqsRecord)
+        .then(payload => {
+            putSubscription(payload);
+            return "OK"
+        })
+        .catch(error => {
+            if (error instanceof ProcessingError) {
+               console.error("Error processing the subscription update", error);
+               if (error.shouldRetry) {
+                   console.error("Will throw an exception to retry this message");
+                   throw error;
+               }  else {
+                   console.error("The error wasn't retryable, giving up.");
+                   return "Error, giving up"
+               }
+            } else {
+               console.error("Unexpected error, will throw to retry: ", error);
                throw error;
-           }  else {
-               console.error("The error wasn't retryable, giving up.");
-               return "Error, giving up"
-           }
-        } else {
-           console.error("Unexpected error, will throw to retry: ", error);
-           throw error;
-        }
-    }
+            }
+        });
+
 }

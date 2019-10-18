@@ -38,7 +38,7 @@ export const ssm: SSM  = new SSM({
 });
 
 
-export function sendToSqs(queueUrl: string, event: any): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+export function sendToSqsImpl(queueUrl: string, event: any): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
     return sqs.sendMessage({
         QueueUrl: queueUrl,
         MessageBody: JSON.stringify(event)
