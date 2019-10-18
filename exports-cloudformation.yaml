@@ -237,7 +237,7 @@ Resources:
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-historical-data/export-historical-data.zip
-      FunctionName: !Sub ${App}-export-historical-data-${Stage}
+      FunctionName: !Sub ${App}-export-apple-historical-data-${Stage}
       Role: !GetAtt ExportLambdasRole.Arn
       Environment:
         Variables:
@@ -253,7 +253,6 @@ Resources:
           Type: Schedule
           Properties:
             Schedule: cron(3 0 1/1 * ? *)
-          Input
       Tags:
         Stage: !Ref Stage
         Stack: !Ref Stack
@@ -268,7 +267,7 @@ Resources:
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-historical-data/export-historical-data.zip
-      FunctionName: !Sub ${App}-export-historical-data-${Stage}
+      FunctionName: !Sub ${App}-export-google-historical-data-${Stage}
       Role: !GetAtt ExportLambdasRole.Arn
       Environment:
         Variables:
@@ -284,7 +283,6 @@ Resources:
           Type: Schedule
           Properties:
             Schedule: cron(3 0 1/1 * ? *)
-          Input
       Tags:
         Stage: !Ref Stage
         Stack: !Ref Stack
