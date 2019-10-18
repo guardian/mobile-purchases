@@ -4,7 +4,7 @@ import {SubscriptionEvent} from "../models/subscriptionEvent";
 import Sqs from 'aws-sdk/clients/sqs';
 import {AWSError} from "aws-sdk";
 import {PromiseResult} from "aws-sdk/lib/request";
-import {sqs, dynamoMapper, sendToSqsImpl} from "../utils/aws";
+import {sqs, dynamoMapper, sendToSqs} from "../utils/aws";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
 
@@ -29,7 +29,7 @@ export async function parseStoreAndSend<Payload, SqsEvent>(
     toDynamoEvent: (payload: Payload) => SubscriptionEvent,
     toSqsEvent: (payload: Payload) => SqsEvent,
     storeInDynamo: (event: SubscriptionEvent) => Promise<SubscriptionEvent> = storeInDynamoImpl,
-    sendToSqs: (queueUrl: string, event: SqsEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqsImpl,
+    sendToSqsFunction: (queueUrl: string, event: SqsEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
 ): Promise<APIGatewayProxyResult> {
     const secret = process.env.Secret;
     return catchingServerErrors(async () => {
@@ -46,7 +46,7 @@ export async function parseStoreAndSend<Payload, SqsEvent>(
             const dynamoPromise = storeInDynamo(dynamoEvent);
 
             const sqsEvent = toSqsEvent(notification);
-            const sqsPromise = sendToSqs(queueUrl, sqsEvent);
+            const sqsPromise = sendToSqsFunction(queueUrl, sqsEvent);
 
             return Promise.all([sqsPromise, dynamoPromise])
                 .then(value => HTTPResponses.OK)
