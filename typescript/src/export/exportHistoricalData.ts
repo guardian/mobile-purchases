@@ -14,9 +14,7 @@ async function recursivelyFetchSqsMessages(sqsUrl: string, handleMsg: (message: 
     };
     const sqsResp = await sqs.receiveMessage(request).promise();
     if (sqsResp.Messages && sqsResp.Messages.length > 0) {
-        sqsResp.Messages.forEach(sqsMessage => {
-            handleMsg(sqsMessage);
-        });
+        sqsResp.Messages.forEach(handleMsg);
         return await recursivelyFetchSqsMessages(sqsUrl, handleMsg)
     }
 }
@@ -51,7 +49,7 @@ export async function handler(): Promise<any> {
     if (!bucket) throw new Error('Variable ExportBucket must be set');
 
     const sqsUrl = process.env['SqsUrl'];
-    if (!sqsUrl) throw new Error('No sqs url set, check the cloudwatch event configuration');
+    if (!sqsUrl) throw new Error('Variable SqsUrl must be set');
 
     let zippedStream = zlib.createGzip();
 
