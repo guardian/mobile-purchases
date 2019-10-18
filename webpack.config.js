@@ -41,7 +41,6 @@ const googleUpdateSub = entryPoint('update-subs/google.ts', 'google-update-subsc
 const appleUpdateSub = entryPoint('update-subs/apple.ts', 'apple-update-subscriptions.js');
 const exportSubs = entryPoint('export/exportSubscriptions.ts', 'export-subscription-tables.js');
 const exportEvents = entryPoint('export/exportEvents.ts', 'export-subscription-events-table.js');
-const exportHistoricalData = entryPoint('export/exportHistoricalData.ts', 'export-historical-data.js');
 
 module.exports = [
     googlePubSub,
