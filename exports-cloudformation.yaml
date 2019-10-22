@@ -81,6 +81,16 @@ Resources:
                 - !Sub arn:aws:s3:::${SubscriptionExportBucket}/*
                 - !Sub arn:aws:s3:::${UserSubscriptionExportBucket}/*
                 - !Sub arn:aws:s3:::${SubscriptionEventsExportBucket}/*
+                - !Sub arn:aws:s3:::${GoogleSubscriptionHistoryExportBucket}/*
+                - !Sub arn:aws:s3:::${AppleSubscriptionHistoryExportBucket}/*
+        - PolicyName: sqs
+          PolicyDocument:
+            Statement:
+              Action: sqs:*
+              Effect: Allow
+              Resource:
+                - !GetAtt AppleHistoricalSubscriptionsQueue.Arn
+                - !GetAtt GoogleHistoricalSubscriptionsQueue.Arn
 
   ExportSubscriptionTableLambda:
     Type: AWS::Serverless::Function
@@ -245,6 +255,7 @@ Resources:
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
           ExportBucket: !Ref AppleSubscriptionHistoryExportBucket
+          SqsUrl: !Ref AppleHistoricalSubscriptionsQueue
       Description: Export the historical Apple subscriptions to the data lake
       MemorySize: 512
       Timeout: 900
@@ -275,6 +286,7 @@ Resources:
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
           ExportBucket: !Ref GoogleSubscriptionHistoryExportBucket
+          SqsUrl: !Ref GoogleHistoricalSubscriptionsQueue
       Description: Export the historical Google subscriptions to the data lake
       MemorySize: 512
       Timeout: 900
