@@ -108,7 +108,7 @@ deployments:
   mobile-purchases-exports-cloudformation:
     type: cloud-formation
     parameters:
-      templatePath: cloudformation.yaml
+      templatePath: exports-cloudformation.yaml
 
   mobile-purchases-export-historical-data:
     template: lambda
