@@ -4,7 +4,7 @@ regions: [eu-west-1]
 templates:
   lambda:
     type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation]
+    dependencies: [mobile-purchases-cloudformation, mobile-purchases-exports-cloudformation]
     parameters:
       bucket: mobile-dist
       prefixStack: false
