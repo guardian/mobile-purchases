@@ -119,7 +119,6 @@ Resources:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
 
-
         - PolicyName: Sqs
           PolicyDocument:
             Statement:
@@ -128,6 +127,8 @@ Resources:
               Resource:
                 - !GetAtt GoogleSubscriptionsQueue.Arn
                 - !GetAtt AppleSubscriptionsQueue.Arn
+                - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-historical-subscriptions
+                - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-google-historical-subscriptions
         - PolicyName: Kms
           PolicyDocument:
             Statement:
@@ -724,6 +725,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
+          HistoricalQueueUrl: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-google-historical-subscriptions
       Description: Consomes subscription data updates from google playstore from sqs and stores them in dynamo
       Handler: google-update-subscriptions.handler
       MemorySize: 512
@@ -789,7 +791,8 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
-      Description: Consomes subscription data updates from app store from sqs and stores them in dynamo
+          HistoricalQueueUrl: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-apple-historical-subscriptions
+      Description: Consumes subscription data updates from app store from sqs and stores them in dynamo
       Handler: apple-update-subscriptions.handler
       MemorySize: 512
       Role: !GetAtt MobilePurchasesLambdasRole.Arn

@@ -1,6 +1,6 @@
 const path = require('path');
 
-const config = {
+module.exports = {
     devtool: 'inline-cheap-source-map',
     module: {
         rules: [
@@ -15,44 +15,25 @@ const config = {
         extensions: [ '.tsx', '.ts', '.js' ]
     },
     target: 'node',
-    mode: 'production'
+    mode: 'production',
+    entry: {
+        "google-pubsub": "./typescript/src/pubsub/google.ts",
+        "apple-pubsub": "./typescript/src/pubsub/apple.ts",
+        "google-subscription-status": "./typescript/src/subscription-status/googleSubStatus.ts",
+        "apple-subscription-status": "./typescript/src/subscription-status/appleSubStatus.ts",
+        "google-link-user-subscription": "./typescript/src/link/google.ts",
+        "apple-link-user-subscription": "./typescript/src/link/apple.ts",
+        "delete-user-subscription": "./typescript/src/link/deleteLink.ts",
+        "user-subscriptions": "./typescript/src/user/user.ts",
+        "google-update-subscriptions": "./typescript/src/update-subs/google.ts",
+        "apple-update-subscriptions": "./typescript/src/update-subs/apple.ts",
+        "export-subscription-tables": "./typescript/src/export/exportSubscriptions.ts",
+        "export-subscription-events-table": "./typescript/src/export/exportEvents.ts",
+        "export-historical-data": "./typescript/src/export/exportHistoricalData.ts",
+    },
+    output: {
+        filename: '[name].js',
+        path: path.resolve(__dirname, 'tsc-target'),
+        libraryTarget: 'commonjs2'
+    }
 };
-
-function entryPoint(sourceFile, outputFile) {
-    return Object.assign({}, config, {
-        entry: `./typescript/src/${sourceFile}`,
-        output: {
-            filename: outputFile,
-            path: path.resolve(__dirname, 'tsc-target'),
-            libraryTarget: 'commonjs2'
-        }
-    });
-}
-
-const googlePubSub = entryPoint('pubsub/google.ts', 'google-pubsub.js');
-const applePubSub = entryPoint('pubsub/apple.ts', 'apple-pubsub.js');
-const googleSubStatus = entryPoint('subscription-status/googleSubStatus.ts', 'google-subscription-status.js');
-const appleSubStatus = entryPoint('subscription-status/appleSubStatus.ts', 'apple-subscription-status.js');
-const googleUserLink = entryPoint('link/google.ts', 'google-link-user-subscription.js');
-const appleUserLink = entryPoint('link/apple.ts', 'apple-link-user-subscription.js');
-const deleteLink = entryPoint('link/deleteLink.ts', 'delete-user-subscription.js');
-const userSubscriptions = entryPoint('user/user.ts', 'user-subscriptions.js');
-const googleUpdateSub = entryPoint('update-subs/google.ts', 'google-update-subscriptions.js');
-const appleUpdateSub = entryPoint('update-subs/apple.ts', 'apple-update-subscriptions.js');
-const exportSubs = entryPoint('export/exportSubscriptions.ts', 'export-subscription-tables.js');
-const exportEvents = entryPoint('export/exportEvents.ts', 'export-subscription-events-table.js');
-
-module.exports = [
-    googlePubSub,
-    applePubSub,
-    googleSubStatus,
-    appleSubStatus,
-    googleUpdateSub,
-    appleUpdateSub,
-    appleUserLink,
-    googleUserLink,
-    deleteLink,
-    userSubscriptions,
-    exportSubs,
-    exportEvents
-];
