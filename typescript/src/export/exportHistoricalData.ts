@@ -44,7 +44,7 @@ async function deleteAllSqsMessages(sqsUrl: string, receiptHandleToDelete: strin
     }
 }
 
-export async function handler(): Promise<any> {
+export async function handler(params: {date: string}): Promise<any> {
     const bucket = process.env['ExportBucket'];
     if (!bucket) throw new Error('Variable ExportBucket must be set');
 
@@ -53,7 +53,7 @@ export async function handler(): Promise<any> {
 
     let zippedStream = zlib.createGzip();
 
-    const yesterday = plusDays(new Date(), -1).toISOString().substr(0,10);
+    const yesterday = params.date || plusDays(new Date(), -1).toISOString().substr(0,10);
     const prefix = (Stage === "PROD") ? "data" : "code-data";
     const randomString = Math.random().toString(36).substring(10);
     const filename = `${prefix}/date=${yesterday}/${yesterday}-${randomString}.json.gz`;
