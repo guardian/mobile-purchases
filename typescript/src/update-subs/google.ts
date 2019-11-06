@@ -51,9 +51,6 @@ export async function handler(event: SQSEvent) {
     const promises = event.Records.map(record => parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse));
     
     return Promise.all(promises)
-        .then(value  => {
-            console.log(`Processed ${event.Records.length} subscriptions`);
-            return "OK";
-        })
+        .then(_  => "OK")
 
 }

@@ -44,8 +44,5 @@ export async function handler(event: SQSEvent): Promise<String> {
     const promises = event.Records.map( record => parseAndStoreSubscriptionUpdate(record, sqsRecordToAppleSubscription));
 
     return Promise.all(promises)
-        .then( value => {
-            console.log(`Processed ${event.Records.length} subscriptions`);
-            return "OK";
-        });
+        .then( _ => "OK");
 }
