@@ -49,12 +49,13 @@ async function queueHistoricalSubscription(subscription: Subscription): Promise<
 
 export async function parseAndStoreSubscriptionUpdate(
     sqsRecord: SQSRecord,
-    fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription>
+    fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription[]>
 ) : Promise<String> {
     try {
-        const subscription = await fetchSubscriberDetails(sqsRecord);
-        await putSubscription(subscription);
-        await queueHistoricalSubscription(subscription);
+        const subscriptions = await fetchSubscriberDetails(sqsRecord);
+        await Promise.all(subscriptions.map(putSubscription));
+        await Promise.all(subscriptions.map(queueHistoricalSubscription));
+        console.log(`Processed ${subscriptions.length} subscriptions`);
         return "OK"
     } catch (error) {
         if (error instanceof ProcessingError) {

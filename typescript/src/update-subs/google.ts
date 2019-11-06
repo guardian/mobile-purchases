@@ -20,7 +20,7 @@ interface GoogleResponseBody {
 
 const restClient = new restm.RestClient('guardian-mobile-purchases');
 
-async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription> {
+async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> {
 
     const sub = JSON.parse(record.body) as GoogleSubscriptionReference;
     const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName);
@@ -30,7 +30,7 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription> {
 
     if(response.result) {
         const expiryDate = new Date(Number.parseInt(response.result.expiryTimeMillis));
-        return new Subscription(
+        return [new Subscription(
             sub.purchaseToken,
             new Date(Number.parseInt(response.result.startTimeMillis)).toISOString(),
             expiryDate.toISOString(),
@@ -41,7 +41,7 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription> {
             undefined,
             null,
             dateToSecondTimestamp(thirtyMonths(expiryDate)),
-        );
+        )];
     } else {
         throw new ProcessingError("There was no data in google response", true);
     }
@@ -51,9 +51,6 @@ export async function handler(event: SQSEvent) {
     const promises = event.Records.map(record => parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse));
     
     return Promise.all(promises)
-        .then(value  => {
-            console.log(`Processed ${event.Records.length} subscriptions`);
-            return "OK";
-        })
+        .then(_  => "OK")
 
 }

@@ -33,19 +33,16 @@ function toAppleSubscription(response: AppleValidationResponse): Subscription {
     )
 }
 
-function sqsRecordToAppleSubscription(record: SQSRecord): Promise<Subscription> {
+function sqsRecordToAppleSubscription(record: SQSRecord): Promise<Subscription[]> {
     const subRef = JSON.parse(record.body) as AppleSubscriptionReference;
 
     return validateReceipt(subRef.receipt)
-        .then(toAppleSubscription)
+        .then(subs => subs.map(toAppleSubscription))
 }
 
 export async function handler(event: SQSEvent): Promise<String> {
     const promises = event.Records.map( record => parseAndStoreSubscriptionUpdate(record, sqsRecordToAppleSubscription));
 
     return Promise.all(promises)
-        .then( value => {
-            console.log(`Processed ${event.Records.length} subscriptions`);
-            return "OK";
-        });
+        .then( _ => "OK");
 }
