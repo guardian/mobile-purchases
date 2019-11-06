@@ -55,7 +55,8 @@ export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGat
 
     try {
         const validationResults = await Promise.all(payload.subscriptions.map(sub => validateReceipt(sub.receipt)));
-        const responsePayload = JSON.stringify(validationResults.map(toResponse));
+        const flattenedValidationResults = validationResults.reduce((agg:AppleValidationResponse[], value) => agg.concat(value), []);
+        const responsePayload = JSON.stringify(flattenedValidationResults.map(toResponse));
         return {statusCode: 200, body: responsePayload};
     } catch (e) {
         console.log(`Unable to validate receipt(s)`, e);

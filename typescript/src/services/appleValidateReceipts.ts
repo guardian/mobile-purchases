@@ -84,7 +84,7 @@ function checkResponseStatus(response: AppleValidationServerResponse): AppleVali
     return response;
 }
 
-export function toSensiblePayloadFormat(response: AppleValidationServerResponse, receipt: string): AppleValidationResponse {
+export function toSensiblePayloadFormat(response: AppleValidationServerResponse, receipt: string): AppleValidationResponse[] {
 
     function expiryDate(receiptServerInfo: AppleValidatedReceiptServerInfo): number {
         if (receiptServerInfo.expires_date_ms) {
@@ -94,24 +94,29 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
         }
     }
 
-    function getReceiptInfo(): AppleValidatedReceiptServerInfo {
+    function getReceiptInfo(): AppleValidatedReceiptServerInfo[] {
         if (response.latest_receipt_info) {
             if (Array.isArray(response.latest_receipt_info)) {
                 const latestReceipt = response.latest_receipt_info as AppleValidatedReceiptServerInfo[];
-                if (latestReceipt.length == 1) {
-                    return latestReceipt[0];
-                } else if (latestReceipt.length > 1) {
-                    return latestReceipt.sort((r1, r2) => expiryDate(r2) - expiryDate(r1))[0]
-                } else {
+                if (latestReceipt.length == 0) {
                     console.error(`Invalid validation response, empty receipt info array`);
                     throw new ProcessingError(`Invalid validation response, empty receipt info array`);
                 }
+
+                const deDupedReceipts = latestReceipt
+                    .sort((r1, r2) => expiryDate(r1) - expiryDate(r2)) // most recent last
+                    .reduce((acc: {[key: string]: AppleValidatedReceiptServerInfo}, current) => {
+                        acc[current.original_transaction_id] = current;
+                        return acc;
+                    }, {});
+
+                return Object.values(deDupedReceipts)
             } else {
-                return response.latest_receipt_info as AppleValidatedReceiptServerInfo;
+                return [response.latest_receipt_info as AppleValidatedReceiptServerInfo];
             }
         } else {
             if (response.latest_expired_receipt_info) {
-                return response.latest_expired_receipt_info
+                return [response.latest_expired_receipt_info];
             } else {
                 // should be impossible as this will be caught by checkResponseStatus
                 console.error(`No receipt info`);
@@ -120,9 +125,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
         }
     }
 
-    const receiptInfo = getReceiptInfo();
-
-    return {
+    return getReceiptInfo().map( receiptInfo => ({
         autoRenewStatus: (response.auto_renew_status === 1),
         isRetryable: response["is-retryable"] === true,
         latestReceipt: response.latest_receipt || receipt,
@@ -134,10 +137,10 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
             productId: receiptInfo.product_id,
         },
         originalResponse: response
-    }
+    }))
 }
 
-export function validateReceipt(receipt: string): Promise<AppleValidationResponse> {
+export function validateReceipt(receipt: string): Promise<AppleValidationResponse[]> {
     return callValidateReceipt(receipt)
         .then(response => response.json())
         .then(body => body as AppleValidationServerResponse)
