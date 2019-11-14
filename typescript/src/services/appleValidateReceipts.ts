@@ -8,7 +8,7 @@ import {Option} from "../utils/option";
 
 export interface AppleValidatedReceiptServerInfo {
     cancellation_date_ms?: string,
-    expires_date: string,
+    expires_date?: string,
     expires_date_ms?: string,
     original_purchase_date_ms: string,
     original_transaction_id: string
@@ -89,8 +89,10 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
     function expiryDate(receiptServerInfo: AppleValidatedReceiptServerInfo): number {
         if (receiptServerInfo.expires_date_ms) {
             return Number.parseInt(receiptServerInfo.expires_date_ms);
-        } else {
+        } else if (receiptServerInfo.expires_date) {
             return Number.parseInt(receiptServerInfo.expires_date);
+        } else {
+            throw new ProcessingError("Receipt has no expiry, this should have been filtered by now", false);
         }
     }
 
@@ -103,7 +105,10 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
                     throw new ProcessingError(`Invalid validation response, empty receipt info array`);
                 }
 
-                const deDupedReceipts = latestReceipt
+                // only keep receipts that have an expiry date, those who don't aren't subscriptions or are pre 2011
+                const filteredLatestReceipt = latestReceipt.filter(receipt => receipt.expires_date || receipt.expires_date_ms);
+
+                const deDupedReceipts = filteredLatestReceipt
                     .sort((r1, r2) => expiryDate(r1) - expiryDate(r2)) // most recent last
                     .reduce((acc: {[key: string]: AppleValidatedReceiptServerInfo}, current) => {
                         acc[current.original_transaction_id] = current;
