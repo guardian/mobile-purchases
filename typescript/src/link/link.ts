@@ -18,22 +18,26 @@ async function enqueueUnstoredPurchaseToken(subChecks: SubscriptionCheckData[]):
 
     const dynamoResult = dynamoMapper.batchGet(subChecks.map(sub => new ReadSubscription().setSubscriptionId(sub.subscriptionId)));
 
-    const refsToSend = subChecks.map(s => s.subscriptionId);
+    type IndexedSubscriptionCheckData = {[id: string]: SubscriptionCheckData};
+    const indexedReferences: IndexedSubscriptionCheckData = subChecks.reduce((agg, value) => {
+        agg[value.subscriptionId] = value;
+        return agg
+    }, {} as IndexedSubscriptionCheckData);
 
+    // eliminate all known subscriptions
     for await (const result of dynamoResult) {
-        const index = refsToSend.indexOf(result.subscriptionId);
-        if (index > -1) {
-            refsToSend.splice(index, 1);
-        }
+        delete indexedReferences[result.subscriptionId];
     }
+
+    const refsToSend = Object.values(indexedReferences).map((value) => value.subscriptionReference);
 
     if (refsToSend.length > 0) {
         const queueUrl = process.env.QueueUrl;
         if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
 
-        const sqsMessages: SendMessageBatchRequestEntry[] = refsToSend.map((subscriptionId, index) => ({
+        const sqsMessages: SendMessageBatchRequestEntry[] = refsToSend.map((subRef, index) => ({
             Id: index.toString(),
-            MessageBody: JSON.stringify(subscriptionId)
+            MessageBody: JSON.stringify(subRef)
         }));
 
         const result = await sqs.sendMessageBatch({QueueUrl: queueUrl, Entries: sqsMessages}).promise();
