@@ -25,15 +25,26 @@ function getPurchaseToken(headers: HttpRequestHeaders): string {
     return headers["Play-Purchase-Token"] || headers["play-purchase-token"]
 }
 
+function googlePackageName(headers: HttpRequestHeaders): string {
+    const packageNameFromHeaders = headers["Package-Name"] || headers["package-name"];
+    if (packageNameFromHeaders) {
+        return packageNameFromHeaders
+    } else {
+        return "com.guardian";
+    }
+}
+
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 
     const stage = process.env.Stage;
-    const googlePackagename =  "com.guardian"
 
     if (request.pathParameters && request.headers && getPurchaseToken(request.headers)) {
         const restClient = new restm.RestClient('guardian-mobile-purchases');
-        const purchaseToken = getPurchaseToken(request.headers)
-        const url = buildGoogleUrl(request.pathParameters.subscriptionId, purchaseToken, googlePackagename);
+        const purchaseToken = getPurchaseToken(request.headers);
+        const packageName = googlePackageName(request.headers);
+        const subscriptionId = request.pathParameters.subscriptionId;
+        console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}`);
+        const url = buildGoogleUrl(subscriptionId, purchaseToken, packageName);
         return getAccessToken(getParams(stage || ""))
             .then(accessToken =>
                 restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
