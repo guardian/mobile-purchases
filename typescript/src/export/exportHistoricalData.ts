@@ -53,7 +53,7 @@ export async function handler(params: {date: string}): Promise<any> {
 
     let zippedStream = zlib.createGzip();
 
-    const yesterday = params.date || plusDays(new Date(), -1).toISOString().substr(0,10);
+    const yesterday = params.date ?? plusDays(new Date(), -1).toISOString().substr(0,10);
     const prefix = (Stage === "PROD") ? "data" : "code-data";
     const randomString = Math.random().toString(36).substring(10);
     const filename = `${prefix}/date=${yesterday}/${yesterday}-${randomString}.json.gz`;
@@ -70,7 +70,7 @@ export async function handler(params: {date: string}): Promise<any> {
 
     function handleOneMessage(sqsMessage: Message): void {
         totalMsgCount++;
-        const parsedMessage = JSON.parse(sqsMessage.Body || "");
+        const parsedMessage = JSON.parse(sqsMessage.Body ?? "");
         const messageDate = parsedMessage.snapshotDate.substr(0, 10);
         if (messageDate == yesterday) {
             processedMsgCount++;

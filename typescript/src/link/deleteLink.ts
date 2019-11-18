@@ -24,17 +24,14 @@ async function deleteUserSubscription(subscriptionId: string): Promise<number> {
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {
     const ttlEvents = event.Records.filter(dynamoEvent => {
         return dynamoEvent.eventName == "REMOVE" &&
-            dynamoEvent.userIdentity &&
-            dynamoEvent.userIdentity.type == "Service" &&
-            dynamoEvent.userIdentity.principalId == "dynamodb.amazonaws.com" &&
-            dynamoEvent.dynamodb &&
-            dynamoEvent.dynamodb.Keys &&
-            dynamoEvent.dynamodb.Keys.subscriptionId
+            dynamoEvent.userIdentity?.type == "Service" &&
+            dynamoEvent.userIdentity?.principalId == "dynamodb.amazonaws.com" &&
+            dynamoEvent.dynamodb?.Keys?.subscriptionId
     });
 
     const subscriptionsPromises = ttlEvents
         // @ts-ignore
-        .map(event => event.dynamodb.Keys.subscriptionId.S || "")
+        .map(event => event.dynamodb.Keys.subscriptionId.S ?? "")
         .map(deleteUserSubscription);
 
 

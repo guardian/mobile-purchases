@@ -54,7 +54,7 @@ function toResponse(validationResponse: AppleValidationResponse): AppleSubscript
 export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     let payload: AppleLinkPayload;
     try {
-         payload = JSON.parse(httpRequest.body || "") as AppleLinkPayload;
+         payload = JSON.parse(httpRequest.body ?? "") as AppleLinkPayload;
     } catch (e) {
         return HTTPResponses.INVALID_REQUEST;
     }

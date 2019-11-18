@@ -26,7 +26,7 @@ export interface StatusUpdateNotification {
 
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
-        let notification = JSON.parse(body || "") as StatusUpdateNotification;
+        let notification = JSON.parse(body ?? "") as StatusUpdateNotification;
         delete notification.password; // no need to keep that in memory
         return notification;
     } catch (e) {
@@ -40,7 +40,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     const now = new Date();
     const eventType = notification.notification_type;
 
-    const receiptInfo = notification.latest_receipt_info || notification.latest_expired_receipt_info;
+    const receiptInfo = notification.latest_receipt_info ?? notification.latest_expired_receipt_info;
 
     return new SubscriptionEvent(
         receiptInfo.transaction_id,
@@ -57,7 +57,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 }
 
 export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
-    const receipt = event.latest_receipt || event.latest_expired_receipt;
+    const receipt = event.latest_receipt ?? event.latest_expired_receipt;
     return {
         receipt: receipt
     }

@@ -144,7 +144,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
     }
 
     type PendingRenewalInfoById = {[id: string]: PendingRenewalInfo};
-    const pendingRenewalInfoArray = response.pending_renewal_info || [];
+    const pendingRenewalInfoArray = response.pending_renewal_info ?? [];
     const pendingRenewalInfoById: PendingRenewalInfoById = pendingRenewalInfoArray.reduce((agg, value) => {
         agg[value.original_transaction_id] = value;
         return agg
@@ -156,7 +156,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
 
         return {
             isRetryable: response["is-retryable"] === true,
-            latestReceipt: response.latest_receipt || receipt,
+            latestReceipt: response.latest_receipt ?? receipt,
             latestReceiptInfo: {
                 autoRenewStatus: autoRenewStatus,
                 cancellationDate: optionalMsToDate(receiptInfo.cancellation_date_ms),

@@ -15,7 +15,7 @@ type GoogleLinkPayload = {
 }
 
 export function parseGoogleLinkPayload(request: APIGatewayProxyEvent): GoogleLinkPayload {
-    return JSON.parse(request.body || "") as GoogleLinkPayload
+    return JSON.parse(request.body ?? "") as GoogleLinkPayload
 }
 
 function toUserSubscription(userId: string, payload: GoogleLinkPayload): UserSubscription[] {

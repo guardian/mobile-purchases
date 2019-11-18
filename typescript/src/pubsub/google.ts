@@ -23,7 +23,7 @@ interface SubscriptionNotification {
 
 export function parsePayload(body: Option<string>): Error | DeveloperNotification {
     try {
-        let rawNotification = Buffer.from(JSON.parse(body || "").message.data, 'base64');
+        let rawNotification = Buffer.from(JSON.parse(body ?? "").message.data, 'base64');
         return JSON.parse(rawNotification.toString()) as DeveloperNotification;
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
@@ -50,7 +50,7 @@ export function toDynamoEvent(notification: DeveloperNotification): Subscription
     const eventTimestamp = eventDate.toISOString();
     const date = eventTimestamp.substr(0, 10);
     const eventType = notification.subscriptionNotification.notificationType;
-    const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] || eventType.toString();
+    const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] ?? eventType.toString();
     return new SubscriptionEvent(
         notification.subscriptionNotification.purchaseToken,
         eventTimestamp + "|" + eventTypeString,
