@@ -6,6 +6,16 @@ import fetch from 'node-fetch';
 import {msToDate, optionalMsToDate} from "../utils/dates";
 import {Option} from "../utils/option";
 
+export interface PendingRenewalInfo {
+    auto_renew_product_id?: string,
+    auto_renew_status: "0" | "1",
+    expiration_intent?: "1" | "2" | "3" | "4" | "5",
+    grace_period_expires_date_ms?: string,
+    is_in_billing_retry_period?: "0" | "1"
+    original_transaction_id: string
+    product_id: string
+}
+
 export interface AppleValidatedReceiptServerInfo {
     cancellation_date_ms?: string,
     expires_date?: string,
@@ -13,6 +23,7 @@ export interface AppleValidatedReceiptServerInfo {
     original_purchase_date_ms: string,
     original_transaction_id: string
     product_id: string,
+    is_trial_period: string
 }
 
 // there are more fields, I cherry picked what was relevant
@@ -24,10 +35,13 @@ export interface AppleValidationServerResponse {
     // yes you've read the type well. It can both be an array or a value, good luck parsing that
     latest_receipt_info?: AppleValidatedReceiptServerInfo | AppleValidatedReceiptServerInfo[],
     latest_expired_receipt_info?: AppleValidatedReceiptServerInfo,
+    pending_renewal_info?: PendingRenewalInfo[],
     status: number
 }
 
 export interface AppleValidatedReceiptInfo {
+    autoRenewStatus: boolean,
+    trialPeriod: boolean,
     cancellationDate: Option<Date>,
     expiresDate: Date,
     originalPurchaseDate: Date,
@@ -37,7 +51,6 @@ export interface AppleValidatedReceiptInfo {
 
 // this is a sanitised and more sensible version of what the response should be
 export interface AppleValidationResponse {
-    autoRenewStatus: boolean,
     isRetryable: boolean,
     latestReceipt: string,
     latestReceiptInfo: AppleValidatedReceiptInfo,
@@ -130,19 +143,32 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
         }
     }
 
-    return getReceiptInfo().map( receiptInfo => ({
-        autoRenewStatus: (response.auto_renew_status === 1),
-        isRetryable: response["is-retryable"] === true,
-        latestReceipt: response.latest_receipt || receipt,
-        latestReceiptInfo: {
-            cancellationDate: optionalMsToDate(receiptInfo.cancellation_date_ms),
-            expiresDate: new Date(expiryDate(receiptInfo)),
-            originalPurchaseDate: msToDate(receiptInfo.original_purchase_date_ms),
-            originalTransactionId: receiptInfo.original_transaction_id,
-            productId: receiptInfo.product_id,
-        },
-        originalResponse: response
-    }))
+    type PendingRenewalInfoById = {[id: string]: PendingRenewalInfo};
+    const pendingRenewalInfoArray = response.pending_renewal_info || [];
+    const pendingRenewalInfoById: PendingRenewalInfoById = pendingRenewalInfoArray.reduce((agg, value) => {
+        agg[value.original_transaction_id] = value;
+        return agg
+    }, {} as PendingRenewalInfoById);
+
+    return getReceiptInfo().map( receiptInfo => {
+        const pendingRenewalInfo: PendingRenewalInfo = pendingRenewalInfoById[receiptInfo.original_transaction_id];
+        const autoRenewStatus = pendingRenewalInfo ? pendingRenewalInfo.auto_renew_status === "1" : response.auto_renew_status === 1;
+
+        return {
+            isRetryable: response["is-retryable"] === true,
+            latestReceipt: response.latest_receipt || receipt,
+            latestReceiptInfo: {
+                autoRenewStatus: autoRenewStatus,
+                cancellationDate: optionalMsToDate(receiptInfo.cancellation_date_ms),
+                expiresDate: new Date(expiryDate(receiptInfo)),
+                originalPurchaseDate: msToDate(receiptInfo.original_purchase_date_ms),
+                originalTransactionId: receiptInfo.original_transaction_id,
+                productId: receiptInfo.product_id,
+                trialPeriod: receiptInfo.is_trial_period === "true",
+            },
+            originalResponse: response
+        };
+    })
 }
 
 export function validateReceipt(receipt: string): Promise<AppleValidationResponse[]> {

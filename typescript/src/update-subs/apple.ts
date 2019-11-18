@@ -10,7 +10,7 @@ function toAppleSubscription(response: AppleValidationResponse): Subscription {
     const latestReceiptInfo = response.latestReceiptInfo;
 
     let autoRenewStatus: boolean = false;
-    if (response.autoRenewStatus) {
+    if (response.latestReceiptInfo.autoRenewStatus) {
         autoRenewStatus = true;
     }
 
