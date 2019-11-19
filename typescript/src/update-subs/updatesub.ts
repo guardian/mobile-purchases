@@ -37,7 +37,7 @@ async function queueHistoricalSubscription(subscription: Subscription): Promise<
     const queueUrl = process.env.HistoricalQueueUrl;
     if (queueUrl === undefined) throw new Error("No HistoricalQueueUrl env parameter provided");
 
-    const payload = subscription.googlePayload || subscription.applePayload;
+    const payload = subscription.googlePayload ?? subscription.applePayload;
     if (payload) {
         await sendToSqs(queueUrl, {
             subscriptionId: subscription.subscriptionId,

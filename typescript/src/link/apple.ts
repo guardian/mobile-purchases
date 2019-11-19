@@ -15,7 +15,7 @@ type AppleLinkPayload = {
 }
 
 function parseAppleLinkPayload(request: APIGatewayProxyEvent): AppleLinkPayload {
-    return JSON.parse(request.body || "") as AppleLinkPayload;
+    return JSON.parse(request.body ?? "") as AppleLinkPayload;
 }
 
 function toUserSubscription(userId: string, payload: AppleLinkPayload): UserSubscription[] {

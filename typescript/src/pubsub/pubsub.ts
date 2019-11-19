@@ -33,7 +33,7 @@ export async function parseStoreAndSend<Payload, SqsEvent>(
 ): Promise<APIGatewayProxyResult> {
     const secret = process.env.Secret;
     return catchingServerErrors(async () => {
-        if (request.queryStringParameters && request.queryStringParameters.secret === secret) {
+        if (request.queryStringParameters?.secret === secret) {
             const notification = parsePayload(request.body);
             if (notification instanceof Error) {
                 return HTTPResponses.INVALID_REQUEST

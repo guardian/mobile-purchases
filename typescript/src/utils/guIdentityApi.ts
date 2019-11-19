@@ -14,7 +14,7 @@ interface IdentityResponse {
 }
 
 export function getAuthToken(headers: HttpRequestHeaders): string {
-    return (headers["Authorization"] || headers["authorization"]).replace("Bearer ", "");
+    return (headers["Authorization"] ?? headers["authorization"]).replace("Bearer ", "");
 }
 
 export async function getUserId(headers: HttpRequestHeaders): Promise<Option<string>> {
