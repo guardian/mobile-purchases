@@ -21,7 +21,7 @@ interface SubscriptionStatusResponse {
     "subscriptionExpiryDate": Date
 }
 
-function getPurchaseToken(headers: HttpRequestHeaders): string {
+function getPurchaseToken(headers: HttpRequestHeaders): string | null {
     return headers["Play-Purchase-Token"] ?? headers["play-purchase-token"]
 }
 
@@ -38,9 +38,9 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
 
     const stage = process.env.Stage;
 
-    if (request.pathParameters && request.headers && getPurchaseToken(request.headers)) {
+    const purchaseToken = getPurchaseToken(request.headers);
+    if (request.pathParameters && request.headers && purchaseToken) {
         const restClient = new restm.RestClient('guardian-mobile-purchases');
-        const purchaseToken = getPurchaseToken(request.headers);
         const packageName = googlePackageName(request.headers);
         const subscriptionId = request.pathParameters.subscriptionId;
         console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}`);
