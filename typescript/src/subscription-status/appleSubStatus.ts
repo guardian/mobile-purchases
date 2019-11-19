@@ -18,9 +18,12 @@ interface AppleLinkPayload {
 interface AppleSubscriptionStatusResponse {
     originalTransactionId: string
     valid: boolean
+    autoRenewStatus: boolean
     gracePeriod: boolean
+    trialPeriod: boolean
     start: string
     end: string
+    endWithGracePeriod: string
     product: string
     latestReceipt: string
 }
@@ -37,11 +40,14 @@ function toResponse(validationResponse: AppleValidationResponse): AppleSubscript
     return {
         originalTransactionId: receiptInfo.originalTransactionId,
         valid: valid,
+        autoRenewStatus: receiptInfo.autoRenewStatus,
         gracePeriod: gracePeriod,
+        trialPeriod: receiptInfo.trialPeriod,
         start: receiptInfo.originalPurchaseDate.toISOString(),
         end: end.toISOString(),
+        endWithGracePeriod: endWithGracePeriod.toISOString(),
         product: receiptInfo.productId,
-        latestReceipt: validationResponse.latestReceipt
+        latestReceipt: validationResponse.latestReceipt,
     }
 }
 

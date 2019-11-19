@@ -9,6 +9,7 @@ describe("The apple validation service", () => {
         const appleResponse: AppleValidationServerResponse = {
             auto_renew_status: 0,
             latest_expired_receipt_info: {
+                is_trial_period: "false",
                 original_transaction_id: "1234",
                 product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
                 expires_date: "1570705794000",
@@ -18,10 +19,11 @@ describe("The apple validation service", () => {
         };
 
         const expected: AppleValidationResponse[] = [{
-            autoRenewStatus: false,
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                autoRenewStatus: false,
+                trialPeriod: false,
                 cancellationDate: null,
                 expiresDate: new Date(1570705794000),
                 originalPurchaseDate: new Date(1567081703000),
@@ -39,6 +41,7 @@ describe("The apple validation service", () => {
         const appleResponse: AppleValidationServerResponse = {
             auto_renew_status: 0,
             latest_receipt_info: {
+                is_trial_period: "false",
                 original_transaction_id: "1234",
                 product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
                 expires_date: "2019-09-10 11:09:54 Etc/GM",
@@ -49,10 +52,11 @@ describe("The apple validation service", () => {
         };
 
         const expected: AppleValidationResponse[] = [{
-            autoRenewStatus: false,
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                autoRenewStatus: false,
+                trialPeriod: false,
                 cancellationDate: null,
                 expiresDate: new Date(1570705794000),
                 originalPurchaseDate: new Date(1567081703000),
@@ -69,6 +73,7 @@ describe("The apple validation service", () => {
         const appleResponse: AppleValidationServerResponse = {
             auto_renew_status: 0,
             latest_receipt_info: [{
+                is_trial_period: "false",
                 original_transaction_id: "1234",
                 product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
                 expires_date: "2019-09-10 11:09:54 Etc/GM",
@@ -79,10 +84,11 @@ describe("The apple validation service", () => {
         };
 
         const expected: AppleValidationResponse[] = [{
-            autoRenewStatus: false,
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                autoRenewStatus: false,
+                trialPeriod: false,
                 cancellationDate: null,
                 expiresDate: new Date(1570705794000),
                 originalPurchaseDate: new Date(1567081703000),
@@ -100,6 +106,7 @@ describe("The apple validation service", () => {
             auto_renew_status: 0,
             latest_receipt_info: [
                 {
+                    is_trial_period: "false",
                     original_transaction_id: "1234",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
                     expires_date: "2019-09-10 11:09:54 Etc/GM",
@@ -107,6 +114,7 @@ describe("The apple validation service", () => {
                     original_purchase_date_ms: "1567081703000"
                 },
                 {
+                    is_trial_period: "false",
                     original_transaction_id: "1235",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
                     expires_date: "2019-09-10 11:09:54 Etc/GM",
@@ -114,6 +122,7 @@ describe("The apple validation service", () => {
                     original_purchase_date_ms: "1567081703000"
                 },
                 {
+                    is_trial_period: "false",
                     original_transaction_id: "1235",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
                     expires_date: "2019-09-10 11:09:54 Etc/GM",
@@ -125,10 +134,11 @@ describe("The apple validation service", () => {
         };
 
         const expected: AppleValidationResponse[] = [{
-            autoRenewStatus: false,
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                autoRenewStatus: false,
+                trialPeriod: false,
                 cancellationDate: null,
                 expiresDate: new Date(1570705793000),
                 originalPurchaseDate: new Date(1567081703000),
@@ -137,10 +147,11 @@ describe("The apple validation service", () => {
             },
             originalResponse: appleResponse
         },{
-            autoRenewStatus: false,
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                autoRenewStatus: false,
+                trialPeriod: false,
                 cancellationDate: null,
                 expiresDate: new Date(1570705794000),
                 originalPurchaseDate: new Date(1567081703000),
@@ -159,11 +170,13 @@ describe("The apple validation service", () => {
             auto_renew_status: 0,
             latest_receipt_info: [
                 {
+                    is_trial_period: "false",
                     original_transaction_id: "1234",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
                     original_purchase_date_ms: "1567081703000"
                 },
                 {
+                    is_trial_period: "false",
                     original_transaction_id: "1235",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
                     expires_date: "2019-09-10 11:09:54 Etc/GM",
@@ -175,14 +188,88 @@ describe("The apple validation service", () => {
         };
 
         const expected: AppleValidationResponse[] = [{
-            autoRenewStatus: false,
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                autoRenewStatus: false,
+                trialPeriod: false,
                 cancellationDate: null,
                 expiresDate: new Date(1570705793000),
                 originalPurchaseDate: new Date(1567081703000),
                 originalTransactionId: "1235",
+                productId: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
+            },
+            originalResponse: appleResponse
+        }];
+
+        expect(toSensiblePayloadFormat(appleResponse, "cmVjZWlwdA==")).toStrictEqual(expected);
+    })
+
+    test("Should transform a dirty apple payload with an array of latest receipts into sane one, matching receipts with renewal info", () => {
+        const appleResponse: AppleValidationServerResponse = {
+            auto_renew_status: 1,
+            latest_receipt_info: [
+                {
+                    is_trial_period: "false",
+                    original_transaction_id: "1235",
+                    product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
+                    expires_date: "2019-09-10 11:09:54 Etc/GM",
+                    expires_date_ms: "1570705793000",
+                    original_purchase_date_ms: "1567081703000"
+                },
+                {
+                    is_trial_period: "false",
+                    original_transaction_id: "1236",
+                    product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
+                    expires_date: "2019-09-10 11:09:54 Etc/GM",
+                    expires_date_ms: "1570705793000",
+                    original_purchase_date_ms: "1567081703000"
+                }
+            ],
+            status: 0,
+            pending_renewal_info: [
+                {
+                    expiration_intent: '1',
+                    auto_renew_product_id: 'uk.co.guardian.gla.6months.2018May.withFreeTrial',
+                    original_transaction_id: '1235',
+                    is_in_billing_retry_period: '0',
+                    product_id: 'uk.co.guardian.gla.6months.2018May.withFreeTrial',
+                    auto_renew_status: '0'
+                },
+                {
+                    expiration_intent: '1',
+                    auto_renew_product_id: 'uk.co.guardian.gla.6months.2018May.withFreeTrial',
+                    original_transaction_id: '1236',
+                    is_in_billing_retry_period: '0',
+                    product_id: 'uk.co.guardian.gla.6months.2018May.withFreeTrial',
+                    auto_renew_status: '1'
+                }
+            ]
+        };
+
+        const expected: AppleValidationResponse[] = [{
+            isRetryable: false,
+            latestReceipt: "cmVjZWlwdA==",
+            latestReceiptInfo: {
+                autoRenewStatus: false,
+                trialPeriod: false,
+                cancellationDate: null,
+                expiresDate: new Date(1570705793000),
+                originalPurchaseDate: new Date(1567081703000),
+                originalTransactionId: "1235",
+                productId: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
+            },
+            originalResponse: appleResponse
+        },{
+            isRetryable: false,
+            latestReceipt: "cmVjZWlwdA==",
+            latestReceiptInfo: {
+                autoRenewStatus: true,
+                trialPeriod: false,
+                cancellationDate: null,
+                expiresDate: new Date(1570705793000),
+                originalPurchaseDate: new Date(1567081703000),
+                originalTransactionId: "1236",
                 productId: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
             },
             originalResponse: appleResponse
