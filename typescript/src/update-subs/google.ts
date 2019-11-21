@@ -26,24 +26,33 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
     const url = buildGoogleUrl(sub.subscriptionId, sub.purchaseToken, sub.packageName);
     const accessToken = await getAccessToken(getParams(Stage));
 
-    const response = await restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}});
+    try {
+        const response = await restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}});
 
-    if(response.result) {
-        const expiryDate = new Date(Number.parseInt(response.result.expiryTimeMillis));
-        return [new Subscription(
-            sub.purchaseToken,
-            new Date(Number.parseInt(response.result.startTimeMillis)).toISOString(),
-            expiryDate.toISOString(),
-            makeCancellationTime(response.result.userCancellationTimeMillis),
-            response.result.autoRenewing,
-            sub.subscriptionId,
-            response.result,
-            undefined,
-            null,
-            dateToSecondTimestamp(thirtyMonths(expiryDate)),
-        )];
-    } else {
-        throw new ProcessingError("There was no data in google response", true);
+        if(response.result) {
+            const expiryDate = new Date(Number.parseInt(response.result.expiryTimeMillis));
+            return [new Subscription(
+                sub.purchaseToken,
+                new Date(Number.parseInt(response.result.startTimeMillis)).toISOString(),
+                expiryDate.toISOString(),
+                makeCancellationTime(response.result.userCancellationTimeMillis),
+                response.result.autoRenewing,
+                sub.subscriptionId,
+                response.result,
+                undefined,
+                null,
+                dateToSecondTimestamp(thirtyMonths(expiryDate)),
+            )];
+        } else {
+            throw new ProcessingError("There was no data in google response", true);
+        }
+    } catch (exception) {
+        if (exception.statusCode === 410) {
+            console.log(`Purchase expired a very long time ago, ignoring`);
+            return [];
+        } else {
+            throw exception;
+        }
     }
 }
 
