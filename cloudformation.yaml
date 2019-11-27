@@ -810,7 +810,7 @@ Resources:
   AppleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: "Ensure that the apple subsciption dead letter queue is empty"
+      AlarmDescription: "Ensure that the apple subscription dead letter queue is empty"
       Namespace: "AWS/SQS"
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
@@ -828,7 +828,7 @@ Resources:
   GoogleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: "Ensure that the apple subsciption dead letter queue is empty"
+      AlarmDescription: "Ensure that the google subscription dead letter queue is empty"
       Namespace: "AWS/SQS"
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
