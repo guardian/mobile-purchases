@@ -7,7 +7,8 @@ import {plusDays} from "../utils/dates";
 
 interface AppleSubscription {
     receipt: string
-    originalTransactionId: string
+    originalTransactionId: string,
+    clientSideValid?: boolean
 }
 
 interface AppleLinkPayload {
@@ -51,6 +52,16 @@ function toResponse(validationResponse: AppleValidationResponse): AppleSubscript
     }
 }
 
+function logClientServerStatusDiff(responses: AppleSubscriptionStatusResponse[], requests: AppleSubscription[]): void {
+    for (const req of requests) {
+        const resp = responses.find(resp => resp.originalTransactionId === req.originalTransactionId);
+        // if the server decide the subscription isn't valid, but the client has decided the subscription is valid
+        if (!resp?.valid && req.clientSideValid === true) {
+            console.warn(`Client thought ${req.originalTransactionId} was valid but server disagreed`);
+        }
+    }
+}
+
 export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     let payload: AppleLinkPayload;
     try {
@@ -62,7 +73,9 @@ export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGat
     try {
         const validationResults = await Promise.all(payload.subscriptions.map(sub => validateReceipt(sub.receipt)));
         const flattenedValidationResults = validationResults.reduce((agg:AppleValidationResponse[], value) => agg.concat(value), []);
-        const responsePayload = JSON.stringify(flattenedValidationResults.map(toResponse));
+        const calculatedResponse = flattenedValidationResults.map(toResponse);
+        logClientServerStatusDiff(calculatedResponse, payload.subscriptions);
+        const responsePayload = JSON.stringify(calculatedResponse);
         return {statusCode: 200, body: responsePayload};
     } catch (e) {
         console.log(`Unable to validate receipt(s)`, e);
