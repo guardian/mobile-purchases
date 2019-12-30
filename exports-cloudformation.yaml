@@ -257,7 +257,7 @@ Resources:
           ExportBucket: !Ref AppleSubscriptionHistoryExportBucket
           SqsUrl: !Ref AppleHistoricalSubscriptionsQueue
       Description: Export the historical Apple subscriptions to the data lake
-      MemorySize: 512
+      MemorySize: 3008
       Timeout: 900
       Events:
         Schedule:
