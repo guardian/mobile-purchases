@@ -3,7 +3,7 @@ import {s3, sqs} from "../utils/aws";
 import zlib from 'zlib'
 import {Stage} from "../utils/appIdentity";
 import {plusDays} from "../utils/dates";
-import {Message, ReceiveMessageRequest} from "aws-sdk/clients/sqs";
+import {GetQueueAttributesRequest, Message, ReceiveMessageRequest} from "aws-sdk/clients/sqs";
 
 async function recursivelyFetchSqsMessages(sqsUrl: string, handleMsg: (message: Message) => void): Promise<void> {
     const request: ReceiveMessageRequest = {
@@ -44,12 +44,30 @@ async function deleteAllSqsMessages(sqsUrl: string, receiptHandleToDelete: strin
     }
 }
 
+async function getNumberOfMessagesNotVisible(sqsUrl: string): Promise<number> {
+    const request: GetQueueAttributesRequest = {
+        QueueUrl: sqsUrl,
+        AttributeNames: ['ApproximateNumberOfMessagesNotVisible']
+    };
+    const sqsResponse = await sqs.getQueueAttributes(request).promise();
+    if (sqsResponse.Attributes) {
+        return parseInt(sqsResponse.Attributes.ApproximateNumberOfMessagesNotVisible)
+    } else {
+        throw new Error(`Failed to retrieve number of messages not visible for ${sqsUrl}`)
+    }
+}
+
 export async function handler(params: {date: string}): Promise<any> {
     const bucket = process.env['ExportBucket'];
     if (!bucket) throw new Error('Variable ExportBucket must be set');
 
     const sqsUrl = process.env['SqsUrl'];
     if (!sqsUrl) throw new Error('Variable SqsUrl must be set');
+
+    const numberOfMessagesNotVisible = await getNumberOfMessagesNotVisible(sqsUrl);
+    if (numberOfMessagesNotVisible > 1) {
+        throw new Error(`Approximately ${numberOfMessagesNotVisible} messages are unavailable for processing. Something else is currently consuming messages from ${sqsUrl}`);
+    }
 
     let zippedStream = zlib.createGzip();
 
