@@ -11,7 +11,7 @@ val simpleConfigurationVersion: String = "1.4.3"
 // Force a version of jackson-databind that addresses this vulnerability:
 // https://app.snyk.io/vuln/SNYK-JAVA-COMFASTERXMLJACKSONCORE-471943
 // introduced via com.typesafe.play:play
-val jacksonData: String = "2.9.10"
+val jacksonData: String = "2.9.10.2"
 
 val scalaRoot = file("scala")
 
