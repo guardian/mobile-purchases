@@ -8,12 +8,19 @@ val testAndCompileDependencies: String = "test->test;compile->compile"
 val awsVersion: String = "1.11.375"
 val simpleConfigurationVersion: String = "1.4.3"
 
+// Force a version of jackson-databind that addresses this vulnerability:
+// https://app.snyk.io/vuln/SNYK-JAVA-COMFASTERXMLJACKSONCORE-471943
+// introduced via com.typesafe.play:play
+val jacksonData: String = "2.9.10.2"
+
 val scalaRoot = file("scala")
 
-lazy val common = project.in(scalaRoot / "common").disablePlugins(AssemblyPlugin).settings(commonSettings("common"))
+lazy val common = project.in(scalaRoot / "common")
+  .disablePlugins(AssemblyPlugin)
+  .settings(commonSettings("common"), libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData)
 
 lazy val userPurchasePersistence = project.in(scalaRoot / "user-purchase-persistence").disablePlugins(AssemblyPlugin)
-  .settings(commonSettings("user-purchase-persistence"))
+  .settings(commonSettings("user-purchase-persistence"), libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData)
   .dependsOn(common % testAndCompileDependencies)
 
 
@@ -24,7 +31,8 @@ lazy val iosValidateReceipts = project.in(scalaRoot / "ios-validate-receipts").e
   List(
     libraryDependencies ++= List(
       "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
-      "com.squareup.okhttp3" % "okhttp" % "3.10.0"
+      "com.squareup.okhttp3" % "okhttp" % "3.10.0",
+      "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData
     ),
     libraryDependencies ++= upgradeIosvalidatereceiptsTransitiveDependencies
   ) ++ commonAssemblySettings("ios-validate-receipts")
@@ -33,13 +41,15 @@ lazy val iosValidateReceipts = project.in(scalaRoot / "ios-validate-receipts").e
 
 lazy val iosUserPurchases = project.in(scalaRoot / "ios-user-purchases").enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("ios-user-purchases"))
   .dependsOn(userPurchasePersistence % testAndCompileDependencies)
+  .settings(libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData)
 
 lazy val googleOauth = project.in(scalaRoot / "google-oauth").enablePlugins(AssemblyPlugin)
   .settings(
     commonAssemblySettings("google-oauth"),
     libraryDependencies ++= List(
     "com.google.auth" % "google-auth-library-oauth2-http" % "0.15.0",
-    "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion
+    "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
+    "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData
     )
   )
   .dependsOn(common % testAndCompileDependencies)
