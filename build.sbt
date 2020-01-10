@@ -7,6 +7,7 @@ import scala.collection.immutable
 val testAndCompileDependencies: String = "test->test;compile->compile"
 val awsVersion: String = "1.11.375"
 val simpleConfigurationVersion: String = "1.4.3"
+
 // Force a version of jackson-databind that addresses this vulnerability:
 // https://app.snyk.io/vuln/SNYK-JAVA-COMFASTERXMLJACKSONCORE-471943
 // introduced via com.typesafe.play:play
