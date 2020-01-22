@@ -78,7 +78,7 @@ function callValidateReceipt(receipt: string, forceSandbox: boolean = false): Pr
             return fetch(endpoint, { method: 'POST', body: body});
         }).then(response => {
             if (!response.ok) {
-                console.error(`Impossible to validate the receipt, got ${response.status} ${response.statusText} from receiptEndpoint for ${receipt}`);
+                console.error(`Impossible to validate the receipt, got ${response.status} ${response.statusText} from ${endpoint} for ${receipt}`);
                 throw new ProcessingError("Impossible to validate receipt", true);
             }
             return response
