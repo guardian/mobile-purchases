@@ -12,7 +12,7 @@ interface AppleSubscription {
 }
 
 interface AppleLinkPayload {
-    platform: Platform.DailyEdition | Platform.Ios
+    platform: Platform.DailyEdition | Platform.Ios | Platform.IosPuzzles
     subscriptions: AppleSubscription[]
 }
 
