@@ -64,7 +64,7 @@ export interface AppleValidationResponse {
 
 const sandboxReceiptEndpoint = "https://sandbox.itunes.apple.com/verifyReceipt";
 const prodReceiptEndpoint = "https://buy.itunes.apple.com/verifyReceipt";
-const receiptEndpoint = (Stage === "PROD") ? sandboxReceiptEndpoint : prodReceiptEndpoint;
+const receiptEndpoint = (Stage === "PROD") ? prodReceiptEndpoint : sandboxReceiptEndpoint;
 
 function callValidateReceipt(receipt: string, forceSandbox: boolean = false): Promise<Response> {
     const endpoint = forceSandbox ? sandboxReceiptEndpoint : receiptEndpoint;
