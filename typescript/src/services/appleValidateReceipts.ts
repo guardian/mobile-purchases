@@ -26,6 +26,10 @@ export interface AppleValidatedReceiptServerInfo {
     is_trial_period: string
 }
 
+export interface ValidationOptions {
+    sandboxRetry: boolean
+}
+
 // there are more fields, I cherry picked what was relevant
 // https://developer.apple.com/library/archive/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateRemotely.html
 export interface AppleValidationServerResponse {
@@ -57,9 +61,13 @@ export interface AppleValidationResponse {
     originalResponse: any
 }
 
-const receiptEndpoint = (Stage === "PROD") ? "https://buy.itunes.apple.com/verifyReceipt" : "https://sandbox.itunes.apple.com/verifyReceipt";
 
-function callValidateReceipt(receipt: string): Promise<Response> {
+const sandboxReceiptEndpoint = "https://sandbox.itunes.apple.com/verifyReceipt";
+const prodReceiptEndpoint = "https://buy.itunes.apple.com/verifyReceipt";
+const receiptEndpoint = (Stage === "PROD") ? prodReceiptEndpoint : sandboxReceiptEndpoint;
+
+function callValidateReceipt(receipt: string, forceSandbox: boolean = false): Promise<Response> {
+    const endpoint = forceSandbox ? sandboxReceiptEndpoint : receiptEndpoint;
     return getConfigValue<string>("apple.password")
         .then(password => {
             const body = JSON.stringify({
@@ -67,10 +75,10 @@ function callValidateReceipt(receipt: string): Promise<Response> {
                 "password": password,
                 "exclude-old-transactions": true
             });
-            return fetch(receiptEndpoint, { method: 'POST', body: body});
+            return fetch(endpoint, { method: 'POST', body: body});
         }).then(response => {
             if (!response.ok) {
-                console.error(`Impossible to validate the receipt, got ${response.status} ${response.statusText} from receiptEndpoint for ${receipt}`);
+                console.error(`Impossible to validate the receipt, got ${response.status} ${response.statusText} from ${endpoint} for ${receipt}`);
                 throw new ProcessingError("Impossible to validate receipt", true);
             }
             return response
@@ -82,7 +90,13 @@ function checkResponseStatus(response: AppleValidationServerResponse): AppleVali
         console.error(`Server error received from Apple, got status ${response.status}, will retry`);
         throw new ProcessingError(`Server error, status ${response.status}`, true);
     }
-    if (response.status == 21007 || response.status == 21008) {
+    if (response.status === 21007) {
+        const msg = `Got status 21007 and we're in ${Stage}, so we are processing a receipt from the wrong environment. ` +
+            `This shouldn't have happen as we should already retry receipts in sandbox if the return code was 21007`;
+        console.error(msg);
+        throw new ProcessingError(`Got status ${response.status} and we're in ${Stage}`);
+    }
+    if (response.status === 21008) {
         console.error(`Got status ${response.status} and we're in ${Stage}, so we are processing a receipt from the wrong environment`);
         throw new ProcessingError(`Got status ${response.status} and we're in ${Stage}`);
     }
@@ -171,10 +185,22 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
     })
 }
 
-export function validateReceipt(receipt: string): Promise<AppleValidationResponse[]> {
+async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerResponse, receipt: string, options: ValidationOptions): Promise<AppleValidationServerResponse> {
+    if (parsedResponse.status === 21007 && options.sandboxRetry) {
+        console.log("Got status code 21007, retrying in Sandbox");
+        return callValidateReceipt(receipt, true)
+            .then(response => response.json())
+            .then(body => body as AppleValidationServerResponse);
+    } else {
+        return parsedResponse;
+    }
+}
+
+export function validateReceipt(receipt: string, options: ValidationOptions): Promise<AppleValidationResponse[]> {
     return callValidateReceipt(receipt)
         .then(response => response.json())
         .then(body => body as AppleValidationServerResponse)
+        .then(parsedResponse => retryInSandboxIfNecessary(parsedResponse, receipt, options))
         .then(checkResponseStatus)
         .then(response => toSensiblePayloadFormat(response, receipt))
 }
