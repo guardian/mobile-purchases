@@ -71,7 +71,7 @@ export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGat
     }
 
     try {
-        const validationResults = await Promise.all(payload.subscriptions.map(sub => validateReceipt(sub.receipt)));
+        const validationResults = await Promise.all(payload.subscriptions.map(sub => validateReceipt(sub.receipt, {sandboxRetry: true})));
         const flattenedValidationResults = validationResults.reduce((agg:AppleValidationResponse[], value) => agg.concat(value), []);
         const calculatedResponse = flattenedValidationResults.map(toResponse);
         logClientServerStatusDiff(calculatedResponse, payload.subscriptions);

@@ -26,6 +26,10 @@ export interface AppleValidatedReceiptServerInfo {
     is_trial_period: string
 }
 
+export interface ValidationOptions {
+    sandboxRetry: boolean
+}
+
 // there are more fields, I cherry picked what was relevant
 // https://developer.apple.com/library/archive/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateRemotely.html
 export interface AppleValidationServerResponse {
@@ -181,9 +185,9 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
     })
 }
 
-async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerResponse, receipt: string): Promise<AppleValidationServerResponse> {
-    if (parsedResponse.status === 21007) {
-        console.log("Got return code 21007, retrying in Sandbox");
+async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerResponse, receipt: string, options: ValidationOptions): Promise<AppleValidationServerResponse> {
+    if (parsedResponse.status === 21007 && options.sandboxRetry) {
+        console.log("Got status code 21007, retrying in Sandbox");
         return callValidateReceipt(receipt, true)
             .then(response => response.json())
             .then(body => body as AppleValidationServerResponse);
@@ -192,11 +196,11 @@ async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerRe
     }
 }
 
-export function validateReceipt(receipt: string): Promise<AppleValidationResponse[]> {
+export function validateReceipt(receipt: string, options: ValidationOptions): Promise<AppleValidationResponse[]> {
     return callValidateReceipt(receipt)
         .then(response => response.json())
         .then(body => body as AppleValidationServerResponse)
-        .then(parsedResponse => retryInSandboxIfNecessary(parsedResponse, receipt))
+        .then(parsedResponse => retryInSandboxIfNecessary(parsedResponse, receipt, options))
         .then(checkResponseStatus)
         .then(response => toSensiblePayloadFormat(response, receipt))
 }
