@@ -102,6 +102,15 @@ Resources:
         AttributeName: ttl
       StreamSpecification:
         StreamViewType: KEYS_ONLY
+      GlobalSecondaryIndexes:
+        - IndexName: ios-endTimestamp-revalidation-index
+          KeySchema:
+            - AttributeName: subscriptionId
+              KeyType: HASH
+            - AttributeName: endTimestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
       Tags:
         - Key: Stage
           Value: !Ref Stage
