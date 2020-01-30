@@ -89,6 +89,8 @@ Resources:
       AttributeDefinitions:
         - AttributeName: subscriptionId
           AttributeType: S
+        - AttributeName: endTimestamp
+          AttributeType: S
       KeySchema:
         - AttributeName: subscriptionId
           KeyType: HASH
