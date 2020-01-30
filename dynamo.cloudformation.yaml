@@ -110,7 +110,10 @@ Resources:
             - AttributeName: endTimestamp
               KeyType: RANGE
           Projection:
-            ProjectionType: ALL
+            NonKeyAttributes:
+              - auto_renew_status
+              - latest_receipt_info
+            ProjectionType: INCLUDE
       Tags:
         - Key: Stage
           Value: !Ref Stage
