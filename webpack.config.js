@@ -30,6 +30,7 @@ module.exports = {
         "export-subscription-tables": "./typescript/src/export/exportSubscriptions.ts",
         "export-subscription-events-table": "./typescript/src/export/exportEvents.ts",
         "export-historical-data": "./typescript/src/export/exportHistoricalData.ts",
+        "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
     },
     output: {
         filename: '[name].js',

@@ -115,3 +115,9 @@ deployments:
     parameters:
       functionNames: [mobile-purchases-export-google-historical-data-, mobile-purchases-export-apple-historical-data-]
       fileName: export-historical-data.zip
+
+  mobile-purchases-apple-revalidate-subscriptions:
+    template: lambda
+    parameters:
+      functionNames: [mobile-purchases-apple-revalidate-receipts-]
+      fileName: apple-revalidate-receipts.zip
