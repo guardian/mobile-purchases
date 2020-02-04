@@ -43,3 +43,9 @@ export function plusDays(from: Date, count: number): Date {
     newDate.setUTCDate(from.getUTCDate() + count);
     return newDate;
 }
+
+export function plusHours(from: Date, count: number): Date {
+    const newDate = new Date(from.getTime());
+    newDate.setUTCHours(from.getUTCHours() + count);
+    return newDate;
+}
