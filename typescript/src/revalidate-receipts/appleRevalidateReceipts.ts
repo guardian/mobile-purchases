@@ -17,10 +17,11 @@ interface ScheduleEvent {
  endTimestampFilter?: string;
 }
 
-export function handler(event: ScheduleEvent) {
+export async function handler(event: ScheduleEvent) {
  const query = dynamoMapper.query({
   valueConstructor: endTimeStampFilterSubscription,
   indexName: 'ios-endTimestamp-revalidation-index',
+  keyCondition: {subject:'subscriptionId'},
   filter: {
    ...equals('2019-10-24T11:38:01.000Z'),
    subject: 'endTimestamp'
