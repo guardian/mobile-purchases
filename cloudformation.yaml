@@ -910,6 +910,15 @@ Resources:
                 - logs:PutLogEvents
                 - cloudwatch:putMetricData
               Resource: "*"
+        - PolicyName: dynamo
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - "dynamodb:Scan"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/index/ios-endTimestamp-revalidation-index
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
 
   DeleteUserSubscriptionLambda:
     Type: AWS::Serverless::Function
