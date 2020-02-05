@@ -27,7 +27,7 @@ export function handler(event: ScheduleEvent) {
   }
  });
 
- query
-     .then(value => {console.log(value)})
-     .catch(error => {console.log(error)})
+ for await (const subscription of query) {
+  console.log(subscription)
+ }
 }
