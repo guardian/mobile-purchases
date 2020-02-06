@@ -24,7 +24,7 @@ export async function handler(event: ScheduleEvent) {
   valueConstructor: endTimeStampFilterSubscription,
   indexName: 'ios-endTimestamp-revalidation-index',
   filter: {
-   ...equals('true'),
+   ...equals(true),
    subject: 'autoRenewing'
   }
  });
