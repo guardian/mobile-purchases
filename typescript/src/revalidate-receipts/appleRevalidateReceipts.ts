@@ -37,7 +37,7 @@ export async function handler(event: ScheduleEvent) {
 //  console.log(queryScan.count)
 //  return queryScan.count
 
- const iterator = dynamoMapper.query(ReadSubscriptionEvent,{subscriptionId:"100000580817300"}, {indexName: "ios-endTimestamp-revalidation-index"});
+ const iterator = dynamoMapper.query(endTimeStampFilterSubscription,{subscriptionId:"100000580817300"}, {indexName: "ios-endTimestamp-revalidation-index"});
 
  for await (const subscription of iterator) {
   console.log(`subscription is: ${subscription}`)

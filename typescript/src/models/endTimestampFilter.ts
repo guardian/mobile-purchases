@@ -12,16 +12,16 @@ export class Subscription {
     endTimestamp: string;
 
     @attribute()
-    latest_receipt_info?: AppleValidatedReceiptServerInfo | AppleValidatedReceiptServerInfo[];
+    receipt?: AppleValidatedReceiptServerInfo | AppleValidatedReceiptServerInfo[];
 
     @attribute()
-    auto_renew_status: Boolean;
+    autoRenewing: Boolean;
 
     constructor(subscriptionId: string, endTimestamp: string, autoRenewStatus: Boolean, latestReceiptInfo?: AppleValidatedReceiptServerInfo | AppleValidatedReceiptServerInfo[]) {
         this.subscriptionId = subscriptionId;
         this.endTimestamp = endTimestamp;
-        this.latest_receipt_info = latestReceiptInfo;
-        this.auto_renew_status = autoRenewStatus
+        this.receipt = latestReceiptInfo;
+        this.autoRenewing = autoRenewStatus
 
     }
 
