@@ -89,8 +89,6 @@ Resources:
       AttributeDefinitions:
         - AttributeName: subscriptionId
           AttributeType: S
-        - AttributeName: endTimestamp
-          AttributeType: S
       KeySchema:
         - AttributeName: subscriptionId
           KeyType: HASH
@@ -104,18 +102,6 @@ Resources:
         AttributeName: ttl
       StreamSpecification:
         StreamViewType: KEYS_ONLY
-      GlobalSecondaryIndexes:
-        - IndexName: ios-endTimestamp-revalidation-index
-          KeySchema:
-            - AttributeName: subscriptionId
-              KeyType: HASH
-            - AttributeName: endTimestamp
-              KeyType: RANGE
-          Projection:
-            NonKeyAttributes:
-              - auto_renew_status
-              - latest_receipt_info
-            ProjectionType: INCLUDE
       Tags:
         - Key: Stage
           Value: !Ref Stage
