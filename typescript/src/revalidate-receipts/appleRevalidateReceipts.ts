@@ -19,37 +19,15 @@ interface ScheduleEvent {
 }
 
 export async function handler(event: ScheduleEvent) {
-  // const query = dynamoMapper.query({valueConstructor: endTimeStampFilterSubscription, indexName: 'ios-endTimestamp-revalidation-index', keyCondition: {}  })
- // const query = dynamoMapper.query({
- //  valueConstructor: endTimeStampFilterSubscription,
- //  indexName: 'ios-endTimestamp-revalidation-index',
- //  keyCondition: {subject:'subscriptionId'},
- //  filter: {
- //   ...equals('2019-10-24T11:38:01.000Z'),
- //   subject: 'endTimestamp'
- //  }
- // });
 
- // {
- //  "TableName": "GameScores",
- //     "IndexName": "GameTitleIndex",
- //     "KeyConditionExpression": "GameTitle = :v_title",
- //     "ExpressionAttributeValues": {
- //  ":v_title": {"S": "Meteor Blasters"}
- // },
- //  "ProjectionExpression": "UserId, TopScore",
- //     "ScanIndexForward": false
- // }
-
- const queryScan = dynamoMapper.scan(
-     endTimeStampFilterSubscription,
-     {
-      startKey: ["subscriptionId"],
-      filter:{
-      ...equals('true'),
-       subject: "autoRenewing"
-      }
-     })
+ const queryScan = dynamoMapper.scan({
+  valueConstructor: endTimeStampFilterSubscription,
+  indexName: 'ios-endTimestamp-revalidation-index',
+  filter: {
+   ...equals('true'),
+   subject: 'autoRenewing'
+  }
+ });
 
  for await (const subscription of queryScan) {
   console.log(subscription)
