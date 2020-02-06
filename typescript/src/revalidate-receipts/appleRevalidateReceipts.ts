@@ -19,7 +19,7 @@ interface ScheduleEvent {
 }
 
 export async function handler(event: ScheduleEvent) {
-
+console.log("in handler")
  const queryScan = dynamoMapper.scan({
   valueConstructor: endTimeStampFilterSubscription,
   indexName: 'ios-endTimestamp-revalidation-index',
@@ -30,6 +30,8 @@ export async function handler(event: ScheduleEvent) {
  });
 
  for await (const subscription of queryScan) {
-  console.log(subscription)
+  console.log(`subscription is: ${subscription}`)
  }
+ console.log(queryScan.count)
+ return queryScan.count
 }
