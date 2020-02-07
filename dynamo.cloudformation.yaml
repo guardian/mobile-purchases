@@ -113,8 +113,8 @@ Resources:
               KeyType: RANGE
           Projection:
             NonKeyAttributes:
-              - auto_renew_status
-              - latest_receipt_info
+              - autoRenewing
+              - receipt
             ProjectionType: INCLUDE
       Tags:
         - Key: Stage
