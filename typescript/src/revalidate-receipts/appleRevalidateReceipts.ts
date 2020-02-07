@@ -1,18 +1,18 @@
 import {plusHours} from "../utils/dates";
 import {dynamoMapper} from "../utils/aws";
 import {endTimeStampFilterSubscription} from "../models/endTimestampFilter";
-import {equals} from '@aws/dynamodb-expressions';
-import {ReadUserSubscription} from "../models/userSubscription";
-import {TableName} from "aws-sdk/clients/dynamodb";
-import {ReadSubscriptionEvent} from "../models/subscriptionEvent";
-import {writeSync} from "fs";
+import {
+ AndExpression,
+ attributeExists,
+ equals, lessThan,
+} from '@aws/dynamodb-expressions';
 
-function endTimestampForQuery(event: ScheduleEvent): Date {
+function endTimestampForQuery(event: ScheduleEvent): string {
  const defaultDate = plusHours(new Date(), 3);
  if(event.endTimestampFilter) {
-  return new Date(Date.parse(event.endTimestampFilter));
+  return new Date(Date.parse(event.endTimestampFilter)).toISOString();
  } else {
-  return defaultDate;
+  return defaultDate.toISOString();
  }
 }
 
@@ -21,26 +21,36 @@ interface ScheduleEvent {
 }
 
 export async function handler(event: ScheduleEvent) {
-// console.log("in handler")
-//  const queryScan = dynamoMapper.scan({
-//   valueConstructor: endTimeStampFilterSubscription,
-//   indexName: 'ios-endTimestamp-revalidation-index',
-//   filter: {
-//    ...equals(true),
-//    subject: 'autoRenewing'
-//   }
-//  });
-//
-//  for await (const subscription of queryScan) {
-//   console.log(`subscription is: ${subscription}`)
-//  }
-//  console.log(queryScan.count)
-//  return queryScan.count
+ const time = endTimestampForQuery(event);
+ console.log(`Will filter subscriptions before ${time}`);
 
- const iterator = dynamoMapper.query(endTimeStampFilterSubscription,{subscriptionId:"100000580817300"}, {indexName: "ios-endTimestamp-revalidation-index"});
+ const filter: AndExpression = {
+  type: 'And',
+  conditions: [
+   {
+    ...equals(true),
+    subject: 'autoRenewing'
+   },
+   {
+    ...attributeExists(),
+    subject: 'receipt'
+   },
+   {
+    ...lessThan(time),
+    subject: 'endTimestamp'
+   }
+  ]
+ };
 
- for await (const subscription of iterator) {
-  console.log(`subscription is: ${subscription}`)
+ const queryScan = dynamoMapper.scan(
+  endTimeStampFilterSubscription,
+  {
+   indexName: 'ios-endTimestamp-revalidation-index',
+   filter: filter
+ });
+
+ for await (const subscription of queryScan) {
+  console.log(`Found subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`)
  }
 }
 
