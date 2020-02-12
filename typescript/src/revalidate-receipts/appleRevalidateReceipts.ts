@@ -22,7 +22,7 @@ interface ScheduleEvent {
 
 export async function handler(event: ScheduleEvent) {
  const time = endTimestampForQuery(event).toISOString();
- console.log(`Will filter subscriptions before ${time}`);
+ console.log(`Filter date will be: ${endTimestampForQuery(event)}`);
 
  const filter: AndExpression = {
   type: 'And',
