@@ -7,12 +7,12 @@ import {
  equals, lessThan,
 } from '@aws/dynamodb-expressions';
 
-function endTimestampForQuery(event: ScheduleEvent): string {
+function endTimestampForQuery(event: ScheduleEvent): Date {
  const defaultDate = plusHours(new Date(), 3);
  if(event.endTimestampFilter) {
-  return new Date(Date.parse(event.endTimestampFilter)).toISOString();
+  return new Date(Date.parse(event.endTimestampFilter));
  } else {
-  return defaultDate.toISOString();
+  return defaultDate;
  }
 }
 
@@ -21,7 +21,7 @@ interface ScheduleEvent {
 }
 
 export async function handler(event: ScheduleEvent) {
- const time = endTimestampForQuery(event);
+ const time = endTimestampForQuery(event).toISOString();
  console.log(`Will filter subscriptions before ${time}`);
 
  const filter: AndExpression = {
