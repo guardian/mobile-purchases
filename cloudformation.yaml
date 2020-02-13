@@ -887,6 +887,15 @@ Resources:
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
+        - PolicyName: sqs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+                - "sqs:SendMessageBatch"
+              Resource:
+                - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-subscriptions-to-fetch
 
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
@@ -966,6 +975,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
+          SqsUrl: !Ref AppleSubscriptionsQueue
       Description: Finds recently expired subscriptions
       MemorySize: 512
       Timeout: 60

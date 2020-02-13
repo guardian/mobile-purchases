@@ -1,5 +1,5 @@
 import {plusHours} from "../utils/dates";
-import {dynamoMapper} from "../utils/aws";
+import {dynamoMapper, sendToSqs} from "../utils/aws";
 import {endTimeStampFilterSubscription} from "../models/endTimestampFilter";
 import {
  AndExpression,
@@ -50,7 +50,10 @@ export async function handler(event: ScheduleEvent) {
  });
 
  for await (const subscription of queryScan) {
+  const queueUrl = process.env.SqsUrl
+  if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+
+  await sendToSqs(queueUrl, queryScan)
   console.log(`Found subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`)
  }
 }
-
