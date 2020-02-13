@@ -49,7 +49,7 @@ We're using [Typescript](https://www.typescriptlang.org/) to develop new lambdas
 
 As a safeguard against this a test-launcher is provided to run a lambda locally, reading a file locally from outside version control in `typescript/src/test-launcher/test-launcher.ts`.
 
-This can be run locally, and assumes a module with a function `handler` which takes some kind of a payload as a pararmeter. 
+This can be run locally, and assumes a module with a function `handler` which takes some kind of a payload as a parameter. 
 
 Test a lambda locally by creating a payload json file under `mobile-purchases-payload` and invoke the test-launcher with the name of your lamda module relative to the test-launcher along with the name of a payoad file. 
 
