@@ -75,7 +75,12 @@ function callValidateReceipt(receipt: string, forceSandbox: boolean = false): Pr
                 "password": password,
                 "exclude-old-transactions": true
             });
-            return fetch(endpoint, { method: 'POST', body: body});
+            return Promise.race([
+                fetch(endpoint, { method: 'POST', body: body}),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Timeout while validating receipt with Apple")), 12000)
+                ) as Promise<Response>
+            ]);
         }).then(response => {
             if (!response.ok) {
                 console.error(`Impossible to validate the receipt, got ${response.status} ${response.statusText} from ${endpoint} for ${receipt}`);
