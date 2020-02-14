@@ -383,7 +383,7 @@ Resources:
           QueueUrl: !Ref GoogleSubscriptionsQueue
       Description: Records play store events
       MemorySize: 128
-      Timeout: 45
+      Timeout: 29
       Events:
         PostApi:
           Type: Api
@@ -415,7 +415,7 @@ Resources:
           QueueUrl: !Ref AppleSubscriptionsQueue
       Description: Records play store events
       MemorySize: 128
-      Timeout: 45
+      Timeout: 29
       Events:
         PostApi:
           Type: Api
@@ -446,7 +446,7 @@ Resources:
           QueueUrl: !Ref GoogleSubscriptionsQueue
       Description: Links users to subscriptions
       MemorySize: 128
-      Timeout: 45
+      Timeout: 29
       Events:
         PostApi:
           Type: Api
@@ -477,7 +477,7 @@ Resources:
           QueueUrl: !Ref AppleSubscriptionsQueue
       Description: Links users to subscriptions
       MemorySize: 128
-      Timeout: 45
+      Timeout: 29
       Events:
         PostApi:
           Type: Api
@@ -507,7 +507,7 @@ Resources:
           App: !Ref App
       Description: Checks the status of a Play Store subscription using the Google Play Developer API
       MemorySize: 128
-      Timeout: 45
+      Timeout: 29
       Events:
         PostApi:
           Type: Api
@@ -537,7 +537,7 @@ Resources:
           App: !Ref App
       Description: Checks the status of an Apple App store subscription using the apple API
       MemorySize: 128
-      Timeout: 45
+      Timeout: 29
       Events:
         PostApi:
           Type: Api
@@ -567,7 +567,7 @@ Resources:
           App: !Ref App
       Description: Validates purchases
       MemorySize: 448
-      Timeout: 45
+      Timeout: 29
       Events:
         PostApi:
           Type: Api
@@ -597,7 +597,7 @@ Resources:
           App: !Ref App
       Description: Gets user purchases
       MemorySize: 448
-      Timeout: 45
+      Timeout: 29
       Events:
         GetApi:
           Type: Api
@@ -760,7 +760,7 @@ Resources:
           App: !Ref App
       Description: Retrieves subscription details for a given user
       MemorySize: 128
-      Timeout: 45
+      Timeout: 29
       Events:
         DirectAccess:
           Type: Api
