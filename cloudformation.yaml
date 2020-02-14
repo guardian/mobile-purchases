@@ -893,7 +893,6 @@ Resources:
               Effect: Allow
               Action:
                 - "sqs:SendMessage"
-                - "sqs:SendMessageBatch"
               Resource:
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-subscriptions-to-fetch
 

@@ -6,6 +6,7 @@ import {
  attributeExists,
  equals, lessThan,
 } from '@aws/dynamodb-expressions';
+import {AppleSubscriptionReference} from "../models/subscriptionReference";
 
 function endTimestampForQuery(event: ScheduleEvent): Date {
  const defaultDate = plusHours(new Date(), 3);
@@ -46,14 +47,25 @@ export async function handler(event: ScheduleEvent) {
   endTimeStampFilterSubscription,
   {
    indexName: 'ios-endTimestamp-revalidation-index',
-   filter: filter
+   filter: filter,
+   limit: 1
  });
 
  for await (const subscription of queryScan) {
-  const queueUrl = process.env.SqsUrl
-  if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+  const SqsUrl = process.env.SqsUrl;
+  if (SqsUrl === undefined) throw new Error("No SqsUrl env parameter provided");
 
-  await sendToSqs(queueUrl, queryScan)
+  function AppleSubscription() {
+   const Subscription: AppleSubscriptionReference | undefined = subscription.receipt
+   if(Subscription) {
+    return {receipt: Subscription};
+   } else {
+    console.log("No receipt found")
+   }
+  }
+
+  await sendToSqs(SqsUrl, AppleSubscription());
+
   console.log(`Found subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`)
  }
 }
