@@ -978,6 +978,11 @@ Resources:
       Description: Finds recently expired subscriptions
       MemorySize: 512
       Timeout: 60
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 0 0/6 ? * * *)
       Tags:
         Stage: !Ref Stage
         Stack: !Ref Stack
