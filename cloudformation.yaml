@@ -976,8 +976,8 @@ Resources:
           Stage: !Sub ${Stage}
           SqsUrl: !Ref AppleSubscriptionsQueue
       Description: Finds recently expired subscriptions
-      MemorySize: 512
-      Timeout: 60
+      MemorySize: 2048
+      Timeout: 180
       Events:
         Schedule:
           Type: Schedule
