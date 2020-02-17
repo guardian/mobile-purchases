@@ -887,14 +887,6 @@ Resources:
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
-        - PolicyName: sqs
-          PolicyDocument:
-            Statement:
-              Effect: Allow
-              Action:
-                - "sqs:SendMessage"
-              Resource:
-                - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-subscriptions-to-fetch
 
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
@@ -927,6 +919,14 @@ Resources:
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/index/ios-endTimestamp-revalidation-index
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+        - PolicyName: sqs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource:
+                - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-subscriptions-to-fetch
 
   DeleteUserSubscriptionLambda:
     Type: AWS::Serverless::Function
