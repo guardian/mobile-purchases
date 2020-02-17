@@ -982,7 +982,7 @@ Resources:
         Schedule:
           Type: Schedule
           Properties:
-            Schedule: cron(0 0 0/6 ? * * *)
+            Schedule: rate(6 hours)
       Tags:
         Stage: !Ref Stage
         Stack: !Ref Stack
