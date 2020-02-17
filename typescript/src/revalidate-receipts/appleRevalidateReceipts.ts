@@ -9,7 +9,7 @@ import {
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
 
 function endTimestampForQuery(event: ScheduleEvent): Date {
-    const defaultDate = plusHours(new Date(), 3);
+    const defaultDate = plusHours(new Date(), 13);
     if (event.endTimestampFilter) {
         return new Date(Date.parse(event.endTimestampFilter));
     } else {
@@ -47,8 +47,7 @@ export async function handler(event: ScheduleEvent) {
         EndTimeStampFilterSubscription,
         {
             indexName: 'ios-endTimestamp-revalidation-index',
-            filter: filter,
-            limit: 1
+            filter: filter
         });
 
     const SqsUrl = process.env.SqsUrl;
