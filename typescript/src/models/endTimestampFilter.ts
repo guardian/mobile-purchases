@@ -1,7 +1,6 @@
 import {hashKey, attribute, rangeKey} from '@aws/dynamodb-data-mapper-annotations';
 import {DynamoDbTable} from "@aws/dynamodb-data-mapper";
 import {App, Stage} from "../utils/appIdentity";
-import {AppleValidatedReceiptServerInfo} from "../services/appleValidateReceipts";
 
 export class Subscription {
 
@@ -12,15 +11,15 @@ export class Subscription {
     endTimestamp: string;
 
     @attribute()
-    receipt?: AppleValidatedReceiptServerInfo | AppleValidatedReceiptServerInfo[];
+    receipt?: string;
 
     @attribute()
     autoRenewing: Boolean;
 
-    constructor(subscriptionId: string, endTimestamp: string, autoRenewStatus: Boolean, latestReceiptInfo?: AppleValidatedReceiptServerInfo | AppleValidatedReceiptServerInfo[]) {
+    constructor(subscriptionId: string, endTimestamp: string, autoRenewStatus: Boolean, receipt?: string) {
         this.subscriptionId = subscriptionId;
         this.endTimestamp = endTimestamp;
-        this.receipt = latestReceiptInfo;
+        this.receipt = receipt;
         this.autoRenewing = autoRenewStatus
 
     }
@@ -31,10 +30,11 @@ export class Subscription {
 
 }
 
-export class endTimeStampFilterSubscription extends Subscription {
+export class EndTimeStampFilterSubscription extends Subscription {
 
     constructor() {
         super("", "" , false);
     }
 
 }
+
