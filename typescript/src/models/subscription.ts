@@ -24,6 +24,9 @@ export class Subscription {
     productId: string;
 
     @attribute()
+    platform?: string;
+
+    @attribute()
     googlePayload?: any;
 
     @attribute()
@@ -42,6 +45,7 @@ export class Subscription {
         cancellationTimestamp: string | undefined,
         autoRenewing: boolean,
         productId: string,
+        platform: string | undefined,
         googlePayload?: any,
         receipt?: string,
         applePayload?: any,
@@ -53,6 +57,7 @@ export class Subscription {
         this.cancellationTimestamp = cancellationTimestamp;
         this.autoRenewing = autoRenewing;
         this.productId = productId;
+        this.platform = platform;
         this.googlePayload = googlePayload;
         this.receipt = receipt;
         this.applePayload = applePayload;
@@ -67,7 +72,7 @@ export class Subscription {
 export class ReadSubscription extends Subscription {
 
     constructor() {
-        super("", "", "", undefined, false, "")
+        super("", "", "", undefined, false, "", undefined)
     }
 
     setSubscriptionId(subscriptionId: string): ReadSubscription {

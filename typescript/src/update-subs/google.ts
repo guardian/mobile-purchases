@@ -3,13 +3,13 @@ import {SQSEvent, SQSRecord} from 'aws-lambda';
 import * as restm from 'typed-rest-client/RestClient';
 import {buildGoogleUrl, getAccessToken, getParams} from "../utils/google-play";
 
-import {parseAndStoreSubscriptionUpdate} from './updatesub';
+import {makeCancellationTime, parseAndStoreSubscriptionUpdate} from './updatesub';
 import {Stage} from "../utils/appIdentity";
 import {Subscription} from "../models/subscription";
-import {makeCancellationTime} from "./updatesub";
 import {ProcessingError} from "../models/processingError";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {GoogleSubscriptionReference} from "../models/subscriptionReference";
+import {Platform} from "../models/platform";
 
 interface GoogleResponseBody {
     startTimeMillis: string,
@@ -17,6 +17,13 @@ interface GoogleResponseBody {
     userCancellationTimeMillis: string,
     autoRenewing: boolean
 }
+
+const packageToPlatform: {[packageName: string]: string} = {
+    "com.guardian": Platform.Android.toString(),
+    "com.guardian.debug": Platform.Android.toString(),
+    "com.guardian.editions": Platform.AndroidEdition.toString(),
+    "uk.co.guardian.puzzles": Platform.AndroidPuzzles.toString()
+};
 
 const restClient = new restm.RestClient('guardian-mobile-purchases');
 
@@ -31,6 +38,7 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
 
         if(response.result) {
             const expiryDate = new Date(Number.parseInt(response.result.expiryTimeMillis));
+            const platform = packageToPlatform[sub.packageName];
             return [new Subscription(
                 sub.purchaseToken,
                 new Date(Number.parseInt(response.result.startTimeMillis)).toISOString(),
@@ -38,6 +46,7 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
                 makeCancellationTime(response.result.userCancellationTimeMillis),
                 response.result.autoRenewing,
                 sub.subscriptionId,
+                platform,
                 response.result,
                 undefined,
                 null,

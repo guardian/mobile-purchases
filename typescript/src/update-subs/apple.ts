@@ -5,6 +5,13 @@ import {Subscription} from "../models/subscription";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
 import {AppleValidationResponse, validateReceipt} from "../services/appleValidateReceipts";
+import {Platform} from "../models/platform";
+
+const bundleToPlatform: {[bundle: string]: string} = {
+    "uk.co.guardian.iphone2": Platform.Ios.toString(),
+    "uk.co.guardian.gce": Platform.IosEdition.toString(),
+    "uk.co.guardian.puzzles": Platform.IosPuzzles.toString()
+};
 
 function toAppleSubscription(response: AppleValidationResponse): Subscription {
     const latestReceiptInfo = response.latestReceiptInfo;
@@ -19,6 +26,8 @@ function toAppleSubscription(response: AppleValidationResponse): Subscription {
         cancellationDate = latestReceiptInfo.cancellationDate.toISOString()
     }
 
+    const platform = (response.latestReceiptInfo.bundleId) ? bundleToPlatform[response.latestReceiptInfo.bundleId] : undefined;
+
     return new Subscription(
         latestReceiptInfo.originalTransactionId,
         latestReceiptInfo.originalPurchaseDate.toISOString(),
@@ -26,6 +35,7 @@ function toAppleSubscription(response: AppleValidationResponse): Subscription {
         cancellationDate,
         autoRenewStatus,
         latestReceiptInfo.productId,
+        platform,
         null,
         response.latestReceipt,
         response.originalResponse,
