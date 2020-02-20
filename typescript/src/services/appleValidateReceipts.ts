@@ -181,6 +181,9 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
         // which is valued but undocumented. Oh and also sometimes it's on the latest_receipt object, but sometimes
         // it's on the receipt object. Hopefully this covers all the corner cases? who knows!
         const bundleId = receiptInfo.bundle_id ?? receiptInfo.bid ?? response.receipt?.bundle_id ?? response.receipt?.bid;
+        if (!bundleId) {
+            console.warn(`Unable to identify the bundle id for the original transaction id ${receiptInfo.original_transaction_id}`)
+        }
 
         return {
             isRetryable: response["is-retryable"] === true,
