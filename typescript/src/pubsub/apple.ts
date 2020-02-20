@@ -6,6 +6,7 @@ import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
+import {fromAppleBundle} from "../services/appToPlatform";
 
 export interface StatusUpdateNotification {
     environment: string,
@@ -41,6 +42,10 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     const eventType = notification.notification_type;
 
     const receiptInfo = notification.latest_receipt_info ?? notification.latest_expired_receipt_info;
+    const platform = fromAppleBundle(receiptInfo.bid);
+    if (!platform) {
+        console.warn(`Unknown bundle id ${receiptInfo.bid}`)
+    }
 
     return new SubscriptionEvent(
         receiptInfo.transaction_id,
@@ -48,7 +53,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         now.toISOString().substr(0, 10),
         now.toISOString(),
         eventType,
-        "ios",
+        platform ?? "unknown",
         receiptInfo.bid,
         null,
         notification,
