@@ -18,6 +18,7 @@ export interface PendingRenewalInfo {
 
 export interface AppleValidatedReceiptServerInfo {
     bundle_id?: string,
+    bid?: string,
     cancellation_date_ms?: string,
     expires_date?: string,
     expires_date_ms?: string,
@@ -176,11 +177,16 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
         const pendingRenewalInfo: PendingRenewalInfo = pendingRenewalInfoById[receiptInfo.original_transaction_id];
         const autoRenewStatus = pendingRenewalInfo ? pendingRenewalInfo.auto_renew_status === "1" : response.auto_renew_status === 1;
 
+        // bundle_id is the documented field, however it's sometimes not valued, but instead there's the field bid
+        // which is valued but undocumented. Oh and also sometimes it's on the latest_receipt object, but sometimes
+        // it's on the receipt object. Hopefully this covers all the corner cases? who knows!
+        const bundleId = receiptInfo.bundle_id ?? receiptInfo.bid ?? response.receipt?.bundle_id ?? response.receipt?.bid;
+
         return {
             isRetryable: response["is-retryable"] === true,
             latestReceipt: response.latest_receipt ?? receipt,
             latestReceiptInfo: {
-                bundleId: receiptInfo.bundle_id ?? response.receipt?.bundle_id,
+                bundleId: bundleId,
                 autoRenewStatus: autoRenewStatus,
                 cancellationDate: optionalMsToDate(receiptInfo.cancellation_date_ms),
                 expiresDate: new Date(expiryDate(receiptInfo)),
