@@ -29,6 +29,7 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
     }
 
     const expiryDate = new Date(Number.parseInt(response.expiryTimeMillis));
+    const freeTrial = response.paymentState === 2; // PaymentState 2 is free trial
     return [new Subscription(
         sub.purchaseToken,
         new Date(Number.parseInt(response.startTimeMillis)).toISOString(),
@@ -37,6 +38,7 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
         response.autoRenewing,
         sub.subscriptionId,
         fromGooglePackageName(sub.packageName)?.toString(),
+        freeTrial,
         response,
         undefined,
         null,
