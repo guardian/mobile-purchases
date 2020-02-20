@@ -3,18 +3,8 @@ import {
     HTTPResponses,
     HttpRequestHeaders
 } from '../models/apiGatewayHttp';
-import {getParams, getAccessToken, buildGoogleUrl} from "../utils/google-play";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {restClient} from "../utils/restClient";
-
-interface GoogleResponseBody {
-    expiryTimeMillis: string
-}
-
-interface AccessToken {
-    token: string,
-    date: Date
-}
+import {fetchGoogleSubscription} from "../services/google-play";
 
 interface SubscriptionStatusResponse {
     "subscriptionHasLapsed": boolean
@@ -22,13 +12,13 @@ interface SubscriptionStatusResponse {
 }
 
 function getPurchaseToken(headers: HttpRequestHeaders): string | null {
-    return headers["Play-Purchase-Token"] ?? headers["play-purchase-token"]
+    return headers["Play-Purchase-Token"] ?? headers["play-purchase-token"];
 }
 
 function googlePackageName(headers: HttpRequestHeaders): string {
     const packageNameFromHeaders = headers["Package-Name"] ?? headers["package-name"];
     if (packageNameFromHeaders) {
-        return packageNameFromHeaders
+        return packageNameFromHeaders;
     } else {
         return "com.guardian";
     }
@@ -36,44 +26,40 @@ function googlePackageName(headers: HttpRequestHeaders): string {
 
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 
-    const stage = process.env.Stage;
-
     const purchaseToken = getPurchaseToken(request.headers);
     if (request.pathParameters && request.headers && purchaseToken) {
         const packageName = googlePackageName(request.headers);
         const subscriptionId = request.pathParameters.subscriptionId;
         console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}`);
-        const url = buildGoogleUrl(subscriptionId, purchaseToken, packageName);
-        return getAccessToken(getParams(stage ?? ""))
-            .then(accessToken =>
-                restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}})
-            )
-            .then(response => {
-                if (response.result) {
-                    const subscriptionExpiryDate: Date = new Date(parseInt(response.result.expiryTimeMillis));
-                    const now: Date = new Date(Date.now());
-                    const subscriptionHasLapsed: boolean = now > subscriptionExpiryDate;
-                    const responseBody: SubscriptionStatusResponse = {"subscriptionHasLapsed": subscriptionHasLapsed, "subscriptionExpiryDate": subscriptionExpiryDate};
-                    console.log(`Successfully retrieved subscription details from Play Developer API. Response body will be: ${JSON.stringify(responseBody)}`);
-                    return {statusCode: 200, body: JSON.stringify(responseBody)}
-                } else {
-                    console.log(`Failed to establish expiry time of subscription`);
-                    return HTTPResponses.NOT_FOUND
-                }
-            })
-            .catch(
-                error => {
-                    if (error.statusCode === 410) {
-                        console.log(`Purchase expired a very long time ago`);
-                        return HTTPResponses.NOT_FOUND
-                    } else {
-                        console.log(`Serving an Internal Server Error due to: ${error}`);
-                        return HTTPResponses.INTERNAL_ERROR
-                    }
-                }
-            );
+
+        try {
+            const subscription = await fetchGoogleSubscription(subscriptionId, purchaseToken, packageName);
+
+            if (subscription) {
+                const subscriptionExpiryDate: Date = new Date(parseInt(subscription.expiryTimeMillis));
+                const now: Date = new Date(Date.now());
+                const subscriptionHasLapsed: boolean = now > subscriptionExpiryDate;
+                const responseBody: SubscriptionStatusResponse = {
+                    "subscriptionHasLapsed": subscriptionHasLapsed,
+                    "subscriptionExpiryDate": subscriptionExpiryDate
+                };
+                console.log(`Successfully retrieved subscription details from Play Developer API. Response body will be: ${JSON.stringify(responseBody)}`);
+                return {statusCode: 200, body: JSON.stringify(responseBody)};
+            } else {
+                console.log(`Failed to establish expiry time of subscription`);
+                return HTTPResponses.NOT_FOUND;
+            }
+        } catch (error) {
+            if (error.statusCode === 410) {
+                console.log(`Purchase expired a very long time ago`);
+                return HTTPResponses.NOT_FOUND;
+            } else {
+                console.log(`Serving an Internal Server Error due to: ${error}`);
+                return HTTPResponses.INTERNAL_ERROR;
+            }
+        }
     } else {
-        return HTTPResponses.INVALID_REQUEST
+        return HTTPResponses.INVALID_REQUEST;
     }
 
 }
