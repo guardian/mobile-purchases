@@ -5,6 +5,7 @@ import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {GoogleSubscriptionReference} from "../models/subscriptionReference";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
+import {fromGooglePackageName} from "../services/appToPlatform";
 
 interface DeveloperNotification {
     version: string,
@@ -51,13 +52,17 @@ export function toDynamoEvent(notification: DeveloperNotification): Subscription
     const date = eventTimestamp.substr(0, 10);
     const eventType = notification.subscriptionNotification.notificationType;
     const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] ?? eventType.toString();
+    const platform = fromGooglePackageName(notification.packageName)?.toString();
+    if (!platform) {
+        console.warn(`Unknown package name ${notification.packageName}`)
+    }
     return new SubscriptionEvent(
         notification.subscriptionNotification.purchaseToken,
         eventTimestamp + "|" + eventTypeString,
         date,
         eventTimestamp,
         eventTypeString,
-        "android",
+        platform ?? "unknown",
         notification.packageName,
         notification,
         null,

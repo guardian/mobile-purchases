@@ -17,6 +17,7 @@ export interface PendingRenewalInfo {
 }
 
 export interface AppleValidatedReceiptServerInfo {
+    bundle_id?: string,
     cancellation_date_ms?: string,
     expires_date?: string,
     expires_date_ms?: string,
@@ -40,10 +41,12 @@ export interface AppleValidationServerResponse {
     latest_receipt_info?: AppleValidatedReceiptServerInfo | AppleValidatedReceiptServerInfo[],
     latest_expired_receipt_info?: AppleValidatedReceiptServerInfo,
     pending_renewal_info?: PendingRenewalInfo[],
+    receipt?: AppleValidatedReceiptServerInfo,
     status: number
 }
 
 export interface AppleValidatedReceiptInfo {
+    bundleId?: string,
     autoRenewStatus: boolean,
     trialPeriod: boolean,
     cancellationDate: Option<Date>,
@@ -177,6 +180,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
             isRetryable: response["is-retryable"] === true,
             latestReceipt: response.latest_receipt ?? receipt,
             latestReceiptInfo: {
+                bundleId: receiptInfo.bundle_id ?? response.receipt?.bundle_id,
                 autoRenewStatus: autoRenewStatus,
                 cancellationDate: optionalMsToDate(receiptInfo.cancellation_date_ms),
                 expiresDate: new Date(expiryDate(receiptInfo)),

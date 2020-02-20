@@ -9,6 +9,7 @@ describe("The apple validation service", () => {
         const appleResponse: AppleValidationServerResponse = {
             auto_renew_status: 0,
             latest_expired_receipt_info: {
+                bundle_id: "uk.co.guardian.iphone2",
                 is_trial_period: "false",
                 original_transaction_id: "1234",
                 product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
@@ -22,6 +23,7 @@ describe("The apple validation service", () => {
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                bundleId: "uk.co.guardian.iphone2",
                 autoRenewStatus: false,
                 trialPeriod: false,
                 cancellationDate: null,
@@ -41,6 +43,7 @@ describe("The apple validation service", () => {
         const appleResponse: AppleValidationServerResponse = {
             auto_renew_status: 0,
             latest_receipt_info: {
+                bundle_id: "uk.co.guardian.iphone2",
                 is_trial_period: "false",
                 original_transaction_id: "1234",
                 product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
@@ -55,6 +58,7 @@ describe("The apple validation service", () => {
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                bundleId: "uk.co.guardian.iphone2",
                 autoRenewStatus: false,
                 trialPeriod: false,
                 cancellationDate: null,
@@ -73,6 +77,7 @@ describe("The apple validation service", () => {
         const appleResponse: AppleValidationServerResponse = {
             auto_renew_status: 0,
             latest_receipt_info: [{
+                bundle_id: "uk.co.guardian.iphone2",
                 is_trial_period: "false",
                 original_transaction_id: "1234",
                 product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
@@ -87,6 +92,7 @@ describe("The apple validation service", () => {
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                bundleId: "uk.co.guardian.iphone2",
                 autoRenewStatus: false,
                 trialPeriod: false,
                 cancellationDate: null,
@@ -106,6 +112,7 @@ describe("The apple validation service", () => {
             auto_renew_status: 0,
             latest_receipt_info: [
                 {
+                    bundle_id: "uk.co.guardian.iphone2",
                     is_trial_period: "false",
                     original_transaction_id: "1234",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
@@ -114,6 +121,7 @@ describe("The apple validation service", () => {
                     original_purchase_date_ms: "1567081703000"
                 },
                 {
+                    bundle_id: "uk.co.guardian.iphone2",
                     is_trial_period: "false",
                     original_transaction_id: "1235",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
@@ -122,6 +130,7 @@ describe("The apple validation service", () => {
                     original_purchase_date_ms: "1567081703000"
                 },
                 {
+                    bundle_id: "uk.co.guardian.iphone2",
                     is_trial_period: "false",
                     original_transaction_id: "1235",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
@@ -137,6 +146,7 @@ describe("The apple validation service", () => {
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                bundleId: "uk.co.guardian.iphone2",
                 autoRenewStatus: false,
                 trialPeriod: false,
                 cancellationDate: null,
@@ -150,6 +160,7 @@ describe("The apple validation service", () => {
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                bundleId: "uk.co.guardian.iphone2",
                 autoRenewStatus: false,
                 trialPeriod: false,
                 cancellationDate: null,
@@ -170,12 +181,14 @@ describe("The apple validation service", () => {
             auto_renew_status: 0,
             latest_receipt_info: [
                 {
+                    bundle_id: "uk.co.guardian.iphone2",
                     is_trial_period: "false",
                     original_transaction_id: "1234",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
                     original_purchase_date_ms: "1567081703000"
                 },
                 {
+                    bundle_id: "uk.co.guardian.iphone2",
                     is_trial_period: "false",
                     original_transaction_id: "1235",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
@@ -191,6 +204,7 @@ describe("The apple validation service", () => {
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                bundleId: "uk.co.guardian.iphone2",
                 autoRenewStatus: false,
                 trialPeriod: false,
                 cancellationDate: null,
@@ -210,6 +224,7 @@ describe("The apple validation service", () => {
             auto_renew_status: 1,
             latest_receipt_info: [
                 {
+                    bundle_id: "uk.co.guardian.iphone2",
                     is_trial_period: "false",
                     original_transaction_id: "1235",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
@@ -218,6 +233,7 @@ describe("The apple validation service", () => {
                     original_purchase_date_ms: "1567081703000"
                 },
                 {
+                    bundle_id: "uk.co.guardian.iphone2",
                     is_trial_period: "false",
                     original_transaction_id: "1236",
                     product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
@@ -251,6 +267,7 @@ describe("The apple validation service", () => {
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                bundleId: "uk.co.guardian.iphone2",
                 autoRenewStatus: false,
                 trialPeriod: false,
                 cancellationDate: null,
@@ -264,6 +281,7 @@ describe("The apple validation service", () => {
             isRetryable: false,
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
+                bundleId: "uk.co.guardian.iphone2",
                 autoRenewStatus: true,
                 trialPeriod: false,
                 cancellationDate: null,

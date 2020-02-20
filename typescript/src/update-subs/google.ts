@@ -3,13 +3,14 @@ import {SQSEvent, SQSRecord} from 'aws-lambda';
 import * as restm from 'typed-rest-client/RestClient';
 import {buildGoogleUrl, getAccessToken, getParams} from "../utils/google-play";
 
-import {parseAndStoreSubscriptionUpdate} from './updatesub';
+import {makeCancellationTime, parseAndStoreSubscriptionUpdate} from './updatesub';
 import {Stage} from "../utils/appIdentity";
 import {Subscription} from "../models/subscription";
-import {makeCancellationTime} from "./updatesub";
 import {ProcessingError} from "../models/processingError";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {GoogleSubscriptionReference} from "../models/subscriptionReference";
+import {Platform} from "../models/platform";
+import {fromGooglePackageName} from "../services/appToPlatform";
 
 interface GoogleResponseBody {
     startTimeMillis: string,
@@ -17,6 +18,8 @@ interface GoogleResponseBody {
     userCancellationTimeMillis: string,
     autoRenewing: boolean
 }
+
+
 
 const restClient = new restm.RestClient('guardian-mobile-purchases');
 
@@ -38,6 +41,7 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
                 makeCancellationTime(response.result.userCancellationTimeMillis),
                 response.result.autoRenewing,
                 sub.subscriptionId,
+                fromGooglePackageName(sub.packageName)?.toString(),
                 response.result,
                 undefined,
                 null,

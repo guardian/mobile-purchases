@@ -28,7 +28,7 @@ describe("The google pubsub", () => {
 
         const body = {
             message: {
-                data:'ewogICJ2ZXJzaW9uIjoiMS4wIiwKICAicGFja2FnZU5hbWUiOiJjb20uc29tZS50aGluZyIsCiAgImV2ZW50VGltZU1pbGxpcyI6IjE1MDMzNDk1NjYxNjgiLAogICJzdWJzY3JpcHRpb25Ob3RpZmljYXRpb24iOgogIHsKICAgICJ2ZXJzaW9uIjoiMS4wIiwKICAgICJub3RpZmljYXRpb25UeXBlIjo0LAogICAgInB1cmNoYXNlVG9rZW4iOiJQVVJDSEFTRV9UT0tFTiIsCiAgICAic3Vic2NyaXB0aW9uSWQiOiJteS5za3UiCiAgfQp9Cg==',
+                data:'ewogICJ2ZXJzaW9uIjoiMS4wIiwKICAicGFja2FnZU5hbWUiOiJjb20uZ3VhcmRpYW4uZGVidWciLAogICJldmVudFRpbWVNaWxsaXMiOiIxNTAzMzQ5NTY2MTY4IiwKICAic3Vic2NyaXB0aW9uTm90aWZpY2F0aW9uIjoKICB7CiAgICAidmVyc2lvbiI6IjEuMCIsCiAgICAibm90aWZpY2F0aW9uVHlwZSI6NCwKICAgICJwdXJjaGFzZVRva2VuIjoiUFVSQ0hBU0VfVE9LRU4iLAogICAgInN1YnNjcmlwdGlvbklkIjoibXkuc2t1IgogIH0KfQo=',
                 messageId: '123',
                 message_id: '123',
                 publishTime: '2019-05-24T15:06:47.701Z',
@@ -60,10 +60,10 @@ describe("The google pubsub", () => {
             "2017-08-21T21:06:06.168Z",
             "SUBSCRIPTION_PURCHASED",
             "android",
-            "com.some.thing",
+            "com.guardian.debug",
             {
                 eventTimeMillis: "1503349566168",
-                packageName: "com.some.thing",
+                packageName: "com.guardian.debug",
                 subscriptionNotification: {
                     notificationType: 4,
                     purchaseToken: "PURCHASE_TOKEN",
@@ -81,7 +81,7 @@ describe("The google pubsub", () => {
             expect(mockStoreFunction.mock.calls.length).toEqual(1);
             expect(mockStoreFunction.mock.calls[0][0]).toStrictEqual(expectedSubscriptionEventInDynamo);
             expect(mockSqsFunction.mock.calls.length).toEqual(1);
-            expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual({packageName: "com.some.thing", purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"});
+            expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual({packageName: "com.guardian.debug", purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"});
         });
     });
 });
