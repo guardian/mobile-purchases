@@ -98,6 +98,7 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
         request,
         parsePayload,
         toDynamoEvent,
-        toSqsSubReference
+        toSqsSubReference,
+        () => Promise.resolve(undefined)
     )
 }

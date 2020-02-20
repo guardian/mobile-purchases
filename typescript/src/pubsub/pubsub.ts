@@ -23,11 +23,12 @@ function storeInDynamoImpl(event: SubscriptionEvent): Promise<SubscriptionEvent>
     return dynamoMapper.put({item: event}).then(result => result.item);
 }
 
-export async function parseStoreAndSend<Payload, SqsEvent>(
+export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
     request: APIGatewayProxyEvent,
     parsePayload: (body: Option<string>) => Payload | Error,
-    toDynamoEvent: (payload: Payload) => SubscriptionEvent,
+    toDynamoEvent: (payload: Payload, metaData?: MetaData) => SubscriptionEvent,
     toSqsEvent: (payload: Payload) => SqsEvent,
+    fetchMetadata: (payload: Payload) => Promise<MetaData | undefined>,
     storeInDynamo: (event: SubscriptionEvent) => Promise<SubscriptionEvent> = storeInDynamoImpl,
     sendToSqsFunction: (queueUrl: string, event: SqsEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
 ): Promise<APIGatewayProxyResult> {
@@ -42,7 +43,8 @@ export async function parseStoreAndSend<Payload, SqsEvent>(
             const queueUrl = process.env.QueueUrl;
             if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
 
-            const dynamoEvent = toDynamoEvent(notification);
+            const metaData = await fetchMetadata(notification);
+            const dynamoEvent = toDynamoEvent(notification, metaData);
             const dynamoPromise = storeInDynamo(dynamoEvent);
 
             const sqsEvent = toSqsEvent(notification);
