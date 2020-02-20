@@ -64,6 +64,7 @@ export function toDynamoEvent(notification: DeveloperNotification): Subscription
         eventTypeString,
         platform ?? "unknown",
         notification.packageName,
+        undefined,
         notification,
         null,
         dateToSecondTimestamp(thirtyMonths(eventDate))

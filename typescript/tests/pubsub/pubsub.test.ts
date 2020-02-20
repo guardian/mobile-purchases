@@ -61,6 +61,7 @@ describe("The google pubsub", () => {
             "SUBSCRIPTION_PURCHASED",
             "android",
             "com.guardian.debug",
+            undefined,
             {
                 eventTimeMillis: "1503349566168",
                 packageName: "com.guardian.debug",
