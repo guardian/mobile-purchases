@@ -1,10 +1,10 @@
-import {Response} from "node-fetch";
 import {getConfigValue} from "../utils/ssmConfig";
 import {ProcessingError} from "../models/processingError";
 import {Stage} from "../utils/appIdentity";
-import fetch from 'node-fetch';
 import {msToDate, optionalMsToDate} from "../utils/dates";
 import {Option} from "../utils/option";
+import {restClient} from "../utils/restClient";
+import {IHttpClientResponse} from "typed-rest-client/Interfaces";
 
 export interface PendingRenewalInfo {
     auto_renew_product_id?: string,
@@ -65,12 +65,11 @@ export interface AppleValidationResponse {
     originalResponse: any
 }
 
-
 const sandboxReceiptEndpoint = "https://sandbox.itunes.apple.com/verifyReceipt";
 const prodReceiptEndpoint = "https://buy.itunes.apple.com/verifyReceipt";
 const receiptEndpoint = (Stage === "PROD") ? prodReceiptEndpoint : sandboxReceiptEndpoint;
 
-function callValidateReceipt(receipt: string, forceSandbox: boolean = false): Promise<Response> {
+function callValidateReceipt(receipt: string, forceSandbox: boolean = false): Promise<IHttpClientResponse> {
     const endpoint = forceSandbox ? sandboxReceiptEndpoint : receiptEndpoint;
     return getConfigValue<string>("apple.password")
         .then(password => {
@@ -79,15 +78,12 @@ function callValidateReceipt(receipt: string, forceSandbox: boolean = false): Pr
                 "password": password,
                 "exclude-old-transactions": true
             });
-            return Promise.race([
-                fetch(endpoint, { method: 'POST', body: body}),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("Timeout while validating receipt with Apple")), 12000)
-                ) as Promise<Response>
-            ]);
+            return restClient.client.post(endpoint, body)
         }).then(response => {
-            if (!response.ok) {
-                console.error(`Impossible to validate the receipt, got ${response.status} ${response.statusText} from ${endpoint} for ${receipt}`);
+            const statusCode = response.message.statusCode;
+            const statusText = response.message.statusMessage;
+            if (statusCode && (statusCode < 200 || statusCode >= 300)) {
+                console.error(`Impossible to validate the receipt, got ${statusCode} ${statusText} from ${endpoint} for ${receipt}`);
                 throw new ProcessingError("Impossible to validate receipt", true);
             }
             return response
@@ -207,7 +203,8 @@ async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerRe
     if (parsedResponse.status === 21007 && options.sandboxRetry) {
         console.log("Got status code 21007, retrying in Sandbox");
         return callValidateReceipt(receipt, true)
-            .then(response => response.json())
+            .then(response => response.readBody())
+            .then(body => JSON.parse(body))
             .then(body => body as AppleValidationServerResponse);
     } else {
         return parsedResponse;
@@ -216,7 +213,8 @@ async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerRe
 
 export function validateReceipt(receipt: string, options: ValidationOptions): Promise<AppleValidationResponse[]> {
     return callValidateReceipt(receipt)
-        .then(response => response.json())
+        .then(response => response.readBody())
+        .then(body => JSON.parse(body))
         .then(body => body as AppleValidationServerResponse)
         .then(parsedResponse => retryInSandboxIfNecessary(parsedResponse, receipt, options))
         .then(checkResponseStatus)
