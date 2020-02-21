@@ -740,7 +740,7 @@ Resources:
       FunctionName: !Ref UpdateGoogleSubscriptionsLambda
       Enabled: true
       EventSourceArn: !GetAtt GoogleSubscriptionsQueue.Arn
-      BatchSize: 10
+      BatchSize: 1
 
 
   UserSubscriptionsLambda:
@@ -805,7 +805,7 @@ Resources:
       FunctionName: !Ref UpdateAppleSubscriptionsLambda
       Enabled: true
       EventSourceArn: !GetAtt AppleSubscriptionsQueue.Arn
-      BatchSize: 10
+      BatchSize: 1
 
   AppleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
