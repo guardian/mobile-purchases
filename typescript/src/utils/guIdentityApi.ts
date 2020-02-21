@@ -1,8 +1,6 @@
 import {HttpRequestHeaders} from "../models/apiGatewayHttp";
-import * as restm from "typed-rest-client/RestClient";
 import {Option} from "./option";
-
-const restClient = new restm.RestClient('guardian-mobile-purchases');
+import {restClient} from "./restClient";
 
 interface UserId {
     id: string

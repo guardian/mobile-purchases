@@ -1,11 +1,11 @@
 import 'source-map-support/register'
-import * as restm from 'typed-rest-client/RestClient';
 import {
     HTTPResponses,
     HttpRequestHeaders
 } from '../models/apiGatewayHttp';
 import {getParams, getAccessToken, buildGoogleUrl} from "../utils/google-play";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {restClient} from "../utils/restClient";
 
 interface GoogleResponseBody {
     expiryTimeMillis: string
@@ -40,7 +40,6 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
 
     const purchaseToken = getPurchaseToken(request.headers);
     if (request.pathParameters && request.headers && purchaseToken) {
-        const restClient = new restm.RestClient('guardian-mobile-purchases');
         const packageName = googlePackageName(request.headers);
         const subscriptionId = request.pathParameters.subscriptionId;
         console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}`);
