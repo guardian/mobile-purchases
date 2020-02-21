@@ -19,6 +19,9 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
         if (exception.statusCode === 410) {
             console.log(`Purchase expired a very long time ago, ignoring`);
             return [];
+        } if (exception.statusCode === 400 && exception?.result?.error?.message === "Invalid Value") {
+            console.warn("The purchase token value was invalid, we can't recover from this error", exception);
+            throw new ProcessingError("Invalid token value", false);
         } else {
             throw exception;
         }
