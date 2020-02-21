@@ -8,7 +8,7 @@ export interface AccessToken {
     date: Date
 }
 
-export function getParams(stage: String): S3.Types.GetObjectRequest {
+export function getParams(stage: string): S3.Types.GetObjectRequest {
   return {
       Bucket: "gu-mobile-access-tokens",
       Key: `${stage}/google-play-developer-api/access_token.json`
@@ -30,7 +30,7 @@ export function getAccessToken(params: S3.Types.GetObjectRequest) : Promise<Acce
         })
 }
 
-export function buildGoogleUrl(subscriptionId: String, purchaseToken: String, packageName: String) {
+export function buildGoogleUrl(subscriptionId: string, purchaseToken: string, packageName: string) {
     const baseUrl = `https://www.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions`;
     return `${baseUrl}/${subscriptionId}/tokens/${purchaseToken}`;
 }
@@ -42,11 +42,10 @@ export interface GoogleResponseBody {
     autoRenewing: boolean
 }
 
-export async function fetchGoogleSubscription(subscriptionId: string, purchaseToken: String, packageName: String): Promise<GoogleResponseBody | null> {
+export async function fetchGoogleSubscription(subscriptionId: string, purchaseToken: string, packageName: string): Promise<GoogleResponseBody | null> {
     const url = buildGoogleUrl(subscriptionId, purchaseToken, packageName);
     const accessToken = await getAccessToken(getParams(Stage));
     const response = await restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}});
 
     return response.result;
 }
-

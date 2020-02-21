@@ -50,7 +50,7 @@ async function queueHistoricalSubscription(subscription: Subscription): Promise<
 export async function parseAndStoreSubscriptionUpdate(
     sqsRecord: SQSRecord,
     fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription[]>
-) : Promise<String> {
+) : Promise<string> {
     try {
         const subscriptions = await fetchSubscriberDetails(sqsRecord);
         await Promise.all(subscriptions.map(putSubscription));
