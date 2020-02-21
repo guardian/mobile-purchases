@@ -35,7 +35,7 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
         try {
             const subscription = await fetchGoogleSubscription(subscriptionId, purchaseToken, packageName);
 
-            if (subscription) {
+            if (subscription !== null) {
                 const subscriptionExpiryDate: Date = new Date(parseInt(subscription.expiryTimeMillis));
                 const now: Date = new Date(Date.now());
                 const subscriptionHasLapsed: boolean = now > subscriptionExpiryDate;
