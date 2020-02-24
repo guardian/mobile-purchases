@@ -38,10 +38,11 @@ export const ssm: SSM  = new SSM({
 });
 
 
-export function sendToSqs(queueUrl: string, event: any): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
     return sqs.sendMessage({
         QueueUrl: queueUrl,
-        MessageBody: JSON.stringify(event)
+        MessageBody: JSON.stringify(event),
+        DelaySeconds: delaySeconds
     }).promise()
 }
 
