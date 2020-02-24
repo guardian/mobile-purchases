@@ -66,14 +66,17 @@ export async function handler(event: ScheduleEvent) {
     const SqsUrl = process.env.SqsUrl;
     if (SqsUrl === undefined) throw new Error("No SqsUrl env parameter provided");
 
+    let sentCount = 0;
     for await (const subscription of queryScan) {
         const receipt: string | undefined = subscription.receipt;
         if (receipt) {
-            const subscriptionReference: AppleSubscriptionReference = {receipt: receipt}
+            const subscriptionReference: AppleSubscriptionReference = {receipt: receipt};
             await sendToSqs(SqsUrl, subscriptionReference);
+            sentCount++;
+            console.log(`Sent subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`)
         } else {
             console.warn(`No receipt found for ${subscription.subscriptionId}`);
         }
-        console.log(`Found subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`)
     }
+    console.log(`Sent ${sentCount} subscriptions to be re-validated.`)
 }
