@@ -6,7 +6,7 @@ import {ProcessingError} from "../models/processingError";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {GoogleSubscriptionReference} from "../models/subscriptionReference";
 import {fromGooglePackageName} from "../services/appToPlatform";
-import {fetchGoogleSubscription} from "../services/google-play";
+import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE} from "../services/google-play";
 
 async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> {
 
@@ -29,7 +29,7 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
     }
 
     const expiryDate = new Date(Number.parseInt(response.expiryTimeMillis));
-    const freeTrial = response.paymentState === 2; // PaymentState 2 is free trial
+    const freeTrial = response.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL;
     return [new Subscription(
         sub.purchaseToken,
         new Date(Number.parseInt(response.startTimeMillis)).toISOString(),

@@ -3,6 +3,13 @@ import S3 from 'aws-sdk/clients/s3'
 import {Stage} from "../utils/appIdentity";
 import {restClient} from "../utils/restClient";
 
+export const GOOGLE_PAYMENT_STATE = {
+    PAYMENT_PENDING: 0,
+    PAYMENT_RECEIVED: 1,
+    FREE_TRIAL: 2,
+    PENDING: 3
+};
+
 export interface AccessToken {
     token: string,
     date: Date
