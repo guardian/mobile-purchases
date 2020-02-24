@@ -1,29 +1,38 @@
-import {plusHours} from "../utils/dates";
+import {plusDays, plusHours} from "../utils/dates";
 import {dynamoMapper, sendToSqs} from "../utils/aws";
 import {EndTimeStampFilterSubscription} from "../models/endTimestampFilter";
 import {
     AndExpression,
     attributeExists,
-    equals, lessThan,
+    equals, greaterThan, lessThan,
 } from '@aws/dynamodb-expressions';
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
 
 function endTimestampForQuery(event: ScheduleEvent): Date {
-    const defaultDate = plusHours(new Date(), 13);
     if (event.endTimestampFilter) {
         return new Date(Date.parse(event.endTimestampFilter));
     } else {
-        return defaultDate;
+        return plusHours(new Date(), 13);
+    }
+}
+
+function startTimestampForQuery(event: ScheduleEvent): Date {
+    if (event.startTimestampFilter) {
+        return new Date(Date.parse(event.startTimestampFilter));
+    } else {
+        return plusDays(new Date(), -60);
     }
 }
 
 interface ScheduleEvent {
-    endTimestampFilter?: string;
+    endTimestampFilter?: string
+    startTimestampFilter?: string
 }
 
 export async function handler(event: ScheduleEvent) {
-    const time = endTimestampForQuery(event).toISOString();
-    console.log(`Will filter subscriptions before ${time}`);
+    const startTimestamp = startTimestampForQuery(event).toISOString();
+    const endTimestamp = endTimestampForQuery(event).toISOString();
+    console.log(`Will filter subscriptions before ${endTimestamp}`);
 
     const filter: AndExpression = {
         type: 'And',
@@ -37,7 +46,11 @@ export async function handler(event: ScheduleEvent) {
                 subject: 'receipt'
             },
             {
-                ...lessThan(time),
+                ...lessThan(endTimestamp),
+                subject: 'endTimestamp'
+            },
+            {
+                ...greaterThan(startTimestamp),
                 subject: 'endTimestamp'
             }
         ]
