@@ -1,7 +1,7 @@
 import 'source-map-support/register'
 import {parseStoreAndSend} from "./pubsub";
 import {SubscriptionEvent} from "../models/subscriptionEvent";
-import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
+import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/dates";
 import {GoogleSubscriptionReference} from "../models/subscriptionReference";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
@@ -28,8 +28,13 @@ interface MetaData {
 
 export function parsePayload(body: Option<string>): Error | DeveloperNotification {
     try {
-        let rawNotification = Buffer.from(JSON.parse(body ?? "").message.data, 'base64');
-        return JSON.parse(rawNotification.toString()) as DeveloperNotification;
+        const rawNotification = Buffer.from(JSON.parse(body ?? "").message.data, 'base64');
+        const parsedNotification = JSON.parse(rawNotification.toString()) as DeveloperNotification;
+        const eventDate = optionalMsToDate(parsedNotification.eventTimeMillis);
+        if (eventDate === null) {
+            return new Error(`Unable to parse the eventTimeMillis field ${parsedNotification.eventTimeMillis}`)
+        }
+        return parsedNotification;
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
         return e;
@@ -70,8 +75,13 @@ async function fetchMetadata(notification: DeveloperNotification): Promise<MetaD
 }
 
 export function toDynamoEvent(notification: DeveloperNotification, metaData?: MetaData): SubscriptionEvent {
-    const eventDate = new Date(Number.parseInt(notification.eventTimeMillis));
-    const eventTimestamp = eventDate.toISOString();
+    const eventTime = optionalMsToDate(notification.eventTimeMillis);
+    if (!eventTime) {
+        // this is tested while parsing the payload in order to return HTTP 400 early.
+        // Therefore we should never reach this part of the code
+        throw new Error("eventTimeMillis can't be null")
+    }
+    const eventTimestamp = eventTime.toISOString();
     const date = eventTimestamp.substr(0, 10);
     const eventType = notification.subscriptionNotification.notificationType;
     const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] ?? eventType.toString();
@@ -91,7 +101,7 @@ export function toDynamoEvent(notification: DeveloperNotification, metaData?: Me
         metaData?.freeTrial,
         notification,
         null,
-        dateToSecondTimestamp(thirtyMonths(eventDate))
+        dateToSecondTimestamp(thirtyMonths(eventTime))
     );
 }
 

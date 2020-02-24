@@ -1,26 +1,15 @@
 import {Option} from "./option";
 
-export function msToDate(ms: string): Date {
-    return new Date(Number.parseInt(ms));
-}
-
 export function optionalMsToDate(ms: Option<string> | undefined): Option<Date> {
     if (ms) {
-        return new Date(Number.parseInt(ms));
+        const parsedDate = new Date(Number.parseInt(ms));
+        if (!isNaN(parsedDate.getDate())) {
+            return parsedDate;
+        } else {
+            return null;
+        }
     } else {
         return null;
-    }
-}
-
-export function msToFormattedString(ms: string): string {
-    return msToDate(ms).toISOString()
-}
-
-export function optionalMsToFormattedString(ms?: string): string | undefined {
-    if (ms) {
-        return msToFormattedString(ms);
-    } else {
-        return undefined;
     }
 }
 

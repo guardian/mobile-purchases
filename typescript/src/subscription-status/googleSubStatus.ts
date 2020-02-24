@@ -5,6 +5,8 @@ import {
 } from '../models/apiGatewayHttp';
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {fetchGoogleSubscription} from "../services/google-play";
+import {optionalMsToDate} from "../utils/dates";
+import {Option} from "../utils/option";
 
 interface SubscriptionStatusResponse {
     "subscriptionHasLapsed": boolean
@@ -35,8 +37,8 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
         try {
             const subscription = await fetchGoogleSubscription(subscriptionId, purchaseToken, packageName);
 
-            if (subscription !== null) {
-                const subscriptionExpiryDate: Date = new Date(parseInt(subscription.expiryTimeMillis));
+            const subscriptionExpiryDate: Option<Date> = optionalMsToDate(subscription?.expiryTimeMillis);
+            if (subscriptionExpiryDate !== null) {
                 const now: Date = new Date(Date.now());
                 const subscriptionHasLapsed: boolean = now > subscriptionExpiryDate;
                 const responseBody: SubscriptionStatusResponse = {

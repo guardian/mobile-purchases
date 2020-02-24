@@ -1,4 +1,4 @@
-import {dateToSecondTimestamp, thirtyMonths} from "../../src/utils/dates";
+import {dateToSecondTimestamp, thirtyMonths, optionalMsToDate} from "../../src/utils/dates";
 
 
 describe("The thirtyMonths function", () => {
@@ -17,4 +17,17 @@ describe("The dateToSecondTimestamp function", () => {
         const result = dateToSecondTimestamp(new Date(Date.UTC(2019, 0, 1, 0, 0, 0, 32)));
         expect(result).toStrictEqual(1546300801);
     });
+});
+
+describe("The optionalMsToDate function", () => {
+    test("Should handle null or undefined", () => {
+        expect(optionalMsToDate(null)).toEqual(null);
+        expect(optionalMsToDate(undefined)).toEqual(null);
+    });
+    test("Should handle invalid strings", () => {
+        expect(optionalMsToDate("abc")).toEqual(null);
+    });
+    test("Should convert numbers to timestamps", () => {
+        expect(optionalMsToDate("12345")).toEqual(new Date(12345));
+    })
 });
