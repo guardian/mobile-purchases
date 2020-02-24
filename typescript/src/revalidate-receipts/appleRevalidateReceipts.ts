@@ -71,7 +71,8 @@ export async function handler(event: ScheduleEvent) {
         const receipt: string | undefined = subscription.receipt;
         if (receipt) {
             const subscriptionReference: AppleSubscriptionReference = {receipt: receipt};
-            await sendToSqs(SqsUrl, subscriptionReference);
+            const delayInSeconds = Math.min(Math.floor(sentCount / 10), 900);
+            await sendToSqs(SqsUrl, subscriptionReference, delayInSeconds);
             sentCount++;
             console.log(`Sent subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`)
         } else {
