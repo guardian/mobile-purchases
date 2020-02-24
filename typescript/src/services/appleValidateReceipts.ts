@@ -1,7 +1,7 @@
 import {getConfigValue} from "../utils/ssmConfig";
 import {ProcessingError} from "../models/processingError";
 import {Stage} from "../utils/appIdentity";
-import {msToDate, optionalMsToDate} from "../utils/dates";
+import {optionalMsToDate} from "../utils/dates";
 import {Option} from "../utils/option";
 import {restClient} from "../utils/restClient";
 import {IHttpClientResponse} from "typed-rest-client/Interfaces";
@@ -184,6 +184,12 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
             console.warn(`Unable to identify the bundle id for the original transaction id ${receiptInfo.original_transaction_id}`)
         }
 
+        const originalPurchaseDate = optionalMsToDate(receiptInfo.original_purchase_date_ms);
+        if (originalPurchaseDate === null) {
+            console.error(`Unable to parse the original purchase date ${receiptInfo.original_purchase_date_ms}`);
+            throw new ProcessingError(`Unable to parse the original purchase date`, false);
+        }
+
         return {
             isRetryable: response["is-retryable"] === true,
             latestReceipt: response.latest_receipt ?? receipt,
@@ -192,7 +198,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
                 autoRenewStatus: autoRenewStatus,
                 cancellationDate: optionalMsToDate(receiptInfo.cancellation_date_ms),
                 expiresDate: new Date(expiryDate(receiptInfo)),
-                originalPurchaseDate: msToDate(receiptInfo.original_purchase_date_ms),
+                originalPurchaseDate: originalPurchaseDate ?? undefined,
                 originalTransactionId: receiptInfo.original_transaction_id,
                 productId: receiptInfo.product_id,
                 trialPeriod: receiptInfo.is_trial_period === "true",

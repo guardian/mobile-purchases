@@ -3,32 +3,6 @@ import {Subscription} from '../models/subscription';
 import {dynamoMapper, sendToSqs} from "../utils/aws";
 import {ProcessingError} from "../models/processingError";
 
-export function makeCancellationTime(cancellationTime: string) : string {
-    if (cancellationTime) {
-        return new Date(Number.parseInt(cancellationTime)).toISOString()
-    } else {
-        return ""
-    }
-}
-
-export class SubscriptionUpdate {
-    purchaseToken: string;
-    startTimeMillis: string;
-    expiryTimeMillis: string;
-    userCancellationTimeMillis: string;
-    autoRenewing: boolean;
-    payload: any;
-
-    constructor(purchaseToken: string, startTimeMillis: string, expiryTimeMillis: string, userCancellationTimeMillis: string, autoRenewing: boolean, payload: any) {
-        this.purchaseToken = purchaseToken;
-        this.startTimeMillis = startTimeMillis;
-        this.expiryTimeMillis = expiryTimeMillis;
-        this.userCancellationTimeMillis = userCancellationTimeMillis;
-        this.autoRenewing = autoRenewing;
-        this.payload = payload;
-    }
-}
-
 function putSubscription(subscription: Subscription): Promise<Subscription> {
     return dynamoMapper.put({item: subscription}).then(result => result.item)
 }
