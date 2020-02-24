@@ -69,6 +69,8 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         console.warn(`Unknown bundle id ${receiptInfo.bid}`)
     }
 
+    const freeTrial = receiptInfo.is_trial_period === "true";
+
     return new SubscriptionEvent(
         receiptInfo.transaction_id,
         now.toISOString() + "|" + eventType,
@@ -77,6 +79,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         eventType,
         platform ?? "unknown",
         receiptInfo.bid,
+        freeTrial,
         null,
         notification,
         dateToSecondTimestamp(thirtyMonths(now))
@@ -95,6 +98,7 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
         request,
         parsePayload,
         toDynamoEvent,
-        toSqsSubReference
+        toSqsSubReference,
+        () => Promise.resolve(undefined)
     )
 }

@@ -18,13 +18,27 @@ export class SubscriptionEvent {
     @attribute()
     appId: string;
     @attribute()
+    freeTrial?: boolean;
+    @attribute()
     googlePayload?: any;
     @attribute()
     applePayload?: any;
     @attribute()
     ttl: number;
 
-    constructor(subscriptionId: string, timestampAndType: string, date: string, timestamp: string, eventType: string, platform: string, appId: string, googlePayload: any, applePayload: any, ttl: number) {
+    constructor(
+        subscriptionId: string,
+        timestampAndType: string,
+        date: string,
+        timestamp: string,
+        eventType: string,
+        platform: string,
+        appId: string,
+        freeTrial: boolean | undefined,
+        googlePayload: any,
+        applePayload: any,
+        ttl: number
+    ) {
         this.subscriptionId = subscriptionId;
         this.timestampAndType = timestampAndType;
         this.date = date;
@@ -32,6 +46,7 @@ export class SubscriptionEvent {
         this.eventType = eventType;
         this.platform = platform;
         this.appId = appId;
+        this.freeTrial = freeTrial;
         this.googlePayload = googlePayload;
         this.applePayload = applePayload;
         this.ttl = ttl;
@@ -44,6 +59,6 @@ export class SubscriptionEvent {
 
 export class ReadSubscriptionEvent extends SubscriptionEvent {
     constructor() {
-        super("", "", "", "", "", "", "", {}, {}, 0);
+        super("", "", "", "", "", "", "", undefined,{}, {}, 0);
     }
 }

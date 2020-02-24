@@ -55,7 +55,7 @@ export async function parseAndStoreSubscriptionUpdate(
         const subscriptions = await fetchSubscriberDetails(sqsRecord);
         await Promise.all(subscriptions.map(putSubscription));
         await Promise.all(subscriptions.map(queueHistoricalSubscription));
-        console.log(`Processed ${subscriptions.length} subscriptions`);
+        console.log(`Processed ${subscriptions.length} subscriptions: ${subscriptions.map(s => s.subscriptionId)}`);
         return "OK"
     } catch (error) {
         if (error instanceof ProcessingError) {

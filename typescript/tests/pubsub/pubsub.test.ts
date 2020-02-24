@@ -14,21 +14,30 @@ describe("The google pubsub", () => {
         process.env['Secret'] = "MYSECRET";
         process.env['QueueUrl'] = "";
 
-        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]>  = jest.fn((event) => {
-            return new Promise((resolve, reject) => {
-                resolve(event);
-            });
-        });
+        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(event => Promise.resolve(event));
 
-        const mockSqsFunction: Mock<Promise<any>, [string, {purchaseToken: string}]>  = jest.fn((queurl, event) => {
-            return new Promise((resolve, reject) => {
-                resolve({});
-            });
-        });
+        const mockSqsFunction: Mock<Promise<any>, [string, {purchaseToken: string}]> = jest.fn((queurl, event) => Promise.resolve({}));
+
+        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
+
+        const receivedEvent = {
+            "version":"1.0",
+            "packageName":"com.guardian.debug",
+            "eventTimeMillis":"1503349566168",
+            "subscriptionNotification":
+                {
+                    "version":"1.0",
+                    "notificationType":4,
+                    "purchaseToken":"PURCHASE_TOKEN",
+                    "subscriptionId":"my.sku"
+                }
+        };
+
+        const encodedEvent = Buffer.from(JSON.stringify(receivedEvent)).toString('base64');
 
         const body = {
             message: {
-                data:'ewogICJ2ZXJzaW9uIjoiMS4wIiwKICAicGFja2FnZU5hbWUiOiJjb20uZ3VhcmRpYW4uZGVidWciLAogICJldmVudFRpbWVNaWxsaXMiOiIxNTAzMzQ5NTY2MTY4IiwKICAic3Vic2NyaXB0aW9uTm90aWZpY2F0aW9uIjoKICB7CiAgICAidmVyc2lvbiI6IjEuMCIsCiAgICAibm90aWZpY2F0aW9uVHlwZSI6NCwKICAgICJwdXJjaGFzZVRva2VuIjoiUFVSQ0hBU0VfVE9LRU4iLAogICAgInN1YnNjcmlwdGlvbklkIjoibXkuc2t1IgogIH0KfQo=',
+                data: encodedEvent,
                 messageId: '123',
                 message_id: '123',
                 publishTime: '2019-05-24T15:06:47.701Z',
@@ -61,6 +70,7 @@ describe("The google pubsub", () => {
             "SUBSCRIPTION_PURCHASED",
             "android",
             "com.guardian.debug",
+            true,
             {
                 eventTimeMillis: "1503349566168",
                 packageName: "com.guardian.debug",
@@ -76,12 +86,16 @@ describe("The google pubsub", () => {
             1582319167
         );
 
-        return parseStoreAndSend(input, parseGooglePayload, googlePayloadToDynamo, toGoogleSqsEvent, mockStoreFunction, mockSqsFunction).then(result => {
+        const expectedSubscriptionReferenceInSqs = {packageName: "com.guardian.debug", purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"};
+
+        return parseStoreAndSend(input, parseGooglePayload, googlePayloadToDynamo, toGoogleSqsEvent, mockFetchMetadataFunction, mockStoreFunction, mockSqsFunction).then(result => {
             expect(result).toStrictEqual(HTTPResponses.OK);
             expect(mockStoreFunction.mock.calls.length).toEqual(1);
             expect(mockStoreFunction.mock.calls[0][0]).toStrictEqual(expectedSubscriptionEventInDynamo);
             expect(mockSqsFunction.mock.calls.length).toEqual(1);
-            expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual({packageName: "com.guardian.debug", purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"});
+            expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(expectedSubscriptionReferenceInSqs);
+            expect(mockFetchMetadataFunction.mock.calls.length).toEqual(1);
+            expect(mockFetchMetadataFunction.mock.calls[0][0]).toStrictEqual(receivedEvent);
         });
     });
 });
