@@ -7,6 +7,7 @@ import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/da
 import {GoogleSubscriptionReference} from "../models/subscriptionReference";
 import {fromGooglePackageName} from "../services/appToPlatform";
 import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE} from "../services/google-play";
+import {PRODUCT_BILLING_PERIOD} from "../services/productBillingPeriod";
 
 async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> {
 
@@ -41,6 +42,11 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
         throw new ProcessingError(`Unable to parse the startTimeMillis field ${response.startTimeMillis}`, false)
     }
 
+    let billingPeriod = PRODUCT_BILLING_PERIOD[sub.subscriptionId];
+    if (billingPeriod === undefined) {
+        console.warn(`Unable to get the billing period, unknown google subscription ID ${sub.subscriptionId}`);
+    }
+
     const freeTrial = response.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL;
     return [new Subscription(
         sub.purchaseToken,
@@ -51,6 +57,7 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
         sub.subscriptionId,
         fromGooglePackageName(sub.packageName)?.toString(),
         freeTrial,
+        billingPeriod,
         response,
         undefined,
         null,

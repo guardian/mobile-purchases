@@ -6,6 +6,7 @@ import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
 import {AppleValidationResponse, validateReceipt} from "../services/appleValidateReceipts";
 import {fromAppleBundle} from "../services/appToPlatform";
+import {PRODUCT_BILLING_PERIOD} from "../services/productBillingPeriod";
 
 function toAppleSubscription(response: AppleValidationResponse): Subscription {
     const latestReceiptInfo = response.latestReceiptInfo;
@@ -20,6 +21,11 @@ function toAppleSubscription(response: AppleValidationResponse): Subscription {
         cancellationDate = latestReceiptInfo.cancellationDate.toISOString()
     }
 
+    let billingPeriod = PRODUCT_BILLING_PERIOD[latestReceiptInfo.productId];
+    if (billingPeriod === undefined) {
+        console.warn(`Unable to get the billing period, unknown product ID ${latestReceiptInfo.productId}`);
+    }
+
     return new Subscription(
         latestReceiptInfo.originalTransactionId,
         latestReceiptInfo.originalPurchaseDate.toISOString(),
@@ -29,6 +35,7 @@ function toAppleSubscription(response: AppleValidationResponse): Subscription {
         latestReceiptInfo.productId,
         fromAppleBundle(response.latestReceiptInfo.bundleId)?.toString(),
         latestReceiptInfo.trialPeriod,
+        billingPeriod,
         null,
         response.latestReceipt,
         response.originalResponse,
