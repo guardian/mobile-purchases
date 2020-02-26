@@ -30,6 +30,9 @@ export class Subscription {
     freeTrial?: boolean;
 
     @attribute()
+    billingPeriod?: string;
+
+    @attribute()
     googlePayload?: any;
 
     @attribute()
@@ -50,6 +53,7 @@ export class Subscription {
         productId: string,
         platform: string | undefined,
         freeTrial: boolean | undefined,
+        billingPeriod: string | undefined,
         googlePayload?: any,
         receipt?: string,
         applePayload?: any,
@@ -63,6 +67,7 @@ export class Subscription {
         this.productId = productId;
         this.platform = platform;
         this.freeTrial = freeTrial;
+        this.billingPeriod = billingPeriod;
         this.googlePayload = googlePayload;
         this.receipt = receipt;
         this.applePayload = applePayload;
@@ -77,7 +82,7 @@ export class Subscription {
 export class ReadSubscription extends Subscription {
 
     constructor() {
-        super("", "", "", undefined, false, "", undefined, undefined)
+        super("", "", "", undefined, false, "", undefined, undefined, undefined)
     }
 
     setSubscriptionId(subscriptionId: string): ReadSubscription {
