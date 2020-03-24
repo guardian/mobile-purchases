@@ -69,7 +69,8 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         console.warn(`Unknown bundle id ${receiptInfo.bid}`)
     }
 
-    const freeTrial = receiptInfo.is_trial_period === "true";
+    // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
+    const freeTrial = receiptInfo.is_trial_period === "true" || receiptInfo.is_in_intro_offer_period === "true";
 
     return new SubscriptionEvent(
         receiptInfo.original_transaction_id,
