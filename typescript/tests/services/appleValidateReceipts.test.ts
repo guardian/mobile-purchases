@@ -40,6 +40,41 @@ describe("The apple validation service", () => {
         expect(toSensiblePayloadFormat(appleResponse, "cmVjZWlwdA==")).toStrictEqual(expected);
     });
 
+    test("Should pass the introOffer flag through the cleanup", () => {
+        const appleResponse: AppleValidationServerResponse = {
+            auto_renew_status: 0,
+            latest_expired_receipt_info: {
+                bundle_id: "uk.co.guardian.iphone2",
+                is_trial_period: "false",
+                is_in_intro_offer_period: "true",
+                original_transaction_id: "1234",
+                product_id: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
+                expires_date: "1570705794000",
+                original_purchase_date_ms: "1567081703000"
+            },
+            status: 21006
+        };
+
+        const expected: AppleValidationResponse[] = [{
+            isRetryable: false,
+            latestReceipt: "cmVjZWlwdA==",
+            latestReceiptInfo: {
+                bundleId: "uk.co.guardian.iphone2",
+                autoRenewStatus: false,
+                trialPeriod: false,
+                inIntroOfferPeriod: true,
+                cancellationDate: null,
+                expiresDate: new Date(1570705794000),
+                originalPurchaseDate: new Date(1567081703000),
+                originalTransactionId: "1234",
+                productId: "uk.co.guardian.gla.1month.2018May.withFreeTrial",
+            },
+            originalResponse: appleResponse
+        }];
+
+        expect(toSensiblePayloadFormat(appleResponse, "cmVjZWlwdA==")).toStrictEqual(expected);
+    });
+
 
     test("Should transform a dirty apple payload with the latest receipt info into a sane one", () => {
         const appleResponse: AppleValidationServerResponse = {
