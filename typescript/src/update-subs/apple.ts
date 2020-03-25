@@ -34,7 +34,7 @@ function toAppleSubscription(response: AppleValidationResponse): Subscription {
         autoRenewStatus,
         latestReceiptInfo.productId,
         fromAppleBundle(response.latestReceiptInfo.bundleId)?.toString(),
-        latestReceiptInfo.trialPeriod,
+        latestReceiptInfo.trialPeriod || latestReceiptInfo.inIntroOfferPeriod,
         billingPeriod,
         null,
         response.latestReceipt,

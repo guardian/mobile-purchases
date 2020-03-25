@@ -25,7 +25,8 @@ export interface AppleValidatedReceiptServerInfo {
     original_purchase_date_ms: string,
     original_transaction_id: string
     product_id: string,
-    is_trial_period: string
+    is_trial_period: string,
+    is_in_intro_offer_period: string
 }
 
 export interface ValidationOptions {
@@ -53,6 +54,7 @@ export interface AppleValidatedReceiptInfo {
     bundleId?: string,
     autoRenewStatus: boolean,
     trialPeriod: boolean,
+    inIntroOfferPeriod: boolean,
     cancellationDate: Option<Date>,
     expiresDate: Date,
     originalPurchaseDate: Date,
@@ -202,6 +204,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
                 originalTransactionId: receiptInfo.original_transaction_id,
                 productId: receiptInfo.product_id,
                 trialPeriod: receiptInfo.is_trial_period === "true",
+                inIntroOfferPeriod: receiptInfo.is_in_intro_offer_period === "true",
             },
             originalResponse: response
         };
