@@ -47,7 +47,7 @@ lazy val googleOauth = project.in(scalaRoot / "google-oauth").enablePlugins(Asse
   .settings(
     commonAssemblySettings("google-oauth"),
     libraryDependencies ++= List(
-    "com.google.auth" % "google-auth-library-oauth2-http" % "0.15.0",
+    "com.google.auth" % "google-auth-library-oauth2-http" % "0.20.0",
     "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData
     )
