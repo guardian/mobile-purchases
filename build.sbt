@@ -93,6 +93,7 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
   assemblyMergeStrategy in assembly := {
     case "META-INF/MANIFEST.MF" => MergeStrategy.discard
     case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
+    case "module-info.class" => MergeStrategy.discard // See: https://stackoverflow.com/a/55557287
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
