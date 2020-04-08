@@ -47,7 +47,7 @@ lazy val googleOauth = project.in(scalaRoot / "google-oauth").enablePlugins(Asse
   .settings(
     commonAssemblySettings("google-oauth"),
     libraryDependencies ++= List(
-    "com.google.auth" % "google-auth-library-oauth2-http" % "0.15.0",
+    "com.google.auth" % "google-auth-library-oauth2-http" % "0.20.0",
     "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData
     )
@@ -93,6 +93,7 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
   assemblyMergeStrategy in assembly := {
     case "META-INF/MANIFEST.MF" => MergeStrategy.discard
     case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
+    case "module-info.class" => MergeStrategy.discard // See: https://stackoverflow.com/a/55557287
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
