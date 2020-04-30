@@ -721,16 +721,16 @@ Resources:
           MetricStat:
             Metric:
               MetricName: Count
-                Namespace: AWS/ApiGateway
-                Dimensions:
-                  - Name: ApiName
-                    Value: !Sub ${App}-${Stage}
-                  - Name: Method
-                    Value: GET
-                  - Name: Resource
-                    Value: /google/subscription/{subscriptionId}/status
-                  - Name: Stage
-                    Value: !Ref Stage
+              Namespace: AWS/ApiGateway
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub ${App}-${Stage}
+                - Name: Method
+                  Value: GET
+                - Name: Resource
+                  Value: /google/subscription/{subscriptionId}/status
+                - Name: Stage
+                  Value: !Ref Stage
             Period: 600
             Stat: Sum
           ReturnData: false
