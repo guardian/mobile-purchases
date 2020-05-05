@@ -680,7 +680,9 @@ Resources:
     Properties:
       ActionsEnabled: !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
       AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:mobile-server-side
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-google-oauth-token-refresh-failure
       AlarmDescription: !Sub Trigger the GoogleOAuth lambda manually to refresh the token
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -700,7 +702,9 @@ Resources:
     Properties:
       ActionsEnabled: !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
       AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:mobile-server-side
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-play-subscription-status-check-errors
       AlarmDescription: |
         More than 20% of attempts to check Play subscription status resulted in a 5XX error.
@@ -860,6 +864,8 @@ Resources:
       Threshold: 0
       AlarmActions:
         - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
       TreatMissingData: notBreaching
 
   GoogleSubscriptionDlqDepthAlarm:
@@ -878,6 +884,8 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       Threshold: 0
       AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
         - Ref: AlarmTopic
       TreatMissingData: notBreaching
 
