@@ -672,7 +672,9 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:mobile-server-side
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-google-oauth-token-refresh-failure
       AlarmDescription: !Sub Trigger the GoogleOAuth lambda manually to refresh the token
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -691,7 +693,9 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:mobile-server-side
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-play-subscription-status-check-errors
       AlarmDescription: !Sub A high number errors are being served to the Android app when it is attempting to check Play GoogleSubscription statuses
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -823,6 +827,8 @@ Resources:
       Threshold: 0
       AlarmActions:
         - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
       TreatMissingData: notBreaching
 
   GoogleSubscriptionDlqDepthAlarm:
@@ -840,6 +846,8 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       Threshold: 0
       AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
         - Ref: AlarmTopic
       TreatMissingData: notBreaching
 
