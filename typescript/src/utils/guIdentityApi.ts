@@ -19,11 +19,15 @@ export async function getUserId(headers: HttpRequestHeaders): Promise<Option<str
     const url = "https://id.guardianapis.com/user/me";
     const identityToken = getAuthToken(headers);
 
-    const response = await restClient.get<IdentityResponse>(url, {additionalHeaders: {Authorization: `Bearer ${identityToken}`}})
-
-    if(response.result) {
-        return response.result.user.id
-    } else {
-        return null;
+    try {
+        const response = await restClient.get<IdentityResponse>(url, {additionalHeaders: {Authorization: `Bearer ${identityToken}`}})
+        if(response.result) {
+            return response.result.user.id
+        } else {
+            return null;
+        }
+    } catch (e) {
+      console.error(`Unable to identify user with token ${identityToken}`, e);
+      throw e;
     }
 }

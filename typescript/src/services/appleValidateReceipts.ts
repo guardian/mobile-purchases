@@ -115,7 +115,7 @@ function checkResponseStatus(response: AppleValidationServerResponse): AppleVali
         throw new ProcessingError(`Invalid receipt, got status ${response.status}`);
     }
     if (!response.latest_receipt_info && !response.latest_expired_receipt_info) {
-        console.error(`No receipt info`);
+        console.error(`No receipt info in Apple's response`, response);
         throw new ProcessingError(`Invalid validation response, no receipt info`);
     }
     return response;
