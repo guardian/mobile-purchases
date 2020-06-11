@@ -26,7 +26,7 @@ function toUserSubscription(userId: string, payload: GoogleLinkPayload): UserSub
     ));
 }
 
-function platformToPackage(platform: GoogleLinkPayload["platform"]): string {
+function platformToPackage(platform: Platform): string {
     switch (platform) {
         case Platform.Android:
             return "com.guardian";
