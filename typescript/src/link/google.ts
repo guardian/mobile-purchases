@@ -1,14 +1,14 @@
 import 'source-map-support/register'
 import {Platform} from "../models/platform";
 import {parseAndStoreLink, SubscriptionCheckData} from "./link";
-import {UserSubscription} from "../models/userSubscription";
+import {ReadUserSubscription, UserSubscription} from "../models/userSubscription";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {fromGooglePackageName} from "../services/appToPlatform";
+import {DynamoStream} from "../export/dynamoStream";
+import {dynamoMapper} from "../utils/aws";
 
 type GoogleSubscription = {
     purchaseToken: string
     subscriptionId: string
-    packageName: string
 }
 
 type GoogleLinkPayload = {
@@ -28,11 +28,24 @@ function toUserSubscription(userId: string, payload: GoogleLinkPayload): UserSub
     ));
 }
 
+function platformToPackage(platform: GoogleLinkPayload["platform"]): string {
+    switch (platform) {
+        case Platform.Android:
+            return "com.guardian";
+        case Platform.AndroidPuzzles:
+            return "uk.co.guardian.puzzles";
+        case Platform.AndroidEdition:
+            return "com.guardian.editions";
+        default:
+            throw new Error(`Invalid platform`);
+    }
+}
+
 function toSqsPayload(payload: GoogleLinkPayload): SubscriptionCheckData[] {
     return payload.subscriptions.map(sub => ({
         subscriptionId: sub.purchaseToken,
         subscriptionReference: {
-            packageName: fromGooglePackageName(sub.packageName)?.toString(),
+            packageName: platformToPackage(payload.platform),
             purchaseToken: sub.purchaseToken,
             subscriptionId: sub.subscriptionId
         }
