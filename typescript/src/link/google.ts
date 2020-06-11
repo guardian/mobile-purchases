@@ -26,11 +26,24 @@ function toUserSubscription(userId: string, payload: GoogleLinkPayload): UserSub
     ));
 }
 
+function platformToPackage(platform: Platform): string {
+    switch (platform) {
+        case Platform.Android:
+            return "com.guardian";
+        case Platform.AndroidPuzzles:
+            return "uk.co.guardian.puzzles";
+        case Platform.AndroidEdition:
+            return "com.guardian.editions";
+        default:
+            throw new Error(`Invalid platform`);
+    }
+}
+
 function toSqsPayload(payload: GoogleLinkPayload): SubscriptionCheckData[] {
     return payload.subscriptions.map(sub => ({
         subscriptionId: sub.purchaseToken,
         subscriptionReference: {
-            packageName: "com.guardian",
+            packageName: platformToPackage(payload.platform),
             purchaseToken: sub.purchaseToken,
             subscriptionId: sub.subscriptionId
         }
