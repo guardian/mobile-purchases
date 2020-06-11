@@ -3,10 +3,12 @@ import {Platform} from "../models/platform";
 import {parseAndStoreLink, SubscriptionCheckData} from "./link";
 import {UserSubscription} from "../models/userSubscription";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {fromGooglePackageName} from "../services/appToPlatform";
 
 type GoogleSubscription = {
     purchaseToken: string
     subscriptionId: string
+    packageName: string
 }
 
 type GoogleLinkPayload = {
@@ -30,7 +32,7 @@ function toSqsPayload(payload: GoogleLinkPayload): SubscriptionCheckData[] {
     return payload.subscriptions.map(sub => ({
         subscriptionId: sub.purchaseToken,
         subscriptionReference: {
-            packageName: "com.guardian",
+            packageName: fromGooglePackageName(sub.packageName)?.toString(),
             purchaseToken: sub.purchaseToken,
             subscriptionId: sub.subscriptionId
         }
