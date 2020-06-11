@@ -1,10 +1,8 @@
 import 'source-map-support/register'
 import {Platform} from "../models/platform";
 import {parseAndStoreLink, SubscriptionCheckData} from "./link";
-import {ReadUserSubscription, UserSubscription} from "../models/userSubscription";
+import {UserSubscription} from "../models/userSubscription";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {DynamoStream} from "../export/dynamoStream";
-import {dynamoMapper} from "../utils/aws";
 
 type GoogleSubscription = {
     purchaseToken: string
