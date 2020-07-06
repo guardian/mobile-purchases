@@ -7,6 +7,8 @@ _IOS receipt validation and purchase persistence_
  
 ## Architecture
 
+This service is a set of cloud functions (AWS lambdas), triggered either by an API Gateway or by SQS queues. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services. 
+
 ![Mobile Purchases Architecture](mobile-purchases-architecture.png)
 
 ### Data
