@@ -1,59 +1,41 @@
 # Mobile Purchases
 _IOS receipt validation and purchase persistence_
 
-## Patterns
-* static state enables reuse of resources between invocations
-* A Controller bridges HTTP abstraction (LambdaRequest/LambdaResponse) from functionality
-* A Route is high level routing logic (like message routing)
+## Structure of the project
+ - The scala part of the project is considered "legacy". It's only kept for very old iOS devices and should be decommissioned once there's only a tiny amount of [traffic reaching the service](https://eu-west-1.console.aws.amazon.com/cloudwatch/home?region=eu-west-1#dashboards:name=MobilePurchases;start=P7D).
+ - The Typescript part of the project contains the more modern approach to validating and storing mobile purchases.
  
-## Common
-* commonlambda is generic functionality that may be useful to other projects
-* userpurchasepersistence is a shared implementation of persistence functionality for the Dynamo table
+## Architecture
+
+This service is a set of cloud functions (AWS lambdas), triggered either by an API Gateway or by SQS queues. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services. 
+
+![Mobile Purchases Architecture](mobile-purchases-architecture.png)
+
+### Data
+There are three dynamo DB tables:
+ - Events (`mobile-purchases-<stage>-subscription-events-v2`): This table records all events as they are received by Google and Apple.
+ - Subscriptions (`mobile-purchases-CODE-subscriptions`): This table records all the subscriptions held by our users. It contains information such as start date, expiration date, type of subscription and whether it will automatically renew at the end of its validity.
+ - UserSubscriptions (`mobile-purchases-CODE-user-subscriptions`): This table records the link between a User (as defined by the Guardian), and a subscription.
+
+These three tables are exported daily to the datalake.
+
+### Cloud Functions
+ - Pubsub: This is triggered by Apple and Google when any event happen on a subscription, such as a subscription has been purchased, renewed, cancelled etc. The data received by this function is stored in the Event table and forwarded to the Update Subs function.
+ - Link: This is triggered by the Apps if a users is logged-in and has a subscription. The function will store that link in the UserSubscriptions table (after ensuring the user is logged in), and forward the subscription to the Update Subs function.
+ - Subscription Status: This is triggered by an API call from the app to check if a Google purchase token or an Apple receipt is a proof to a valid subscription.
+ - Update Subs: This function checks the status of a subscription and updates it in the Subscriptions table.
  
-## Lambda: iosvalidatereceipts (/validateReceipts)
-### Routing (see ValidateReceiptsRouteImpl)
-* send all receipts to App store and recursively fetch all receipts (latest, current, ..., everything), caching requests to avoid repetition
-* transform all app store responses into representations of whether they are valid receipts
-* attempt persistence (see Persistence)
-* return validated transactions matching the requests
-
-### Persistance(see TransactionPersistenceImpl)
-* transform into the purchase representation
-* only worry about the vendor id
-* enrich with any known existing purchases (device sends batches of 25, so latest may not be in there)
-* persist all valid purchases older than a month ago (may include future purchases)
-* ttl is 6 months
-
-## Lambda: iosuserpurchases (/userPurchases)
-* read last persisted purchases (see /iosvalidatereceipts)
-
-## Dynamo: Stores purchases
-* key is userid:appid
-* value is a string of json that includes purchases `{"purchases":[{...}, {...]}` that are directly returned by iosuserpurchases
-
-## Notable Implementation Details:
-* Typseafe Config instrumented from ssm
-* OkHttpClient for async http
-* Parallism.largeGlobalExecutionContext used as default ExecutionContext.Global is too small in Lambda
-* Jackson with ScalaObjectMapper should be fast for JSON
-* LambdaRequest/LambdaResponse - slightly neater bridge to the JSON API Gateway demands
-* Delegation abstraction to allow for safe transition to new service
-* Specs2 testing
-* Mockito mocks third party code
-* ScalaCheck for some property based testing
-* Hack: AWS Lambda with log4j2 in Scala required sbt-assembly merge  ```case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy``` 
-
 ## Running typescript lambdas locally
 
-We're using [Typescript](https://www.typescriptlang.org/) to develop new lambdas and its useful to be able to test these locally, without having to resubmit a build and deploy to the cloud. A problem with this, though, is that it can lead to inappropriate things ( like purchaseTokens ) being pushed to github. 
+We're using [Typescript](https://www.typescriptlang.org/) to develop this project and it's useful to be able to test these locally, without having to resubmit a build and deploy to the cloud. 
 
-As a safeguard against this a test-launcher is provided to run a lambda locally, reading a file locally from outside version control in `typescript/src/test-launcher/test-launcher.ts`.
+To avoid committing test data locally a test-launcher is provided to run a lambda locally, that will only read a file in a directory that's configured to not commit anything.
 
-This can be run locally, and assumes a module with a function `handler` which takes some kind of a payload as a pararmeter. 
+This can be run locally, and assumes a module with a function `handler` which takes some kind of a payload as a parameter. 
 
-Test a lambda locally by creating a payload json file under `mobile-purchases-payload` and invoke the test-launcher with the name of your lamda module relative to the test-launcher along with the name of a payoad file. 
+Test a lambda locally by creating a payload json file under the `mobile-purchases-payload` directory and invoke the test-launcher with the name of your lambda module relative to the test-launcher along with the name of a payload file. 
 
-For example, to test the lambda that updates google subscriptions (`typescript/updatesubs/google.ts`). This reads from an SQS queue, so create a a file `sqs.json` like this and put it in `mobile-purchases-payload`*
+For example, to test the lambda that updates google subscriptions (`typescript/update-subs/google.ts`). This reads from an SQS queue, so create a a file `sqs.json` like this and put it in `mobile-purchases-payload`.
 
 
 ```
@@ -79,10 +61,10 @@ For example, to test the lambda that updates google subscriptions (`typescript/u
 }
 ```
 
-* This directory has it's own `.gitignore` which means that any json files here remain local.
+_This directory has its own `.gitignore` which means that any json files here remain local._
 
 Invoke your function locally via the launcher script thus
 
-     tsc && node ./tsc-target/src/test-launcher/test-launcher.js ../playsubstatus/playsubstatus http.json
-
-``
+```
+tsc && node ./tsc-target/src/test-launcher/test-launcher.js ../update-subs/google.js sqs.json
+```
