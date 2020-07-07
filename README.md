@@ -29,7 +29,7 @@ These three tables are exported daily to the datalake.
 
 We're using [Typescript](https://www.typescriptlang.org/) to develop this project and it's useful to be able to test these locally, without having to resubmit a build and deploy to the cloud. 
 
-To avoid committing test data locally a test-launcher is provided to run a lambda locally, that will only read file in a directory configured to not commit anything.
+To avoid committing test data locally a test-launcher is provided to run a lambda locally, that will only read a file in a directory that's configured to not commit anything.
 
 This can be run locally, and assumes a module with a function `handler` which takes some kind of a payload as a parameter. 
 
