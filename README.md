@@ -61,7 +61,7 @@ For example, to test the lambda that updates google subscriptions (`typescript/u
 }
 ```
 
-_This directory has it's own `.gitignore` which means that any json files here remain local._
+_This directory has its own `.gitignore` which means that any json files here remain local._
 
 Invoke your function locally via the launcher script thus
 
