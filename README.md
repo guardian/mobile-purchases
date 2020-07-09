@@ -24,7 +24,9 @@ These three tables are exported daily to the datalake.
  - Link: This is triggered by the Apps if a users is logged-in and has a subscription. The function will store that link in the UserSubscriptions table (after ensuring the user is logged in), and forward the subscription to the Update Subs function.
  - Subscription Status: This is triggered by an API call from the app to check if a Google purchase token or an Apple receipt is a proof to a valid subscription.
  - Update Subs: This function checks the status of a subscription and updates it in the Subscriptions table.
- 
+ - Subscription Status: This function checks the status of a subscription on behalf of the App.
+ - Delete Link: This function deletes rows from the UserSubscriptions table if their corresponding subscription has been deleted. It relies on [dynamo streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html).
+  
 ## Running typescript lambdas locally
 
 We're using [Typescript](https://www.typescriptlang.org/) to develop this project and it's useful to be able to test these locally, without having to resubmit a build and deploy to the cloud. 
