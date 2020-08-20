@@ -8,10 +8,8 @@ val testAndCompileDependencies: String = "test->test;compile->compile"
 val awsVersion: String = "1.11.375"
 val simpleConfigurationVersion: String = "1.4.3"
 
-// Force a version of jackson-databind that addresses this vulnerability:
-// https://app.snyk.io/vuln/SNYK-JAVA-COMFASTERXMLJACKSONCORE-471943
-// introduced via com.typesafe.play:play
-val jacksonData: String = "2.9.10.2"
+// Force a more recent version of jackson databind
+val jacksonData: String = "2.9.10.5"
 
 val scalaRoot = file("scala")
 
