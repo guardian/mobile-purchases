@@ -64,7 +64,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     const eventType = notification.notification_type;
 
     const receiptInfo = notification.latest_receipt_info ?? notification.latest_expired_receipt_info;
-    console.log(`latest_receipt_info is undefined: ${notification.latest_receipt_info === undefined}, latest_expired_receipt_info is undefined: ${notification.latest_expired_receipt_info === undefined}`);
+    console.log(`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.latest_receipt_info === undefined}, latest_expired_receipt_info is undefined: ${notification.latest_expired_receipt_info === undefined}`);
     const platform = fromAppleBundle(receiptInfo.bid);
     if (!platform) {
         console.warn(`Unknown bundle id ${receiptInfo.bid}`)
