@@ -826,7 +826,7 @@ Resources:
                 - Name: ApiName
                   Value: !Sub ${App}-${Stage}
                 - Name: Method
-                  Value: GET
+                  Value: POST
                 - Name: Resource
                   Value: /apple/subscription/status
                 - Name: Stage
