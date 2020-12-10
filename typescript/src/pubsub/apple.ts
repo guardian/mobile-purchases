@@ -51,7 +51,6 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
     try {
         let notification = JSON.parse(body ?? "") as StatusUpdateNotification;
         delete notification.password; // no need to keep that in memory
-        console.log(`Notification payload: ${notification}`)
         return notification;
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
@@ -65,8 +64,8 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     const eventType = notification.notification_type;
 
     const receiptInfo = notification.latest_receipt_info ?? notification.latest_expired_receipt_info;
+    console.log(`latest_receipt_info is undefined: ${notification.latest_receipt_info === undefined}, latest_expired_receipt_info is undefined: ${notification.latest_expired_receipt_info === undefined}`);
     const platform = fromAppleBundle(receiptInfo.bid);
-    console.log(`Receipt info: ${receiptInfo}`)
     if (!platform) {
         console.warn(`Unknown bundle id ${receiptInfo.bid}`)
     }
