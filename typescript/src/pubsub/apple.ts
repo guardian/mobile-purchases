@@ -6,7 +6,6 @@ import {AppleSubscriptionReference} from "../models/subscriptionReference";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
 import {fromAppleBundle} from "../services/appToPlatform";
-import {PendingRenewalInfo} from "../services/appleValidateReceipts";
 
 // this is the definition of a receipt as received by the server to server notification system.
 // Not to be confused with apple's receipt validation receipt info (although they do look similar, they are different)
@@ -30,15 +29,6 @@ export interface AppleReceiptInfo {
     bvrs: string,
     version_external_identifier: string
 }
-//Documentation for unified_receipt: https://developer.apple.com/documentation/appstoreservernotifications/unified_receipt
-export interface UnifiedReceiptInfo {
-    environment: string,
-    latest_receipt: string,
-    latest_receipt_info: AppleReceiptInfo,
-    pending_renewal_info: PendingRenewalInfo[],
-    status: number
-
-}
 
 export interface StatusUpdateNotification {
     environment: string,
@@ -47,7 +37,10 @@ export interface StatusUpdateNotification {
     original_transaction_id: string,
     cancellation_date: string,
     web_order_line_item_id: string,
-    unified_receipt: UnifiedReceiptInfo,
+    latest_receipt: string,
+    latest_receipt_info: AppleReceiptInfo,
+    latest_expired_receipt: string,
+    latest_expired_receipt_info: AppleReceiptInfo,
     auto_renew_status: boolean,
     auto_renew_adam_id: string,
     auto_renew_product_id: string,
@@ -70,8 +63,8 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     const now = new Date();
     const eventType = notification.notification_type;
 
-    const receiptInfo = notification.unified_receipt.latest_receipt_info;
-    console.log(`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.unified_receipt.latest_receipt_info === undefined}`);
+    const receiptInfo = notification.latest_receipt_info ?? notification.latest_expired_receipt_info;
+    console.log(`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.latest_receipt_info === undefined}, latest_expired_receipt_info is undefined: ${notification.latest_expired_receipt_info === undefined}`);
     const platform = fromAppleBundle(receiptInfo.bid);
     if (!platform) {
         console.warn(`Unknown bundle id ${receiptInfo.bid}`)
@@ -96,7 +89,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 }
 
 export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
-    const receipt = event.unified_receipt.latest_receipt;
+    const receipt = event.latest_receipt ?? event.latest_expired_receipt;
     return {
         receipt: receipt
     }
