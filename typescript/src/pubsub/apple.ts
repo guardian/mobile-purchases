@@ -42,6 +42,7 @@ export interface UnifiedReceiptInfo {
 
 export interface StatusUpdateNotification {
     environment: string,
+    bid: string,
     notification_type: string,
     password?: string,
     original_transaction_id: string,
@@ -72,9 +73,9 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 
     const receiptInfo = notification.unified_receipt.latest_receipt_info;
     console.log(`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.unified_receipt.latest_receipt_info === undefined}`);
-    const platform = fromAppleBundle(receiptInfo.bid);
+    const platform = fromAppleBundle(notification.bid);
     if (!platform) {
-        console.warn(`Unknown bundle id ${receiptInfo.bid}`)
+        console.warn(`Unknown bundle id ${notification.bid}`)
     }
 
     // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
@@ -87,7 +88,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         now.toISOString(),
         eventType,
         platform ?? "unknown",
-        receiptInfo.bid,
+        notification.bid,
         freeTrial,
         null,
         notification,
