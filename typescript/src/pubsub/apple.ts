@@ -6,7 +6,6 @@ import {AppleSubscriptionReference} from "../models/subscriptionReference";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
 import {fromAppleBundle} from "../services/appToPlatform";
-import {PendingRenewalInfo} from "../services/appleValidateReceipts";
 
 // this is the definition of a receipt as received by the server to server notification system.
 // Not to be confused with apple's receipt validation receipt info (although they do look similar, they are different)
@@ -30,14 +29,10 @@ export interface AppleReceiptInfo {
     bvrs: string,
     version_external_identifier: string
 }
-//Documentation for unified_receipt: https://developer.apple.com/documentation/appstoreservernotifications/unified_receipt
-export interface UnifiedReceiptInfo {
-    environment: string,
-    latest_receipt: string,
-    latest_receipt_info: AppleReceiptInfo,
-    pending_renewal_info: PendingRenewalInfo[],
-    status: number
 
+export interface UnifiedReceiptInfo {
+    latest_receipt: string,
+    latest_receipt_info: AppleReceiptInfo
 }
 
 export interface StatusUpdateNotification {
@@ -70,7 +65,6 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
 export function toDynamoEvent(notification: StatusUpdateNotification): SubscriptionEvent {
     const now = new Date();
     const eventType = notification.notification_type;
-
     const receiptInfo = notification.unified_receipt.latest_receipt_info;
     console.log(`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.unified_receipt.latest_receipt_info === undefined}`);
     const platform = fromAppleBundle(notification.bid);
