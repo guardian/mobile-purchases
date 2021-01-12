@@ -34,7 +34,7 @@ export interface AppleReceiptInfo {
 export interface UnifiedReceiptInfo {
     environment: string,
     latest_receipt: string,
-    latest_receipt_info: AppleReceiptInfo,
+    latest_receipt_info: AppleReceiptInfo[],
     pending_renewal_info: PendingRenewalInfo[],
     status: number
 }
@@ -76,11 +76,15 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         console.warn(`Unknown bundle id ${notification.bid}`)
     }
 
+    if(receiptInfo.length == 0) {
+        console.warn(`Receipt info list is empty`)
+    }
+
     // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
-    const freeTrial = receiptInfo.is_trial_period === "true" || receiptInfo.is_in_intro_offer_period === "true";
+    const freeTrial = receiptInfo[0].is_trial_period === "true" || receiptInfo[0].is_in_intro_offer_period === "true";
 
     return new SubscriptionEvent(
-        receiptInfo.original_transaction_id,
+        receiptInfo[0].original_transaction_id,
         now.toISOString() + "|" + eventType,
         now.toISOString().substr(0, 10),
         now.toISOString(),
