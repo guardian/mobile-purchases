@@ -13,7 +13,6 @@ import {HTTPResponses} from "../../src/models/apiGatewayHttp";
 import {SubscriptionEvent} from "../../src/models/subscriptionEvent";
 import Mock = jest.Mock;
 import {APIGatewayProxyEvent} from "aws-lambda";
-import {dateToSecondTimestamp} from "../../src/utils/dates";
 
 describe("The google pubsub", () => {
     test("Should return HTTP 200 and store the correct data in dynamo", () => {
