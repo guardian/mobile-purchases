@@ -76,15 +76,21 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         console.warn(`Unknown bundle id ${notification.bid}`)
     }
 
-    if(receiptInfo.length == 0) {
-        console.warn(`Receipt info list is empty`)
-    }
+
+
+    const sortDates = receiptInfo.sort((receipt1, receipt2) => {
+        return Number.parseInt(receipt2.expires_date) - Number.parseInt(receipt1.expires_date);
+    });
+
+    console.log(sortDates)
 
     // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
-    const freeTrial = receiptInfo[0].is_trial_period === "true" || receiptInfo[0].is_in_intro_offer_period === "true";
+    const freeTrial = sortDates[0].is_trial_period === "true" || sortDates[0].is_in_intro_offer_period === "true";
+
+    console.log(freeTrial)
 
     return new SubscriptionEvent(
-        receiptInfo[0].original_transaction_id,
+        sortDates[0].original_transaction_id,
         now.toISOString() + "|" + eventType,
         now.toISOString().substr(0, 10),
         now.toISOString(),
