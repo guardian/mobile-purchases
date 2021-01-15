@@ -13,7 +13,6 @@ import {PendingRenewalInfo} from "../services/appleValidateReceipts";
 // See https://developer.apple.com/documentation/appstoreservernotifications/responsebody
 export interface AppleReceiptInfo {
     transaction_id: string,
-    bid: string,
     product_id: string,
     original_transaction_id: string,
     item_id: string,
@@ -25,6 +24,7 @@ export interface AppleReceiptInfo {
     purchase_date_ms: string,
     original_purchase_date_ms: string,
     expires_date: string,
+    expires_date_ms: string,
     is_in_intro_offer_period: string,
     is_trial_period: string,
     bvrs: string,
@@ -42,6 +42,7 @@ export interface UnifiedReceiptInfo {
 export interface StatusUpdateNotification {
     environment: string,
     bid: string,
+    bvrs: string,
     notification_type: string,
     password?: string,
     original_transaction_id: string,
@@ -79,7 +80,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 
 
     const sortDates = receiptInfo.sort((receipt1, receipt2) => {
-        return Number.parseInt(receipt2.expires_date) - Number.parseInt(receipt1.expires_date);
+        return Number.parseInt(receipt2.expires_date_ms) - Number.parseInt(receipt1.expires_date_ms);
     });
 
     console.log(sortDates)
