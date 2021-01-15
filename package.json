@@ -32,7 +32,7 @@
     "@aws/dynamodb-expressions": "^0.7.3",
     "@types/aws-lambda": "8.10.27",
     "@types/node": "^12.0.2",
-    "aws-sdk": "^2.553.0",
+    "aws-sdk": "^2.828.0",
     "source-map-support": "^0.5.19",
     "typed-rest-client": "^1.4.0"
   }
