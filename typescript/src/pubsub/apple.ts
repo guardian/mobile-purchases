@@ -76,7 +76,11 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     if (!platform) {
         console.warn(`Unknown bundle id ${notification.bid}`)
     }
-    
+
+    if(receiptInfo.length === 0) {
+        console.warn(`No latest_receipt_info has been found, it has returned an empty array`)
+    }
+
     const sortByExpiryDate = receiptInfo.sort((receipt1, receipt2) => {
         return Number.parseInt(receipt2.expires_date_ms) - Number.parseInt(receipt1.expires_date_ms);
     });
