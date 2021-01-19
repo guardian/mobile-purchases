@@ -6,13 +6,13 @@ import {AppleSubscriptionReference} from "../models/subscriptionReference";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
 import {fromAppleBundle} from "../services/appToPlatform";
+import {PendingRenewalInfo} from "../services/appleValidateReceipts";
 
 // this is the definition of a receipt as received by the server to server notification system.
 // Not to be confused with apple's receipt validation receipt info (although they do look similar, they are different)
 // See https://developer.apple.com/documentation/appstoreservernotifications/responsebody
 export interface AppleReceiptInfo {
     transaction_id: string,
-    bid: string,
     product_id: string,
     original_transaction_id: string,
     item_id: string,
@@ -24,23 +24,31 @@ export interface AppleReceiptInfo {
     purchase_date_ms: string,
     original_purchase_date_ms: string,
     expires_date: string,
+    expires_date_ms: string,
     is_in_intro_offer_period: string,
     is_trial_period: string,
     bvrs: string,
     version_external_identifier: string
 }
 
+export interface UnifiedReceiptInfo {
+    environment: string,
+    latest_receipt: string,
+    latest_receipt_info: AppleReceiptInfo[],
+    pending_renewal_info: PendingRenewalInfo[],
+    status: number
+}
+
 export interface StatusUpdateNotification {
     environment: string,
+    bid: string,
+    bvrs: string,
     notification_type: string,
     password?: string,
     original_transaction_id: string,
     cancellation_date: string,
     web_order_line_item_id: string,
-    latest_receipt: string,
-    latest_receipt_info: AppleReceiptInfo,
-    latest_expired_receipt: string,
-    latest_expired_receipt_info: AppleReceiptInfo,
+    unified_receipt: UnifiedReceiptInfo,
     auto_renew_status: boolean,
     auto_renew_adam_id: string,
     auto_renew_product_id: string,
@@ -62,25 +70,32 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
 export function toDynamoEvent(notification: StatusUpdateNotification): SubscriptionEvent {
     const now = new Date();
     const eventType = notification.notification_type;
-
-    const receiptInfo = notification.latest_receipt_info ?? notification.latest_expired_receipt_info;
-    console.log(`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.latest_receipt_info === undefined}, latest_expired_receipt_info is undefined: ${notification.latest_expired_receipt_info === undefined}`);
-    const platform = fromAppleBundle(receiptInfo.bid);
+    const receiptInfo = notification.unified_receipt.latest_receipt_info;
+    console.log(`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.unified_receipt.latest_receipt_info === undefined}`);
+    const platform = fromAppleBundle(notification.bid);
     if (!platform) {
-        console.warn(`Unknown bundle id ${receiptInfo.bid}`)
+        console.warn(`Unknown bundle id ${notification.bid}`)
     }
 
+    if(receiptInfo.length === 0) {
+        console.warn(`No latest_receipt_info has been found, it has returned an empty array`)
+    }
+
+    const sortByExpiryDate = receiptInfo.sort((receipt1, receipt2) => {
+        return Number.parseInt(receipt2.expires_date_ms) - Number.parseInt(receipt1.expires_date_ms);
+    });
+
     // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
-    const freeTrial = receiptInfo.is_trial_period === "true" || receiptInfo.is_in_intro_offer_period === "true";
+    const freeTrial = sortByExpiryDate[0].is_trial_period === "true" || sortByExpiryDate[0].is_in_intro_offer_period === "true";
 
     return new SubscriptionEvent(
-        receiptInfo.original_transaction_id,
+        sortByExpiryDate[0].original_transaction_id,
         now.toISOString() + "|" + eventType,
         now.toISOString().substr(0, 10),
         now.toISOString(),
         eventType,
         platform ?? "unknown",
-        receiptInfo.bid,
+        notification.bid,
         freeTrial,
         null,
         notification,
@@ -89,7 +104,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 }
 
 export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
-    const receipt = event.latest_receipt ?? event.latest_expired_receipt;
+    const receipt = event.unified_receipt.latest_receipt;
     return {
         receipt: receipt
     }

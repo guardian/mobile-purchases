@@ -9,7 +9,8 @@ import {plusDays} from "../utils/dates";
 function cleanupEvent(subEvent: SubscriptionEvent): any {
     if (subEvent.applePayload) {
         delete subEvent.applePayload.password; // just to be safe
-        delete subEvent.applePayload.latest_receipt; // really no need to put that in the datalake
+        delete subEvent.applePayload.latest_receipt;
+        delete subEvent.applePayload.unified_receipt.latest_receipt; // really no need to put that in the datalake
     }
     return subEvent;
 }
