@@ -836,7 +836,7 @@ Resources:
           ReturnData: false
       ComparisonOperator: GreaterThanOrEqualToThreshold
       EvaluationPeriods: 1
-      Threshold: 20
+      Threshold: 10
 
   ApplePubsub5xxErrors:
     Type: AWS::CloudWatch::Alarm
@@ -864,6 +864,7 @@ Resources:
       Period: 300
       Statistic: Sum
       Threshold: 1
+      TreatMissingData: notBreaching
 
 
   UserSubscriptionsLambda:
