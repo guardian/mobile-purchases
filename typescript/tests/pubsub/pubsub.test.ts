@@ -4,6 +4,11 @@ import {
     toDynamoEvent as googlePayloadToDynamo,
     toSqsSubReference as toGoogleSqsEvent
 } from "../../src/pubsub/google";
+import {
+    parsePayload as parseApplePayload,
+    toDynamoEvent as applePayloadToDynamo,
+    toSqsSubReference as toAppleSqsEvent
+} from "../../src/pubsub/apple";
 import {HTTPResponses} from "../../src/models/apiGatewayHttp";
 import {SubscriptionEvent} from "../../src/models/subscriptionEvent";
 import Mock = jest.Mock;
@@ -96,6 +101,133 @@ describe("The google pubsub", () => {
             expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(expectedSubscriptionReferenceInSqs);
             expect(mockFetchMetadataFunction.mock.calls.length).toEqual(1);
             expect(mockFetchMetadataFunction.mock.calls[0][0]).toStrictEqual(receivedEvent);
+        });
+    });
+});
+
+describe("The apple pubsub", () => {
+    test("Should return HTTP 200 and store the correct data in dynamo", () => {
+        process.env['Secret'] = "MYSECRET";
+        process.env['QueueUrl'] = "";
+
+        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(event => Promise.resolve(event));
+
+        const mockSqsFunction: Mock<Promise<any>, [string, {receipt: string}]> = jest.fn((queueurl, event) => Promise.resolve({}));
+
+        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({undefined}));
+
+        const body = {
+                auto_renew_product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+                auto_renew_status: true,
+                bid: "uk.co.guardian.iphone2",
+                bvrs: "TEST",
+                environment: "Sandbox",
+                notification_type: "INITIAL_BUY",
+                unified_receipt: {
+                    environment: "Sandbox",
+                    latest_receipt: "TEST",
+                    latest_receipt_info: [{
+                        app_item_id: "TEST",
+                        bid: "uk.co.guardian.iphone2",
+                        bvrs: "TEST",
+                        is_in_intro_offer_period: false,
+                        is_trial_period: true,
+                        item_id: "TEST",
+                        original_transaction_id: "TEST",
+                        product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+                        quantity: "1",
+                        transaction_id: "TEST",
+                        unique_identifier: "TEST",
+                        unique_vendor_identifier: "TEST",
+                        version_external_identifier: "TEST",
+                        web_order_line_item_id: "TEST"
+                    }],
+                    pending_renewal_info: [
+                        {
+                            auto_renew_product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+                            auto_renew_status: "1",
+                            original_transaction_id: "TEST",
+                            product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial"
+                        }
+                    ],
+                    status: 0
+                }
+        };
+
+        const input: APIGatewayProxyEvent = {
+            queryStringParameters: {secret: "MYSECRET"},
+            body: JSON.stringify(body),
+            headers: {},
+            multiValueHeaders: {},
+            httpMethod: "POST",
+            isBase64Encoded: false,
+            path: '',
+            pathParameters: {},
+            multiValueQueryStringParameters: {},
+            // @ts-ignore
+            requestContext: null,
+            resource: '',
+
+        };
+
+        const expectedSubscriptionEventInDynamo: any = {
+            subscriptionId: "TEST",
+            eventType: "INITIAL_BUY",
+            platform: "ios",
+            appId: "uk.co.guardian.iphone2",
+            freeTrial: false,
+            googlePayload: null,
+            applePayload:
+            {
+                auto_renew_product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+                auto_renew_status: true,
+                bid: "uk.co.guardian.iphone2",
+                bvrs: "TEST",
+                environment: "Sandbox",
+                notification_type: "INITIAL_BUY",
+                unified_receipt: {
+                    environment: "Sandbox",
+                    latest_receipt: "TEST",
+                    latest_receipt_info: [
+                        {
+                            app_item_id: "TEST",
+                            bid: "uk.co.guardian.iphone2",
+                            bvrs: "TEST",
+                            is_in_intro_offer_period: false,
+                            is_trial_period: true,
+                            item_id: "TEST",
+                            original_transaction_id: "TEST",
+                            product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+                            quantity: "1",
+                            transaction_id: "TEST",
+                            unique_identifier: "TEST",
+                            unique_vendor_identifier: "TEST",
+                            version_external_identifier: "TEST",
+                            web_order_line_item_id: "TEST"
+                        }
+                    ],
+                    pending_renewal_info: [
+                        {
+                        auto_renew_product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+                        auto_renew_status: "1",
+                        original_transaction_id: "TEST",
+                        product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial"
+                        }
+                    ],
+                    status: 0
+                }
+            }
+        }
+
+        const expectedSubscriptionReferenceInSqs = {receipt: "TEST"};
+
+        return parseStoreAndSend(input, parseApplePayload, applePayloadToDynamo, toAppleSqsEvent, mockFetchMetadataFunction, mockStoreFunction, mockSqsFunction).then(result => {
+            expect(result).toStrictEqual(HTTPResponses.OK);
+            expect(mockStoreFunction.mock.calls.length).toEqual(1);
+            expect(mockStoreFunction.mock.calls[0][0]).toMatchObject(expectedSubscriptionEventInDynamo);
+            expect(mockSqsFunction.mock.calls.length).toEqual(1);
+            expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(expectedSubscriptionReferenceInSqs);
+            expect(mockFetchMetadataFunction.mock.calls.length).toEqual(1);
         });
     });
 });
