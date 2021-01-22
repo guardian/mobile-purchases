@@ -5,6 +5,7 @@ import {optionalMsToDate} from "../utils/dates";
 import {Option} from "../utils/option";
 import {restClient} from "../utils/restClient";
 import {IHttpClientResponse} from "typed-rest-client/Interfaces";
+import {GracefulProcessingError} from "../models/GracefulProcessingError";
 
 export interface PendingRenewalInfo {
     auto_renew_product_id?: string,
@@ -104,7 +105,7 @@ function checkResponseStatus(response: AppleValidationServerResponse): AppleVali
         const msg = `Got status 21007 and we're in ${Stage}, so we are processing a receipt from the wrong environment. ` +
             `This shouldn't have happen as we should already retry receipts in sandbox if the return code was 21007`;
         console.error(msg);
-        throw new ProcessingError(`Got status ${response.status} and we're in ${Stage}`);
+        throw new GracefulProcessingError(`Got status ${response.status} and we're in ${Stage}`);
     }
     if (response.status === 21008) {
         console.error(`Got status ${response.status} and we're in ${Stage}, so we are processing a receipt from the wrong environment`);
