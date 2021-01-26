@@ -37,7 +37,7 @@ export function getAccessToken(params: S3.Types.GetObjectRequest) : Promise<Acce
         })
 }
 
-export function buildGoogleUrl(subscriptionId: string, purchaseToken: string, packageName: string) {
+export function buildGoogleUrl(subscriptionId: string | undefined, purchaseToken: string, packageName: string) {
     const baseUrl = `https://www.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions`;
     return `${baseUrl}/${subscriptionId}/tokens/${purchaseToken}`;
 }
@@ -50,7 +50,7 @@ export interface GoogleResponseBody {
     paymentState: 0 | 1 | 2 | 3
 }
 
-export async function fetchGoogleSubscription(subscriptionId: string, purchaseToken: string, packageName: string): Promise<GoogleResponseBody | null> {
+export async function fetchGoogleSubscription(subscriptionId: string | undefined, purchaseToken: string, packageName: string): Promise<GoogleResponseBody | null> {
     const url = buildGoogleUrl(subscriptionId, purchaseToken, packageName);
     const accessToken = await getAccessToken(getParams(Stage));
     const response = await restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}});

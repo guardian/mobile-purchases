@@ -9,7 +9,7 @@ export interface PathParameters {
 }
 
 export interface HttpRequestHeaders {
-    [key: string]: string
+    [name: string]: string | undefined;
 }
 
 export const HTTPResponses: {[key: string]: APIGatewayProxyResult} = {

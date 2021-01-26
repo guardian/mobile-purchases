@@ -13,7 +13,7 @@ interface SubscriptionStatusResponse {
     "subscriptionExpiryDate": Date
 }
 
-function getPurchaseToken(headers: HttpRequestHeaders): string | null {
+function getPurchaseToken(headers: HttpRequestHeaders): string | undefined {
     return headers["Play-Purchase-Token"] ?? headers["play-purchase-token"];
 }
 
