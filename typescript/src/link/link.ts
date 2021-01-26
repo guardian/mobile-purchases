@@ -67,7 +67,7 @@ export async function parseAndStoreLink<A, B>(
 ): Promise<APIGatewayProxyResult> {
     try {
         if (httpRequest.headers && getAuthToken(httpRequest.headers)) {
-
+            console.warn("headers: " + httpRequest.headers["Authorization"]);
             const payload: A = parsePayload(httpRequest);
             const userId = await getUserId(httpRequest.headers);
             if (userId) {
