@@ -38,6 +38,7 @@ export function getAccessToken(params: S3.Types.GetObjectRequest) : Promise<Acce
 }
 
 export function buildGoogleUrl(subscriptionId: string | undefined, purchaseToken: string, packageName: string) {
+    if(subscriptionId == undefined) throw Error("subscriptionId is undefined");
     const baseUrl = `https://www.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions`;
     return `${baseUrl}/${subscriptionId}/tokens/${purchaseToken}`;
 }
