@@ -35,6 +35,9 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
         console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}`);
 
         try {
+            if (subscriptionId === undefined) {
+                throw Error("subscriptionId is undefined");
+            }
             const subscription = await fetchGoogleSubscription(subscriptionId, purchaseToken, packageName);
 
             const subscriptionExpiryDate: Option<Date> = optionalMsToDate(subscription?.expiryTimeMillis);

@@ -50,10 +50,7 @@ export interface GoogleResponseBody {
     paymentState: 0 | 1 | 2 | 3
 }
 
-export async function fetchGoogleSubscription(subscriptionId: string | undefined, purchaseToken: string, packageName: string): Promise<GoogleResponseBody | null> {
-    if(subscriptionId === undefined) {
-        throw Error("subscriptionId is undefined");
-    }
+export async function fetchGoogleSubscription(subscriptionId: string, purchaseToken: string, packageName: string): Promise<GoogleResponseBody | null> {
     const url = buildGoogleUrl(subscriptionId, purchaseToken, packageName);
     const accessToken = await getAccessToken(getParams(Stage));
     const response = await restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}});
