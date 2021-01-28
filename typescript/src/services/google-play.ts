@@ -37,8 +37,7 @@ export function getAccessToken(params: S3.Types.GetObjectRequest) : Promise<Acce
         })
 }
 
-export function buildGoogleUrl(subscriptionId: string | undefined, purchaseToken: string, packageName: string) {
-    if(subscriptionId == undefined) throw Error("subscriptionId is undefined");
+export function buildGoogleUrl(subscriptionId: string, purchaseToken: string, packageName: string) {
     const baseUrl = `https://www.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions`;
     return `${baseUrl}/${subscriptionId}/tokens/${purchaseToken}`;
 }
@@ -52,6 +51,9 @@ export interface GoogleResponseBody {
 }
 
 export async function fetchGoogleSubscription(subscriptionId: string | undefined, purchaseToken: string, packageName: string): Promise<GoogleResponseBody | null> {
+    if(subscriptionId === undefined) {
+        throw Error("subscriptionId is undefined");
+    }
     const url = buildGoogleUrl(subscriptionId, purchaseToken, packageName);
     const accessToken = await getAccessToken(getParams(Stage));
     const response = await restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}});
