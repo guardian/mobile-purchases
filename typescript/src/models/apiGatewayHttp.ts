@@ -5,11 +5,11 @@ export interface QueryParameters {
 }
 
 export interface PathParameters {
-    [key: string]: string
+    [key: string]: string | undefined
 }
 
 export interface HttpRequestHeaders {
-    [key: string]: string
+    [name: string]: string | undefined
 }
 
 export const HTTPResponses: {[key: string]: APIGatewayProxyResult} = {

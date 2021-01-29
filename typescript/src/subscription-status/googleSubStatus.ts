@@ -1,7 +1,8 @@
 import 'source-map-support/register'
 import {
     HTTPResponses,
-    HttpRequestHeaders
+    HttpRequestHeaders,
+    PathParameters
 } from '../models/apiGatewayHttp';
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {fetchGoogleSubscription} from "../services/google-play";
@@ -13,8 +14,12 @@ interface SubscriptionStatusResponse {
     "subscriptionExpiryDate": Date
 }
 
-function getPurchaseToken(headers: HttpRequestHeaders): string | null {
+function getPurchaseToken(headers: HttpRequestHeaders): string | undefined {
     return headers["Play-Purchase-Token"] ?? headers["play-purchase-token"];
+}
+
+function getSubscriptionId(parameters: PathParameters | null): string | undefined {
+    return parameters?.subscriptionId;
 }
 
 function googlePackageName(headers: HttpRequestHeaders): string {
@@ -29,9 +34,9 @@ function googlePackageName(headers: HttpRequestHeaders): string {
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 
     const purchaseToken = getPurchaseToken(request.headers);
-    if (request.pathParameters && request.headers && purchaseToken) {
+    const subscriptionId = getSubscriptionId(request.pathParameters);
+    if (purchaseToken && subscriptionId) {
         const packageName = googlePackageName(request.headers);
-        const subscriptionId = request.pathParameters.subscriptionId;
         console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}`);
 
         try {
