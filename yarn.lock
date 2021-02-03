@@ -1188,10 +1188,10 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-aws-sdk@^2.831.0:
-  version "2.831.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.831.0.tgz#02607cc911a2136e5aabe624c1282e821830aef2"
-  integrity sha512-lrOjbGFpjk2xpESyUx2PGsTZgptCy5xycZazPeakNbFO19cOoxjHx3xyxOHsMCYb3pQwns35UvChQT60B4u6cw==
+aws-sdk@^2.835.0:
+  version "2.835.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.835.0.tgz#4769360da8f807d956200c70ec81843e7a450c3f"
+  integrity sha512-codVDhqE6PD4P7m5j8T0o4jer2Gt/oy+QqU+0BhzeuH/ryT+03YJDw8mXlfMWlhQ+6ZQBMZ3+YT69/85VgR6IQ==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
@@ -5288,10 +5288,10 @@ type-fest@^0.8.1:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.8.1.tgz#09e249ebde851d3b1e48d27c105444667f17b83d"
   integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
-typed-rest-client@^1.8.0:
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-1.8.0.tgz#3b6c22a7cc31b665ec1e4bedb3482ebe12e2fbe6"
-  integrity sha512-Nu1MrdH6ECrRW5gHoRAdubgCs4oH6q5/J76jsEC8bVDfvVoVPkigukPalhMHPwb7ZvpsZqPptd5zpt/QdtrdBw==
+typed-rest-client@^1.8.1:
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-1.8.1.tgz#2ecb18dd360ce2a722ad30d0e076712f1fc3d191"
+  integrity sha512-7JbJFBZZuu3G64u6ksklN1xtVGfqBKiR5MQoTe5oLTi68OyB6pRuuIQCllfK/BdGjQtZYp62rgUOnEYDz4e9Xg==
   dependencies:
     qs "^6.9.1"
     tunnel "0.0.6"
