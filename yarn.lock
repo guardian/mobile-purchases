@@ -5152,10 +5152,10 @@ type-fest@^0.8.1:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.8.1.tgz#09e249ebde851d3b1e48d27c105444667f17b83d"
   integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
-typed-rest-client@^1.8.1:
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-1.8.1.tgz#2ecb18dd360ce2a722ad30d0e076712f1fc3d191"
-  integrity sha512-7JbJFBZZuu3G64u6ksklN1xtVGfqBKiR5MQoTe5oLTi68OyB6pRuuIQCllfK/BdGjQtZYp62rgUOnEYDz4e9Xg==
+typed-rest-client@^1.8.3:
+  version "1.8.3"
+  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-1.8.3.tgz#a93bf81565c745381cb989b4b941a3283894779d"
+  integrity sha512-gJoH7RE3trY77Bf5MNezVV+21O/WMmt9ps7w1bjFyLxrQqDymDWJSDacem1eM6R86zFM0FlE07F8dOupLmKLmQ==
   dependencies:
     qs "^6.9.1"
     tunnel "0.0.6"
