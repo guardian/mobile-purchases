@@ -31,7 +31,7 @@
     "@aws/dynamodb-data-mapper-annotations": "^0.7.3",
     "@aws/dynamodb-expressions": "^0.7.3",
     "@types/aws-lambda": "8.10.72",
-    "@types/node": "^12.0.2",
+    "@types/node": "^14.14.37",
     "aws-sdk": "^2.862.0",
     "source-map-support": "^0.5.19",
     "typed-rest-client": "^1.8.1"
