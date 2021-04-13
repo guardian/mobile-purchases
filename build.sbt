@@ -9,7 +9,7 @@ val awsVersion: String = "1.11.375"
 val simpleConfigurationVersion: String = "1.4.3"
 
 // Force a more recent version of jackson databind
-val jacksonData: String = "2.9.10.5"
+val jacksonData: String = "2.9.10.6"
 
 val scalaRoot = file("scala")
 
