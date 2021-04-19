@@ -7,8 +7,8 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
 import {fromAppleBundle} from "../services/appToPlatform";
 import {PendingRenewalInfo} from "../services/appleValidateReceipts";
-import type {Result} from "@guardian/types";
-import {ok, err, ResultKind} from "@guardian/types";
+import type {Result, Option as Optional} from "@guardian/types";
+import {ok, err, ResultKind, some, none, OptionKind} from "@guardian/types";
 
 // this is the definition of a receipt as received by the server to server notification system.
 // Not to be confused with apple's receipt validation receipt info (although they do look similar, they are different)
@@ -57,30 +57,33 @@ export interface StatusUpdateNotification {
     expiration_intent: string
 }
 
+type binaryStatus = "0" | "1"
+type expirationIntent = "1" | "2" | "3" | "4" | "5"
+
 const isObject = (a: unknown): a is Record<string, unknown> =>
     typeof a === 'object' && a !== null;
 
-const parseArray = <A>(parseA: (a: unknown) => Option<A>) => (array: unknown): Option<A[]> => {
-    const f = (acc: A[], remainder: unknown[]): Option<A[]> => {
+const parseArray = <A>(parseA: (a: unknown) => Result<string, A>) => (array: unknown): Result<string, A[]> => {
+    const f = (acc: A[], remainder: unknown[]): Result<string, A[]> => {
         if (remainder.length === 0) {
-            return some(acc);
+            return ok(acc);
         }
 
         const [ item, ...tail ] = remainder;
         const parsed = parseA(item);
 
-        if (parsed.kind === OptionKind.Some) {
+        if (parsed.kind === ResultKind.Ok) {
             return f([ ...acc, parsed.value ], tail);
         }
 
-        return none;
+        return err("We can't parse the items in the array because of a type mismatch");
     }
 
     if (Array.isArray(array)) {
         return f([], array);
     }
 
-    return none;
+    return err("Is not an array");
 }
 
 function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptInfo> {
@@ -88,24 +91,129 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
         return err("The apple receipt info field that Apple gave us isn't an object")
     }
     if(
-    )
+        typeof payload.transaction_id === "string" &&
+        typeof payload.product_id === "string" &&
+        typeof payload.original_transaction_id === "string" &&
+        typeof payload.item_id === "string" &&
+        typeof payload.app_item_id === "string" &&
+        typeof payload.web_order_line_item_id === "string" &&
+        typeof payload.unique_identifier === "string" &&
+        typeof payload.unique_vendor_identifier === "string" &&
+        typeof payload.quantity === "string" &&
+        typeof payload.purchase_date_ms === "string" &&
+        typeof payload.original_purchase_date_ms === "string" &&
+        typeof payload.expires_date === "string" &&
+        typeof payload.expires_date_ms === "string" &&
+        typeof payload.is_in_intro_offer_period === "string" &&
+        typeof payload.is_trial_period === "string" &&
+        typeof payload.bvrs === "string" &&
+        typeof payload.version_external_identifier === "string"
+    ) { 
+        return ok({
+            transaction_id: payload.transaction_id,
+            product_id: payload.product_id,
+            original_transaction_id: payload.original_transaction_id,
+            item_id: payload.item_id,
+            app_item_id: payload.app_item_id,
+            web_order_line_item_id: payload.web_order_line_item_id,
+            unique_identifier: payload.unique_identifier,
+            unique_vendor_identifier: payload.unique_vendor_identifier,
+            quantity: payload.quantity,
+            purchase_date_ms: payload.purchase_date_ms,
+            original_purchase_date_ms: payload.original_purchase_date_ms,
+            expires_date: payload.expires_date,
+            expires_date_ms: payload.expires_date_ms,
+            is_in_intro_offer_period: payload.is_in_intro_offer_period,
+            is_trial_period: payload.is_trial_period,
+            bvrs: payload.bvrs,
+            version_external_identifier: payload.version_external_identifier
+        })
+    }
+    return err("Apple Receipt Info object from Apple cannot be parsed")
+}
+
+function parseBinaryStatus(status: unknown): Result<string, binaryStatus> {
+    if (typeof status !== 'string') {
+        return err("Not a string");
+    }
+    switch(status) {
+        case "0": 
+        case "1": 
+            return ok(status)
+        default:
+            return err("Not a valid status")
+    }
+}
+
+function parseExpirationIntent(status: unknown): Result<string, expirationIntent> {
+    if (typeof status !== 'string') {
+        return err("Not a string");
+    }
+    switch(status) {
+        case "0": 
+        case "1": 
+        case "2": 
+        case "3": 
+        case "4": 
+        case "5": 
+            return ok(status)
+        default:
+            return err("Not a valid status")
+    }
+}
+
+function parsePendingRenewalInfo(payload: unknown):  Result<string, PendingRenewalInfo> {
+    if(!isObject(payload)) {
+        return err("The apple pending renewal info field that Apple gave us isn't an object")
+    }
+    const autoRenewStatus = parseBinaryStatus(payload.auto_renew_status);
+    const billingRetryPeriod = parseBinaryStatus(payload.is_in_billing_retry_period);
+    const expirationIntent = parseExpirationIntent(payload.expiration_intent);
+    if(
+        typeof payload.auto_renew_product_id === "string" &&
+        autoRenewStatus.kind === ResultKind.Ok &&
+        expirationIntent.kind === ResultKind.Ok &&
+        typeof payload.grace_period_expires_date_ms === "string" &&
+        billingRetryPeriod.kind === ResultKind.Ok &&
+        typeof payload.original_transaction_id === "string" &&
+        typeof payload.product_id === "string"
+    ) {
+        return ok({
+            auto_renew_product_id: payload.auto_renew_product_id,
+            auto_renew_status: autoRenewStatus.value,
+            expiration_intent: expirationIntent.value,
+            grace_period_expires_date_ms: payload.grace_period_expires_date_ms,
+            is_in_billing_retry_period: billingRetryPeriod.value,
+            original_transaction_id: payload.original_transaction_id,
+            product_id: payload.product_id
+        })
+    }
+    return err("Pending Renewal Info object from Apple cannot be parsed")
 }
 
 function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptInfo> {
     if(!isObject(payload)) {
         return err("The unified receipt field that Apple gave us isn't an object")
     }
+    const latestReceiptInfo = parseArray(parseAppleReceiptInfo)(payload.latest_receipt_info)
+    const pendingRenewalInfo = parseArray(parsePendingRenewalInfo)(payload.pending_renewal_info)
     if(
         typeof payload.environment === "string" &&
         typeof payload.latest_receipt === "string" &&
-        typeof payload.status === "number"
+        typeof payload.status === "number" &&
+        latestReceiptInfo.kind === ResultKind.Ok &&
+        pendingRenewalInfo.kind === ResultKind.Ok
+    
     ) {
         return ok({
             environment: payload.environment,
             latest_receipt: payload.latest_receipt,
-            status: payload.status
+            status: payload.status,
+            latest_receipt_info: latestReceiptInfo.value,
+            pending_renewal_info: pendingRenewalInfo.value
         })
     }
+    return err("Unified Receipt object from Apple cannot be parsed")
 }
 
 function parseNotification(payload: unknown): Result<string, StatusUpdateNotification>  {
@@ -142,13 +250,18 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
             unified_receipt: unifiedReceipt.value
         })
     }
+    return err("Notification from Apple cannot be parsed")
 }
 
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
         let notification: unknown = JSON.parse(body ?? "");
-        delete notification.password; // no need to keep that in memory
-        return notification;
+        const parsedNotification = parseNotification(notification)
+        if(parsedNotification.kind === ResultKind.Ok) {
+            delete parsedNotification.value.password; // no need to keep that in memory
+            return parsedNotification.value;
+        } 
+        throw Error(`The payload could not be parsed due to ${parsedNotification.err}`)
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
         return e;
