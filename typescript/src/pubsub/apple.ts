@@ -77,14 +77,14 @@ const parseArray = <A>(parseA: (a: unknown) => Result<string, A>) => (array: unk
         }
 
         return err("We can't parse the items in the array because of a type mismatch");
-    }
+    };
 
     if (Array.isArray(array)) {
         return f([], array);
     }
 
     return err("Is not an array");
-}
+};
 
 function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptInfo> {
     if(!isObject(payload)) {
@@ -108,7 +108,7 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
         typeof payload.is_trial_period === "string" &&
         typeof payload.bvrs === "string" &&
         typeof payload.version_external_identifier === "string"
-    ) { 
+    ) {
         return ok({
             transaction_id: payload.transaction_id,
             product_id: payload.product_id,
@@ -137,9 +137,9 @@ function parseBinaryStatus(status: unknown): Result<string, binaryStatus> {
         return err("Not a string");
     }
     switch(status) {
-        case "0": 
-        case "1": 
-            return ok(status)
+        case "0":
+        case "1":
+            return ok(status);
         default:
             return err("Not a valid status")
     }
@@ -150,13 +150,12 @@ function parseExpirationIntent(status: unknown): Result<string, expirationIntent
         return err("Not a string");
     }
     switch(status) {
-        case "0": 
-        case "1": 
-        case "2": 
-        case "3": 
-        case "4": 
-        case "5": 
-            return ok(status)
+        case "1":
+        case "2":
+        case "3":
+        case "4":
+        case "5":
+            return ok(status);
         default:
             return err("Not a valid status")
     }
@@ -203,7 +202,7 @@ function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptIn
         typeof payload.status === "number" &&
         latestReceiptInfo.kind === ResultKind.Ok &&
         pendingRenewalInfo.kind === ResultKind.Ok
-    
+
     ) {
         return ok({
             environment: payload.environment,
@@ -260,7 +259,7 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
         if(parsedNotification.kind === ResultKind.Ok) {
             delete parsedNotification.value.password; // no need to keep that in memory
             return parsedNotification.value;
-        } 
+        }
         throw Error(`The payload could not be parsed due to ${parsedNotification.err}`)
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
