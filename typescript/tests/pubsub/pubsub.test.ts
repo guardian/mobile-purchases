@@ -5,7 +5,7 @@ import {
     toSqsSubReference as toGoogleSqsEvent
 } from "../../src/pubsub/google";
 import {
-    parsePayload as parseApplePayload,
+    parsePayload as parseApplePayload, StatusUpdateNotification,
     toDynamoEvent as applePayloadToDynamo,
     toSqsSubReference as toAppleSqsEvent
 } from "../../src/pubsub/apple";
@@ -116,7 +116,12 @@ describe("The apple pubsub", () => {
 
         const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({undefined}));
 
-        const body = {
+        const body: StatusUpdateNotification = {
+                original_transaction_id: "TEST",
+                cancellation_date: "TEST",
+                web_order_line_item_id: "TEST",
+                auto_renew_adam_id: "TEST",
+                expiration_intent: "TEST",
                 auto_renew_product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
                 auto_renew_status: true,
                 bid: "uk.co.guardian.iphone2",
@@ -128,10 +133,9 @@ describe("The apple pubsub", () => {
                     latest_receipt: "TEST",
                     latest_receipt_info: [{
                         app_item_id: "TEST",
-                        bid: "uk.co.guardian.iphone2",
                         bvrs: "TEST",
-                        is_in_intro_offer_period: false,
-                        is_trial_period: true,
+                        is_in_intro_offer_period: "false",
+                        is_trial_period: "true",
                         item_id: "TEST",
                         original_transaction_id: "TEST",
                         product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
@@ -140,7 +144,11 @@ describe("The apple pubsub", () => {
                         unique_identifier: "TEST",
                         unique_vendor_identifier: "TEST",
                         version_external_identifier: "TEST",
-                        web_order_line_item_id: "TEST"
+                        web_order_line_item_id: "TEST",
+                        purchase_date_ms: "TEST",
+                        original_purchase_date_ms: "TEST",
+                        expires_date: "TEST",
+                        expires_date_ms: "TEST"
                     }],
                     pending_renewal_info: [
                         {
@@ -175,10 +183,15 @@ describe("The apple pubsub", () => {
             eventType: "INITIAL_BUY",
             platform: "ios",
             appId: "uk.co.guardian.iphone2",
-            freeTrial: false,
+            freeTrial: true,
             googlePayload: null,
             applePayload:
             {
+                original_transaction_id: "TEST",
+                cancellation_date: "TEST",
+                web_order_line_item_id: "TEST",
+                auto_renew_adam_id: "TEST",
+                expiration_intent: "TEST",
                 auto_renew_product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
                 auto_renew_status: true,
                 bid: "uk.co.guardian.iphone2",
@@ -191,10 +204,9 @@ describe("The apple pubsub", () => {
                     latest_receipt_info: [
                         {
                             app_item_id: "TEST",
-                            bid: "uk.co.guardian.iphone2",
                             bvrs: "TEST",
-                            is_in_intro_offer_period: false,
-                            is_trial_period: true,
+                            is_in_intro_offer_period: "false",
+                            is_trial_period: "true",
                             item_id: "TEST",
                             original_transaction_id: "TEST",
                             product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
@@ -203,7 +215,11 @@ describe("The apple pubsub", () => {
                             unique_identifier: "TEST",
                             unique_vendor_identifier: "TEST",
                             version_external_identifier: "TEST",
-                            web_order_line_item_id: "TEST"
+                            web_order_line_item_id: "TEST",
+                            purchase_date_ms: "TEST",
+                            original_purchase_date_ms: "TEST",
+                            expires_date: "TEST",
+                            expires_date_ms: "TEST",
                         }
                     ],
                     pending_renewal_info: [

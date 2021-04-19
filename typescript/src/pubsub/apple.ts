@@ -7,8 +7,8 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
 import {fromAppleBundle} from "../services/appToPlatform";
 import {PendingRenewalInfo} from "../services/appleValidateReceipts";
-import type {Result, Option as Optional} from "@guardian/types";
-import {ok, err, ResultKind, some, none, OptionKind} from "@guardian/types";
+import type {Result} from "@guardian/types";
+import {ok, err, ResultKind} from "@guardian/types";
 
 // this is the definition of a receipt as received by the server to server notification system.
 // Not to be confused with apple's receipt validation receipt info (although they do look similar, they are different)
@@ -76,7 +76,7 @@ const parseArray = <A>(parseA: (a: unknown) => Result<string, A>) => (array: unk
             return f([ ...acc, parsed.value ], tail);
         }
 
-        return err("We can't parse the items in the array because of a type mismatch");
+        return parsed;
     };
 
     if (Array.isArray(array)) {
@@ -132,9 +132,16 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
     return err("Apple Receipt Info object from Apple cannot be parsed")
 }
 
+function parseBillingRetryPeriod(status: unknown): Result<string, binaryStatus | undefined> {
+    if(status === undefined) {
+        return ok(undefined)
+    }
+    return parseBinaryStatus(status);
+}
+
 function parseBinaryStatus(status: unknown): Result<string, binaryStatus> {
     if (typeof status !== 'string') {
-        return err("Not a string");
+        return err("Binary Status is not a string");
     }
     switch(status) {
         case "0":
@@ -145,9 +152,12 @@ function parseBinaryStatus(status: unknown): Result<string, binaryStatus> {
     }
 }
 
-function parseExpirationIntent(status: unknown): Result<string, expirationIntent> {
+function parseExpirationIntent(status: unknown): Result<string, expirationIntent | undefined> {
+    if(status === undefined) {
+        return ok(undefined)
+    }
     if (typeof status !== 'string') {
-        return err("Not a string");
+        return err("Expiration Intent is not a string");
     }
     switch(status) {
         case "1":
@@ -166,13 +176,22 @@ function parsePendingRenewalInfo(payload: unknown):  Result<string, PendingRenew
         return err("The apple pending renewal info field that Apple gave us isn't an object")
     }
     const autoRenewStatus = parseBinaryStatus(payload.auto_renew_status);
-    const billingRetryPeriod = parseBinaryStatus(payload.is_in_billing_retry_period);
+    const billingRetryPeriod = parseBillingRetryPeriod(payload.is_in_billing_retry_period);
     const expirationIntent = parseExpirationIntent(payload.expiration_intent);
+    if(autoRenewStatus.kind === ResultKind.Err) {
+        return autoRenewStatus
+    }
+    if(billingRetryPeriod.kind === ResultKind.Err) {
+       return billingRetryPeriod
+    }
+    if(expirationIntent.kind === ResultKind.Err) {
+        return expirationIntent
+    }
     if(
-        typeof payload.auto_renew_product_id === "string" &&
+        (typeof payload.auto_renew_product_id === "string" || typeof payload.auto_renew_product_id === "undefined") &&
         autoRenewStatus.kind === ResultKind.Ok &&
         expirationIntent.kind === ResultKind.Ok &&
-        typeof payload.grace_period_expires_date_ms === "string" &&
+        (typeof payload.grace_period_expires_date_ms === "string" || typeof payload.grace_period_expires_date_ms === "undefined") &&
         billingRetryPeriod.kind === ResultKind.Ok &&
         typeof payload.original_transaction_id === "string" &&
         typeof payload.product_id === "string"
@@ -196,6 +215,12 @@ function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptIn
     }
     const latestReceiptInfo = parseArray(parseAppleReceiptInfo)(payload.latest_receipt_info)
     const pendingRenewalInfo = parseArray(parsePendingRenewalInfo)(payload.pending_renewal_info)
+    if(latestReceiptInfo.kind === ResultKind.Err) {
+        return latestReceiptInfo
+    }
+    if(pendingRenewalInfo.kind === ResultKind.Err) {
+        return pendingRenewalInfo
+    }
     if(
         typeof payload.environment === "string" &&
         typeof payload.latest_receipt === "string" &&
@@ -221,6 +246,9 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
     }
     console.log(`The keys of the payload: ${Object.keys(payload)}`);
     const unifiedReceipt = parseUnifiedReceipt(payload.unified_receipt);
+    if(unifiedReceipt.kind === ResultKind.Err) {
+        return unifiedReceipt
+    }
     if(
         typeof payload.environment === "string" &&
         typeof payload.bid === "string" &&
@@ -232,8 +260,7 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
         typeof payload.auto_renew_status === "boolean" &&
         typeof payload.auto_renew_adam_id === "string" &&
         typeof payload.auto_renew_product_id === "string" &&
-        typeof payload.expiration_intent === "string" &&
-        unifiedReceipt.kind === ResultKind.Ok
+        typeof payload.expiration_intent === "string"
     ) {
         return ok({
             environment: payload.environment,
