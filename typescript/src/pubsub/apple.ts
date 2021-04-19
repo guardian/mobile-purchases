@@ -7,6 +7,8 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
 import {fromAppleBundle} from "../services/appToPlatform";
 import {PendingRenewalInfo} from "../services/appleValidateReceipts";
+import type {Result} from "@guardian/types";
+import {ok, err, ResultKind} from "@guardian/types";
 
 // this is the definition of a receipt as received by the server to server notification system.
 // Not to be confused with apple's receipt validation receipt info (although they do look similar, they are different)
@@ -55,9 +57,96 @@ export interface StatusUpdateNotification {
     expiration_intent: string
 }
 
+const isObject = (a: unknown): a is Record<string, unknown> =>
+    typeof a === 'object' && a !== null;
+
+const parseArray = <A>(parseA: (a: unknown) => Option<A>) => (array: unknown): Option<A[]> => {
+    const f = (acc: A[], remainder: unknown[]): Option<A[]> => {
+        if (remainder.length === 0) {
+            return some(acc);
+        }
+
+        const [ item, ...tail ] = remainder;
+        const parsed = parseA(item);
+
+        if (parsed.kind === OptionKind.Some) {
+            return f([ ...acc, parsed.value ], tail);
+        }
+
+        return none;
+    }
+
+    if (Array.isArray(array)) {
+        return f([], array);
+    }
+
+    return none;
+}
+
+function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptInfo> {
+    if(!isObject(payload)) {
+        return err("The apple receipt info field that Apple gave us isn't an object")
+    }
+    if(
+    )
+}
+
+function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptInfo> {
+    if(!isObject(payload)) {
+        return err("The unified receipt field that Apple gave us isn't an object")
+    }
+    if(
+        typeof payload.environment === "string" &&
+        typeof payload.latest_receipt === "string" &&
+        typeof payload.status === "number"
+    ) {
+        return ok({
+            environment: payload.environment,
+            latest_receipt: payload.latest_receipt,
+            status: payload.status
+        })
+    }
+}
+
+function parseNotification(payload: unknown): Result<string, StatusUpdateNotification>  {
+    if(!isObject(payload)) {
+        return err("The notification from Apple didn't have any data we can parse")
+    }
+    const unifiedReceipt = parseUnifiedReceipt(payload.unified_receipt)
+    if(
+        typeof payload.environment === "string" &&
+        typeof payload.bid === "string" &&
+        typeof payload.bvrs === "string" &&
+        typeof payload.notification_type === "string" &&
+        typeof payload.original_transaction_id === "string" &&
+        typeof payload.cancellation_date === "string" &&
+        typeof payload.web_order_line_item_id === "string" &&
+        typeof payload.auto_renew_status === "boolean" &&
+        typeof payload.auto_renew_adam_id === "string" &&
+        typeof payload.auto_renew_product_id === "string" &&
+        typeof payload.expiration_intent === "string" &&
+        unifiedReceipt.kind === ResultKind.Ok
+    ) {
+        return ok({
+            environment: payload.environment,
+            bid: payload.bid,
+            bvrs: payload.bvrs,
+            notification_type: payload.notification_type,
+            original_transaction_id: payload.original_transaction_id,
+            cancellation_date: payload.cancellation_date,
+            web_order_line_item_id: payload.web_order_line_item_id,
+            auto_renew_status: payload.auto_renew_status,
+            auto_renew_adam_id: payload.auto_renew_adam_id,
+            auto_renew_product_id: payload.auto_renew_product_id,
+            expiration_intent: payload.expiration_intent,
+            unified_receipt: unifiedReceipt.value
+        })
+    }
+}
+
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
-        let notification = JSON.parse(body ?? "") as StatusUpdateNotification;
+        let notification: unknown = JSON.parse(body ?? "");
         delete notification.password; // no need to keep that in memory
         return notification;
     } catch (e) {
