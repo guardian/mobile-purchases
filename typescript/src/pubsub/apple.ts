@@ -192,7 +192,7 @@ function parsePendingRenewalInfo(payload: unknown):  Result<string, PendingRenew
 
 function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptInfo> {
     if(!isObject(payload)) {
-        return err("The unified receipt field that Apple gave us isn't an object")
+        return err("The unified receipt object that Apple gave us isn't an object")
     }
     const latestReceiptInfo = parseArray(parseAppleReceiptInfo)(payload.latest_receipt_info)
     const pendingRenewalInfo = parseArray(parsePendingRenewalInfo)(payload.pending_renewal_info)
@@ -219,7 +219,8 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
     if(!isObject(payload)) {
         return err("The notification from Apple didn't have any data we can parse")
     }
-    const unifiedReceipt = parseUnifiedReceipt(payload.unified_receipt)
+    console.log(`The keys of the payload: ${Object.keys(payload)}`);
+    const unifiedReceipt = parseUnifiedReceipt(payload.unified_receipt);
     if(
         typeof payload.environment === "string" &&
         typeof payload.bid === "string" &&
@@ -254,10 +255,9 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
 
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
-        let notification: unknown = JSON.parse(body ?? "");
-        const parsedNotification = parseNotification(notification)
+        const notification: unknown = JSON.parse(body ?? "");
+        const parsedNotification = parseNotification(notification);
         if(parsedNotification.kind === ResultKind.Ok) {
-            delete parsedNotification.value.password; // no need to keep that in memory
             return parsedNotification.value;
         }
         throw Error(`The payload could not be parsed due to ${parsedNotification.err}`)
