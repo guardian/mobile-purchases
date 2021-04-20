@@ -17,11 +17,7 @@ export interface AppleReceiptInfo {
     transaction_id: string,
     product_id: string,
     original_transaction_id: string,
-    item_id: string,
-    app_item_id: string,
     web_order_line_item_id: string,
-    unique_identifier: string,
-    unique_vendor_identifier: string,
     quantity: string,
     purchase_date_ms: string,
     original_purchase_date_ms: string,
@@ -29,8 +25,12 @@ export interface AppleReceiptInfo {
     expires_date_ms: string,
     is_in_intro_offer_period: string,
     is_trial_period: string,
-    bvrs: string,
-    version_external_identifier: string
+    item_id?: string,
+    app_item_id?: string,
+    unique_identifier?: string,
+    unique_vendor_identifier?: string,
+    bvrs?: string,
+    version_external_identifier?: string
 }
 
 export interface UnifiedReceiptInfo {
@@ -47,11 +47,11 @@ export interface StatusUpdateNotification {
     bvrs: string,
     notification_type: string,
     password?: string,
-    original_transaction_id: string,
-    cancellation_date: string,
-    web_order_line_item_id: string,
+    original_transaction_id?: string,
+    cancellation_date?: string,
+    web_order_line_item_id?: string,
     unified_receipt: UnifiedReceiptInfo,
-    auto_renew_status: boolean,
+    auto_renew_status: string,
     auto_renew_adam_id: string,
     auto_renew_product_id: string,
     expiration_intent: string
@@ -94,11 +94,11 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
         typeof payload.transaction_id === "string" &&
         typeof payload.product_id === "string" &&
         typeof payload.original_transaction_id === "string" &&
-        typeof payload.item_id === "string" &&
-        typeof payload.app_item_id === "string" &&
+        (typeof payload.item_id === "string" || typeof payload.item_id === "undefined") &&
+        (typeof payload.app_item_id === "string" || typeof payload.app_item_id === "undefined") &&
         typeof payload.web_order_line_item_id === "string" &&
-        typeof payload.unique_identifier === "string" &&
-        typeof payload.unique_vendor_identifier === "string" &&
+        (typeof payload.unique_identifier === "string" || typeof payload.unique_identifier === "undefined") &&
+        (typeof payload.unique_vendor_identifier === "string" || typeof payload.unique_vendor_identifier === "undefined") &&
         typeof payload.quantity === "string" &&
         typeof payload.purchase_date_ms === "string" &&
         typeof payload.original_purchase_date_ms === "string" &&
@@ -106,8 +106,8 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
         typeof payload.expires_date_ms === "string" &&
         typeof payload.is_in_intro_offer_period === "string" &&
         typeof payload.is_trial_period === "string" &&
-        typeof payload.bvrs === "string" &&
-        typeof payload.version_external_identifier === "string"
+        (typeof payload.bvrs === "string" || typeof payload.bvrs === "undefined") &&
+        (typeof payload.version_external_identifier === "string" || typeof payload.version_external_identifier === "undefined")
     ) {
         return ok({
             transaction_id: payload.transaction_id,
@@ -254,10 +254,10 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
         typeof payload.bid === "string" &&
         typeof payload.bvrs === "string" &&
         typeof payload.notification_type === "string" &&
-        typeof payload.original_transaction_id === "string" &&
-        typeof payload.cancellation_date === "string" &&
-        typeof payload.web_order_line_item_id === "string" &&
-        typeof payload.auto_renew_status === "boolean" &&
+        (typeof payload.original_transaction_id === "string" || typeof payload.original_transaction_id === "undefined") &&
+        (typeof payload.cancellation_date === "string" || typeof payload.cancellation_date === "undefined") &&
+        (typeof payload.web_order_line_item_id === "string" || typeof payload.web_order_line_item_id === "undefined" ) &&
+        typeof payload.auto_renew_status === "string" &&
         typeof payload.auto_renew_adam_id === "string" &&
         typeof payload.auto_renew_product_id === "string" &&
         typeof payload.expiration_intent === "string"
