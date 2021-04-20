@@ -52,9 +52,9 @@ export interface StatusUpdateNotification {
     web_order_line_item_id?: string,
     unified_receipt: UnifiedReceiptInfo,
     auto_renew_status: string,
-    auto_renew_adam_id: string,
+    auto_renew_adam_id?: string,
     auto_renew_product_id: string,
-    expiration_intent: string
+    expiration_intent?: string
 }
 
 type binaryStatus = "0" | "1"
@@ -258,9 +258,9 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
         (typeof payload.cancellation_date === "string" || typeof payload.cancellation_date === "undefined") &&
         (typeof payload.web_order_line_item_id === "string" || typeof payload.web_order_line_item_id === "undefined" ) &&
         typeof payload.auto_renew_status === "string" &&
-        typeof payload.auto_renew_adam_id === "string" &&
+        (typeof payload.auto_renew_adam_id === "string" || typeof payload.auto_renew_adam_id === "undefined" ) &&
         typeof payload.auto_renew_product_id === "string" &&
-        typeof payload.expiration_intent === "string"
+        (typeof payload.expiration_intent === "string" || typeof payload.expiration_intent === "undefined")
     ) {
         return ok({
             environment: payload.environment,
