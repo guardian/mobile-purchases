@@ -375,7 +375,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: google-pubsub.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-google-pubsub/google-pubsub.zip
@@ -407,7 +407,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: apple-pubsub.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-apple-pubsub/apple-pubsub.zip
@@ -439,7 +439,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: google-link-user-subscription.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-google-link-user-subscription/google-link-user-subscription.zip
@@ -470,7 +470,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: apple-link-user-subscription.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-apple-link-user-subscription/apple-link-user-subscription.zip
@@ -501,7 +501,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: google-subscription-status.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-google-subscription-status/google-subscription-status.zip
@@ -531,7 +531,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: apple-subscription-status.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-apple-subscription-status/apple-subscription-status.zip
@@ -771,7 +771,7 @@ Resources:
       MemorySize: 512
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Timeout: 25
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
 
 
   UpdateGoogleSubscriptionsEventSource:
@@ -871,7 +871,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: user-subscriptions.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-user-subscriptions/user-subscriptions.zip
@@ -921,7 +921,7 @@ Resources:
       MemorySize: 512
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Timeout: 25
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
 
   AppleSubscriptionsEventSource:
     Type: AWS::Lambda::EventSourceMapping
@@ -1062,7 +1062,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: delete-user-subscription.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-delete-user-subscription/delete-user-subscription.zip
@@ -1093,7 +1093,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: apple-revalidate-receipts.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-apple-revalidate-receipts/apple-revalidate-receipts.zip
