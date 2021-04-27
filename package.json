@@ -5,7 +5,8 @@
   "scripts": {
     "clean": "rm -r tsc-target",
     "build": "webpack",
-    "test": "jest"
+    "test": "jest",
+    "test-lambda": "tsc && node ./tsc-target/src/test-launcher/test-launcher.js"
   },
   "repository": {
     "type": "git",
