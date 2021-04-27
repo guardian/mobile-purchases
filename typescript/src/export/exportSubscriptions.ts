@@ -15,9 +15,11 @@ export async function handler(): Promise<any> {
     let stream = null;
     switch (className) {
         case "ReadSubscription":
+            console.log("Reading subscription from subscriptions");
             stream = new DynamoStream(dynamoMapper.scan(ReadSubscription));
             break;
         case "ReadUserSubscription":
+            console.log("Reading user subscription from user subscription");
             stream = new DynamoStream(dynamoMapper.scan(ReadUserSubscription));
             break;
         default:
@@ -30,6 +32,7 @@ export async function handler(): Promise<any> {
     const yesterday = plusDays(new Date(), -1).toISOString().substr(0,10);
     const prefix = (Stage === "PROD") ? "data" : "code-data";
     const filename = `${prefix}/date=${yesterday}/${yesterday}.json.gz`;
+    console.log(`uploading ${filename} to s3`);
     const managedUpload = s3.upload({
         Bucket: bucket,
         Key: filename,
