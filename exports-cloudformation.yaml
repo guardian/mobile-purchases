@@ -96,7 +96,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-tables.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
@@ -126,7 +126,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-tables.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
@@ -156,7 +156,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-events-table.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-events-table/export-subscription-events-table.zip
@@ -243,7 +243,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-historical-data.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-historical-data/export-historical-data.zip
@@ -274,7 +274,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-historical-data.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-historical-data/export-historical-data.zip
