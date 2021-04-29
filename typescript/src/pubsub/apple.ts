@@ -21,8 +21,8 @@ export interface AppleReceiptInfo {
     quantity: string,
     purchase_date_ms: string,
     original_purchase_date_ms: string,
-    expires_date?: string,
-    expires_date_ms?: string,
+    expires_date: string,
+    expires_date_ms: string,
     is_in_intro_offer_period?: string,
     is_trial_period: string,
     item_id?: string,
@@ -103,8 +103,8 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
         typeof payload.quantity === "string" &&
         typeof payload.purchase_date_ms === "string" &&
         typeof payload.original_purchase_date_ms === "string" &&
-        (typeof payload.expires_date === "string" || typeof payload.expires_date === "undefined") &&
-        (typeof payload.expires_date_ms === "string" || typeof payload.expires_date_ms === "undefined") &&
+        typeof payload.expires_date === "string" &&
+        typeof payload.expires_date_ms === "string" &&
         (typeof payload.is_in_intro_offer_period === "string" || typeof payload.is_in_intro_offer_period === "undefined") &&
         typeof payload.is_trial_period === "string" &&
         (typeof payload.bvrs === "string" || typeof payload.bvrs === "undefined") &&
