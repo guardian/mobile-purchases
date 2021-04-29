@@ -17,13 +17,13 @@ export interface AppleReceiptInfo {
     transaction_id: string,
     product_id: string,
     original_transaction_id: string,
-    web_order_line_item_id: string,
+    web_order_line_item_id?: string,
     quantity: string,
     purchase_date_ms: string,
     original_purchase_date_ms: string,
-    expires_date: string,
-    expires_date_ms: string,
-    is_in_intro_offer_period: string,
+    expires_date?: string,
+    expires_date_ms?: string,
+    is_in_intro_offer_period?: string,
     is_trial_period: string,
     item_id?: string,
     app_item_id?: string,
@@ -97,15 +97,15 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
         typeof payload.original_transaction_id === "string" &&
         (typeof payload.item_id === "string" || typeof payload.item_id === "undefined") &&
         (typeof payload.app_item_id === "string" || typeof payload.app_item_id === "undefined") &&
-        typeof payload.web_order_line_item_id === "string" &&
+        (typeof payload.web_order_line_item_id === "string" || typeof payload.web_order_line_item_id === "undefined") &&
         (typeof payload.unique_identifier === "string" || typeof payload.unique_identifier === "undefined") &&
         (typeof payload.unique_vendor_identifier === "string" || typeof payload.unique_vendor_identifier === "undefined") &&
         typeof payload.quantity === "string" &&
         typeof payload.purchase_date_ms === "string" &&
         typeof payload.original_purchase_date_ms === "string" &&
-        typeof payload.expires_date === "string" &&
-        typeof payload.expires_date_ms === "string" &&
-        typeof payload.is_in_intro_offer_period === "string" &&
+        (typeof payload.expires_date === "string" || typeof payload.expires_date === "undefined") &&
+        (typeof payload.expires_date_ms === "string" || typeof payload.expires_date_ms === "undefined") &&
+        (typeof payload.is_in_intro_offer_period === "string" || typeof payload.is_in_intro_offer_period === "undefined") &&
         typeof payload.is_trial_period === "string" &&
         (typeof payload.bvrs === "string" || typeof payload.bvrs === "undefined") &&
         (typeof payload.version_external_identifier === "string" || typeof payload.version_external_identifier === "undefined")
