@@ -90,6 +90,7 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
     if(!isObject(payload)) {
         return err("The apple receipt info field that Apple gave us isn't an object")
     }
+    console.log(`The keys of the apple receipt info: ${Object.keys(payload)}`);
     if(
         typeof payload.transaction_id === "string" &&
         typeof payload.product_id === "string" &&
@@ -175,6 +176,7 @@ function parsePendingRenewalInfo(payload: unknown):  Result<string, PendingRenew
     if(!isObject(payload)) {
         return err("The apple pending renewal info field that Apple gave us isn't an object")
     }
+    console.log(`The keys of the pending renewal info: ${Object.keys(payload)}`);
     const autoRenewStatus = parseBinaryStatus(payload.auto_renew_status);
     const billingRetryPeriod = parseBillingRetryPeriod(payload.is_in_billing_retry_period);
     const expirationIntent = parseExpirationIntent(payload.expiration_intent);
@@ -213,6 +215,7 @@ function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptIn
     if(!isObject(payload)) {
         return err("The unified receipt object that Apple gave us isn't an object")
     }
+    console.log(`The keys of the unified receipt: ${Object.keys(payload)}`);
     const latestReceiptInfo = parseArray(parseAppleReceiptInfo)(payload.latest_receipt_info)
     const pendingRenewalInfo = parseArray(parsePendingRenewalInfo)(payload.pending_renewal_info)
     if(latestReceiptInfo.kind === ResultKind.Err) {
