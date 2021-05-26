@@ -35,9 +35,11 @@ Parameters:
   GooglePubSubSecret:
     Type: String
     Description: The secret used by google's pubsub
+    NoEcho: true
   ApplePubSubSecret:
     Type: String
     Description: The secret used by google's pubsub
+    NoEcho: true
   AlarmTopic:
     Type: String
     Description: The ARN of the SNS topic to send all the cloudwatch alarms to
