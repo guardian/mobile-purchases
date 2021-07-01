@@ -89,7 +89,7 @@ function callValidateReceipt(receipt: string, forceSandbox: boolean = false): Pr
             const statusCode = response.message.statusCode;
             const statusText = response.message.statusMessage;
             if (statusCode && (statusCode < 200 || statusCode >= 300)) {
-                console.error(`Impossible to validate the receipt, got ${statusCode} ${statusText} from ${endpoint} for ${receipt}`);
+                console.error(`Impossible to validate the receipt, got ${statusCode} ${statusText} from ${endpoint}`);
                 throw new ProcessingError("Impossible to validate receipt", true);
             }
             return response
