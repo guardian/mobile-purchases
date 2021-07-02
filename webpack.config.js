@@ -33,7 +33,6 @@ module.exports = {
         "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
     },
     output: {
-        filename: '[name].js',
         path: path.resolve(__dirname, 'tsc-target'),
         libraryTarget: 'commonjs2'
     }
