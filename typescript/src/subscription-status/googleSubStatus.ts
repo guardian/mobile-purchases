@@ -61,7 +61,7 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
                 console.log(`Purchase expired a very long time ago`);
                 return HTTPResponses.NOT_FOUND;
             } else {
-                console.log(`Serving an Internal Server Error due to: ${error}`);
+                console.log(`Serving an Internal Server Error due to: ${error.toString().split('/tokens/')[0]}`);
                 return HTTPResponses.INTERNAL_ERROR;
             }
         }
