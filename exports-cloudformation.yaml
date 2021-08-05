@@ -66,6 +66,7 @@ Resources:
               Action:
                 - "dynamodb:Scan"
                 - "dynamodb:Query"
+                - "dynamodb:ExportTableToPointInTime"
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
