@@ -1,18 +1,13 @@
 import "source-map-support/register";
 import { aws } from "../utils/aws";
 import { plusDays } from "../utils/dates";
-import { ExportTableToPointInTimeOutput } from "aws-sdk/clients/dynamodb";
-import { AWSError } from "aws-sdk";
-import { PromiseResult } from "aws-sdk/lib/request";
 
 function prefix_creator(): string {
   const yesterday = plusDays(new Date(), -1).toISOString().substr(0, 10);
   return `v2/data/date=${yesterday}`;
 }
 
-export async function handler(): Promise<
-  PromiseResult<ExportTableToPointInTimeOutput, AWSError>
-> {
+export async function handler(): Promise<string> {
   const bucket = process.env["ExportBucket"];
   const tableArn = process.env["TableArn"];
   const S3BucketOwner = process.env["S3BucketOwner"];
@@ -29,5 +24,11 @@ export async function handler(): Promise<
     ExportFormat: "DYNAMODB_JSON",
   };
 
-  return aws.exportTableToPointInTime(params).promise();
+  return aws.exportTableToPointInTime(params)
+      .promise()
+      .then(result =>
+      `Dynamo export started, with status: ${result.ExportDescription?.ExportStatus}`
+  ).catch(err => {
+    throw new Error("Failed to start dynamo export");
+  });
 }
