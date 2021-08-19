@@ -111,7 +111,7 @@ Resources:
           ExportBucket: !Ref SubscriptionExportBucket
           ClassName: ReadSubscription
       Description: Export subscription table to the datalake
-      MemorySize: 10240
+      MemorySize: 512
       Timeout: 900
       Events:
         Schedule:

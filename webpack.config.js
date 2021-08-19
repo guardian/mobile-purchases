@@ -27,7 +27,7 @@ module.exports = {
         "user-subscriptions": "./typescript/src/user/user.ts",
         "google-update-subscriptions": "./typescript/src/update-subs/google.ts",
         "apple-update-subscriptions": "./typescript/src/update-subs/apple.ts",
-        "export-subscription-tables": "./typescript/src/export/exportSubscriptions.ts",
+        "export-subscription-tables": "./typescript/src/export/exportSubscriptions-v2.ts",
         "export-subscription-events-table": "./typescript/src/export/exportEvents.ts",
         "export-historical-data": "./typescript/src/export/exportHistoricalData.ts",
         "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
