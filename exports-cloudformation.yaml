@@ -1,6 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: Exports mobile purchases data
+
 Parameters:
   Stack:
     Description: Stack name
@@ -20,9 +21,15 @@ Parameters:
   AlarmTopic:
     Type: String
     Description: The ARN of the SNS topic to send all the cloudwatch alarms to
+  AccountId:
+    Type: String
+    Description: The account id of the mobile account
   SubscriptionExportBucket:
     Type: String
     Description: The name of the export subscription bucket
+  SubscriptionExportBucketOwner:
+    Type: String
+    Description: The id of the owner of the export subscription bucket
   UserSubscriptionExportBucket:
     Type: String
     Description: The name of the export user subscription bucket
@@ -35,6 +42,7 @@ Parameters:
   AppleSubscriptionHistoryExportBucket:
     Type: String
     Description: The name of the export bucket containing the subscription history from Apple
+
 
 Resources:
   ExportLambdasRole:
@@ -111,7 +119,7 @@ Resources:
           ExportBucket: !Ref SubscriptionExportBucket
           ClassName: ReadSubscription
       Description: Export subscription table to the datalake
-      MemorySize: 512
+      MemorySize: 10240
       Timeout: 900
       Events:
         Schedule:
@@ -140,6 +148,70 @@ Resources:
           Stage: !Sub ${Stage}
           ExportBucket: !Ref UserSubscriptionExportBucket
           ClassName: ReadUserSubscription
+      Description: Export the user subscription table to the datalake
+      MemorySize: 512
+      Timeout: 900
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(3 0 1/1 * ? *)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  ExportSubscriptionTableLambdaV2:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: export-subscription-tables-v2.handler
+      Runtime: nodejs14.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables-v2/export-subscription-tables-v2.zip
+      FunctionName: !Sub ${App}-export-subscription-table-v2-${Stage}
+      Role: !GetAtt ExportLambdasRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          ExportBucket: !Ref SubscriptionExportBucket
+          BucketOwner: !Ref SubscriptionExportBucketOwner
+          AccountId: !Ref AccountId
+          ClassName: subscriptions
+      Description: Export subscription table to the datalake
+      MemorySize: 512
+      Timeout: 900
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(3 0 1/1 * ? *)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  ExportUserSubscriptionTableLambdaV2:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: export-subscription-tables-v2.handler
+      Runtime: nodejs14.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables-v2/export-subscription-tables-v2.zip
+      FunctionName: !Sub ${App}-export-user-subscription-table-v2-${Stage}
+      Role: !GetAtt ExportLambdasRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          ExportBucket: !Ref UserSubscriptionExportBucket
+          BucketOwner: !Ref SubscriptionExportBucketOwner
+          AccountId: !Ref AccountId
+          ClassName: user-subscriptions
       Description: Export the user subscription table to the datalake
       MemorySize: 512
       Timeout: 900
