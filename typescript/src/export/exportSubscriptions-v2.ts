@@ -1,9 +1,6 @@
 import "source-map-support/register";
-import {aws, dynamoMapper} from "../utils/aws";
+import { aws } from "../utils/aws";
 import { plusDays } from "../utils/dates";
-import {DynamoStream} from "./dynamoStream";
-import {ReadSubscription} from "../models/subscription";
-import {ReadUserSubscription} from "../models/userSubscription";
 
 function prefix_creator(): string {
   const yesterday = plusDays(new Date(), -1).toISOString().substr(0, 10);
