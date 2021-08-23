@@ -2,9 +2,7 @@ import "source-map-support/register";
 import { aws } from "../utils/aws";
 import { plusDays } from "../utils/dates";
 
-const stage = process.env["Stage"];
-
-function prefix_creator(): string {
+function prefix_creator(stage: string): string {
   const yesterday = plusDays(new Date(), -1).toISOString().substr(0, 10);
   if(stage == "CODE") {
     return `v2/code-data/date=${yesterday}`;
@@ -18,6 +16,7 @@ export async function handler(): Promise<string> {
   const s3BucketOwner = process.env["BucketOwner"];
   const account = process.env["AccountId"];
   const app = process.env["App"];
+  const stage = process.env["Stage"];
   const className = process.env["ClassName"];
 
   if (!bucket) throw new Error("Variable ExportBucket must be set");
@@ -47,7 +46,7 @@ export async function handler(): Promise<string> {
     TableArn: tableArn,
     S3Bucket: bucket,
     S3BucketOwner: s3BucketOwner,
-    S3Prefix: prefix_creator(),
+    S3Prefix: prefix_creator(stage),
     ExportFormat: "DYNAMODB_JSON",
   };
 
