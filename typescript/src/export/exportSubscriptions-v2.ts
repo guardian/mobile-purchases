@@ -2,9 +2,15 @@ import "source-map-support/register";
 import { aws } from "../utils/aws";
 import { plusDays } from "../utils/dates";
 
+const stage = process.env["Stage"];
+
 function prefix_creator(): string {
   const yesterday = plusDays(new Date(), -1).toISOString().substr(0, 10);
-  return `v2/data/date=${yesterday}`;
+  if(stage == "CODE") {
+    return `v2/code-data/date=${yesterday}`;
+  } else {
+    return `v2/data/date=${yesterday}`;
+  }
 }
 
 export async function handler(): Promise<string> {
@@ -12,7 +18,6 @@ export async function handler(): Promise<string> {
   const s3BucketOwner = process.env["BucketOwner"];
   const account = process.env["AccountId"];
   const app = process.env["App"];
-  const stage = process.env["Stage"];
   const className = process.env["ClassName"];
 
   if (!bucket) throw new Error("Variable ExportBucket must be set");
