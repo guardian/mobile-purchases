@@ -97,7 +97,7 @@ deployments:
     template: lambda
     parameters:
       functionNames: [mobile-purchases-export-subscription-table-v2-, mobile-purchases-export-user-subscription-table-v2-]
-      fileName: export-subscription-tables-v2.zip
+      fileName: export-subscription-table-v2.zip
 
   mobile-purchases-export-subscription-events-table:
     template: lambda
