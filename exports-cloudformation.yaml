@@ -43,7 +43,6 @@ Parameters:
     Type: String
     Description: The name of the export bucket containing the subscription history from Apple
 
-
 Resources:
   ExportLambdasRole:
     Type: AWS::IAM::Role
@@ -164,11 +163,11 @@ Resources:
   ExportSubscriptionTableLambdaV2:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: export-subscription-tables-v2.handler
+      Handler: export-subscription-table-v2.handler
       Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables-v2/export-subscription-tables-v2.zip
+        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-table-v2/export-subscription-table-v2.zip
       FunctionName: !Sub ${App}-export-subscription-table-v2-${Stage}
       Role: !GetAtt ExportLambdasRole.Arn
       Environment:
@@ -196,11 +195,11 @@ Resources:
   ExportUserSubscriptionTableLambdaV2:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: export-subscription-tables-v2.handler
+      Handler: export-subscription-table-v2.handler
       Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables-v2/export-subscription-tables-v2.zip
+        Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-table-v2/export-subscription-table-v2.zip
       FunctionName: !Sub ${App}-export-user-subscription-table-v2-${Stage}
       Role: !GetAtt ExportLambdasRole.Arn
       Environment:
@@ -341,7 +340,6 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
-
 
   ExportGoogleHistoricalSubscriptionsLambda:
     Type: AWS::Serverless::Function
