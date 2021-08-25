@@ -12,10 +12,10 @@ const credentialProvider = new CredentialProviderChain([
     function () { return new ECSCredentials(); },
     function () { return new SharedIniFileCredentials({
         profile: "mobile"
-    }); }                                                                            
+    }); }
 ]);
 
-const aws = new DynamoDB({
+export const aws = new DynamoDB({
     region: Region,
     credentialProvider: credentialProvider
 });
