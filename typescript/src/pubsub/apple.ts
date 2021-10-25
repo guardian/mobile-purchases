@@ -90,28 +90,26 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
     if(!isObject(payload)) {
         return err("The apple receipt info field that Apple gave us isn't an object")
     }
-    let valid = (
+    console.log(`The keys of the apple receipt info: ${Object.keys(payload)}`);
+    if(
         typeof payload.transaction_id === "string" &&
-            typeof payload.product_id === "string" &&
-            typeof payload.original_transaction_id === "string" &&
-            (typeof payload.item_id === "string" || typeof payload.item_id === "undefined") &&
-            (typeof payload.app_item_id === "string" || typeof payload.app_item_id === "undefined") &&
-            typeof payload.web_order_line_item_id === "string" &&
-            (typeof payload.unique_identifier === "string" || typeof payload.unique_identifier === "undefined") &&
-            (typeof payload.unique_vendor_identifier === "string" || typeof payload.unique_vendor_identifier === "undefined") &&
-            typeof payload.quantity === "string" &&
-            typeof payload.purchase_date_ms === "string" &&
-            typeof payload.original_purchase_date_ms === "string" &&
-            typeof payload.expires_date === "string" &&
-            typeof payload.expires_date_ms === "string" &&
-            typeof payload.is_in_intro_offer_period === "string" &&
-            typeof payload.is_trial_period === "string" &&
-            (typeof payload.bvrs === "string" || typeof payload.bvrs === "undefined") &&
-            (typeof payload.version_external_identifier === "string" || typeof payload.version_external_identifier === "undefined")
-    )
-    console.log(`The keys of the apple receipt info (valid=$valid): ${Object.keys(payload)}`);
-
-    if(valid) {
+        typeof payload.product_id === "string" &&
+        typeof payload.original_transaction_id === "string" &&
+        (typeof payload.item_id === "string" || typeof payload.item_id === "undefined") &&
+        (typeof payload.app_item_id === "string" || typeof payload.app_item_id === "undefined") &&
+        typeof payload.web_order_line_item_id === "string" &&
+        (typeof payload.unique_identifier === "string" || typeof payload.unique_identifier === "undefined") &&
+        (typeof payload.unique_vendor_identifier === "string" || typeof payload.unique_vendor_identifier === "undefined") &&
+        typeof payload.quantity === "string" &&
+        typeof payload.purchase_date_ms === "string" &&
+        typeof payload.original_purchase_date_ms === "string" &&
+        typeof payload.expires_date === "string" &&
+        typeof payload.expires_date_ms === "string" &&
+        typeof payload.is_in_intro_offer_period === "string" &&
+        typeof payload.is_trial_period === "string" &&
+        (typeof payload.bvrs === "string" || typeof payload.bvrs === "undefined") &&
+        (typeof payload.version_external_identifier === "string" || typeof payload.version_external_identifier === "undefined")
+    ) {
         return ok({
             transaction_id: payload.transaction_id,
             product_id: payload.product_id,
