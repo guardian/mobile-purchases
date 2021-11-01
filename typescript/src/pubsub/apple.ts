@@ -287,7 +287,7 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
     try {
         const notification: unknown = JSON.parse(body ?? "");
         if(isObject(notification)) {
-            console.log(`parsePayload environment: ${notification?.environment}`);
+            console.log(`parsePayload environment: ${notification?.environment}; notification_type: ${notification?.notification_type}`);
         }
         //     if(notification?.environment === "Sandbox") {
         //         console.log(`parsePayload: sandbox body: ${body}`)
