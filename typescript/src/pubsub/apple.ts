@@ -287,7 +287,8 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
     try {
         const notification: unknown = JSON.parse(body ?? "");
         if(isObject(notification)) {
-            console.log(`parsePayload environment: ${notification?.environment}; notification_type: ${notification?.notification_type}`);
+            const product_id = (isObject(notification.unified_receipt) && typeof(notification.unified_receipt.product_id === "string")) ? notification?.unified_receipt?.product_id : "<unified_receipt is not an object>";
+            console.log(`parsePayload environment: ${notification?.environment}; notification_type: ${notification?.notification_type}; product_id: ${product_id}`);
         }
         //     if(notification?.environment === "Sandbox") {
         //         console.log(`parsePayload: sandbox body: ${body}`)
