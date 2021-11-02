@@ -285,7 +285,7 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
 
 const fieldWhiteList = [ "environment" ];
 
-function debugLogPayload(notification: unknown, depth: number = 1): string {
+function debugLogPayload(notification: unknown, depth: number = 3): string {
     let result: string[] = []
     if(isObject(notification)) {
         for(let k in notification) {
