@@ -283,12 +283,16 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
     return err("Notification from Apple cannot be parsed")
 }
 
+const fieldWhiteList = [ "environment" ];
+
 function debugLogPayload(notification: unknown, depth: number = 1): string {
     let result: string[] = []
     if(isObject(notification)) {
         for(let k in notification) {
             if(depth > 0 && isObject(notification[k])) {
                 result.push(`${k}: { ${debugLogPayload(notification[k], depth - 1)} }`)
+            } else if(fieldWhiteList.includes(k)) {
+                result.push(`${k}: "${notification[k]}"`)
             } else {
                 result.push(`${k}: <${typeof(notification[k])}>`)
             }
@@ -302,8 +306,9 @@ function debugLogPayload(notification: unknown, depth: number = 1): string {
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
         const notification: unknown = JSON.parse(body ?? "");
-        console.log(debugLogPayload(notification));
-        // if(isObject(notification)) {
+        if(isObject(notification) && notification?.environment === "Sandbox") {
+            console.log(debugLogPayload(notification));
+        }
         //     const product_id = (isObject(notification.unified_receipt) && typeof(notification.unified_receipt.product_id === "string")) ? notification?.unified_receipt?.product_id : "<unified_receipt is not an object>";
         //     console.log(`parsePayload environment: ${notification?.environment}; notification_type: ${notification?.notification_type}; product_id: ${product_id}`);
         // }
