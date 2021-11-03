@@ -1,7 +1,5 @@
 import * as fs from "fs";
 
-import path from 'path';
-
 if(process.argv.length == 4) {
     let rawPayload = fs.readFileSync(`mobile-purchases-payload/${process.argv[3]}`)
     import(`../${process.argv[2]}`).then( module => {
