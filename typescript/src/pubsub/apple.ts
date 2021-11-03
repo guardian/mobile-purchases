@@ -303,18 +303,19 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
     try {
         const notification: unknown = JSON.parse(body ?? "");
         if(isObject(notification) && notification?.environment === "Sandbox") {
-            let parseResultStr = "unknown"
-            try {
-                const parseResult = parseNotification(notification)
-                if(parseResult.kind === ResultKind.Err) {
-                    parseResultStr = parseResult.err
-                } else {
-                    parseResultStr = "ok"
-                }
-            } catch (e) {
-                parseResultStr = `exception: ${e}`
-            }
-            console.log(`debugLogPayload (parse result: ${parseResultStr}): ${JSON.stringify(debugLogPayload(notification))}`);
+            console.log(`debugLogPayload: ${JSON.stringify(debugLogPayload(notification))}`);
+            // let parseResultStr = "unknown"
+            // try {
+            //     const parseResult = parseNotification(notification)
+            //     if(parseResult.kind === ResultKind.Err) {
+            //         parseResultStr = parseResult.err
+            //     } else {
+            //         parseResultStr = "ok"
+            //     }
+            // } catch (e) {
+            //     parseResultStr = `exception: ${e}`
+            // }
+            // console.log(`debugLogPayload (parse result: ${parseResultStr}): ${JSON.stringify(debugLogPayload(notification))}`);
         }
         const parsedNotification = parseNotification(notification);
         if(parsedNotification.kind === ResultKind.Ok) {
