@@ -285,29 +285,25 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
 
 const fieldWhiteList = [ "environment" ];
 
-function debugLogPayload(notification: unknown, depth: number = 3): string {
-    let result: string[] = []
-    if(isObject(notification)) {
-        for(let k in notification) {
-            if(depth > 0 && isObject(notification[k])) {
-                result.push(`${k}: { ${debugLogPayload(notification[k], depth - 1)} }`)
-            } else if(fieldWhiteList.includes(k)) {
-                result.push(`${k}: "${notification[k]}"`)
-            } else {
-                result.push(`${k}: <${typeof(notification[k])}>`)
-            }
+function debugLogPayload(data: unknown, depth: number = 3, whitelisted: boolean = false): object | string {
+    if(isObject(data) && depth > 0) {
+        if(Array.isArray(data))
+            return { array_length: data.length, sample: debugLogPayload(data[0], depth - 1) }
+        else {
+            let result: Record<string, unknown> = {}
+            for(let k in data)
+                result[k] = debugLogPayload(data[k], depth - 1, fieldWhiteList.includes(k))
+            return result
         }
-    } else {
-        result.push("<notification is not an object>");
-    }
-    return result.join(", ")
+    } else if(whitelisted) return `${data}`
+    else return `<${typeof(data)}>`
 }
 
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
         const notification: unknown = JSON.parse(body ?? "");
         if(isObject(notification) && notification?.environment === "Sandbox") {
-            console.log(`debugLogPayload: ${debugLogPayload(notification)}`);
+            console.log(`debugLogPayload: ${JSON.stringify(debugLogPayload(notification))}`);
         }
         //     const product_id = (isObject(notification.unified_receipt) && typeof(notification.unified_receipt.product_id === "string")) ? notification?.unified_receipt?.product_id : "<unified_receipt is not an object>";
         //     console.log(`parsePayload environment: ${notification?.environment}; notification_type: ${notification?.notification_type}; product_id: ${product_id}`);
