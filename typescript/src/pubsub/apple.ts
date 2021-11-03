@@ -285,7 +285,7 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
 
 const fieldWhiteList = [ "environment" ];
 
-function debugLogPayload(data: unknown, depth: number = 3, whitelisted: boolean = false): object | string {
+function debugLogPayload(data: unknown, depth: number = 4, whitelisted: boolean = false): object | string {
     if(isObject(data) && depth > 0) {
         if(Array.isArray(data))
             return { array_length: data.length, sample: debugLogPayload(data[0], depth - 1) }
