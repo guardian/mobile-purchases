@@ -4,9 +4,10 @@
   "description": "IOS receipt validation and purchase persistence",
   "scripts": {
     "clean": "rm -r tsc-target",
-    "build": "webpack",
+    "build": "webpack --env production",
+    "build:dev": "webpack",
     "test": "jest",
-    "test-lambda": "tsc && node ./tsc-target/src/test-launcher/test-launcher.js"
+    "test-lambda": "yarn build:dev && node ./tsc-target/test-launcher.js"
   },
   "repository": {
     "type": "git",

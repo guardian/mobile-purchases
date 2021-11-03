@@ -68,5 +68,5 @@ _This directory has its own `.gitignore` which means that any json files here re
 Invoke your function locally via the launcher script thus
 
 ```
-tsc && node ./tsc-target/src/test-launcher/test-launcher.js ../update-subs/google.js sqs.json
+yarn test-lambda update-subs/google sqs.json
 ```
