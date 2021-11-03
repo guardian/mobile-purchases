@@ -302,19 +302,10 @@ function debugLogPayload(data: unknown, depth: number = 4, whitelisted: boolean 
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
         const notification: unknown = JSON.parse(body ?? "");
-        if(isObject(notification) && notification?.environment === "Sandbox") {
-            console.log(`debugLogPayload: ${JSON.stringify(debugLogPayload(notification))}`);
-        }
-        //     const product_id = (isObject(notification.unified_receipt) && typeof(notification.unified_receipt.product_id === "string")) ? notification?.unified_receipt?.product_id : "<unified_receipt is not an object>";
-        //     console.log(`parsePayload environment: ${notification?.environment}; notification_type: ${notification?.notification_type}; product_id: ${product_id}`);
-        // }
-        //     if(notification?.environment === "Sandbox") {
-        //         console.log(`parsePayload: sandbox body: ${body}`)
-        //     } else {
-        //         console.log(`parsePayload environment: ${notification?.environment}`);
-        //     }
-        // }
         const parsedNotification = parseNotification(notification);
+        if(isObject(notification) && notification?.environment === "Sandbox") {
+            console.log(`debugLogPayload (parse result: ${parsedNotification.kind}): ${JSON.stringify(debugLogPayload(notification))}`);
+        }
         if(parsedNotification.kind === ResultKind.Ok) {
             return parsedNotification.value;
         }
