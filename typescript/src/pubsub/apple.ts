@@ -302,10 +302,21 @@ function debugLogPayload(data: unknown, depth: number = 4, whitelisted: boolean 
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
         const notification: unknown = JSON.parse(body ?? "");
-        const parsedNotification = parseNotification(notification);
         if(isObject(notification) && notification?.environment === "Sandbox") {
-            console.log(`debugLogPayload (parse result: ${ResultKind[parsedNotification.kind]}): ${JSON.stringify(debugLogPayload(notification))}`);
+            let parseResultStr = "unknown"
+            try {
+                const parseResult = parseNotification(notification)
+                if(parseResult.kind === ResultKind.Err) {
+                    parseResultStr = parseResult.err
+                } else {
+                    parseResultStr = "ok"
+                }
+            } catch (e) {
+                parseResultStr = `exception: ${e}`
+            }
+            console.log(`debugLogPayload (parse result: ${parseResultStr}): ${JSON.stringify(debugLogPayload(notification))}`);
         }
+        const parsedNotification = parseNotification(notification);
         if(parsedNotification.kind === ResultKind.Ok) {
             return parsedNotification.value;
         }
