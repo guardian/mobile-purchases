@@ -86,6 +86,30 @@ const parseArray = <A>(parseA: (a: unknown) => Result<string, A>) => (array: unk
     return err("Is not an array");
 };
 
+const fieldWhiteList = [ "environment", "product_id", "notification_type",
+                         "auto_renew_status", "status", "purchase_date" ];
+
+function debugCleanPayload(data: unknown, depth: number = 4, whitelisted: boolean = false): object | string {
+    if(isObject(data) && depth > 0) {
+        if(Array.isArray(data)) {
+            let res = []
+            for(let item of data)
+                res.push(debugCleanPayload(item, depth - 1))
+            return res
+        } else {
+            let result: Record<string, unknown> = {}
+            for(let k in data)
+                result[k] = debugCleanPayload(data[k], depth - 1, fieldWhiteList.includes(k))
+            return result
+        }
+    } else if(whitelisted) return `${data}`
+    else return `<${typeof(data)}>`
+}
+
+function debugLogPayload(data: unknown, maxDepth: number = 4) {
+    return JSON.stringify(debugCleanPayload(data, maxDepth))
+}
+
 function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptInfo> {
     if(!isObject(payload)) {
         return err("The apple receipt info field that Apple gave us isn't an object")
@@ -130,7 +154,7 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
             version_external_identifier: payload.version_external_identifier
         })
     }
-    return err("Apple Receipt Info object from Apple cannot be parsed")
+    return err(`Apple Receipt Info object from Apple cannot be parsed: ${debugLogPayload(payload)}`)
 }
 
 function parseBillingRetryPeriod(status: unknown): Result<string, binaryStatus | undefined> {
@@ -283,50 +307,14 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
     return err("Notification from Apple cannot be parsed")
 }
 
-const fieldWhiteList = [ "environment", "product_id", "notification_type",
-                         "auto_renew_status", "status", "purchase_date" ];
-
-function debugLogPayload(data: unknown, depth: number = 4, whitelisted: boolean = false): object | string {
-    if(isObject(data) && depth > 0) {
-        if(Array.isArray(data)) {
-            let res = []
-            for(let item of data)
-                res.push(debugLogPayload(item, depth - 1))
-            return res
-        } else {
-            let result: Record<string, unknown> = {}
-            for(let k in data)
-                result[k] = debugLogPayload(data[k], depth - 1, fieldWhiteList.includes(k))
-            return result
-        }
-    } else if(whitelisted) return `${data}`
-    else return `<${typeof(data)}>`
-}
-
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
         const notification: unknown = JSON.parse(body ?? "");
-        if(isObject(notification)) {
-            let parseResultStr = "unknown"
-            let parseResultValid = false
-            try {
-                const parseResult = parseNotification(notification)
-                if(parseResult.kind === ResultKind.Err) {
-                    parseResultStr = `error: ${parseResult.err}`
-                } else {
-                    parseResultStr = "ok"
-                    parseResultValid = true
-                }
-            } catch (e) {
-                parseResultStr = `exception: ${e}`
-            }
-            if(!parseResultValid)
-                console.log(`debugLogPayload (parse result: ${parseResultStr}): ${JSON.stringify(debugLogPayload(notification))}`)
-        }
         const parsedNotification = parseNotification(notification);
         if(parsedNotification.kind === ResultKind.Ok) {
             return parsedNotification.value;
         }
+        console.log(`debugLogPayload (parse error: ${parsedNotification.err}): ${debugLogPayload(notification)}`)
         throw Error(`The payload could not be parsed due to ${parsedNotification.err}`)
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
