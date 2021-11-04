@@ -17,13 +17,13 @@ export interface AppleReceiptInfo {
     transaction_id: string,
     product_id: string,
     original_transaction_id: string,
-    web_order_line_item_id: string,
+    web_order_line_item_id?: string,
     quantity: string,
     purchase_date_ms: string,
     original_purchase_date_ms: string,
-    expires_date: string,
-    expires_date_ms: string,
-    is_in_intro_offer_period: string,
+    expires_date?: string,
+    expires_date_ms?: string,
+    is_in_intro_offer_period?: string,
     is_trial_period: string,
     item_id?: string,
     app_item_id?: string,
@@ -120,15 +120,15 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
     if(typeof payload.original_transaction_id !== "string") return err("missing field: original_transaction_id")
     if(typeof payload.item_id !== "string" && typeof payload.item_id !== "undefined") return err(`incorrect optional field: item_id ${typeof payload.item_id}`)
     if(typeof payload.app_item_id !== "string" && typeof payload.app_item_id !== "undefined") return err(`incorrect optional field: app_item_id ${typeof(payload.app_item_id)}`)
-    if(typeof payload.web_order_line_item_id !== "string") return err("missing field: web_order_line_item_id")
+    if(typeof payload.web_order_line_item_id !== "string" && typeof payload.web_order_line_item_id !== "undefined") return err(`incorrect optional field: web_order_line_item_id ${typeof(payload.web_order_line_item_id)}`)
     if(typeof payload.unique_identifier !== "string" && typeof payload.unique_identifier !== "undefined") return err(`incorrect optional field: unique_identifier ${typeof(payload.unique_identifier)}`)
     if(typeof payload.unique_vendor_identifier !== "string" && typeof payload.unique_vendor_identifier !== "undefined") return err(`incorrect optional field: unique_vendor_identifier ${typeof(payload.unique_vendor_identifier)}`)
     if(typeof payload.quantity !== "string") return err("missing field: quantity")
     if(typeof payload.purchase_date_ms !== "string") return err("missing field: purchase_date_ms")
     if(typeof payload.original_purchase_date_ms !== "string") return err("missing field: original_purchase_date_ms")
-    if(typeof payload.expires_date !== "string") return err("missing field: expires_date")
-    if(typeof payload.expires_date_ms !== "string") return err("missing field: expires_date_ms")
-    if(typeof payload.is_in_intro_offer_period !== "string") return err("missing field: is_in_intro_offer_period")
+    if(typeof payload.expires_date !== "string" && typeof payload.expires_date !== "undefined") return err(`incorrect optional field: expires_date ${typeof(payload.expires_date)}`)
+    if(typeof payload.expires_date_ms !== "string" && typeof payload.expires_date_ms !== "undefined") return err(`incorrect optional field: expires_date_ms ${typeof(payload.expires_date_ms)}`)
+    if(typeof payload.is_in_intro_offer_period !== "string" && typeof payload.is_in_intro_offer_period !== "undefined") return err(`incorrect optional field: is_in_intro_offer_period ${typeof(payload.is_in_intro_offer_period)}`)
     if(typeof payload.is_trial_period !== "string") return err("missing field: is_trial_period")
     if(typeof payload.bvrs !== "string" && typeof payload.bvrs !== "undefined") return err(`incorrect optional field: bvrs ${typeof(payload.bvrs)}`)
     if(typeof payload.version_external_identifier !== "string" && typeof payload.version_external_identifier !== "undefined") return err(`incorrect optional field: version_external_identifier ${typeof(payload.version_external_identifier)}`)
@@ -314,7 +314,6 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
     }
 }
 
-
 export function toDynamoEvent(notification: StatusUpdateNotification): SubscriptionEvent {
     const now = new Date();
     const eventType = notification.notification_type;
@@ -330,7 +329,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     }
 
     const sortByExpiryDate = receiptInfo.sort((receipt1, receipt2) => {
-        return Number.parseInt(receipt2.expires_date_ms) - Number.parseInt(receipt1.expires_date_ms);
+        return Number.parseInt(receipt2.purchase_date_ms) - Number.parseInt(receipt1.purchase_date_ms);
     });
 
     // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
