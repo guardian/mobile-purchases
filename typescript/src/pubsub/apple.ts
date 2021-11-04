@@ -114,47 +114,45 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
     if(!isObject(payload)) {
         return err("The apple receipt info field that Apple gave us isn't an object")
     }
-    console.log(`The keys of the apple receipt info: ${Object.keys(payload)}`);
-    if(
-        typeof payload.transaction_id === "string" &&
-        typeof payload.product_id === "string" &&
-        typeof payload.original_transaction_id === "string" &&
-        (typeof payload.item_id === "string" || typeof payload.item_id === "undefined") &&
-        (typeof payload.app_item_id === "string" || typeof payload.app_item_id === "undefined") &&
-        typeof payload.web_order_line_item_id === "string" &&
-        (typeof payload.unique_identifier === "string" || typeof payload.unique_identifier === "undefined") &&
-        (typeof payload.unique_vendor_identifier === "string" || typeof payload.unique_vendor_identifier === "undefined") &&
-        typeof payload.quantity === "string" &&
-        typeof payload.purchase_date_ms === "string" &&
-        typeof payload.original_purchase_date_ms === "string" &&
-        typeof payload.expires_date === "string" &&
-        typeof payload.expires_date_ms === "string" &&
-        typeof payload.is_in_intro_offer_period === "string" &&
-        typeof payload.is_trial_period === "string" &&
-        (typeof payload.bvrs === "string" || typeof payload.bvrs === "undefined") &&
-        (typeof payload.version_external_identifier === "string" || typeof payload.version_external_identifier === "undefined")
-    ) {
-        return ok({
-            transaction_id: payload.transaction_id,
-            product_id: payload.product_id,
-            original_transaction_id: payload.original_transaction_id,
-            item_id: payload.item_id,
-            app_item_id: payload.app_item_id,
-            web_order_line_item_id: payload.web_order_line_item_id,
-            unique_identifier: payload.unique_identifier,
-            unique_vendor_identifier: payload.unique_vendor_identifier,
-            quantity: payload.quantity,
-            purchase_date_ms: payload.purchase_date_ms,
-            original_purchase_date_ms: payload.original_purchase_date_ms,
-            expires_date: payload.expires_date,
-            expires_date_ms: payload.expires_date_ms,
-            is_in_intro_offer_period: payload.is_in_intro_offer_period,
-            is_trial_period: payload.is_trial_period,
-            bvrs: payload.bvrs,
-            version_external_identifier: payload.version_external_identifier
-        })
-    }
-    return err(`Apple Receipt Info object from Apple cannot be parsed: ${debugLogPayload(payload)}`)
+    // console.log(`The keys of the apple receipt info: ${Object.keys(payload)}`);
+    if(typeof payload.transaction_id !== "string") return err("missing field: transaction_id")
+    if(typeof payload.product_id !== "string") return err("missing field: product_id")
+    if(typeof payload.original_transaction_id !== "string") return err("missing field: original_transaction_id")
+    if(typeof payload.item_id !== "string" && typeof payload.item_id !== "undefined") return err(`incorrect optional field: item_id ${typeof payload.item_id}`)
+    if(typeof payload.app_item_id !== "string" && typeof payload.app_item_id !== "undefined") return err(`incorrect optional field: app_item_id ${typeof(payload.app_item_id)}`)
+    if(typeof payload.web_order_line_item_id !== "string") return err("missing field: web_order_line_item_id")
+    if(typeof payload.unique_identifier !== "string" && typeof payload.unique_identifier !== "undefined") return err(`incorrect optional field: unique_identifier ${typeof(payload.unique_identifier)}`)
+    if(typeof payload.unique_vendor_identifier !== "string" && typeof payload.unique_vendor_identifier !== "undefined") return err(`incorrect optional field: unique_vendor_identifier ${typeof(payload.unique_vendor_identifier)}`)
+    if(typeof payload.quantity !== "string") return err("missing field: quantity")
+    if(typeof payload.purchase_date_ms !== "string") return err("missing field: purchase_date_ms")
+    if(typeof payload.original_purchase_date_ms !== "string") return err("missing field: original_purchase_date_ms")
+    if(typeof payload.expires_date !== "string") return err("missing field: expires_date")
+    if(typeof payload.expires_date_ms !== "string") return err("missing field: expires_date_ms")
+    if(typeof payload.is_in_intro_offer_period !== "string") return err("missing field: is_in_intro_offer_period")
+    if(typeof payload.is_trial_period !== "string") return err("missing field: is_trial_period")
+    if(typeof payload.bvrs !== "string" && typeof payload.bvrs !== "undefined") return err(`incorrect optional field: bvrs ${typeof(payload.bvrs)}`)
+    if(typeof payload.version_external_identifier !== "string" && typeof payload.version_external_identifier !== "undefined") return err(`incorrect optional field: version_external_identifier ${typeof(payload.version_external_identifier)}`)
+
+    return ok({
+        transaction_id: payload.transaction_id,
+        product_id: payload.product_id,
+        original_transaction_id: payload.original_transaction_id,
+        item_id: payload.item_id,
+        app_item_id: payload.app_item_id,
+        web_order_line_item_id: payload.web_order_line_item_id,
+        unique_identifier: payload.unique_identifier,
+        unique_vendor_identifier: payload.unique_vendor_identifier,
+        quantity: payload.quantity,
+        purchase_date_ms: payload.purchase_date_ms,
+        original_purchase_date_ms: payload.original_purchase_date_ms,
+        expires_date: payload.expires_date,
+        expires_date_ms: payload.expires_date_ms,
+        is_in_intro_offer_period: payload.is_in_intro_offer_period,
+        is_trial_period: payload.is_trial_period,
+        bvrs: payload.bvrs,
+        version_external_identifier: payload.version_external_identifier
+    })
+//    return err(`Apple Receipt Info object from Apple cannot be parsed: ${debugLogPayload(payload)}`)
 }
 
 function parseBillingRetryPeriod(status: unknown): Result<string, binaryStatus | undefined> {
