@@ -246,23 +246,18 @@ function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptIn
     if(pendingRenewalInfo.kind === ResultKind.Err) {
         return pendingRenewalInfo
     }
-    if(
-        typeof payload.environment === "string" &&
-        typeof payload.latest_receipt === "string" &&
-        typeof payload.status === "number" &&
-        latestReceiptInfo.kind === ResultKind.Ok &&
-        pendingRenewalInfo.kind === ResultKind.Ok
 
-    ) {
-        return ok({
-            environment: payload.environment,
-            latest_receipt: payload.latest_receipt,
-            status: payload.status,
-            latest_receipt_info: latestReceiptInfo.value,
-            pending_renewal_info: pendingRenewalInfo.value
-        })
-    }
-    return err("Unified Receipt object from Apple cannot be parsed")
+    if(typeof payload.environment !== "string") return err("parseUnifiedReceipt: missing field: environment")
+    if(typeof payload.latest_receipt !== "string") return err("parseUnifiedReceipt: missing field: latest_receipt")
+    if(typeof payload.status !== "number") return err("parseUnifiedReceipt: missing field: status")
+
+    return ok({
+        environment: payload.environment,
+        latest_receipt: payload.latest_receipt,
+        status: payload.status,
+        latest_receipt_info: latestReceiptInfo.value,
+        pending_renewal_info: pendingRenewalInfo.value
+    })
 }
 
 function parseNotification(payload: unknown): Result<string, StatusUpdateNotification>  {
