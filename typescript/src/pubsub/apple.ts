@@ -302,12 +302,12 @@ function debugLogPayload(data: unknown, depth: number = 4, whitelisted: boolean 
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
         const notification: unknown = JSON.parse(body ?? "");
-        if(isObject(notification) && notification?.environment === "Sandbox") {
+        if(isObject(notification)) {
             let parseResultStr = "unknown"
             try {
                 const parseResult = parseNotification(notification)
                 if(parseResult.kind === ResultKind.Err) {
-                    parseResultStr = parseResult.err
+                    parseResultStr = `error: ${parseResult.err}`
                 } else {
                     parseResultStr = "ok"
                 }
