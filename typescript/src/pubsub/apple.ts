@@ -283,7 +283,8 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
     return err("Notification from Apple cannot be parsed")
 }
 
-const fieldWhiteList = [ "environment" ];
+const fieldWhiteList = [ "environment", "product_id", "notification_type",
+                         "auto_renew_status", "status" ];
 
 function debugLogPayload(data: unknown, depth: number = 4, whitelisted: boolean = false): object | string {
     if(isObject(data) && depth > 0) {
@@ -307,17 +308,20 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
         const notification: unknown = JSON.parse(body ?? "");
         if(isObject(notification)) {
             let parseResultStr = "unknown"
+            let parseResultValid = false
             try {
                 const parseResult = parseNotification(notification)
                 if(parseResult.kind === ResultKind.Err) {
                     parseResultStr = `error: ${parseResult.err}`
                 } else {
                     parseResultStr = "ok"
+                    parseResultValid = true
                 }
             } catch (e) {
                 parseResultStr = `exception: ${e}`
             }
-            console.log(`debugLogPayload (parse result: ${parseResultStr}): ${JSON.stringify(debugLogPayload(notification))}`);
+            if(!parseResultValid)
+                console.log(`debugLogPayload (parse result: ${parseResultStr}): ${JSON.stringify(debugLogPayload(notification))}`)
         }
         const parsedNotification = parseNotification(notification);
         if(parsedNotification.kind === ResultKind.Ok) {
