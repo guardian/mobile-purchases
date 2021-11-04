@@ -284,7 +284,7 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
 }
 
 const fieldWhiteList = [ "environment", "product_id", "notification_type",
-                         "auto_renew_status", "status" ];
+                         "auto_renew_status", "status", "purchase_date" ];
 
 function debugLogPayload(data: unknown, depth: number = 4, whitelisted: boolean = false): object | string {
     if(isObject(data) && depth > 0) {
