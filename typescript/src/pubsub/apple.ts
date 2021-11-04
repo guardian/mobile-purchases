@@ -287,9 +287,12 @@ const fieldWhiteList = [ "environment" ];
 
 function debugLogPayload(data: unknown, depth: number = 4, whitelisted: boolean = false): object | string {
     if(isObject(data) && depth > 0) {
-        if(Array.isArray(data))
-            return { array_length: data.length, sample: debugLogPayload(data[0], depth - 1) }
-        else {
+        if(Array.isArray(data)) {
+            let res = []
+            for(let item of data)
+                res.push(debugLogPayload(item, depth - 1))
+            return res
+        } else {
             let result: Record<string, unknown> = {}
             for(let k in data)
                 result[k] = debugLogPayload(data[k], depth - 1, fieldWhiteList.includes(k))
