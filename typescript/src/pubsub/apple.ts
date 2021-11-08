@@ -86,7 +86,7 @@ const parseArray = <A>(parseA: (a: unknown) => Result<string, A>) => (array: unk
     return err("Is not an array");
 };
 
-const fieldWhiteList = [ "environment", "product_id", "notification_type",
+const fieldAllowList = [ "environment", "product_id", "notification_type",
                          "auto_renew_status", "status", "purchase_date" ];
 
 function debugCleanPayload(data: unknown, depth: number = 4, whitelisted: boolean = false): object | string {
@@ -99,7 +99,7 @@ function debugCleanPayload(data: unknown, depth: number = 4, whitelisted: boolea
         } else {
             let result: Record<string, unknown> = {}
             for(let k in data)
-                result[k] = debugCleanPayload(data[k], depth - 1, fieldWhiteList.includes(k))
+                result[k] = debugCleanPayload(data[k], depth - 1, fieldAllowList.includes(k))
             return result
         }
     } else if(whitelisted) return `${data}`
