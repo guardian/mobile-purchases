@@ -152,7 +152,6 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
         bvrs: payload.bvrs,
         version_external_identifier: payload.version_external_identifier
     })
-//    return err(`Apple Receipt Info object from Apple cannot be parsed: ${debugLogPayload(payload)}`)
 }
 
 function parseBillingRetryPeriod(status: unknown): Result<string, binaryStatus | undefined> {
