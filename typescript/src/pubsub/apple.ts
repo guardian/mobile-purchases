@@ -86,51 +86,72 @@ const parseArray = <A>(parseA: (a: unknown) => Result<string, A>) => (array: unk
     return err("Is not an array");
 };
 
+const fieldAllowList = [ "environment", "product_id", "notification_type",
+                         "auto_renew_status", "status", "purchase_date" ];
+
+function debugCleanPayload(data: unknown, depth: number = 4, whitelisted: boolean = false): object | string {
+    if(isObject(data) && depth > 0) {
+        if(Array.isArray(data)) {
+            let res = []
+            for(let item of data)
+                res.push(debugCleanPayload(item, depth - 1))
+            return res
+        } else {
+            let result: Record<string, unknown> = {}
+            for(let k in data)
+                result[k] = debugCleanPayload(data[k], depth - 1, fieldAllowList.includes(k))
+            return result
+        }
+    } else if(whitelisted) return `${data}`
+    else return `<${typeof(data)}>`
+}
+
+function debugLogPayload(data: unknown, maxDepth: number = 4) {
+    return JSON.stringify(debugCleanPayload(data, maxDepth))
+}
+
 function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptInfo> {
     if(!isObject(payload)) {
         return err("The apple receipt info field that Apple gave us isn't an object")
     }
-    console.log(`The keys of the apple receipt info: ${Object.keys(payload)}`);
-    if(
-        typeof payload.transaction_id === "string" &&
-        typeof payload.product_id === "string" &&
-        typeof payload.original_transaction_id === "string" &&
-        (typeof payload.item_id === "string" || typeof payload.item_id === "undefined") &&
-        (typeof payload.app_item_id === "string" || typeof payload.app_item_id === "undefined") &&
-        typeof payload.web_order_line_item_id === "string" &&
-        (typeof payload.unique_identifier === "string" || typeof payload.unique_identifier === "undefined") &&
-        (typeof payload.unique_vendor_identifier === "string" || typeof payload.unique_vendor_identifier === "undefined") &&
-        typeof payload.quantity === "string" &&
-        typeof payload.purchase_date_ms === "string" &&
-        typeof payload.original_purchase_date_ms === "string" &&
-        typeof payload.expires_date === "string" &&
-        typeof payload.expires_date_ms === "string" &&
-        typeof payload.is_in_intro_offer_period === "string" &&
-        typeof payload.is_trial_period === "string" &&
-        (typeof payload.bvrs === "string" || typeof payload.bvrs === "undefined") &&
-        (typeof payload.version_external_identifier === "string" || typeof payload.version_external_identifier === "undefined")
-    ) {
-        return ok({
-            transaction_id: payload.transaction_id,
-            product_id: payload.product_id,
-            original_transaction_id: payload.original_transaction_id,
-            item_id: payload.item_id,
-            app_item_id: payload.app_item_id,
-            web_order_line_item_id: payload.web_order_line_item_id,
-            unique_identifier: payload.unique_identifier,
-            unique_vendor_identifier: payload.unique_vendor_identifier,
-            quantity: payload.quantity,
-            purchase_date_ms: payload.purchase_date_ms,
-            original_purchase_date_ms: payload.original_purchase_date_ms,
-            expires_date: payload.expires_date,
-            expires_date_ms: payload.expires_date_ms,
-            is_in_intro_offer_period: payload.is_in_intro_offer_period,
-            is_trial_period: payload.is_trial_period,
-            bvrs: payload.bvrs,
-            version_external_identifier: payload.version_external_identifier
-        })
-    }
-    return err("Apple Receipt Info object from Apple cannot be parsed")
+    // console.log(`The keys of the apple receipt info: ${Object.keys(payload)}`);
+    if(typeof payload.transaction_id !== "string") return err("missing field: transaction_id")
+    if(typeof payload.product_id !== "string") return err("missing field: product_id")
+    if(typeof payload.original_transaction_id !== "string") return err("missing field: original_transaction_id")
+    if(typeof payload.item_id !== "string" && typeof payload.item_id !== "undefined") return err(`incorrect optional field: item_id ${typeof payload.item_id}`)
+    if(typeof payload.app_item_id !== "string" && typeof payload.app_item_id !== "undefined") return err(`incorrect optional field: app_item_id ${typeof(payload.app_item_id)}`)
+    if(typeof payload.web_order_line_item_id !== "string") return err("missing field: web_order_line_item_id")
+    if(typeof payload.unique_identifier !== "string" && typeof payload.unique_identifier !== "undefined") return err(`incorrect optional field: unique_identifier ${typeof(payload.unique_identifier)}`)
+    if(typeof payload.unique_vendor_identifier !== "string" && typeof payload.unique_vendor_identifier !== "undefined") return err(`incorrect optional field: unique_vendor_identifier ${typeof(payload.unique_vendor_identifier)}`)
+    if(typeof payload.quantity !== "string") return err("missing field: quantity")
+    if(typeof payload.purchase_date_ms !== "string") return err("missing field: purchase_date_ms")
+    if(typeof payload.original_purchase_date_ms !== "string") return err("missing field: original_purchase_date_ms")
+    if(typeof payload.expires_date !== "string") return err("missing field: expires_date")
+    if(typeof payload.expires_date_ms !== "string") return err("missing field: expires_date_ms")
+    if(typeof payload.is_in_intro_offer_period !== "string") return err("missing field: is_in_intro_offer_period")
+    if(typeof payload.is_trial_period !== "string") return err("missing field: is_trial_period")
+    if(typeof payload.bvrs !== "string" && typeof payload.bvrs !== "undefined") return err(`incorrect optional field: bvrs ${typeof(payload.bvrs)}`)
+    if(typeof payload.version_external_identifier !== "string" && typeof payload.version_external_identifier !== "undefined") return err(`incorrect optional field: version_external_identifier ${typeof(payload.version_external_identifier)}`)
+
+    return ok({
+        transaction_id: payload.transaction_id,
+        product_id: payload.product_id,
+        original_transaction_id: payload.original_transaction_id,
+        item_id: payload.item_id,
+        app_item_id: payload.app_item_id,
+        web_order_line_item_id: payload.web_order_line_item_id,
+        unique_identifier: payload.unique_identifier,
+        unique_vendor_identifier: payload.unique_vendor_identifier,
+        quantity: payload.quantity,
+        purchase_date_ms: payload.purchase_date_ms,
+        original_purchase_date_ms: payload.original_purchase_date_ms,
+        expires_date: payload.expires_date,
+        expires_date_ms: payload.expires_date_ms,
+        is_in_intro_offer_period: payload.is_in_intro_offer_period,
+        is_trial_period: payload.is_trial_period,
+        bvrs: payload.bvrs,
+        version_external_identifier: payload.version_external_identifier
+    })
 }
 
 function parseBillingRetryPeriod(status: unknown): Result<string, binaryStatus | undefined> {
@@ -224,23 +245,18 @@ function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptIn
     if(pendingRenewalInfo.kind === ResultKind.Err) {
         return pendingRenewalInfo
     }
-    if(
-        typeof payload.environment === "string" &&
-        typeof payload.latest_receipt === "string" &&
-        typeof payload.status === "number" &&
-        latestReceiptInfo.kind === ResultKind.Ok &&
-        pendingRenewalInfo.kind === ResultKind.Ok
 
-    ) {
-        return ok({
-            environment: payload.environment,
-            latest_receipt: payload.latest_receipt,
-            status: payload.status,
-            latest_receipt_info: latestReceiptInfo.value,
-            pending_renewal_info: pendingRenewalInfo.value
-        })
-    }
-    return err("Unified Receipt object from Apple cannot be parsed")
+    if(typeof payload.environment !== "string") return err("parseUnifiedReceipt: missing field: environment")
+    if(typeof payload.latest_receipt !== "string") return err("parseUnifiedReceipt: missing field: latest_receipt")
+    if(typeof payload.status !== "number") return err("parseUnifiedReceipt: missing field: status")
+
+    return ok({
+        environment: payload.environment,
+        latest_receipt: payload.latest_receipt,
+        status: payload.status,
+        latest_receipt_info: latestReceiptInfo.value,
+        pending_renewal_info: pendingRenewalInfo.value
+    })
 }
 
 function parseNotification(payload: unknown): Result<string, StatusUpdateNotification>  {
@@ -290,6 +306,7 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
         if(parsedNotification.kind === ResultKind.Ok) {
             return parsedNotification.value;
         }
+        console.log(`debugLogPayload (parse error: ${parsedNotification.err}): ${debugLogPayload(notification)}`)
         throw Error(`The payload could not be parsed due to ${parsedNotification.err}`)
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
