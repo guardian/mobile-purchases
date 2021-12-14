@@ -6,7 +6,7 @@ import scala.collection.immutable
 
 val testAndCompileDependencies: String = "test->test;compile->compile"
 val awsVersion: String = "1.11.375"
-val simpleConfigurationVersion: String = "1.4.3"
+val simpleConfigurationVersion: String = "1.5.5"
 
 val jacksonData: String = "2.9.10.8"
 
@@ -57,15 +57,14 @@ lazy val root = project
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     scalaVersion := "2.12.5",
-    resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
     name := "mobile-purchases",
     riffRaffPackageType := file(".nothing"),
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
     riffRaffUploadManifestBucket := Option("riffraff-builds"),
     riffRaffManifestProjectName := s"Mobile::${name.value}",
-    riffRaffArtifactResources += (assembly in iosValidateReceipts).value -> s"${(name in iosValidateReceipts).value}/${(assembly in iosValidateReceipts).value.getName}",
-    riffRaffArtifactResources += (assembly in iosUserPurchases).value -> s"${(name in iosUserPurchases).value}/${(assembly in iosUserPurchases).value.getName}",
-    riffRaffArtifactResources += (assembly in googleOauth).value -> s"${(name in googleOauth).value}/${(assembly in googleOauth).value.getName}",
+    riffRaffArtifactResources += (iosValidateReceipts / assembly).value -> s"${(iosValidateReceipts / name).value}/${(iosValidateReceipts / assembly).value.getName}",
+    riffRaffArtifactResources += (iosUserPurchases / assembly).value -> s"${(iosUserPurchases / name).value}/${(iosUserPurchases / assembly).value.getName}",
+    riffRaffArtifactResources += (googleOauth / assembly).value -> s"${(googleOauth / name).value}/${(googleOauth / assembly).value.getName}",
     riffRaffArtifactResources += file("tsc-target/google-pubsub.zip") -> s"mobile-purchases-google-pubsub/google-pubsub.zip",
     riffRaffArtifactResources += file("tsc-target/apple-pubsub.zip") -> s"mobile-purchases-apple-pubsub/apple-pubsub.zip",
     riffRaffArtifactResources += file("tsc-target/google-subscription-status.zip") -> s"mobile-purchases-google-subscription-status/google-subscription-status.zip",
@@ -86,14 +85,13 @@ lazy val root = project
   )
 
 def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = commonSettings(module) ++ List(
-  publishArtifact in(Compile, packageDoc) := false,
-  publishArtifact in packageDoc := false,
-  assemblyMergeStrategy in assembly := {
+  Compile / packageDoc / publishArtifact := false,
+  assembly / assemblyMergeStrategy := {
     case "META-INF/MANIFEST.MF" => MergeStrategy.discard
     case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
     case "module-info.class" => MergeStrategy.discard // See: https://stackoverflow.com/a/55557287
     case x =>
-      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      val oldStrategy = (assembly / assemblyMergeStrategy).value
       oldStrategy(x)
   },
   assemblyJarName := s"${name.value}.jar"
@@ -116,7 +114,7 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
       .setPreference(DanglingCloseParenthesis, Preserve),
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
-    scalacOptions in Test ++= Seq("-Yrangepos"),
+    Test / scalacOptions ++= Seq("-Yrangepos"),
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.6",
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
