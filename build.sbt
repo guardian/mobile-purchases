@@ -90,16 +90,14 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
     case "META-INF/MANIFEST.MF" => MergeStrategy.discard
     case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
     case "module-info.class" => MergeStrategy.discard // See: https://stackoverflow.com/a/55557287
-    case x =>
-      val oldStrategy = (assembly / assemblyMergeStrategy).value
-      oldStrategy(x)
+    case x => MergeStrategy.first
   },
   assemblyJarName := s"${name.value}.jar"
 )
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
   val specsVersion: String = "4.0.3"
   val log4j2Version: String = "2.15.0"
-  val jacksonVersion: String = "2.9.10"
+  val jacksonVersion: String = "2.13.0"
   val upgradeTransitiveDependencies = Seq(
     "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
     "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
@@ -113,7 +111,6 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
       .setPreference(DoubleIndentConstructorArguments, true)
       .setPreference(DanglingCloseParenthesis, Preserve),
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
-    resolvers += "Guardian Platform Bintray" at "https://dl.bintray.com/guardian/platforms",
     Test / scalacOptions ++= Seq("-Yrangepos"),
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.6",

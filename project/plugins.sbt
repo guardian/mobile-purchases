@@ -5,9 +5,3 @@ addSbtPlugin("com.gu" % "sbt-riffraff-artifact" % "1.1.8")
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.2")
 
 addDependencyTreePlugin
-
-val upgradeTransitivePluginDependencies = Seq(
-  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.8.11",
-  "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.10",
-  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.8.11")
-libraryDependencies ++= upgradeTransitivePluginDependencies
