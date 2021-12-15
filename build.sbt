@@ -96,7 +96,7 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
 )
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
   val specsVersion: String = "4.0.3"
-  val log4j2Version: String = "2.15.0"
+  val log4j2Version: String = "2.16.0"
   val jacksonVersion: String = "2.13.0"
   val upgradeTransitiveDependencies = Seq(
     "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
