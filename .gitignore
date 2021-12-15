@@ -6,3 +6,9 @@ tsc-target
 node_modules
 dist
 .metals/
+.vscode/
+.bloop/
+project/.bloop/
+project/metals.sbt
+.bsp/
+
