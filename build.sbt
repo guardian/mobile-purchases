@@ -115,7 +115,7 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.6",
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
-      "com.amazonaws" % "aws-lambda-java-log4j2" % "1.3.0",
+      "com.amazonaws" % "aws-lambda-java-log4j2" % "1.4.0",
       "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
