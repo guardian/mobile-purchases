@@ -4,6 +4,7 @@ import {Platform} from "../models/platform";
 import {AppleValidationResponse, validateReceipt} from "../services/appleValidateReceipts";
 import {HTTPResponses} from "../models/apiGatewayHttp";
 import {plusDays} from "../utils/dates";
+import {ok, err, Result, ResultKind} from "@guardian/types";
 
 interface AppleSubscription {
     receipt: string
@@ -71,8 +72,21 @@ export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGat
     }
 
     try {
-        const validationResults = await Promise.all(payload.subscriptions.map(sub => validateReceipt(sub.receipt, {sandboxRetry: true})));
-        const flattenedValidationResults = validationResults.reduce((agg:AppleValidationResponse[], value) => agg.concat(value), []);
+        const validationResults: Result<any, AppleValidationResponse[]>[] = await Promise.all(
+            payload.subscriptions.map(sub => 
+                validateReceipt(sub.receipt, {sandboxRetry: true})
+                    .then(ok)
+                    .catch(err)
+            )
+        );
+        if (validationResults.every((r) => r.kind === ResultKind.Err)) {
+            console.log("Unable to validate receipt(s)");
+            return HTTPResponses.INTERNAL_ERROR;    
+        }
+        const flattenedValidationResults = validationResults.reduce(
+            (agg:AppleValidationResponse[], value) => value.kind === ResultKind.Ok ? agg.concat(value.value) : agg, 
+            []
+        );
         const calculatedResponse = flattenedValidationResults.map(toResponse);
         logClientServerStatusDiff(calculatedResponse, payload.subscriptions);
         const responsePayload = JSON.stringify(calculatedResponse);
