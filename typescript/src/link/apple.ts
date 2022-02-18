@@ -19,10 +19,12 @@ function parseAppleLinkPayload(request: APIGatewayProxyEvent): AppleLinkPayload 
 }
 
 function toUserSubscription(userId: string, payload: AppleLinkPayload): UserSubscription[] {
-    return payload.subscriptions.map(sub => new UserSubscription(
+    const now = new Date().toISOString()
+    const originalTransactionIds = payload.subscriptions.map(sub => sub.originalTransactionId)
+    return Array.from(new Set(originalTransactionIds)).map((originalTransactionId) => new UserSubscription(
         userId,
-        sub.originalTransactionId,
-        new Date().toISOString()
+        originalTransactionId,
+        now
     ));
 }
 
