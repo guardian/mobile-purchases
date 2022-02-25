@@ -84,6 +84,10 @@ export async function parseAndStoreLink<A, B>(
         }
     } catch (error) {
         console.error("Internal Server Error", error);
+        const message = error.message
+        if (typeof message === "string" && message.includes("Provided list of item keys contains duplicates")) {
+            console.error("Request body: " + (httpRequest.body ?? ""))
+        }
         return HTTPResponses.INTERNAL_ERROR
     }
 }
