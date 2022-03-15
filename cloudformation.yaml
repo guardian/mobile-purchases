@@ -548,28 +548,6 @@ Resources:
         - Key: App
           Value: !Ref App
 
-  GoogleTokenRefreshFailureAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled: !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
-      AlarmActions:
-        - Ref: AlarmTopic
-      OKActions:
-        - Ref: AlarmTopic
-      AlarmName: !Sub mobile-purchases-${Stage}-google-oauth-token-refresh-failure
-      AlarmDescription: !Sub Trigger the GoogleOAuth lambda manually to refresh the token
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref GoogleOAuthLambda
-      EvaluationPeriods: 1
-      MetricName: Errors
-      Namespace: AWS/Lambda
-      Period: 60
-      Statistic: Sum
-      Threshold: 1
-      TreatMissingData: notBreaching
-
   GooglePlaySubsStatus5xxErrors:
     Type: AWS::CloudWatch::Alarm
     Properties:
