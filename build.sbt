@@ -1,5 +1,4 @@
 import sbt.{Def, project}
-import sbtassembly.MergeStrategy
 import scalariform.formatter.preferences._
 
 import scala.collection.immutable
@@ -8,52 +7,8 @@ val testAndCompileDependencies: String = "test->test;compile->compile"
 val awsVersion: String = "1.11.375"
 val simpleConfigurationVersion: String = "1.5.5"
 
-val jacksonData: String = "2.9.10"
-
-val scalaRoot = file("scala")
-
-lazy val common = project.in(scalaRoot / "common")
-  .disablePlugins(AssemblyPlugin)
-  .settings(commonSettings("common"), libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData)
-
-lazy val userPurchasePersistence = project.in(scalaRoot / "user-purchase-persistence").disablePlugins(AssemblyPlugin)
-  .settings(commonSettings("user-purchase-persistence"), libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData)
-  .dependsOn(common % testAndCompileDependencies)
-
-
-lazy val iosValidateReceipts = project.in(scalaRoot / "ios-validate-receipts").enablePlugins(AssemblyPlugin).settings({
-  val upgradeIosvalidatereceiptsTransitiveDependencies = List(
-    "com.amazonaws" % "aws-java-sdk-ssm" % awsVersion
-  )
-  List(
-    libraryDependencies ++= List(
-      "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
-      "com.squareup.okhttp3" % "okhttp" % "3.10.0",
-      "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData
-    ),
-    libraryDependencies ++= upgradeIosvalidatereceiptsTransitiveDependencies
-  ) ++ commonAssemblySettings("ios-validate-receipts")
-})
-  .dependsOn(userPurchasePersistence % testAndCompileDependencies)
-
-lazy val iosUserPurchases = project.in(scalaRoot / "ios-user-purchases").enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("ios-user-purchases"))
-  .dependsOn(userPurchasePersistence % testAndCompileDependencies)
-  .settings(libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData)
-
-lazy val googleOauth = project.in(scalaRoot / "google-oauth").enablePlugins(AssemblyPlugin)
-  .settings(
-    commonAssemblySettings("google-oauth"),
-    libraryDependencies ++= List(
-    "com.google.auth" % "google-auth-library-oauth2-http" % "0.20.0",
-    "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
-    "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData
-    )
-  )
-  .dependsOn(common % testAndCompileDependencies)
-
 lazy val root = project
   .enablePlugins(RiffRaffArtifact).in(file("."))
-  .aggregate(common, userPurchasePersistence, iosValidateReceipts, iosUserPurchases, googleOauth)
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     scalaVersion := "2.12.5",
@@ -62,9 +17,6 @@ lazy val root = project
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
     riffRaffUploadManifestBucket := Option("riffraff-builds"),
     riffRaffManifestProjectName := s"Mobile::${name.value}",
-    riffRaffArtifactResources += (iosValidateReceipts / assembly).value -> s"${(iosValidateReceipts / name).value}/${(iosValidateReceipts / assembly).value.getName}",
-    riffRaffArtifactResources += (iosUserPurchases / assembly).value -> s"${(iosUserPurchases / name).value}/${(iosUserPurchases / assembly).value.getName}",
-    riffRaffArtifactResources += (googleOauth / assembly).value -> s"${(googleOauth / name).value}/${(googleOauth / assembly).value.getName}",
     riffRaffArtifactResources += file("tsc-target/google-pubsub.zip") -> s"mobile-purchases-google-pubsub/google-pubsub.zip",
     riffRaffArtifactResources += file("tsc-target/apple-pubsub.zip") -> s"mobile-purchases-apple-pubsub/apple-pubsub.zip",
     riffRaffArtifactResources += file("tsc-target/google-subscription-status.zip") -> s"mobile-purchases-google-subscription-status/google-subscription-status.zip",
@@ -84,16 +36,6 @@ lazy val root = project
     riffRaffArtifactResources += file("exports-cloudformation.yaml") -> s"mobile-purchases-exports-cloudformation/exports-cloudformation.yaml",
   )
 
-def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = commonSettings(module) ++ List(
-  Compile / packageDoc / publishArtifact := false,
-  assembly / assemblyMergeStrategy := {
-    case "META-INF/MANIFEST.MF" => MergeStrategy.discard
-    case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
-    case "module-info.class" => MergeStrategy.discard // See: https://stackoverflow.com/a/55557287
-    case x => MergeStrategy.first
-  },
-  assemblyJarName := s"${name.value}.jar"
-)
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
   val specsVersion: String = "4.0.3"
   val log4j2Version: String = "2.17.1"
