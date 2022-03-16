@@ -17,7 +17,7 @@ type AppleLinkPayload = {
 function deduplicate<T, U>(list: T[], selector: (item: T) => U): T[] {
     return list.reduce<T[]>(
         (agg, item) =>
-            agg.some((x) => selector(x) == selector(item)) ?
+            agg.some((x) => selector(x) === selector(item)) ?
                 agg : agg.concat([item]), 
         []
     )
