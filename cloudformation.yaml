@@ -172,27 +172,6 @@ Resources:
           version: "1.0.0"
           title: !Sub ${App}-${Stage}
         paths:
-          "/validateReceipts":
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IosValidateReceiptsLambda.Arn}/invocations
-              consumes: [ application/json ]
-              produces: [ application/json ]
-              responses:
-                "200":
-                  "description": "200 response"
-          "/userPurchases":
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IosUserPurchasesLambda.Arn}/invocations
-              produces: [ application/json ]
-              responses:
-                "200":
-                  "description": "200 response"
           "/google/pubsub":
             post:
               x-amazon-apigateway-integration:
