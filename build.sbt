@@ -20,26 +20,6 @@ lazy val userPurchasePersistence = project.in(scalaRoot / "user-purchase-persist
   .settings(commonSettings("user-purchase-persistence"), libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData)
   .dependsOn(common % testAndCompileDependencies)
 
-
-lazy val iosValidateReceipts = project.in(scalaRoot / "ios-validate-receipts").enablePlugins(AssemblyPlugin).settings({
-  val upgradeIosvalidatereceiptsTransitiveDependencies = List(
-    "com.amazonaws" % "aws-java-sdk-ssm" % awsVersion
-  )
-  List(
-    libraryDependencies ++= List(
-      "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
-      "com.squareup.okhttp3" % "okhttp" % "3.10.0",
-      "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData
-    ),
-    libraryDependencies ++= upgradeIosvalidatereceiptsTransitiveDependencies
-  ) ++ commonAssemblySettings("ios-validate-receipts")
-})
-  .dependsOn(userPurchasePersistence % testAndCompileDependencies)
-
-lazy val iosUserPurchases = project.in(scalaRoot / "ios-user-purchases").enablePlugins(AssemblyPlugin).settings(commonAssemblySettings("ios-user-purchases"))
-  .dependsOn(userPurchasePersistence % testAndCompileDependencies)
-  .settings(libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData)
-
 lazy val googleOauth = project.in(scalaRoot / "google-oauth").enablePlugins(AssemblyPlugin)
   .settings(
     commonAssemblySettings("google-oauth"),
@@ -53,7 +33,7 @@ lazy val googleOauth = project.in(scalaRoot / "google-oauth").enablePlugins(Asse
 
 lazy val root = project
   .enablePlugins(RiffRaffArtifact).in(file("."))
-  .aggregate(common, userPurchasePersistence, iosValidateReceipts, iosUserPurchases, googleOauth)
+  .aggregate(common, googleOauth)
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     scalaVersion := "2.12.5",
@@ -62,8 +42,6 @@ lazy val root = project
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
     riffRaffUploadManifestBucket := Option("riffraff-builds"),
     riffRaffManifestProjectName := s"Mobile::${name.value}",
-    riffRaffArtifactResources += (iosValidateReceipts / assembly).value -> s"${(iosValidateReceipts / name).value}/${(iosValidateReceipts / assembly).value.getName}",
-    riffRaffArtifactResources += (iosUserPurchases / assembly).value -> s"${(iosUserPurchases / name).value}/${(iosUserPurchases / assembly).value.getName}",
     riffRaffArtifactResources += (googleOauth / assembly).value -> s"${(googleOauth / name).value}/${(googleOauth / assembly).value.getName}",
     riffRaffArtifactResources += file("tsc-target/google-pubsub.zip") -> s"mobile-purchases-google-pubsub/google-pubsub.zip",
     riffRaffArtifactResources += file("tsc-target/apple-pubsub.zip") -> s"mobile-purchases-apple-pubsub/apple-pubsub.zip",
