@@ -310,7 +310,7 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
         throw Error(`The payload could not be parsed due to ${parsedNotification.err}`)
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
-        return e;
+        return e as Error;
     }
 }
 

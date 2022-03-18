@@ -31,7 +31,7 @@ export async function getUserId(headers: HttpRequestHeaders): Promise<Option<str
         // The REST client used here throws on 403s, so we have to try...catch
         // instead of handling this case in the response object above
         // https://github.com/microsoft/typed-rest-client#rest
-        if (error.statusCode === 403) {
+        if ((error as any).statusCode === 403) {
             console.warn('Identity API returned 403');
             return null;
         } else {

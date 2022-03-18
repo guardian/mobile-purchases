@@ -14,16 +14,28 @@ type AppleLinkPayload = {
     subscriptions: AppleSubscription[]
 }
 
-function parseAppleLinkPayload(request: APIGatewayProxyEvent): AppleLinkPayload {
-    return JSON.parse(request.body ?? "") as AppleLinkPayload;
+function deduplicate<T, U>(list: T[], selector: (item: T) => U): T[] {
+    return list.reduce<T[]>(
+        (agg, item) =>
+            agg.some((x) => selector(x) === selector(item)) ?
+                agg : agg.concat([item]), 
+        []
+    )
+}
+
+export function parseAppleLinkPayload(request: APIGatewayProxyEvent): AppleLinkPayload {
+    const parsed = JSON.parse(request.body ?? "") as AppleLinkPayload;
+    return {
+        ...parsed,
+        subscriptions: deduplicate(parsed.subscriptions, x => x.originalTransactionId)
+    }
 }
 
 function toUserSubscription(userId: string, payload: AppleLinkPayload): UserSubscription[] {
     const now = new Date().toISOString()
-    const originalTransactionIds = payload.subscriptions.map(sub => sub.originalTransactionId)
-    return Array.from(new Set(originalTransactionIds)).map((originalTransactionId) => new UserSubscription(
+    return payload.subscriptions.map(sub => new UserSubscription(
         userId,
-        originalTransactionId,
+        sub.originalTransactionId,
         now
     ));
 }

@@ -37,7 +37,7 @@ export function parsePayload(body: Option<string>): Error | DeveloperNotificatio
         return parsedNotification;
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
-        return e;
+        return e as Error;
     }
 }
 
