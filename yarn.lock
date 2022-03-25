@@ -1187,10 +1187,10 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-aws-sdk@^2.1097.0:
-  version "2.1097.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1097.0.tgz#1e53ee27d8ab7523760d023b934b24a9512bd719"
-  integrity sha512-fChMDiSfWcW0EUWmiqlyc+VAIXKH0w7BBruL3cVWSwO+5oA5A9juGF4NCBV2/KAHzaKaG0hXKPE49Wh6Lq74ag==
+aws-sdk@^2.1100.0:
+  version "2.1100.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1100.0.tgz#20bbabc12fbc316067ba02af66bf371a455af9e3"
+  integrity sha512-StLSQCYFmFPxjoMntIb+8jUZ0vzmq3xkrwG5e/4qU1bSGWCmhhjvz6c+4j38AnIy8MFV1+tV8RArbhLUEV2dGw==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
