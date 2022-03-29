@@ -15,18 +15,6 @@ deployments:
     parameters:
       templatePath: cloudformation.yaml
 
-  mobile-purchases-ios-validate-receipts:
-    template: lambda
-    parameters:
-      functionNames: [mobile-purchases-iosvalidatereceipts-]
-      fileName: mobile-purchases-ios-validate-receipts.jar
-
-  mobile-purchases-ios-user-purchases:
-    template: lambda
-    parameters:
-      functionNames: [mobile-purchases-iosuserpurchases-]
-      fileName: mobile-purchases-ios-user-purchases.jar
-
   mobile-purchases-google-pubsub:
     template: lambda
     parameters:
