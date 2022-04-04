@@ -273,7 +273,7 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
         typeof payload.bid === "string" &&
         typeof payload.bvrs === "string" &&
         typeof payload.notification_type === "string" &&
-        (typeof payload.original_transaction_id === "string" || typeof payload.original_transaction_id === "undefined") &&
+        (typeof payload.original_transaction_id === "string" || typeof payload.original_transaction_id === "undefined" || typeof payload.original_transaction_id === "number") &&
         (typeof payload.cancellation_date === "string" || typeof payload.cancellation_date === "undefined") &&
         (typeof payload.web_order_line_item_id === "string" || typeof payload.web_order_line_item_id === "undefined" ) &&
         typeof payload.auto_renew_status === "string" &&
@@ -286,7 +286,7 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
             bid: payload.bid,
             bvrs: payload.bvrs,
             notification_type: payload.notification_type,
-            original_transaction_id: payload.original_transaction_id,
+            original_transaction_id: typeof payload.original_transaction_id === "number" ? payload.original_transaction_id.toString() : payload.original_transaction_id,
             cancellation_date: payload.cancellation_date,
             web_order_line_item_id: payload.web_order_line_item_id,
             auto_renew_status: payload.auto_renew_status,
