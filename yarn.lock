@@ -1187,10 +1187,10 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-aws-sdk@^2.1097.0:
-  version "2.1097.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1097.0.tgz#1e53ee27d8ab7523760d023b934b24a9512bd719"
-  integrity sha512-fChMDiSfWcW0EUWmiqlyc+VAIXKH0w7BBruL3cVWSwO+5oA5A9juGF4NCBV2/KAHzaKaG0hXKPE49Wh6Lq74ag==
+aws-sdk@^2.1155.0:
+  version "2.1155.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1155.0.tgz#baee24931a969a44496afc8eff5f6543518d5b75"
+  integrity sha512-H2QircO+R3/tx7DhRKYsGuj0YJcIY2N53U2gDExAmy34/oNAGUcS1eKB8DwTbpNPrnQgZzYDGBgHMTFWtN2XZA==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
@@ -1199,7 +1199,7 @@ aws-sdk@^2.1097.0:
     querystring "0.2.0"
     sax "1.2.1"
     url "0.10.3"
-    uuid "3.3.2"
+    uuid "8.0.0"
     xml2js "0.4.19"
 
 aws-sign2@~0.7.0:
@@ -4460,10 +4460,10 @@ util-deprecate@~1.0.1:
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
   integrity sha1-RQ1Nyfpw3nMnYvvS1KKJgUGaDM8=
 
-uuid@3.3.2:
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.3.2.tgz#1b4af4955eb3077c501c23872fc6513811587131"
-  integrity sha512-yXJmeNaw3DnnKAOKJE51sL/ZaYfWJRl1pK9dr19YFCu0ObS231AB1/LbqTKRAQ5kw8A90rA6fr4riOUpTZvQZA==
+uuid@8.0.0:
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.0.0.tgz#bc6ccf91b5ff0ac07bbcdbf1c7c4e150db4dbb6c"
+  integrity sha512-jOXGuXZAWdsTH7eZLtyXMqUb9EcWMGZNbL9YcGBJl4MH4nrxHmZJhEHvyLFrkxo+28uLb/NYRcStH48fnD0Vzw==
 
 uuid@^3.0.0, uuid@^3.3.2:
   version "3.4.0"
