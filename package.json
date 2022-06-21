@@ -35,7 +35,7 @@
     "@guardian/types": "^6.0.0",
     "@types/aws-lambda": "8.10.93",
     "@types/node": "^16.0.0",
-    "aws-sdk": "^2.1097.0",
+    "aws-sdk": "^2.1158.0",
     "source-map-support": "^0.5.21",
     "typed-rest-client": "^1.8.4"
   }
