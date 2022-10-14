@@ -1,27 +1,17 @@
 name: Snyk
 
 on:
-    schedule:
-        - cron: "0 9 * * 1-5"
-    workflow_dispatch:
-    
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
 jobs:
-    snyk:
-        name: Snyk
-        runs-on: ubuntu-latest
-        timeout-minutes: 3
-
-        strategy:
-            matrix:
-                node-version: [12.x]
-
-        steps:
-            - uses: actions/checkout@v2
-
-            - name: Run Snyk to check for vulnerabilities
-              uses: snyk/actions/node@master
-              env:
-                  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-              with:
-                  command: monitor
-                  args: --org=guardian-mobile --project-name=mobile-purchases --file=yarn.lock
+  security:
+    uses: guardian/.github/.github/workflows/sbt-node-snyk.yml@main
+    with:
+      DEBUG: true
+      ORG: the-guardian-cuu
+      SKIP_NODE: false
+    secrets:
+       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
