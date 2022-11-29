@@ -13,5 +13,6 @@ jobs:
       DEBUG: true
       ORG: the-guardian-cuu
       SKIP_NODE: false
+      PRUNE_DUPLICATES: true
     secrets:
        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
