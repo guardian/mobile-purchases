@@ -71,11 +71,17 @@ export async function parseAndStoreLink<A, B>(
             const payload: A = parsePayload(httpRequest);
             const userId = await getUserId(httpRequest.headers);
             if (userId) {
-                const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
-                const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
-                console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
+                if (userId == "1234567890") {
+                    // See comment in guIdentityApi explaining the reason for this magic number
+                    // This is a temporary measure.
+                    return HTTPResponses.FORBIDDEN
+                } else {
+                    const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
+                    const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
+                    console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
+                    return HTTPResponses.OK;
+                }
 
-                return HTTPResponses.OK;
             } else {
                 return HTTPResponses.UNAUTHORISED;
             }
