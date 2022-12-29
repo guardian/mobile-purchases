@@ -14,7 +14,7 @@ interface IdentityResponse {
 interface OktaJwtVerifierReturn {
     claims : {
         scp: [string],
-        sub: string,
+        legacy_identity_id: string,
     }
 }
 
@@ -84,8 +84,28 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<Option<st
             return await oktaJwtVerifier.verifyAccessToken(accessTokenString, expectedAud)
             .then((payload: OktaJwtVerifierReturn) => {
                 if (payload.claims.scp.includes('email')) { 
-                    // We have found the email address claim, so we are going to return the email address which is the id we want.
-                    return payload.claims.sub; 
+                    // We have found the email address claim
+                    // The claims attribute maps to
+                    /*
+                        {
+                            ver: 1,
+                            jti: 'EDITED',
+                            iss: 'https://profile.code.dev-theguardian.com/oauth2/aus3v9gla95Toj0EE0x7',
+                            aud: 'https://profile.code.dev-theguardian.com/',
+                            iat: 1672252869,
+                            exp: 1672256469,
+                            cid: '0oa4iyjx692Aj8SlZ0x7',
+                            uid: '00u38ar4186TSK9j00x7',
+                            scp: [ 'email', 'openid', 'profile' ],
+                            auth_time: 1671029934,
+                            sub: 'EDITED',
+                            identity_username: '',
+                            email_validated: true,
+                            legacy_identity_id: 'EDITED'
+                        }
+                    */
+                    // Let's use the legacy_identity_id
+                    return payload.claims.legacy_identity_id; 
                 } else {
                     // We have passed authentication but we didn't pass the scope check
                     return "1234567890";
