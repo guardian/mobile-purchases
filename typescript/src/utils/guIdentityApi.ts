@@ -1,5 +1,4 @@
 import {HttpRequestHeaders} from "../models/apiGatewayHttp";
-import {Option} from "./option";
 import {restClient} from "./restClient";
 
 interface UserId {
@@ -18,11 +17,31 @@ interface OktaJwtVerifierReturn {
     }
 }
 
+/*
+    Date: 31st Dec 2022
+
+    Function getUserId_OldIdentity used to perform the resolution of a authorization token and used to
+    return null or a string (the userId). That value was handled by the caller { function: parseAndStoreLink }.
+    In the case of null we would return a { HTTPResponses.UNAUTHORISED, 401 }
+
+    When we moved to the Okta authentication, we needed to make the difference between failures
+    due to an incorrect token and failures due to incorrect scopes. In the case of an incorrect
+    token we need to return { HTTPResponses.UNAUTHORISED, 401 } but in the case of incorrect scope
+    we need to return { HTTPResponses.FORBIDDEN, 403 }.
+
+    To be able to convey to { function: parseAndStoreLink } which case occured during the authentication,
+    we are extending the return type of the getUserId functions, to become a { UserIdResolution }
+*/
+export interface UserIdResolution {
+    status: "incorrect-token" | "incorrect-scope" | "success",
+    userId: null | string
+}
+
 export function getAuthToken(headers: HttpRequestHeaders): string | undefined {
     return (headers["Authorization"] ?? headers["authorization"])?.replace("Bearer ", "");
 }
 
-async function getUserId_OldIdentity(headers: HttpRequestHeaders): Promise<Option<string>> {
+async function getUserId_OldIdentity(headers: HttpRequestHeaders): Promise<UserIdResolution> {
     const url = "https://id.guardianapis.com/user/me";
     const identityToken = getAuthToken(headers);
 
@@ -30,24 +49,21 @@ async function getUserId_OldIdentity(headers: HttpRequestHeaders): Promise<Optio
         const response = await restClient.get<IdentityResponse>(url, {additionalHeaders: {Authorization: `Bearer ${identityToken}`}})
 
         if(response.result) {
-            return response.result.user.id
+            return {status: "success", userId: response.result.user.id};
         } else {
-            return null;
+            return {status: "incorrect-token", userId: null};
         }
     } catch (error) {
-        // The REST client used here throws on 403s, so we have to try...catch
-        // instead of handling this case in the response object above
-        // https://github.com/microsoft/typed-rest-client#rest
         if ((error as any).statusCode === 403) {
             console.warn('Identity API returned 403');
-            return null;
+            return {status: "incorrect-token", userId: null};
         } else {
             throw error;
         }
     }
 }
 
-async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<Option<string>> {
+async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdResolution> {
     try {
         const OktaJwtVerifier = require('@okta/jwt-verifier');
 
@@ -63,23 +79,6 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<Option<st
         
         const accessTokenString = getAuthToken(headers);
 
-        // Date: 28th December 2022
-        // Author: Pascal 
-          
-        // We want: 
-        //       401 for an invalid/expired access token.
-        //       403 for an invalid scope, and 
-
-        // If the authentication fails, mostly because the access token is invalid, then oktaJwtVerifier.verifyAccessToken
-        // throw an error. That error would bubble up to a servor error (500), which is not what we want. 
-        // In that case we just catch the error and return a null, which the function { parseAndStoreLink } which called us
-        // will return as a HTTPResponses.UNAUTHORISED, meaning a 401
-
-        // If fail the scope check then for the moment, we return a magic value and let { parseAndStoreLink } deal with it. 
-        // The reason for simply not returning the right type, is that we are calling not only the new but also version 
-        // of this (for backward compatibility with the old identity authentication), and at this stage I am not updating 
-        // all signatures. So overloading it is.
-        
         try {
             return await oktaJwtVerifier.verifyAccessToken(accessTokenString, expectedAud)
             .then((payload: OktaJwtVerifierReturn) => {
@@ -105,26 +104,26 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<Option<st
                         }
                     */
                     // Let's use the legacy_identity_id
-                    return payload.claims.legacy_identity_id; 
+                    return {status: "success", userId: payload.claims.legacy_identity_id};
                 } else {
                     // We have passed authentication but we didn't pass the scope check
-                    return "1234567890";
+                    return {status: "incorrect-scope", userId: null};
                 }
             }); 
         } catch (error) {
-            return null;
+            return {status: "incorrect-token", userId: null};
         }
     } catch (error) {
         throw error;
     }
 }
 
-export async function getUserId(headers: HttpRequestHeaders): Promise<Option<string>> {
-    // This function is the front that implement the common interface behind which there is the old (Identity) 
-    // and new (Okta) authentication methods
-    const userId1 = await getUserId_OldIdentity(headers);
-    if (userId1) {
-        return userId1
+export async function getUserId(headers: HttpRequestHeaders): Promise<UserIdResolution> {
+    // This function is the front that implement the common interface behind which 
+    // there is the old (Identity) and new (Okta) authentication methods.
+    const resolution = await getUserId_OldIdentity(headers);
+    if (resolution.status == "success") {
+        return resolution;
     }
     return await getUserId_NewOkta(headers);
 }
