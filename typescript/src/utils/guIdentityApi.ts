@@ -70,11 +70,12 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdRes
         const ISSUER      = 'https://profile.code.dev-theguardian.com/oauth2/aus3v9gla95Toj0EE0x7'
         const CLIENT_ID   = "0oa4iyjx692Aj8SlZ0x7"
         const expectedAud = "https://profile.code.dev-theguardian.com/";
+        const scope       = "guardian.mobile-purchases-api.update.self"
         
         const oktaJwtVerifier = new OktaJwtVerifier({
             issuer: ISSUER,
             clientId: CLIENT_ID,
-            assertClaims: {'scp.includes': ['email']}
+            assertClaims: {'scp.includes': [scope]}
           });
         
         const accessTokenString = getAuthToken(headers);
@@ -82,7 +83,7 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdRes
         try {
             return await oktaJwtVerifier.verifyAccessToken(accessTokenString, expectedAud)
             .then((payload: OktaJwtVerifierReturn) => {
-                if (payload.claims.scp.includes('email')) { 
+                if (payload.claims.scp.includes(scope)) { 
                     // We have found the email address claim
                     // The claims attribute maps to
                     /*
