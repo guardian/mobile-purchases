@@ -75,7 +75,6 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdRes
         const oktaJwtVerifier = new OktaJwtVerifier({
             issuer: ISSUER,
             clientId: CLIENT_ID,
-            assertClaims: {'scp.includes': [scope]}
           });
         
         const accessTokenString = getAuthToken(headers);
