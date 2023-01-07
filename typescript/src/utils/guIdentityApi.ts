@@ -122,6 +122,13 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdRes
     we are extending the return type of the getUserId functions, to become a { UserIdResolution }
 */
 
+/*
+    Date: 07th Jan 2022
+
+    We we complete the transition to Okta, we will have to keep the UserIdResolution type,
+    But we will be able to get rid of getUserId_OldIdentity without any other change.
+*/
+
 export async function getUserId(headers: HttpRequestHeaders): Promise<UserIdResolution> {
     const resolution = await getUserId_OldIdentity(headers);
     if (resolution.status == "success") {
