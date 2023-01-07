@@ -114,8 +114,12 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdRes
 /*
     Date: 07th Jan 2022
 
-    We we complete the transition to Okta, we will have to keep the UserIdResolution type,
+    When we complete the transition to Okta, we will have to keep the UserIdResolution type,
     But we will be able to get rid of getUserId_OldIdentity without any other change.
+
+    Note that the reason we perform the old Identity authentication before the Okta authentication
+    is because the Okta authentication fails in more ways than the old authentication and in order to keep 
+    the code simple while returning the right code, it need to be done in that order.
 */
 
 export async function getUserId(headers: HttpRequestHeaders): Promise<UserIdResolution> {
