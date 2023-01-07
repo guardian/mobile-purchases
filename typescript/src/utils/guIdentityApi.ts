@@ -17,21 +17,6 @@ interface OktaJwtVerifierReturn {
     }
 }
 
-/*
-    Date: 31st Dec 2022
-
-    Function getUserId_OldIdentity used to perform the resolution of a authorization token and used to
-    return null or a string (the userId). That value was handled by the caller { function: parseAndStoreLink }.
-    In the case of null we would return a { HTTPResponses.UNAUTHORISED, 401 }
-
-    When we moved to the Okta authentication, we needed to make the difference between failures
-    due to an incorrect token and failures due to incorrect scopes. In the case of an incorrect
-    token we need to return { HTTPResponses.UNAUTHORISED, 401 } but in the case of incorrect scope
-    we need to return { HTTPResponses.FORBIDDEN, 403 }.
-
-    To be able to convey to { function: parseAndStoreLink } which case occured during the authentication,
-    we are extending the return type of the getUserId functions, to become a { UserIdResolution }
-*/
 export interface UserIdResolution {
     status: "incorrect-token" | "incorrect-scope" | "success",
     userId: null | string
@@ -118,9 +103,26 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdRes
     }
 }
 
+// Function getUserId is the front that implements the common interface behind which 
+// the old (Identity) and the new (Okta) authentication methods.
+
+/*
+    Date: 31st Dec 2022
+
+    Function getUserId_OldIdentity used to perform the resolution of a authorization token and used to
+    return null or a string (the userId). That value was handled by the caller { function: parseAndStoreLink }.
+    In the case of null we would return a { HTTPResponses.UNAUTHORISED, 401 }
+
+    When we moved to the Okta authentication, we needed to make the difference between failures
+    due to an incorrect token and failures due to incorrect scopes. In the case of an incorrect
+    token we need to return { HTTPResponses.UNAUTHORISED, 401 } but in the case of incorrect scope
+    we need to return { HTTPResponses.FORBIDDEN, 403 }.
+
+    To be able to convey to { function: parseAndStoreLink } which case occured during the authentication,
+    we are extending the return type of the getUserId functions, to become a { UserIdResolution }
+*/
+
 export async function getUserId(headers: HttpRequestHeaders): Promise<UserIdResolution> {
-    // This function is the front that implement the common interface behind which 
-    // there is the old (Identity) and new (Okta) authentication methods.
     const resolution = await getUserId_OldIdentity(headers);
     if (resolution.status == "success") {
         return resolution;
