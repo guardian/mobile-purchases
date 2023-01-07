@@ -70,17 +70,20 @@ export async function parseAndStoreLink<A, B>(
             const payload: A = parsePayload(httpRequest);
             const resolution: UserIdResolution = await getUserId(httpRequest.headers);
             switch(resolution.status) {
+                case "incorrect-token": {
+                    return HTTPResponses.UNAUTHORISED;
+                }
+                case "incorrect-scope": {
+                    return HTTPResponses.FORBIDDEN;
+                }
+                case "missing-identity-id": {
+                    return HTTPResponses.INVALID_REQUEST;
+                }
                 case "success": {
                     const insertCount = await persistUserSubscriptionLinks(toUserSubscription((resolution.userId as string), payload));
                     const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
                     console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
                     return HTTPResponses.OK;
-                }
-                case "incorrect-scope": {
-                    return HTTPResponses.FORBIDDEN;
-                }
-                case "incorrect-token": {
-                    return HTTPResponses.UNAUTHORISED;
                 }
             }
         } else {

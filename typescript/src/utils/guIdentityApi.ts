@@ -18,7 +18,7 @@ interface OktaJwtVerifierReturn {
 }
 
 export interface UserIdResolution {
-    status: "incorrect-token" | "incorrect-scope" | "success",
+    status: "incorrect-token" | "incorrect-scope" | "missing-identity-id" | "success",
     userId: null | string
 }
 
@@ -68,28 +68,11 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdRes
             return await oktaJwtVerifier.verifyAccessToken(accessTokenString, expectedAud)
             .then((payload: OktaJwtVerifierReturn) => {
                 if (payload.claims.scp.includes(scope)) { 
-                    // We have found the email address claim
-                    // The claims attribute maps to
-                    /*
-                        {
-                            ver: 1,
-                            jti: 'EDITED',
-                            iss: 'https://profile.code.dev-theguardian.com/oauth2/aus3v9gla95Toj0EE0x7',
-                            aud: 'https://profile.code.dev-theguardian.com/',
-                            iat: 1672252869,
-                            exp: 1672256469,
-                            cid: '0oa4iyjx692Aj8SlZ0x7',
-                            uid: '00u38ar4186TSK9j00x7',
-                            scp: [ 'email', 'openid', 'profile' ],
-                            auth_time: 1671029934,
-                            sub: 'EDITED',
-                            identity_username: '',
-                            email_validated: true,
-                            legacy_identity_id: 'EDITED'
-                        }
-                    */
-                    // Let's use the legacy_identity_id
-                    return {status: "success", userId: payload.claims.legacy_identity_id};
+                    if (payload.claims.legacy_identity_id) {
+                        return {status: "success", userId: payload.claims.legacy_identity_id};
+                    } else {
+                        return {status: "missing-identity-id", userId: null};
+                    }
                 } else {
                     // We have passed authentication but we didn't pass the scope check
                     return {status: "incorrect-scope", userId: null};
@@ -116,7 +99,13 @@ async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdRes
     When we moved to the Okta authentication, we needed to make the difference between failures
     due to an incorrect token and failures due to incorrect scopes. In the case of an incorrect
     token we need to return { HTTPResponses.UNAUTHORISED, 401 } but in the case of incorrect scope
-    we need to return { HTTPResponses.FORBIDDEN, 403 }.
+    we need to return { HTTPResponses.FORBIDDEN, 403 }. Additionaly note that if the claim that carries the
+    identity id is missing, we return { HTTPResponses.INVALID_REQUEST, 400 }.
+
+    Incorrect token                     -> 401
+    Incorrect scope                     -> 403
+    Missing claim / Missing identity id -> 400
+    Successful request                  -> 200
 
     To be able to convey to { function: parseAndStoreLink } which case occured during the authentication,
     we are extending the return type of the getUserId functions, to become a { UserIdResolution }

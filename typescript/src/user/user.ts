@@ -95,15 +95,18 @@ export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGat
         } else {
             const resolution: UserIdResolution = await getUserId(httpRequest.headers);
             switch(resolution.status) {
-                case "success": {
-                    userId = (resolution.userId as string)
-                    break;
+                case "incorrect-token": {
+                    return HTTPResponses.UNAUTHORISED;
                 }
                 case "incorrect-scope": {
                     return HTTPResponses.FORBIDDEN;
                 }
-                case "incorrect-token": {
-                    return HTTPResponses.UNAUTHORISED;
+                case "missing-identity-id": {
+                    return HTTPResponses.INVALID_REQUEST;
+                }
+                case "success": {
+                    userId = (resolution.userId as string)
+                    break;
                 }
             }
         }
