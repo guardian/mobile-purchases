@@ -35,7 +35,7 @@ To avoid committing test data locally a test-launcher is provided to run a lambd
 
 This can be run locally, and assumes a module with a function `handler` which takes some kind of a payload as a parameter. 
 
-Test a lambda locally by creating a payload json file under the `mobile-purchases-payload` directory and invoke the test-launcher with the name of your lambda module relative to the test-launcher along with the name of a payload file. 
+Test a lambda locally by creating a payload json file under the `mobile-purchases-payload` directory and invoke the test-launcher with the name of your lambda module relative to the test-launcher along with the name of a payload file.
 
 For example, to test the lambda that updates google subscriptions (`typescript/update-subs/google.ts`). This reads from an SQS queue, so create a a file `sqs.json` like this and put it in `mobile-purchases-payload`.
 
