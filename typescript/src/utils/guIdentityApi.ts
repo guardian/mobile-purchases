@@ -18,6 +18,12 @@ interface OktaJwtVerifierReturn {
     }
 }
 
+interface OktaStageParameters {
+    issuer: string,
+    expectedAud: string,
+    scope: string
+}
+
 export interface UserIdResolution {
     status: "incorrect-token" | "incorrect-scope" | "missing-identity-id" | "success",
     userId: null | string
@@ -49,22 +55,34 @@ async function getUserId_OldIdentity(headers: HttpRequestHeaders): Promise<UserI
     }
 }
 
+function getOktaStageParameters(stage: string): OktaStageParameters {
+    if (stage === "PROD") {
+        return {
+            issuer: 'https://profile.theguardian.com/oauth2/aus3xgj525jYQRowl417',
+            expectedAud: "https://profile.theguardian.com/",
+            scope: "guardian.mobile-purchases-api.update.self"
+        }
+    } else {
+        return {
+            issuer: 'https://profile.code.dev-theguardian.com/oauth2/aus3v9gla95Toj0EE0x7',
+            expectedAud: "https://profile.code.dev-theguardian.com/",
+            scope: "guardian.mobile-purchases-api.update.self"
+        }
+    }
+}
+
 async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdResolution> {
     try {
         const OktaJwtVerifier = require('@okta/jwt-verifier');
         
-        var ISSUER      = 'https://profile.code.dev-theguardian.com/oauth2/aus3v9gla95Toj0EE0x7'
-        var expectedAud = "https://profile.code.dev-theguardian.com/";
-        var scope       = "guardian.mobile-purchases-api.update.self"
+        const oktaparams = getOktaStageParameters(Stage);
 
-        if (Stage === "PROD") {
-            ISSUER      = 'https://profile.theguardian.com/oauth2/aus3xgj525jYQRowl417'
-            expectedAud = "https://profile.theguardian.com/";
-            scope       = "guardian.mobile-purchases-api.update.self"
-        }
+        const issuer      = oktaparams.issuer;
+        const expectedAud = oktaparams.expectedAud;
+        const scope       = oktaparams.scope;
 
         const oktaJwtVerifier = new OktaJwtVerifier({
-            issuer: ISSUER,
+            issuer: issuer,
           });
         
         const accessTokenString = getAuthToken(headers);
