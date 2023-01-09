@@ -1,5 +1,6 @@
 import {HttpRequestHeaders} from "../models/apiGatewayHttp";
 import {restClient} from "./restClient";
+import {Stage} from "../utils/appIdentity";
 
 interface UserId {
     id: string
@@ -51,15 +52,19 @@ async function getUserId_OldIdentity(headers: HttpRequestHeaders): Promise<UserI
 async function getUserId_NewOkta(headers: HttpRequestHeaders): Promise<UserIdResolution> {
     try {
         const OktaJwtVerifier = require('@okta/jwt-verifier');
-
-        const ISSUER      = 'https://profile.code.dev-theguardian.com/oauth2/aus3v9gla95Toj0EE0x7'
-        const CLIENT_ID   = "0oa4iyjx692Aj8SlZ0x7"
-        const expectedAud = "https://profile.code.dev-theguardian.com/";
-        const scope       = "guardian.mobile-purchases-api.update.self"
         
+        var ISSUER      = 'https://profile.code.dev-theguardian.com/oauth2/aus3v9gla95Toj0EE0x7'
+        var expectedAud = "https://profile.code.dev-theguardian.com/";
+        var scope       = "guardian.mobile-purchases-api.update.self"
+
+        if (Stage === "PROD") {
+            ISSUER      = 'https://profile.theguardian.com/oauth2/aus3xgj525jYQRowl417'
+            expectedAud = "https://profile.theguardian.com/";
+            scope       = "guardian.mobile-purchases-api.update.self"
+        }
+
         const oktaJwtVerifier = new OktaJwtVerifier({
             issuer: ISSUER,
-            clientId: CLIENT_ID,
           });
         
         const accessTokenString = getAuthToken(headers);
