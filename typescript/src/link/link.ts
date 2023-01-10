@@ -1,5 +1,4 @@
 import {HTTPResponses} from '../models/apiGatewayHttp';
-
 import {UserSubscription} from "../models/userSubscription";
 import {ReadSubscription} from "../models/subscription";
 import {dynamoMapper, sqs} from "../utils/aws";
@@ -8,6 +7,7 @@ import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
 import {ProcessingError} from "../models/processingError";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {UserIdResolution} from "../utils/guIdentityApi"
 
 export interface SubscriptionCheckData {
     subscriptionId: string
@@ -67,17 +67,24 @@ export async function parseAndStoreLink<A, B>(
 ): Promise<APIGatewayProxyResult> {
     try {
         if (httpRequest.headers && getAuthToken(httpRequest.headers)) {
-
             const payload: A = parsePayload(httpRequest);
-            const userId = await getUserId(httpRequest.headers);
-            if (userId) {
-                const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
-                const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
-                console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
-
-                return HTTPResponses.OK;
-            } else {
-                return HTTPResponses.UNAUTHORISED;
+            const resolution: UserIdResolution = await getUserId(httpRequest.headers);
+            switch(resolution.status) {
+                case "incorrect-token": {
+                    return HTTPResponses.UNAUTHORISED;
+                }
+                case "incorrect-scope": {
+                    return HTTPResponses.FORBIDDEN;
+                }
+                case "missing-identity-id": {
+                    return HTTPResponses.INVALID_REQUEST;
+                }
+                case "success": {
+                    const insertCount = await persistUserSubscriptionLinks(toUserSubscription((resolution.userId as string), payload));
+                    const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
+                    console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
+                    return HTTPResponses.OK;
+                }
             }
         } else {
             return HTTPResponses.INVALID_REQUEST

@@ -3,7 +3,7 @@ import {HTTPResponses} from "../models/apiGatewayHttp";
 import {Subscription, ReadSubscription} from "../models/subscription";
 import {ReadUserSubscription} from "../models/userSubscription";
 import {dynamoMapper} from "../utils/aws"
-import {getUserId, getAuthToken} from "../utils/guIdentityApi";
+import {getUserId, getAuthToken, UserIdResolution} from "../utils/guIdentityApi";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {plusDays} from "../utils/dates";
 import {getConfigValue} from "../utils/ssmConfig";
@@ -93,11 +93,21 @@ export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGat
                 return HTTPResponses.INVALID_REQUEST;
             }
         } else {
-            const response = await getUserId(httpRequest.headers);
-            if (response) {
-                userId = response;
-            } else {
-                return HTTPResponses.UNAUTHORISED;
+            const resolution: UserIdResolution = await getUserId(httpRequest.headers);
+            switch(resolution.status) {
+                case "incorrect-token": {
+                    return HTTPResponses.UNAUTHORISED;
+                }
+                case "incorrect-scope": {
+                    return HTTPResponses.FORBIDDEN;
+                }
+                case "missing-identity-id": {
+                    return HTTPResponses.INVALID_REQUEST;
+                }
+                case "success": {
+                    userId = (resolution.userId as string)
+                    break;
+                }
             }
         }
 
