@@ -56,7 +56,7 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
                 console.log(`Failed to establish expiry time of subscription`);
                 return HTTPResponses.NOT_FOUND;
             }
-        } catch (error) {
+        } catch (error: any) {
             if (error.statusCode === 410) {
                 console.log(`Purchase expired a very long time ago`);
                 return HTTPResponses.NOT_FOUND;

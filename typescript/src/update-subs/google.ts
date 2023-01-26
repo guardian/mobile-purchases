@@ -16,7 +16,7 @@ async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> 
     let response;
     try {
         response = await fetchGoogleSubscription(sub.subscriptionId, sub.purchaseToken, sub.packageName);
-    } catch (exception) {
+    } catch (exception: any) {
         if (exception.statusCode === 410) {
             console.log(`Purchase expired a very long time ago, ignoring`);
             return [];
