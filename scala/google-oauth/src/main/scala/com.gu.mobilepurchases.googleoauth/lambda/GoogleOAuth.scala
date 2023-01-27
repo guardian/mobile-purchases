@@ -48,7 +48,7 @@ object GoogleOAuth {
       case Success(identity) => ConfigurationLoader.load(identity, credentialsProvider) {
         case AwsIdentity(_, _, stage, _) => SSMConfigurationLocation(s"/mobile-purchases/$stage/google-oauth-lambda", "eu-west-1")
       }
-      case Failure(_) => throw new Exception("Could not retrieve configuration")
+      case Failure(cause) => throw new Exception(s"Could not fetch configuration, cause: ${cause.getMessage}")
     }
   }
 
