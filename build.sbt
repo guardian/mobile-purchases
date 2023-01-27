@@ -6,7 +6,7 @@ import scala.collection.immutable
 
 val testAndCompileDependencies: String = "test->test;compile->compile"
 val awsVersion: String = "1.11.375"
-val simpleConfigurationVersion: String = "1.5.5"
+val simpleConfigurationVersion: String = "1.5.7"
 
 val jacksonData: String = "2.13.3"
 
