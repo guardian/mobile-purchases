@@ -97,7 +97,7 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
       "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-      "com.gu" %% "scanamo" % "1.0.0-M6",
+      "org.scanamo" %% "scanamo" % "1.0.0-M23",
       "com.gu" %% "simple-configuration-core" % simpleConfigurationVersion,
       "org.specs2" %% "specs2-core" % specsVersion % "test",
       "org.specs2" %% "specs2-scalacheck" % specsVersion % "test",
