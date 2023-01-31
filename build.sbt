@@ -108,14 +108,13 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
     organization := "com.gu",
     description := "Validate Receipts",
     version := "1.0",
-    scalaVersion := "2.12.17",
+    scalaVersion := "2.13.0",
     scalacOptions ++= Seq(
       "-deprecation",
       "-encoding", "UTF-8",
       "-target:jvm-1.8",
       "-Ywarn-dead-code",
       "-Xfatal-warnings",
-      "-Ypartial-unification"
     )
 
   )
