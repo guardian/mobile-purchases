@@ -73,7 +73,7 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
   assemblyJarName := s"${name.value}.jar"
 )
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
-  val specsVersion: String = "4.0.3"
+  val specsVersion: String = "4.19.2" // Not possible to upgrade to 5.*.* unless moving to Scala 3.
   val log4j2Version: String = "2.17.1"
   val jacksonVersion: String = "2.13.3"
   val upgradeTransitiveDependencies = Seq(
