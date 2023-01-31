@@ -36,7 +36,7 @@ object GoogleOAuth {
 
   def refreshToken: Try[AccessToken] = Try {
     val credentials = GoogleCredentials
-      .fromStream(new ByteArrayInputStream(fetchConfiguration.getString("google.serviceAccountJson").getBytes))
+      .fromStream(new ByteArrayInputStream(fetchConfiguration().getString("google.serviceAccountJson").getBytes))
       .createScoped("https://www.googleapis.com/auth/androidpublisher")
     credentials.refresh()
     credentials.getAccessToken

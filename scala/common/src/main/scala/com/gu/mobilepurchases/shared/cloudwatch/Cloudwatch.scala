@@ -29,8 +29,8 @@ trait CloudWatchPublisher {
 trait CloudWatch extends CloudWatchMetrics with CloudWatchPublisher
 
 sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Instant = Instant.now()) {
-  def succeed = cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds, start)
-  def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(start, Instant.now()).toMillis, StandardUnit.Milliseconds, start)
+  def succeed = cloudWatch.queueMetric(s"$metricName-success", Duration.between(start, Instant.now()).toMillis.toDouble, StandardUnit.Milliseconds, start)
+  def fail = cloudWatch.queueMetric(s"$metricName-fail", Duration.between(start, Instant.now()).toMillis.toDouble, StandardUnit.Milliseconds, start)
 
 }
 
@@ -55,7 +55,7 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsyn
       val request: PutMetricDataRequest = new PutMetricDataRequest()
         .withNamespace(s"mobile-purchases/$stage/$lambdaname")
         .withMetricData(bufferOfMetrics)
-      val promise: Promise[PutMetricDataResult] = Promise[PutMetricDataResult]
+      val promise: Promise[PutMetricDataResult] = Promise[PutMetricDataResult]()
       val value: AsyncHandler[PutMetricDataRequest, PutMetricDataResult] = new AsyncHandler[PutMetricDataRequest, PutMetricDataResult] {
         override def onError(exception: Exception): Unit = promise.failure(exception)
         override def onSuccess(request: PutMetricDataRequest, result: PutMetricDataResult): Unit = {
