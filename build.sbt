@@ -36,7 +36,7 @@ lazy val root = project
   .aggregate(common, googleOauth)
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
-    scalaVersion := "2.12.5",
+    scalaVersion := "2.12.17",
     name := "mobile-purchases",
     riffRaffPackageType := file(".nothing"),
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
