@@ -12,6 +12,8 @@ val jacksonData: String = "2.13.3"
 
 val scalaRoot = file("scala")
 
+scalaVersion := "2.13.10"
+
 lazy val common = project.in(scalaRoot / "common")
   .disablePlugins(AssemblyPlugin)
   .settings(commonSettings("common"), libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData)
@@ -36,7 +38,6 @@ lazy val root = project
   .aggregate(common, googleOauth)
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
-    scalaVersion := "2.12.5",
     name := "mobile-purchases",
     riffRaffPackageType := file(".nothing"),
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
@@ -108,7 +109,6 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
     organization := "com.gu",
     description := "Validate Receipts",
     version := "1.0",
-    scalaVersion := "2.13.10",
     scalacOptions ++= Seq(
       "-deprecation",
       "-encoding", "UTF-8",
