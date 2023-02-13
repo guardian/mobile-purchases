@@ -114,5 +114,5 @@ export async function handler(params: {date: string, maxMessagesToFetch?: number
     await deleteAllSqsMessages(sqsUrl, msgToDelete);
     console.log(`Deleted ${msgToDelete.length} messages from the SQS queue`);
 
-    return {date: yesterday, recordCount: totalMsgCount};
+    return {date: yesterday, recordCount: totalMsgCount, processedCount: processedMsgCount};
 }
