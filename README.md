@@ -29,7 +29,7 @@ These three tables are exported daily to the datalake.
   
 ## Running typescript lambdas locally
 
-We're using [Typescript](https://www.typescriptlang.org/) to develop this project and it's useful to be able to test these locally, without having to resubmit a build and deploy to the cloud. 
+We're using [TypeScript](https://www.typescriptlang.org/) to develop this project and it's useful to be able to test these locally, without having to resubmit a build and deploy to the cloud. 
 
 To avoid committing test data locally a test-launcher is provided to run a lambda locally, that will only read a file in a directory that's configured to not commit anything.
 
