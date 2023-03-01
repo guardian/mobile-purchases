@@ -104,8 +104,21 @@ export async function postConsent(identityId: string, identityToken: string): Pr
             'Content-type': 'application/json',
         }
     }
-    await fetch(url, params);
-    return true;
+    try {
+        return fetch(url, params)
+            .then((response) => {
+                if (response.status == 200) {
+                    return true;
+                } else {
+                    console.warn(`Warning, status: ${response.status}, while posting consent data for user ${identityId}`);
+                    return false
+                }
+            })
+    } catch (error) {
+        console.warn(`Error while posting consent data for user ${identityId}`);
+        console.warn(error);
+        return Promise.resolve(false);
+    }
 }
 
 /*
