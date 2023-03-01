@@ -73,15 +73,16 @@ async function getSubscriptions(subscriptionIds: string[]) : Promise<Subscriptio
     }
 }
 
-async function apiKeyConfig(): Promise<string[]> {
+async function apiKeysConfig(): Promise<string[]> {
     // returning an array just in case we get more than one client one day
-    const apiKey = await getConfigValue<string>("user.api-key.0");
-    return [apiKey]
+    const apiKey0Default = await getConfigValue<string>("user.api-key.0");
+    const apiKey1Salesforce = await getConfigValue<string>("user.api-key.1.salesforce");
+    return [apiKey0Default, apiKey1Salesforce]
 }
 
 export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     try {
-        const apiKeys = await apiKeyConfig();
+        const apiKeys = await apiKeysConfig();
         const authToken = getAuthToken(httpRequest.headers);
 
         let userId: string;
