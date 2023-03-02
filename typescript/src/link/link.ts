@@ -135,13 +135,13 @@ export async function postConsent(identityId: string, identityToken: string): Pr
         /google/linkToSubscriptions
         /google/linkToSubscriptions
 
-    This change is... temporary and a stepping store to what is going to be version 1.5
+    This change is... temporary and a stepping stone to what is going to be version 1.5
     and then later on version 2.
 
-    Some code have been added to this file to support this (temporary feature). The entry
+    Some code have been added to this file to support this (temporary) feature. The entry
     point is what is labelled "Soft Opt-In version 1" in parseAndStoreLink.
 
-    This will clearly identity the code that needs to be modified, cleaned up later.
+    This will clearly identify the code that needs to be modified, cleaned up later.
 */
 
 export async function parseAndStoreLink<A, B>(
