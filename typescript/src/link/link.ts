@@ -71,23 +71,23 @@ interface IdentityResponse {
 }
 
 function consentPayload(): any {
-    [
-        {
-           "id" : "guardian_weekly_newsletter",
-           "consented" : false
-         },
-         {
-           "id" : "similar_guardian_products",
-           "consented" : true
-         },
-         {
-           "id" : "subscriber_preview",
-           "consented" : true
-         },
-         {
-           "id" : "supporter_newsletter",
-           "consented" : true
-         }
+   [
+    {
+       "id" : "your_support_onboarding",
+       "consented" : true
+     },
+     {
+       "id" : "similar_guardian_products",
+       "consented" : true
+     },
+     {
+       "id" : "digital_subscriber_preview",
+       "consented" : true
+     },
+     {
+       "id" : "supporter_newsletter",
+       "consented" : true
+     }
    ]
 }
 
