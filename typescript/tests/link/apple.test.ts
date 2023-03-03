@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
-import { parseAppleLinkPayload } from "../../src/link/apple"
+import { parseAppleLinkPayload } from "../../src/link/apple-utils"
 
 describe("The apple link service", () => {
   test("Should deduplicate originalTransactionIds", () => {
