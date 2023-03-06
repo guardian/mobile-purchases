@@ -7,7 +7,6 @@ import S3 from 'aws-sdk/clients/s3';
 import {PromiseResult} from "aws-sdk/lib/request";
 import SSM = require("aws-sdk/clients/ssm");
 
-
 const credentialProvider = new CredentialProviderChain([
     function () { return new ECSCredentials(); },
     function () { return new SharedIniFileCredentials({
@@ -37,7 +36,6 @@ export const ssm: SSM  = new SSM({
     credentialProvider: credentialProvider
 });
 
-
 export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
     return sqs.sendMessage({
         QueueUrl: queueUrl,
@@ -45,6 +43,3 @@ export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): 
         DelaySeconds: delaySeconds
     }).promise()
 }
-
-
-
