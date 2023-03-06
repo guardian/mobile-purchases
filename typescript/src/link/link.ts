@@ -81,10 +81,6 @@ function consentPayload(): any {
        "consented" : true
      },
      {
-       "id" : "digital_subscriber_preview",
-       "consented" : true
-     },
-     {
        "id" : "supporter_newsletter",
        "consented" : true
      }
