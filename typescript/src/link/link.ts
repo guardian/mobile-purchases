@@ -140,6 +140,16 @@ export async function postConsent(identityId: string, identityToken: string): Pr
     This will clearly identify the code that needs to be modified, cleaned up later.
 */
 
+const soft_opt_in_v1_active: boolean = false;
+
+/*
+    Date: March 2023, 6th
+    Author: Pascal
+
+    Introduced the `soft_opt_in_v1_5_active` variable above to guard against
+    the effect as this goes to the main branch. When we go live, just remove the check.
+*/
+
 export async function parseAndStoreLink<A, B>(
     httpRequest: APIGatewayProxyEvent,
     parsePayload: (request: APIGatewayProxyEvent) => A,
@@ -167,13 +177,12 @@ export async function parseAndStoreLink<A, B>(
                     const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
                     console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
 
-                    // ---------------------------------------
-                    // Soft Opt-In version 1
-                    const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
-                    await postConsent(userId, userAuthenticationToken)
-                    console.log(`Posted consent data for user ${userId}`);
-                    // ---------------------------------------
-
+                    if (soft_opt_in_v1_active) {
+                        // Soft Opt-In version 1
+                        const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
+                        await postConsent(userId, userAuthenticationToken)
+                        console.log(`Posted consent data for user ${userId}`);
+                    }
                     return HTTPResponses.OK;
                 }
             }
