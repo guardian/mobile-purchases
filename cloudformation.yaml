@@ -939,6 +939,41 @@ Resources:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
 
+  SoftOptInAcquisitionLambdasRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - cloudwatch:putMetricData
+              Resource: "*"
+        - PolicyName: dynamoStream
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - "dynamodb:GetRecords"
+                - "dynamodb:GetShardIterator"
+                - "dynamodb:DescribeStream"
+                - "dynamodb:ListStreams"
+              Resource:
+                - Fn::ImportValue:
+                    !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -978,6 +1013,37 @@ Resources:
                 - "sqs:SendMessage"
               Resource:
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-subscriptions-to-fetch
+
+  SoftOptInAcquisitionsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: soft-opt-ins.acquisitionsHandler
+      Runtime: nodejs14.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-soft-opt-in-acquisitions/soft-opt-in-acquisitions.zip
+      FunctionName: !Sub ${App}-soft-opt-in-acquisitions-${Stage}
+      Role: !GetAtt DeleteUserLinkLambdasRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: asdf
+      MemorySize: 512
+      Timeout: 60
+      Events:
+        Schedule:
+          Type: DynamoDB
+          Properties:
+            Stream:
+              Fn::ImportValue:
+                !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+            StartingPosition: LATEST
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
 
   DeleteUserSubscriptionLambda:
     Type: AWS::Serverless::Function
