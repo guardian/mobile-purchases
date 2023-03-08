@@ -87,7 +87,7 @@ function consentPayload(): any {
    ]
 }
 
-export async function postConsent(identityId: string, identityToken: string): Promise<boolean> {
+async function postSoftOptInConsent(identityId: string, identityToken: string): Promise<boolean> {
     var url = `http://idapi.code.dev-theguardian.com/${identityId}/consents`
     if (Stage === "PROD") {
         url = `https://idapi.theguardian.com/user/${identityId}/consents`
@@ -117,28 +117,15 @@ export async function postConsent(identityId: string, identityToken: string): Pr
     }
 }
 
-/*
+async function shouldPostSoftOptInConsent(subscriptionId: string): Promise<boolean> {
+    // Write code....
+    return Promise.resolve(false);
+}
 
-    Date: March 2023, 1st
-    Author: Pascal
-
-    At the time these lines are written the Engine team and friends from Retention are
-    working on the Soft Opt-In project, and more exactly what is known as "version/stage 1"
-    of that project.
-
-    The effect for mobile-purchases, is that we are asked to send a payload to the identity API
-    for each acquisition notification from the users mobile apps hitting the endpoints
-        /google/linkToSubscriptions
-        /google/linkToSubscriptions
-
-    This change is... temporary and a stepping stone to what is going to be version 1.5
-    and then later on version 2.
-
-    Some code have been added to this file to support this (temporary) feature. The entry
-    point is what is labelled "Soft Opt-In version 1" in parseAndStoreLink.
-
-    This will clearly identify the code that needs to be modified, cleaned up later.
-*/
+async function updateDynamoTable(subcriptionId: string): Promise<null> {
+    // Write code....
+    return Promise.resolve(null);
+}
 
 const soft_opt_in_v1_active: boolean = false;
 
@@ -146,8 +133,8 @@ const soft_opt_in_v1_active: boolean = false;
     Date: March 2023, 6th
     Author: Pascal
 
-    Introduced the `soft_opt_in_v1_5_active` variable above to guard against
-    the effect as this goes to the main branch. When we go live, just remove the check.
+    Introduced the `soft_opt_in_v1_active` variable above to guard against
+    the effect of the Soft Opt In patch code until it's time to go live.
 */
 
 export async function parseAndStoreLink<A, B>(
@@ -178,11 +165,66 @@ export async function parseAndStoreLink<A, B>(
                     console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
 
                     if (soft_opt_in_v1_active) {
-                        // Soft Opt-In version 1
-                        const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
-                        await postConsent(userId, userAuthenticationToken)
-                        console.log(`Posted consent data for user ${userId}`);
+
+                        /*
+
+                            Soft Opt-In project (version 1)
+
+                            Date: March 2023, 1st
+                            Author: Pascal
+
+                            ### Context
+
+                            At the time these lines are written the Engine team and friends from Retention are
+                            working on the Soft Opt-In project, and more exactly what is known as "version/stage 1"
+                            of that project.
+
+                            The effect for mobile-purchases, is that we are asked to send a payload to the identity API
+                            for each acquisition notification from the users mobile apps hitting the endpoints
+                                /google/linkToSubscriptions
+                                /google/linkToSubscriptions
+
+                            This change is... temporary and a stepping stone to what is going to be version 1.5
+                            and then later on version 2.
+
+                            ### Specifications
+
+                            In this current HTTP request we have a contextual user (corresponding to the userId
+                            which was extracted during authentication) as well as an array of subscriptions from the
+                            request payload. We have the requirement to
+
+                            """
+                            look up soft opt in consent status for each
+                            subscription and only post consent data against the user if for one of those subscriptions
+                            that look up return the right value.
+                            """
+
+                            The type of the payload depends on the platform. It's AppleLinkPayload for iOS
+                            and GoogleLinkPayload for android. Working from the payload here would not be
+                            practical, but since we are only after the subscriptionId, we can read it in both cases
+                            from a UserSubscription.
+
+                            Note that toUserSubscription(userId, payload) return an array of such subscriptions
+                        */
+
+                        // We want reading in sequence from here:
+                        // https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
+
+                        var consent_data_has_been_posted = false;
+
+                        for (const subscription of toUserSubscription(userId, payload)){
+                            if (!consent_data_has_been_posted) {
+                                if (await shouldPostSoftOptInConsent(subscription.subscriptionId)) {
+                                    const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
+                                    await postSoftOptInConsent(userId, userAuthenticationToken)
+                                    console.log(`Posted consent data for user ${userId}`);
+                                    await updateDynamoTable(subscription.subscriptionId)
+                                    consent_data_has_been_posted = true
+                                }
+                            }
+                        }
                     }
+
                     return HTTPResponses.OK;
                 }
             }
