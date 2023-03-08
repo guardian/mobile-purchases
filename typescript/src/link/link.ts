@@ -210,15 +210,15 @@ export async function parseAndStoreLink<A, B>(
                         // We want reading in sequence from here:
                         // https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
 
+                        const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
                         var consent_data_has_been_posted = false;
 
                         for (const subscription of toUserSubscription(userId, payload)){
                             if (!consent_data_has_been_posted) {
                                 if (await shouldPostSoftOptInConsent(subscription.subscriptionId)) {
-                                    const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
-                                    await postSoftOptInConsent(userId, userAuthenticationToken)
+                                    await postSoftOptInConsent(userId, userAuthenticationToken);
                                     console.log(`Posted consent data for user ${userId}`);
-                                    await updateDynamoTable(subscription.subscriptionId)
+                                    await updateDynamoTable(subscription.subscriptionId);
                                     consent_data_has_been_posted = true
                                 }
                             }
