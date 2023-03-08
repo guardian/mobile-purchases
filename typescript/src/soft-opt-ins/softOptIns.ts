@@ -1,6 +1,15 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
+import {dynamoMapper} from "../utils/aws";
+import {ReadUserSubscription} from "../models/userSubscription";
 
 async function processAcquisition(record: any): Promise<void> {
+    const subscriptionId = record.dynamodb.Keys.subscriptionId.S ?? "";
+
+    // fetch the subscription record from the `subscriptions` table as we need to get the acquisition date of the sub to know when to send WelcomeDay0 email
+    const sub = await dynamoMapper.query(ReadUserSubscription, {subscriptionId}, {indexName: "subscriptionId"});
+
+    // Send welcomeday0 email if sub's `start_timestamp` property is in a given time window
+
     // pascals idapi code here
 }
 
