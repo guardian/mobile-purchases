@@ -122,7 +122,7 @@ async function shouldPostSoftOptInConsent(subscriptionId: string): Promise<boole
     return Promise.resolve(false);
 }
 
-async function updateDynamoTable(subcriptionId: string): Promise<null> {
+async function updateDynamoTable(subcriptionIds: string[]): Promise<null> {
     // Write code....
     return Promise.resolve(null);
 }
@@ -190,14 +190,13 @@ export async function parseAndStoreLink<A, B>(
                             ### Specifications
 
                             In this current HTTP request we have a contextual user (corresponding to the userId
-                            which was extracted during authentication) as well as an array of subscriptions from the
-                            request payload. We have the requirement to
+                            which was extracted during authentication) as well as an array of subscriptions
+                            from the request payload. We want to update the dynamo table with soft opt in
+                            information for the subscriptions that have not yet been soft opted in, and we
+                            also post a consent object to the Identity API (once) if at least one of those
+                            subscriptions needed to be soft opted in.
 
-                            """
-                            look up soft opt in consent status for each
-                            subscription and only post consent data against the user if for one of those subscriptions
-                            that look up return the right value.
-                            """
+                            ### Implementation details.
 
                             The type of the payload depends on the platform. It's AppleLinkPayload for iOS
                             and GoogleLinkPayload for android. Working from the payload here would not be
@@ -211,18 +210,21 @@ export async function parseAndStoreLink<A, B>(
                         // https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
 
                         const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
-                        var consent_data_has_been_posted = false;
+                        var subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
+                        var subscriptionsToUpdate: string[] = [];
 
-                        for (const subscription of toUserSubscription(userId, payload)){
-                            if (!consent_data_has_been_posted) {
-                                if (await shouldPostSoftOptInConsent(subscription.subscriptionId)) {
-                                    await postSoftOptInConsent(userId, userAuthenticationToken);
-                                    console.log(`Posted consent data for user ${userId}`);
-                                    await updateDynamoTable(subscription.subscriptionId);
-                                    consent_data_has_been_posted = true
-                                }
+                        for (const subscription of subscriptionsFromHttpPayload){
+                            if (await shouldPostSoftOptInConsent(subscription.subscriptionId)) {
+                                subscriptionsToUpdate.push(subscription.subscriptionId);
                             }
                         }
+                        if (subscriptionsToUpdate.length > 0) {
+                            await postSoftOptInConsent(userId, userAuthenticationToken);
+                            console.log(`Posted consent data for user ${userId}`);
+                            await updateDynamoTable(subscriptionsToUpdate);
+                        }
+
+                        // Todo: write test.
                     }
 
                     return HTTPResponses.OK;
