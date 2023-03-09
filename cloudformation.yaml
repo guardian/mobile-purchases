@@ -939,6 +939,13 @@ Resources:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
 
+  SoftOptInsPostAcquisition:
+    Type: AWS::SQS::Queue
+    Description: "This is a queue"
+    Properties:
+      VisibilityTimeout: 3000
+      QueueName: !Sub soft-opt-ins-post-acquisition-sign-in-${Stage}
+
   SoftOptInAcquisitionLambdasRole:
     Type: AWS::IAM::Role
     Properties:

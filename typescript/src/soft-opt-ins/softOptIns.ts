@@ -1,28 +1,36 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
-import {dynamoMapper} from "../utils/aws";
+import {dynamoMapper, sendToSqs} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
+import {postConsent} from "../link/link";
+import {getAuthToken} from "../utils/guIdentityApi";
+import {getConfigValue} from "../utils/ssmConfig";
 
 async function processAcquisition(record: any): Promise<void> {
-    const subscriptionId = record.dynamodb.Keys.subscriptionId.S ?? "";
+    const apiKey1Salesforce = await getConfigValue<string>("user.api-key.1.salesforce");
+
+    const identityId = record?.dynamodb?.Keys?.userId?.S;
+    const subscriptionId = record?.dynamodb?.Keys?.subscriptionId?.S;
 
     // fetch the subscription record from the `subscriptions` table as we need to get the acquisition date of the sub to know when to send WelcomeDay0 email
     const records = dynamoMapper.query(ReadSubscription, {subscriptionId}, {indexName: "subscriptionId"});
 
-    const oneDayInMilliseconds = 24 * 60 * 60 * 1000;
+    const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
 
     for await (const record of records) {
-        // pascals idapi code here
+        postConsent(identityId, apiKey1Salesforce);
 
-        const timestampDate = new Date(record.startTimestamp);
+        const acquisitionDate = new Date(record.startTimestamp);
         const todayDate = new Date();
 
-        if ((todayDate.getTime() - timestampDate.getTime()) >= oneDayInMilliseconds) {
-            // send welcomeday0 email
+        if ((todayDate.getTime() - acquisitionDate.getTime()) >= twoDaysInMilliseconds) {
+            sendToSqs("subs-welcome-email", {
+                To:{Address:"example@gmail.com",
+                    ContactAttributes:{SubscriberAttributes: {}}},
+                DataExtensionName:"SV_PA_SOINotification",
+                SfContactId:"sfContactId",
+                IdentityUserId: identityId})
         }
     }
-
-    // FOR V1: check acquisition date equals today
-    // For V2+: Send welcomeday0 email if sub's `start_timestamp` property is in a given time window
 }
 
 export async function acquisitionHandler(event: DynamoDBStreamEvent): Promise<any> {
