@@ -181,7 +181,7 @@ export async function parseAndStoreLink<A, B>(
 
                             The effect for mobile-purchases, is that we are asked to send a payload to the identity API
                             for each acquisition notification from the users mobile apps hitting the endpoints
-                                /google/linkToSubscriptions
+                                /apple/linkToSubscriptions
                                 /google/linkToSubscriptions
 
                             This change is... temporary and a stepping stone to what is going to be version 1.5
