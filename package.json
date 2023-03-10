@@ -35,7 +35,7 @@
     "@guardian/types": "^9.0.1",
     "@okta/jwt-verifier": "^3.0.1",
     "@types/aws-lambda": "8.10.111",
-    "@types/node": "^18.14.6",
+    "@types/node": "^18.15.0",
     "aws-sdk": "^2.1331.0",
     "node-fetch": "^3.3.0",
     "source-map-support": "^0.5.21",
