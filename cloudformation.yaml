@@ -1030,7 +1030,7 @@ Resources:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-soft-opt-in-acquisitions/soft-opt-in-acquisitions.zip
       FunctionName: !Sub ${App}-soft-opt-in-acquisitions-${Stage}
-      Role: !GetAtt DeleteUserLinkLambdasRole.Arn
+      Role: !GetAtt SoftOptInAcquisitionLambdasRole.Arn
       Environment:
         Variables:
           App: !Sub ${App}
