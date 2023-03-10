@@ -117,14 +117,19 @@ async function postSoftOptInConsent(identityId: string, identityToken: string): 
     }
 }
 
-async function shouldPostSoftOptInConsent(subscriptionId: string): Promise<boolean> {
-    // Check for query parameters
+function softOptInQueryParameterIsPresent(): boolean {
+    // Pascal's code: check for query parameter
     // soft-opt-in-notifcation-shown=true
+    return false
+}
+
+async function dynamoDbLookupAndSubscriptionHasNotBeenSoftedOptedIn(subscriptionId: string): Promise<boolean> {
+    // Jon's code: check that we need to soft opt in this one subscription
     return Promise.resolve(false);
 }
 
 async function updateDynamoTable(subcriptionIds: string[]): Promise<null> {
-    // Jon to write code or call his implementation from here
+    // Jon's code: dynamo db update the all the subscriptions given as argument 
     return Promise.resolve(null);
 }
 
@@ -215,19 +220,21 @@ export async function parseAndStoreLink<A, B>(
                         // We want reading in sequence from here:
                         // https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
 
-                        const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
-                        var subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
-                        var subscriptionsToUpdate: string[] = [];
-
-                        for (const subscription of subscriptionsFromHttpPayload){
-                            if (await shouldPostSoftOptInConsent(subscription.subscriptionId)) {
-                                subscriptionsToUpdate.push(subscription.subscriptionId);
+                        if (softOptInQueryParameterIsPresent()) {
+                            const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
+                            var subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
+                            var subscriptionsToUpdate: string[] = [];
+    
+                            for (const subscription of subscriptionsFromHttpPayload){
+                                if (await dynamoDbLookupAndSubscriptionHasNotBeenSoftedOptedIn(subscription.subscriptionId)) {
+                                    subscriptionsToUpdate.push(subscription.subscriptionId);
+                                }
                             }
-                        }
-                        if (subscriptionsToUpdate.length > 0) {
-                            await postSoftOptInConsent(userId, userAuthenticationToken);
-                            console.log(`Posted consent data for user ${userId}`);
-                            await updateDynamoTable(subscriptionsToUpdate);
+                            if (subscriptionsToUpdate.length > 0) {
+                                await postSoftOptInConsent(userId, userAuthenticationToken);
+                                console.log(`Posted consent data for user ${userId}`);
+                                await updateDynamoTable(subscriptionsToUpdate);
+                            }
                         }
 
                         // Todo: write test.
