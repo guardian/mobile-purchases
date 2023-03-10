@@ -1,7 +1,7 @@
 import {HTTPResponses} from '../models/apiGatewayHttp';
 import {UserSubscription} from "../models/userSubscription";
 import {ReadSubscription} from "../models/subscription";
-import {dynamoMapper, sqs} from "../utils/aws";
+import {dynamoMapper, sendToSqs, sqs} from "../utils/aws";
 import {getUserId, getAuthToken} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
@@ -220,19 +220,23 @@ export async function parseAndStoreLink<A, B>(
                         // We want reading in sequence from here:
                         // https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
 
+                        /*
+                         Handle post-acquisition sign-ins here!
+                         */
+
                         if (softOptInQueryParameterIsPresent()) {
                             const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
                             var subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
+
+                            // why would this ever be empty?
                             var subscriptionsToUpdate: string[] = [];
-    
-                            for (const subscription of subscriptionsFromHttpPayload){
-                                if (await dynamoDbLookupAndSubscriptionHasNotBeenSoftedOptedIn(subscription.subscriptionId)) {
-                                    subscriptionsToUpdate.push(subscription.subscriptionId);
-                                }
-                            }
+
+                            // we set soft opt-ins regardless
                             if (subscriptionsToUpdate.length > 0) {
                                 await postSoftOptInConsent(userId, userAuthenticationToken);
                                 console.log(`Posted consent data for user ${userId}`);
+
+                                // add logging to table
                                 await updateDynamoTable(subscriptionsToUpdate);
                             }
                         }
