@@ -10,6 +10,7 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {UserIdResolution} from "../utils/guIdentityApi"
 import {Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
+import {SoftOptInLog} from "../models/softOptInLogging";
 
 export interface SubscriptionCheckData {
     subscriptionId: string
@@ -87,7 +88,7 @@ function consentPayload(): any {
    ]
 }
 
-async function postSoftOptInConsent(identityId: string, identityToken: string): Promise<boolean> {
+async function postSoftOptInConsentToIdentityAPI(identityId: string, identityToken: string): Promise<boolean> {
     var url = `http://idapi.code.dev-theguardian.com/${identityId}/consents`
     if (Stage === "PROD") {
         url = `https://idapi.theguardian.com/user/${identityId}/consents`
@@ -123,14 +124,10 @@ function softOptInQueryParameterIsPresent(): boolean {
     return false
 }
 
-async function dynamoDbLookupAndSubscriptionHasNotBeenSoftedOptedIn(subscriptionId: string): Promise<boolean> {
-    // Jon's code: check that we need to soft opt in this one subscription
-    return Promise.resolve(false);
-}
-
-async function updateDynamoTable(subcriptionIds: string[]): Promise<null> {
-    // Jon's code: dynamo db update the all the subscriptions given as argument 
-    return Promise.resolve(null);
+function updateDynamoLoggingTable(subcriptionIds: string[], identityId: string) {
+    const timestamp = new Date().getTime();
+    const record = new SoftOptInLog(identityId, "V1 - no subscription Id", timestamp, "Soft opt-ins processed for acquisition");
+    return dynamoMapper.put({item: record})
 }
 
 const soft_opt_in_v1_active: boolean = false;
@@ -226,18 +223,16 @@ export async function parseAndStoreLink<A, B>(
 
                         if (softOptInQueryParameterIsPresent()) {
                             const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
-                            var subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
+                            const subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
 
-                            // why would this ever be empty?
-                            var subscriptionsToUpdate: string[] = [];
-
-                            // we set soft opt-ins regardless
-                            if (subscriptionsToUpdate.length > 0) {
-                                await postSoftOptInConsent(userId, userAuthenticationToken);
+                            if (subscriptionsFromHttpPayload.length > 0) {
+                                await postSoftOptInConsentToIdentityAPI(userId, userAuthenticationToken);
                                 console.log(`Posted consent data for user ${userId}`);
 
-                                // add logging to table
-                                await updateDynamoTable(subscriptionsToUpdate);
+                                await updateDynamoLoggingTable(subscriptionsFromHttpPayload.map(rec => rec.subscriptionId), userId);
+                                console.log(`Logged soft opt-in setting to Dynamo`)
+                            } else {
+                                // No subscriptions were found in link table!!
                             }
                         }
 
