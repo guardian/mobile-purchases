@@ -118,12 +118,13 @@ async function postSoftOptInConsent(identityId: string, identityToken: string): 
 }
 
 async function shouldPostSoftOptInConsent(subscriptionId: string): Promise<boolean> {
-    // Write code....
+    // Check for query parameters
+    // soft-opt-in-notifcation-shown=true
     return Promise.resolve(false);
 }
 
 async function updateDynamoTable(subcriptionIds: string[]): Promise<null> {
-    // Write code....
+    // Jon to write code or call his implementation from here
     return Promise.resolve(null);
 }
 
@@ -188,6 +189,11 @@ export async function parseAndStoreLink<A, B>(
                             and then later on version 2.
 
                             ### Specifications
+
+                            The trigger for the soft opt in will be the following query parameter:
+                            ```
+                            soft-opt-in-notifcation-shown=true
+                            ```
 
                             In this current HTTP request we have a contextual user (corresponding to the userId
                             which was extracted during authentication) as well as an array of subscriptions
