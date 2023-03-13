@@ -124,10 +124,17 @@ function softOptInQueryParameterIsPresent(): boolean {
     return false
 }
 
-function updateDynamoLoggingTable(subcriptionIds: string[], identityId: string) {
+async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: string) {
     const timestamp = new Date().getTime();
     const record = new SoftOptInLog(identityId, "V1 - no subscription Id", timestamp, "Soft opt-ins processed for acquisition");
-    return dynamoMapper.put({item: record})
+
+    try {
+        await dynamoMapper.put({item: record});
+        console.log(`Logged soft opt-in setting to Dynamo`);
+    } catch (error) {
+        console.warn(`Dynamo write failed for record: ${record}`);
+        throw error;
+    }
 }
 
 const soft_opt_in_v1_active: boolean = false;
@@ -230,9 +237,10 @@ export async function parseAndStoreLink<A, B>(
                                 console.log(`Posted consent data for user ${userId}`);
 
                                 await updateDynamoLoggingTable(subscriptionsFromHttpPayload.map(rec => rec.subscriptionId), userId);
-                                console.log(`Logged soft opt-in setting to Dynamo`)
                             } else {
-                                // No subscriptions were found in link table!!
+                                const message = `Soft Opt-Ins V1 - No subscriptions found in the Link table`
+                                console.warn(message)
+                                throw new Error(message)
                             }
                         }
 
