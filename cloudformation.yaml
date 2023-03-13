@@ -1072,3 +1072,25 @@ Resources:
           Value: !Ref Stack
         - Key: App
           Value: !Ref App
+
+  failedSettingSoftOptIns:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn:
+      - UserSubscriptionsLambda
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+      AlarmName: !Sub soft-opt-ins-V1-${Stage} failed to set soft-opt-ins for IAP
+      AlarmDescription: >
+        A run failed to set soft-opt-ins for an IAP in the Link endpoint.
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: Stage
+          Value: !Sub ${Stage}
+      EvaluationPeriods: 1
+      MetricName: failed_consents_updates
+      Namespace: soft-opt-ins
+      Period: 3600
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching

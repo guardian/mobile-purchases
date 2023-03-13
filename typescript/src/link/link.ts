@@ -1,7 +1,7 @@
 import {HTTPResponses} from '../models/apiGatewayHttp';
 import {UserSubscription} from "../models/userSubscription";
 import {ReadSubscription} from "../models/subscription";
-import {dynamoMapper, sendToSqs, sqs} from "../utils/aws";
+import {dynamoMapper, putMetric, sendToSqs, sqs} from "../utils/aws";
 import {getUserId, getAuthToken} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
@@ -114,6 +114,7 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityTok
     } catch (error) {
         console.warn(`Error while posting consent data for user ${identityId}`);
         console.warn(error);
+        await putMetric("failed_consents_updates", 1)
         return Promise.resolve(false);
     }
 }
@@ -133,7 +134,7 @@ async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: st
         console.log(`Logged soft opt-in setting to Dynamo`);
     } catch (error) {
         console.warn(`Dynamo write failed for record: ${record}`);
-        throw error;
+        await putMetric("failed_consents_updates", 1)
     }
 }
 
@@ -238,9 +239,8 @@ export async function parseAndStoreLink<A, B>(
 
                                 await updateDynamoLoggingTable(subscriptionsFromHttpPayload.map(rec => rec.subscriptionId), userId);
                             } else {
-                                const message = `Soft Opt-Ins V1 - No subscriptions found in the Link table`
-                                console.warn(message)
-                                throw new Error(message)
+                                console.warn(`Soft Opt-Ins V1 - No subscriptions found in the Link table`);
+                                await putMetric("failed_consents_updates", 1);
                             }
                         }
 
