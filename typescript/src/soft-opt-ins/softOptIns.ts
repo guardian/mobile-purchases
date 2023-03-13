@@ -12,13 +12,20 @@ async function processAcquisition(record: any): Promise<void> {
     const subscriptionId = record?.dynamodb?.Keys?.subscriptionId?.S;
 
     // fetch the subscription record from the `subscriptions` table as we need to get the acquisition date of the sub to know when to send WelcomeDay0 email
+    /*
+        Note: the subscription record may have not been created yet. On purchase, the link endpoint and the webhook that
+        creates the subscription in the subscription table are executed asynchronously.
+
+         This is not an issue. Since we are using the subscription record's acquisition date to determine if it has been more than two
+         days since purchase, if it does not exist yet in the table, then we assume the customer has purchased it just now.
+     */
     const records = dynamoMapper.query(ReadSubscription, {subscriptionId}, {indexName: "subscriptionId"});
 
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
 
-    for await (const record of records) {
-        postConsent(identityId, apiKey1Salesforce);
+    await postConsent(identityId, apiKey1Salesforce);
 
+    for await (const record of records) {
         const acquisitionDate = new Date(record.startTimestamp);
         const todayDate = new Date();
 
