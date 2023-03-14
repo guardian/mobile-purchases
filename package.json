@@ -34,7 +34,7 @@
     "@aws/dynamodb-expressions": "^0.7.3",
     "@guardian/types": "^9.0.1",
     "@okta/jwt-verifier": "^3.0.1",
-    "@types/aws-lambda": "8.10.111",
+    "@types/aws-lambda": "8.10.112",
     "@types/node": "^18.15.1",
     "aws-sdk": "^2.1333.0",
     "node-fetch": "^3.3.1",
