@@ -1048,7 +1048,7 @@ Resources:
           AttributeType: S
         - AttributeName: userId
           AttributeType: S
-        - AttributeName: timestamp
+        - AttributeName: subscriptionId
           AttributeType: S
       KeySchema:
         - AttributeName: timestamp
