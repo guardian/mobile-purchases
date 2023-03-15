@@ -122,7 +122,7 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityTok
 function softOptInQueryParameterIsPresent(): boolean {
     // Pascal's code: check for query parameter
     // soft-opt-in-notifcation-shown=true
-    return false
+    return true;
 }
 
 async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: string) {
@@ -133,12 +133,13 @@ async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: st
         await dynamoMapper.put({item: record});
         console.log(`Logged soft opt-in setting to Dynamo`);
     } catch (error) {
+        console.warn(error);
         console.warn(`Dynamo write failed for record: ${record}`);
         await putMetric("failed_consents_updates", 1)
     }
 }
 
-const soft_opt_in_v1_active: boolean = false;
+const soft_opt_in_v1_active: boolean = true;
 
 /*
     Date: March 2023, 6th
