@@ -6,11 +6,12 @@ import {getUserId, getAuthToken} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
 import {ProcessingError} from "../models/processingError";
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {APIGatewayProxyEvent, APIGatewayProxyEventQueryStringParameters, APIGatewayProxyResult} from "aws-lambda";
 import {UserIdResolution} from "../utils/guIdentityApi"
 import {Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import {SoftOptInLog} from "../models/softOptInLogging";
+import { getConfigValue } from '../utils/ssmConfig';
 
 export interface SubscriptionCheckData {
     subscriptionId: string
@@ -88,16 +89,20 @@ function consentPayload(): any {
    ]
 }
 
-async function postSoftOptInConsentToIdentityAPI(identityId: string, identityToken: string): Promise<boolean> {
-    var url = `http://idapi.code.dev-theguardian.com/${identityId}/consents`
+async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApiKey: string): Promise<boolean> {
+    //var url = `http://idapi.code.dev-theguardian.com/${identityId}/consents`
+    //if (Stage === "PROD") {
+    //    url = `https://idapi.theguardian.com/user/${identityId}/consents`
+    //}
+    var url = `http://idapi.code.dev-theguardian.com/users/me/consents`;
     if (Stage === "PROD") {
-        url = `https://idapi.theguardian.com/user/${identityId}/consents`
+        url = `https://idapi.theguardian.com/user/users/me/consents`;
     }
     const params = {
         method: 'PATCH',
         body: JSON.stringify(consentPayload()),
         headers: {
-            Authorization: `Bearer ${identityToken}`,
+            Authorization: `Bearer ${identityApiKey}`,
             'Content-type': 'application/json',
         }
     }
@@ -120,8 +125,8 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityTok
 }
 
 function softOptInQueryParameterIsPresent(): boolean {
-    // Pascal's code: check for query parameter
     // soft-opt-in-notifcation-shown=true
+    // https://aws.amazon.com/premiumsupport/knowledge-center/pass-api-gateway-rest-api-parameters/
     return true;
 }
 
@@ -137,6 +142,11 @@ async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: st
         console.warn(`Dynamo write failed for record: ${record}`);
         await putMetric("failed_consents_updates", 1)
     }
+}
+
+async function getIdenityApiKey(): Promise<string> {
+    //return await getConfigValue<string>("mp-soft-opt-in-idendity-api-key");
+    return Promise.resolve("stuff");
 }
 
 const soft_opt_in_v1_active: boolean = true;
@@ -233,6 +243,8 @@ export async function parseAndStoreLink<A, B>(
                         if (softOptInQueryParameterIsPresent()) {
                             const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
                             const subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
+
+                            const identityApiKey = await getIdenityApiKey();
 
                             if (subscriptionsFromHttpPayload.length > 0) {
                                 await postSoftOptInConsentToIdentityAPI(userId, userAuthenticationToken);
