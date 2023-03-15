@@ -127,7 +127,7 @@ Resources:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events-v2
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
-                - !GetAtt SoftOptInsLoggingTable.Arn
+                - !GetAtt SoftOptInsLoggingTable2.Arn
 
         - PolicyName: Sqs
           PolicyDocument:
@@ -1044,6 +1044,42 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${App}-${Stage}-soft-opt-ins-logging
+      AttributeDefinitions:
+        - AttributeName: timestamp
+          AttributeType: N
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: subscriptionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+      GlobalSecondaryIndexes:
+        - IndexName: subscriptionId-index
+          KeySchema:
+            - AttributeName: subscriptionId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+
+  SoftOptInsLoggingTable2:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${App}-${Stage}-soft-opt-ins-logging-v2
       AttributeDefinitions:
         - AttributeName: timestamp
           AttributeType: N
