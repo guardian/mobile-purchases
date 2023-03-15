@@ -1051,10 +1051,10 @@ Resources:
         - AttributeName: subscriptionId
           AttributeType: S
       KeySchema:
-        - AttributeName: timestamp
-          KeyType: RANGE
         - AttributeName: userId
           KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       BillingMode: PAY_PER_REQUEST
