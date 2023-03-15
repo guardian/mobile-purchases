@@ -127,7 +127,7 @@ Resources:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events-v2
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
-                - !GetAtt SoftOptInsLogsTable.Arn
+                - !GetAtt SoftOptInsLoggingTable.Arn
 
         - PolicyName: Sqs
           PolicyDocument:
@@ -1040,13 +1040,13 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
-  SoftOptInsLogsTable:
+  SoftOptInsLoggingTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${App}-${Stage}-soft-opt-ins-logging
       AttributeDefinitions:
         - AttributeName: timestamp
-          AttributeType: N
+          AttributeType: S
         - AttributeName: userId
           AttributeType: S
         - AttributeName: subscriptionId
