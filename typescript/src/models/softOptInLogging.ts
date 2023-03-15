@@ -24,7 +24,7 @@ export class SoftOptInLog {
     }
 
     get[DynamoDbTable]() {
-        return `${App}-${Stage}-soft-opt-ins-logs`
+        return `${App}-${Stage}-soft-opt-ins-logging`
     }
 
 }

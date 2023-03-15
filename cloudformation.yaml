@@ -1043,7 +1043,7 @@ Resources:
   SoftOptInsLogsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${App}-${Stage}-soft-opt-ins-logs
+      TableName: !Sub ${App}-${Stage}-soft-opt-ins-logging
       AttributeDefinitions:
         - AttributeName: timestamp
           AttributeType: N
