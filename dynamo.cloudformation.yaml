@@ -167,13 +167,13 @@ Resources:
       AttributeDefinitions:
         - AttributeName: timestamp
           AttributeType: S
-        - AttributeName: subscriptionId
+        - AttributeName: userId
           AttributeType: S
       KeySchema:
         - AttributeName: timestamp
-          KeyType: HASH
-        - AttributeName: subscriptionId
           KeyType: RANGE
+        - AttributeName: userId
+          KeyType: HASH
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       BillingMode: PAY_PER_REQUEST
