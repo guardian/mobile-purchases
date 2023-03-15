@@ -1046,7 +1046,7 @@ Resources:
       TableName: !Sub ${App}-${Stage}-soft-opt-ins-logging
       AttributeDefinitions:
         - AttributeName: timestamp
-          AttributeType: N
+          AttributeType: S
         - AttributeName: userId
           AttributeType: S
         - AttributeName: subscriptionId
