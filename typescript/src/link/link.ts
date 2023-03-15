@@ -133,6 +133,7 @@ async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: st
         await dynamoMapper.put({item: record});
         console.log(`Logged soft opt-in setting to Dynamo`);
     } catch (error) {
+        console.warn(error);
         console.warn(`Dynamo write failed for record: ${record}`);
         await putMetric("failed_consents_updates", 1)
     }
