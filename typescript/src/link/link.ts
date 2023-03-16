@@ -242,6 +242,19 @@ export async function parseAndStoreLink<A, B>(
                             from a UserSubscription.
 
                             Note that toUserSubscription(userId, payload) return an array of such subscriptions
+
+                            ### Why using a metric driven alerting instead of erroring ?
+
+                            These end points have a very strict contract with the mobile apps about which HTTP
+                            error codes to return in which situation, therefore there should not really be any uncaught
+                            error that filter up to the clients.
+
+                            ### Identity API
+
+                            We are using and have created mp-soft-opt-in-identity-api-key just for this.
+                            We could not use the userAuthenticationToken to post the consent object to Identity
+                            because it doesn't carry the right scopes.
+
                         */
 
                         if (softOptInQueryParameterIsPresent(httpRequest)) {
