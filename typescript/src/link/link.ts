@@ -129,6 +129,7 @@ function softOptInQueryParameterIsPresent(httpRequest: APIGatewayProxyEvent): bo
     if (httpRequest.queryStringParameters === null) {
         return false;
     }
+    console.log(`${httpRequest.queryStringParameters}`);
     return httpRequest.queryStringParameters['soins'] === "true";
 }
 
