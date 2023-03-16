@@ -103,6 +103,8 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
         }
     }
     try {
+        console.log(`url ${url}`);
+        console.log(`identityApiKey ${identityApiKey}`);
         return fetch(url, params)
             .then((response) => {
                 if (response.status == 200) {
@@ -145,7 +147,7 @@ async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: st
 }
 
 async function getIdenityApiKey(): Promise<string> {
-    return await getConfigValue<string>("mp-soft-opt-in-idendity-api-key");
+    return await getConfigValue<string>("mp-soft-opt-in-identity-api-key");
 }
 
 const soft_opt_in_v1_active: boolean = true;
