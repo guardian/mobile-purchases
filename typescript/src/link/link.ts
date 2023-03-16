@@ -262,7 +262,7 @@ export async function parseAndStoreLink<A, B>(
                             const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
                             const subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
 
-                            const identityApiKey = await getIdenityApiKey();
+                            const identityApiKey = await getIdentityApiKey();
 
                             if (subscriptionsFromHttpPayload.length > 0) {
                                 console.log(`posting consent data for user ${userId}`);
