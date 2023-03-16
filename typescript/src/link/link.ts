@@ -249,8 +249,7 @@ export async function parseAndStoreLink<A, B>(
 
                                 await updateDynamoLoggingTable(subscriptionsFromHttpPayload.map(rec => rec.subscriptionId), userId);
                             } else {
-                                console.warn(`Soft Opt-Ins V1 - No subscriptions found in the Link table`);
-                                await putMetric("failed_consents_updates", 1);
+                                console.warn(`Soft Opt-Ins V1 - No subscriptions found in the HTTP payload`);
                             }
                         }
                     }
