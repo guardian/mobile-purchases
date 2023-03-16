@@ -243,7 +243,7 @@ export async function parseAndStoreLink<A, B>(
                             const identityApiKey = await getIdenityApiKey();
 
                             if (subscriptionsFromHttpPayload.length > 0) {
-                                await postSoftOptInConsentToIdentityAPI(userId, userAuthenticationToken);
+                                await postSoftOptInConsentToIdentityAPI(userId, identityApiKey);
                                 console.log(`Posted consent data for user ${userId}`);
 
                                 await updateDynamoLoggingTable(subscriptionsFromHttpPayload.map(rec => rec.subscriptionId), userId);
