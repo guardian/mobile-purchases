@@ -244,6 +244,7 @@ export async function parseAndStoreLink<A, B>(
                             console.log(`identityApiKey ${identityApiKey}`);
 
                             if (subscriptionsFromHttpPayload.length > 0) {
+                                console.log(`Posting consents`);
                                 await postSoftOptInConsentToIdentityAPI(userId, identityApiKey);
                                 console.log(`Posted consent data for user ${userId}`);
 
