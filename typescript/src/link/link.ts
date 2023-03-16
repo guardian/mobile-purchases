@@ -6,7 +6,7 @@ import {getUserId, getAuthToken} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
 import {ProcessingError} from "../models/processingError";
-import {APIGatewayProxyEvent, APIGatewayProxyEventQueryStringParameters, APIGatewayProxyResult} from "aws-lambda";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {UserIdResolution} from "../utils/guIdentityApi"
 import {Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
