@@ -110,13 +110,12 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
                 if (response.status == 200) {
                     return true;
                 } else {
-                    console.warn(`Warning, body: ${response.body?.read(1000)}, while posting consent data for user ${identityId}`);
-                    console.warn(`Warning, status: ${response.status}, while posting consent data for user ${identityId}`);
+                    console.warn(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
                     return false
                 }
             })
     } catch (error) {
-        console.warn(`Error while posting consent data for user ${identityId}`);
+        console.warn(`error while posting consent data for user ${identityId}`);
         console.warn(error);
         await putMetric("failed_consents_updates", 1)
         return Promise.resolve(false);
@@ -144,14 +143,14 @@ function softOptInQueryParameterIsPresent(httpRequest: APIGatewayProxyEvent): bo
 
 async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: string) {
     const timestamp = new Date().getTime();
-    const record = new SoftOptInLog(identityId, "V1 - no subscription Id", timestamp, "Soft opt-ins processed for acquisition");
+    const record = new SoftOptInLog(identityId, "v1 - no subscription id", timestamp, "soft opt-ins processed for acquisition");
 
     try {
         await dynamoMapper.put({item: record});
-        console.log(`Logged soft opt-in setting to Dynamo`);
+        console.log(`logged soft opt-in setting to Dynamo`);
     } catch (error) {
         console.warn(error);
-        console.warn(`Dynamo write failed for record: ${record}`);
+        console.warn(`dynamo write failed for record: ${record}`);
         await putMetric("failed_consents_updates", 1)
     }
 }
@@ -160,7 +159,7 @@ async function getIdenityApiKey(): Promise<string> {
     return await getConfigValue<string>("mp-soft-opt-in-identity-api-key");
 }
 
-const soft_opt_in_v1_active: boolean = true;
+const soft_opt_in_v1_active: boolean = false;
 
 /*
     Date: March 2023, 6th
@@ -195,10 +194,10 @@ export async function parseAndStoreLink<A, B>(
 
                     const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
                     const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
-                    console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
+                    console.log(`put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
 
                     if (soft_opt_in_v1_active) {
-                        console.log(`Entering SOI version 1`);
+                        console.log(`entering soft opt in version 1`);
 
                         /*
 
@@ -251,16 +250,15 @@ export async function parseAndStoreLink<A, B>(
                             const subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
 
                             const identityApiKey = await getIdenityApiKey();
-                            console.log(`identityApiKey ${identityApiKey}`);
 
                             if (subscriptionsFromHttpPayload.length > 0) {
-                                console.log(`Posting consents`);
+                                console.log(`posting consent data for user ${userId}`);
                                 await postSoftOptInConsentToIdentityAPI(userId, identityApiKey);
-                                console.log(`Posted consent data for user ${userId}`);
+                                console.log(`posted consent data for user ${userId}`);
 
                                 await updateDynamoLoggingTable(subscriptionsFromHttpPayload.map(rec => rec.subscriptionId), userId);
                             } else {
-                                console.warn(`Soft Opt-Ins V1 - No subscriptions found in the HTTP payload`);
+                                console.warn(`soft opt-ins v1 - no subscriptions found in the HTTP payload`);
                             }
                         }
                     }
