@@ -188,6 +188,7 @@ export async function parseAndStoreLink<A, B>(
                     console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
 
                     if (soft_opt_in_v1_active) {
+                        console.log(`Entering SOI version 1`);
 
                         /*
 
@@ -235,6 +236,7 @@ export async function parseAndStoreLink<A, B>(
                         */
 
                         if (softOptInQueryParameterIsPresent(httpRequest)) {
+                            console.log(`softOptInQueryParameterIsPresent`);
                             const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
                             const subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
 
