@@ -125,7 +125,7 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
 }
 
 function softOptInQueryParameterIsPresent(httpRequest: APIGatewayProxyEvent): boolean {
-    // soft-opt-in-notifcation-shown=true
+    // soft-opt-in-notification-shown=true
     // https://aws.amazon.com/premiumsupport/knowledge-center/pass-api-gateway-rest-api-parameters/
     // https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-lambda.html
     if (httpRequest.queryStringParameters === null) {
@@ -217,7 +217,7 @@ export async function parseAndStoreLink<A, B>(
 
                             The trigger for the soft opt in will be the following query parameter:
                             ```
-                            soft-opt-in-notifcation-shown=true
+                            soft-opt-in-notification-shown=true
                             ```
 
                             In this current HTTP request we have a contextual user (corresponding to the userId
