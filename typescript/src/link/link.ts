@@ -124,10 +124,14 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
     }
 }
 
-function softOptInQueryParameterIsPresent(): boolean {
+function softOptInQueryParameterIsPresent(httpRequest: APIGatewayProxyEvent): boolean {
     // soft-opt-in-notifcation-shown=true
     // https://aws.amazon.com/premiumsupport/knowledge-center/pass-api-gateway-rest-api-parameters/
-    return true;
+    // https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-lambda.html
+    if (httpRequest.queryStringParameters === null) {
+        return false;
+    }
+    return httpRequest.queryStringParameters['soins'] === "true";
 }
 
 async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: string) {
@@ -233,14 +237,7 @@ export async function parseAndStoreLink<A, B>(
                             Note that toUserSubscription(userId, payload) return an array of such subscriptions
                         */
 
-                        // We want reading in sequence from here:
-                        // https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
-
-                        /*
-                         Handle post-acquisition sign-ins here!
-                         */
-
-                        if (softOptInQueryParameterIsPresent()) {
+                        if (softOptInQueryParameterIsPresent(httpRequest)) {
                             const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
                             const subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
 
@@ -256,8 +253,6 @@ export async function parseAndStoreLink<A, B>(
                                 await putMetric("failed_consents_updates", 1);
                             }
                         }
-
-                        // Todo: write test.
                     }
 
                     return HTTPResponses.OK;
