@@ -126,7 +126,7 @@ function softOptInQueryParameterIsPresent(httpRequest: APIGatewayProxyEvent): bo
     // soft-opt-in-notification-shown=true
     // https://aws.amazon.com/premiumsupport/knowledge-center/pass-api-gateway-rest-api-parameters/
     // https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-lambda.html
-    console.log(`${JSON.stringify(httpRequest.queryStringParameters)}`);
+    console.log(`${JSON.stringify(httpRequest.multiValueQueryStringParameters)}`);
     
     if (httpRequest.queryStringParameters === null) {
         return false;
