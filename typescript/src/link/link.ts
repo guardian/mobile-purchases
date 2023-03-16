@@ -90,7 +90,7 @@ function consentPayload(): any {
 }
 
 async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApiKey: string): Promise<boolean> {
-    var url = `http://idapi.code.dev-theguardian.com/users/${identityId}/consents`
+    var url = `https://idapi.code.dev-theguardian.com/users/${identityId}/consents`
     if (Stage === "PROD") {
         url = `https://idapi.theguardian.com/users/${identityId}/consents`
     }
