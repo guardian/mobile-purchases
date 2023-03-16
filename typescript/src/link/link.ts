@@ -126,13 +126,19 @@ function softOptInQueryParameterIsPresent(httpRequest: APIGatewayProxyEvent): bo
     // soft-opt-in-notification-shown=true
     // https://aws.amazon.com/premiumsupport/knowledge-center/pass-api-gateway-rest-api-parameters/
     // https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-lambda.html
-    console.log(`httpRequest.multiValueQueryStringParameters: ${JSON.stringify(httpRequest.multiValueQueryStringParameters)}`);
-    
-    if (httpRequest.queryStringParameters === null) {
+    // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/46689
+    // console.log(`httpRequest.multiValueQueryStringParameters: ${JSON.stringify(httpRequest.multiValueQueryStringParameters)}`);
+    // we get it as: {"soft-opt-in-notification-shown":["true"]}
+    if (httpRequest.multiValueQueryStringParameters === null) {
         return false;
     }
-
-    return httpRequest.queryStringParameters['soins'] === "true";
+    if (typeof httpRequest.multiValueQueryStringParameters["soft-opt-in-notification-shown"] === "undefined") {
+        return false;
+    }
+    if (httpRequest.multiValueQueryStringParameters["soft-opt-in-notification-shown"].length == 0) {
+        return false
+    }
+    return httpRequest.multiValueQueryStringParameters["soft-opt-in-notification-shown"][0] === "true"
 }
 
 async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: string) {
