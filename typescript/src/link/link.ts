@@ -149,8 +149,7 @@ async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: st
 }
 
 async function getIdenityApiKey(): Promise<string> {
-    //return await getConfigValue<string>("mp-soft-opt-in-idendity-api-key");
-    return Promise.resolve("stuff");
+    return await getConfigValue<string>("mp-soft-opt-in-idendity-api-key");
 }
 
 const soft_opt_in_v1_active: boolean = true;
