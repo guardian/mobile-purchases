@@ -32,6 +32,9 @@ async function processAcquisition(record: any): Promise<void> {
     })
 
     for await (const record of records) {
+        console.log("record");
+        console.log(JSON.stringify(record));
+
         const acquisitionDate = new Date(record.startTimestamp);
         const todayDate = new Date();
 

@@ -4,13 +4,7 @@ import {DynamoDBStreamEvent} from "aws-lambda";
 jest.mock('@aws/dynamodb-data-mapper', () => {
     const actualDataMapper = jest.requireActual('@aws/dynamodb-data-mapper');
 
-    const mockQueryIterator = {
-        [Symbol.asyncIterator]: jest.fn().mockReturnValue({}),
-    };
-
-    mockQueryIterator[Symbol.asyncIterator] = jest.fn(() => [1, 2, 3].values());
-
-    const queryFn = jest.fn(() => mockQueryIterator);
+    const queryFn = jest.fn();
 
     return {
         ...actualDataMapper,
@@ -19,23 +13,22 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
             get: jest.fn(),
             put: jest.fn().mockResolvedValue(undefined),
             delete: jest.fn(),
-            query: jest.fn(() => mockQueryIterator),
+            query: queryFn,
             scan: jest.fn(),
             update: jest.fn(),
         })),
+        setMockQuery: (mockImplementation: (arg0: any) => any) => {
+            queryFn.mockImplementation(async function* (params) {
+                const iterator = mockImplementation(params);
+                for await (const item of iterator) {
+                    yield item;
+                }
+            });
+        },
     };
 });
+const setMockQuery = require('@aws/dynamodb-data-mapper').setMockQuery;
 
-const __setQueryResult = (result: any[]) => {
-    const mockQueryIterator = {
-        [Symbol.asyncIterator]: jest.fn().mockReturnValue({}),
-    };
-
-    const queryFn = jest.fn(() => mockQueryIterator);
-
-    mockQueryIterator[Symbol.asyncIterator] = jest.fn(() => result.values());
-    queryFn.mockImplementation(() => mockQueryIterator);
-};
 
 // mock so imports don't use real client which throws an error as credentials are needed
 jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
@@ -110,8 +103,16 @@ describe('acquisitionHandler', () => {
             ]
         };
 
-        const expectedResult = [{subscriptionId: "1"}, 2, 3];
-        __setQueryResult(expectedResult);
+        setMockQuery(async function* (params: { keyCondition: any; indexName: any; }) {
+            console.log(params);
+
+            // expect(params.keyCondition).toEqual('custom_key_condition');
+            // expect(params.indexName).toEqual('custom_index_name');
+
+            // You can yield the custom response here
+            yield { subscriptionId: '133', userId: '123' };
+            yield { subscriptionId: '233', userId: '123' };
+        });
 
         await acquisitionHandler(event);
     });
