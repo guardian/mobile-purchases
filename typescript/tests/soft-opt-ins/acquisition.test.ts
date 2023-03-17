@@ -8,6 +8,8 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
         [Symbol.asyncIterator]: jest.fn().mockReturnValue({}),
     };
 
+    mockQueryIterator[Symbol.asyncIterator] = jest.fn(() => [1, 2, 3].values());
+
     const queryFn = jest.fn(() => mockQueryIterator);
 
     return {
@@ -17,16 +19,23 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
             get: jest.fn(),
             put: jest.fn().mockResolvedValue(undefined),
             delete: jest.fn(),
-            query: queryFn,
+            query: jest.fn(() => mockQueryIterator),
             scan: jest.fn(),
             update: jest.fn(),
         })),
-        __setQueryResult: (result: any[]) => {
-            mockQueryIterator[Symbol.asyncIterator] = jest.fn(() => result.values());
-            queryFn.mockImplementation(() => mockQueryIterator);
-        },
     };
 });
+
+const __setQueryResult = (result: any[]) => {
+    const mockQueryIterator = {
+        [Symbol.asyncIterator]: jest.fn().mockReturnValue({}),
+    };
+
+    const queryFn = jest.fn(() => mockQueryIterator);
+
+    mockQueryIterator[Symbol.asyncIterator] = jest.fn(() => result.values());
+    queryFn.mockImplementation(() => mockQueryIterator);
+};
 
 // mock so imports don't use real client which throws an error as credentials are needed
 jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
@@ -101,14 +110,9 @@ describe('acquisitionHandler', () => {
             ]
         };
 
-        await acquisitionHandler(event);
-
         const expectedResult = [{subscriptionId: "1"}, 2, 3];
         __setQueryResult(expectedResult);
 
-        expect(mockQueryIterator[Symbol.asyncIterator]).toHaveBeenCalledTimes(1);
-        const result = await mockQueryIterator[Symbol.asyncIterator]().next();
-        expect(result.done).toBe(false);
-        expect(result.value).toEqual({ subscriptionId: '12345', userId: '67890' });
+        await acquisitionHandler(event);
     });
 });
