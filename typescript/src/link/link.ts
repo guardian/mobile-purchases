@@ -1,7 +1,7 @@
 import {HTTPResponses} from '../models/apiGatewayHttp';
 import {UserSubscription} from "../models/userSubscription";
 import {ReadSubscription} from "../models/subscription";
-import {dynamoMapper, sqs} from "../utils/aws";
+import {dynamoMapper, putMetric, sendToSqs, sqs} from "../utils/aws";
 import {getUserId, getAuthToken} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
@@ -10,6 +10,8 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {UserIdResolution} from "../utils/guIdentityApi"
 import {Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
+import {SoftOptInLog} from "../models/softOptInLogging";
+import { getConfigValue } from '../utils/ssmConfig';
 
 export interface SubscriptionCheckData {
     subscriptionId: string
@@ -87,58 +89,75 @@ function consentPayload(): any {
    ]
 }
 
-export async function postConsent(identityId: string, identityToken: string): Promise<boolean> {
-    var url = `http://idapi.code.dev-theguardian.com/${identityId}/consents`
+async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApiKey: string): Promise<boolean> {
+    var url = `https://idapi.code.dev-theguardian.com/users/${identityId}/consents`
     if (Stage === "PROD") {
-        url = `https://idapi.theguardian.com/user/${identityId}/consents`
+        url = `https://idapi.theguardian.com/users/${identityId}/consents`
     }
     const params = {
         method: 'PATCH',
         body: JSON.stringify(consentPayload()),
         headers: {
-            Authorization: `Bearer ${identityToken}`,
+            Authorization: `Bearer ${identityApiKey}`,
             'Content-type': 'application/json',
         }
     }
     try {
+        console.log(`url ${url}`);
+        //console.log(`identityApiKey ${identityApiKey}`);
         return fetch(url, params)
             .then((response) => {
                 if (response.status == 200) {
                     return true;
                 } else {
-                    console.warn(`Warning, status: ${response.status}, while posting consent data for user ${identityId}`);
+                    console.warn(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
                     return false
                 }
             })
     } catch (error) {
-        console.warn(`Error while posting consent data for user ${identityId}`);
+        console.warn(`error while posting consent data for user ${identityId}`);
         console.warn(error);
+        await putMetric("failed_consents_updates", 1)
         return Promise.resolve(false);
     }
 }
 
-/*
+function softOptInQueryParameterIsPresent(httpRequest: APIGatewayProxyEvent): boolean {
+    // soft-opt-in-notification-shown=true
+    // https://aws.amazon.com/premiumsupport/knowledge-center/pass-api-gateway-rest-api-parameters/
+    // https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-lambda.html
+    // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/46689
+    // console.log(`httpRequest.multiValueQueryStringParameters: ${JSON.stringify(httpRequest.multiValueQueryStringParameters)}`);
+    // we get it as: {"soft-opt-in-notification-shown":["true"]}
+    if (httpRequest.multiValueQueryStringParameters === null) {
+        return false;
+    }
+    if (typeof httpRequest.multiValueQueryStringParameters["soft-opt-in-notification-shown"] === "undefined") {
+        return false;
+    }
+    if (httpRequest.multiValueQueryStringParameters["soft-opt-in-notification-shown"].length == 0) {
+        return false
+    }
+    return httpRequest.multiValueQueryStringParameters["soft-opt-in-notification-shown"][0] === "true"
+}
 
-    Date: March 2023, 1st
-    Author: Pascal
+async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: string) {
+    const timestamp = new Date().getTime();
+    const record = new SoftOptInLog(identityId, "v1 - no subscription id", timestamp, "soft opt-ins processed for acquisition");
 
-    At the time these lines are written the Engine team and friends from Retention are
-    working on the Soft Opt-In project, and more exactly what is known as "version/stage 1"
-    of that project.
+    try {
+        await dynamoMapper.put({item: record});
+        console.log(`logged soft opt-in setting to Dynamo`);
+    } catch (error) {
+        console.warn(error);
+        console.warn(`dynamo write failed for record: ${record}`);
+        await putMetric("failed_consents_updates", 1)
+    }
+}
 
-    The effect for mobile-purchases, is that we are asked to send a payload to the identity API
-    for each acquisition notification from the users mobile apps hitting the endpoints
-        /google/linkToSubscriptions
-        /google/linkToSubscriptions
-
-    This change is... temporary and a stepping stone to what is going to be version 1.5
-    and then later on version 2.
-
-    Some code have been added to this file to support this (temporary) feature. The entry
-    point is what is labelled "Soft Opt-In version 1" in parseAndStoreLink.
-
-    This will clearly identify the code that needs to be modified, cleaned up later.
-*/
+async function getIdentityApiKey(): Promise<string> {
+    return await getConfigValue<string>("mp-soft-opt-in-identity-api-key");
+}
 
 const soft_opt_in_v1_active: boolean = false;
 
@@ -146,8 +165,8 @@ const soft_opt_in_v1_active: boolean = false;
     Date: March 2023, 6th
     Author: Pascal
 
-    Introduced the `soft_opt_in_v1_5_active` variable above to guard against
-    the effect as this goes to the main branch. When we go live, just remove the check.
+    Introduced the `soft_opt_in_v1_active` variable above to guard against
+    the effect of the Soft Opt In patch code until it's time to go live.
 */
 
 export async function parseAndStoreLink<A, B>(
@@ -175,14 +194,88 @@ export async function parseAndStoreLink<A, B>(
 
                     const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
                     const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
-                    console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
+                    console.log(`put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
 
                     if (soft_opt_in_v1_active) {
-                        // Soft Opt-In version 1
-                        const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
-                        await postConsent(userId, userAuthenticationToken)
-                        console.log(`Posted consent data for user ${userId}`);
+                        console.log(`entering soft opt in version 1`);
+
+                        /*
+
+                            Soft Opt-In project (version 1)
+
+                            Date: March 2023, 1st
+                            Author: Pascal
+
+                            ### Context
+
+                            At the time these lines are written the Engine team and friends from Retention are
+                            working on the Soft Opt-In project, and more exactly what is known as "version/stage 1"
+                            of that project.
+
+                            The effect for mobile-purchases, is that we are asked to send a payload to the identity API
+                            for each acquisition notification from the users mobile apps hitting the endpoints
+                                /apple/linkToSubscriptions
+                                /google/linkToSubscriptions
+
+                            This change is... temporary and a stepping stone to what is going to be version 1.5
+                            and then later on version 2.
+
+                            ### Specifications
+
+                            The trigger for the soft opt in will be the following query parameter:
+                            ```
+                            soft-opt-in-notification-shown=true
+                            ```
+
+                            In this current HTTP request we have a contextual user (corresponding to the userId
+                            which was extracted during authentication) as well as an array of subscriptions
+                            from the request payload. We want to update the dynamo table with soft opt in
+                            information for the subscriptions that have not yet been soft opted in, and we
+                            also post a consent object to the Identity API (once) if at least one of those
+                            subscriptions needed to be soft opted in.
+
+                            ### Implementation details.
+
+                            The type of the payload depends on the platform. It's AppleLinkPayload for iOS
+                            and GoogleLinkPayload for android. Working from the payload here would not be
+                            practical, but since we are only after the subscriptionId, we can read it in both cases
+                            from a UserSubscription.
+
+                            Note that toUserSubscription(userId, payload) return an array of such subscriptions
+
+                            ### Why using a metric driven alerting instead of erroring ?
+
+                            These end points have a very strict contract with the mobile apps about which HTTP
+                            error codes to return in which situation, therefore there should not really be any uncaught
+                            error that filter up to the clients.
+
+                            ### Identity API
+
+                            We are using and have created mp-soft-opt-in-identity-api-key just for this.
+                            We could not use the userAuthenticationToken to post the consent object to Identity
+                            because it doesn't carry the right scopes.
+
+                        */
+
+                        if (softOptInQueryParameterIsPresent(httpRequest)) {
+                            console.log(`softOptInQueryParameterIsPresent`);
+                            // const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
+                            const subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
+
+                            const identityApiKey = await getIdentityApiKey();
+
+                            if (subscriptionsFromHttpPayload.length > 0) {
+                                console.log(`posting consent data for user ${userId}`);
+                                await postSoftOptInConsentToIdentityAPI(userId, identityApiKey);
+                                console.log(`posted consent data for user ${userId}`);
+
+                                await updateDynamoLoggingTable(subscriptionsFromHttpPayload.map(rec => rec.subscriptionId), userId);
+                            } else {
+                                console.warn(`soft opt-ins v1 - no subscriptions found in the HTTP payload`);
+                            }
+                        }
                     }
+
                     return HTTPResponses.OK;
                 }
             }
