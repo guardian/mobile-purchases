@@ -104,7 +104,7 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
     }
     try {
         console.log(`url ${url}`);
-        console.log(`identityApiKey ${identityApiKey}`);
+        //console.log(`identityApiKey ${identityApiKey}`);
         return fetch(url, params)
             .then((response) => {
                 if (response.status == 200) {
