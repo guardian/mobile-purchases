@@ -2,8 +2,6 @@ import { DynamoDBStreamEvent } from "aws-lambda";
 import {dynamoMapper, sendToSqs} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Stage} from "../utils/appIdentity";
-import {SubscriptionEvent} from "../models/subscriptionEvent";
-import {QueryIterator} from "@aws/dynamodb-data-mapper";
 
 export function isPostAcquisition(todaysDate: Date, acquisitionDate: Date): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -11,24 +9,9 @@ export function isPostAcquisition(todaysDate: Date, acquisitionDate: Date): bool
     return todaysDate.getTime() - acquisitionDate.getTime() >= twoDaysInMilliseconds
 }
 
-function queryDynamo(subscriptionId: String): QueryIterator<ReadSubscription> {
-    return dynamoMapper.query(ReadSubscription, {subscriptionId}, {indexName: "subscriptionId"});
-}
-
-function sendSoftOptInsEvent(identityId: String) {
-    return sendToSqs(Stage === "PROD" ? "soft-opt-in-consent-setter-queue" : "soft-opt-in-consent-setter-queue-DEV", {
-        identityId: identityId,
-        eventType: "Acquisition",
-        productName: "InAppPurchase"
-    })
-}
-
 function logToNewDynamoTable(){}
 
-async function processAcquisition(record: any,
-                                  queryDynamo: (subscriptionId: String) => QueryIterator<ReadSubscription>,
-                                  sendSoftOptInsEvent: (identityId: String) => any
-): Promise<void> {
+async function processAcquisition(record: any): Promise<void> {
     const identityId = record?.dynamodb?.Keys?.userId?.S;
     const subscriptionId = record?.dynamodb?.Keys?.subscriptionId?.S;
 
@@ -40,9 +23,13 @@ async function processAcquisition(record: any,
          This is not an issue. Since we are using the subscription record's acquisition date to determine if it has been more than two
          days since purchase, if it does not exist yet in the table, then we assume the customer has purchased it just now.
      */
-    await sendSoftOptInsEvent(identityId);
+    const records = await dynamoMapper.query(ReadSubscription, {subscriptionId}, {indexName: "subscriptionId"});
 
-    const records = await queryDynamo(subscriptionId);
+    await sendToSqs(Stage === "PROD" ? "soft-opt-in-consent-setter-queue" : "soft-opt-in-consent-setter-queue-DEV", {
+        identityId: identityId,
+        eventType: "Acquisition",
+        productName: "InAppPurchase"
+    })
 
     for await (const record of records) {
         console.log("record");
@@ -63,22 +50,17 @@ async function processAcquisition(record: any,
 }
 
 export async function acquisitionHandler(event: DynamoDBStreamEvent): Promise<any> {
-    main(event, queryDynamo, sendSoftOptInsEvent)
-}
-
-export async function main(event: DynamoDBStreamEvent, queryDynamo: (subscriptionId: String) => QueryIterator<ReadSubscription>,
-                    sendSoftOptInsEvent: (identityId: String) => any) {
     const records = event.Records;
 
     const processRecordPromises = records.map((record) => {
-    const eventName = record.eventName;
+        const eventName = record.eventName;
 
-    if (eventName === "INSERT") {
-        return processAcquisition(record, queryDynamo, sendSoftOptInsEvent);
-    }
-});
+        if (eventName === "INSERT") {
+            return processAcquisition(record);
+        }
+    });
 
-await Promise.all(processRecordPromises);
+    await Promise.all(processRecordPromises);
 
-console.log(`Processed ${records.length} newly inserted records from the link (insert full name) DynamoDB table`);
+    console.log(`Processed ${records.length} newly inserted records from the link (insert full name) DynamoDB table`);
 }
