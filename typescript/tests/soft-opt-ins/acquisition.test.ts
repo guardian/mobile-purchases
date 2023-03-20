@@ -1,9 +1,5 @@
-import {acquisitionHandler, isPostAcquisition, main} from "../../src/soft-opt-ins/softOptIns";
+import {acquisitionHandler, isPostAcquisition} from "../../src/soft-opt-ins/softOptIns";
 import {DynamoDBStreamEvent} from "aws-lambda";
-import {SubscriptionEvent} from "../../src/models/subscriptionEvent";
-import Mock = jest.Mock;
-import {QueryIterator} from "@aws/dynamodb-data-mapper";
-import {ReadSubscription} from "../../src/models/subscription";
 
 jest.mock('@aws/dynamodb-data-mapper', () => {
     const actualDataMapper = jest.requireActual('@aws/dynamodb-data-mapper');
@@ -32,6 +28,7 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
     };
 });
 const setMockQuery = require('@aws/dynamodb-data-mapper').setMockQuery;
+
 
 // mock so imports don't use real client which throws an error as credentials are needed
 jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
@@ -72,23 +69,6 @@ describe("isPostAcquisition() function", () => {
     });
 });
 
-function createAsyncIterable(items: any[]): AsyncIterable<any> {
-    return {
-        [Symbol.asyncIterator]: async function* () {
-            for (const item of items) {
-                yield item;
-            }
-        },
-    };
-}
-
-class CustomQueryIterator<T> extends QueryIterator<T> {
-    constructor(asyncIterable: AsyncIterable<T>) {
-        // @ts-ignore
-        super(asyncIterable, () => {}, {});
-    }
-}
-
 describe('acquisitionHandler', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -109,19 +89,17 @@ describe('acquisitionHandler', () => {
             ]
         };
 
-        const mockStoreFunction: Mock<QueryIterator<ReadSubscription>, [String]> = jest.fn((subscriptionId) => {
-            const items = [
-                // Add the items you want the iterator to return
-                { subscriptionId: '12345', userId: '67890' },
-                { subscriptionId: '12345', userId: '123' },
-            ];
+        setMockQuery(async function* (params: { keyCondition: any; indexName: any; }) {
+            console.log(params);
 
-            const asyncIterable = createAsyncIterable(items);
-            return new QueryIterator(asyncIterable, ReadSubscription, null);
+            // expect(params.keyCondition).toEqual('custom_key_condition');
+            // expect(params.indexName).toEqual('custom_index_name');
+
+            // You can yield the custom response here
+            yield { subscriptionId: '133', userId: '123' };
+            yield { subscriptionId: '233', userId: '123' };
         });
 
-        const mockSqsFunction: Mock<Promise<any>> = jest.fn((queurl, event) => Promise.resolve({}));
-
-        await main(event, mockStoreFunction, mockSqsFunction);
+        await acquisitionHandler(event);
     });
 });
