@@ -259,7 +259,7 @@ export async function parseAndStoreLink<A, B>(
 
                         if (softOptInQueryParameterIsPresent(httpRequest)) {
                             console.log(`softOptInQueryParameterIsPresent`);
-                            const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
+                            // const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
                             const subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
 
                             const identityApiKey = await getIdentityApiKey();
