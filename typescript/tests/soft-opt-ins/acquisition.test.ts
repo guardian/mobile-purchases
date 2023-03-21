@@ -1,5 +1,6 @@
 import {acquisitionHandler, isPostAcquisition} from "../../src/soft-opt-ins/softOptIns";
 import {DynamoDBStreamEvent} from "aws-lambda";
+import {ReadSubscription} from "../../src/models/subscription";
 
 jest.mock('@aws/dynamodb-data-mapper', () => {
     const actualDataMapper = jest.requireActual('@aws/dynamodb-data-mapper');
@@ -29,7 +30,6 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
 });
 const setMockQuery = require('@aws/dynamodb-data-mapper').setMockQuery;
 
-
 // mock so imports don't use real client which throws an error as credentials are needed
 jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
 jest.mock('aws-sdk/clients/s3', () => jest.fn());
@@ -37,15 +37,18 @@ jest.mock('aws-sdk/clients/ssm', () => jest.fn());
 
 jest.mock('aws-sdk/clients/sqs', () => {
     const mockSQS = {
-        sendMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
+        sendMessage: jest.fn().mockReturnValue({promise: jest.fn()}),
     };
 
     return jest.fn(() => mockSQS)
 })
 
 jest.mock('aws-sdk/lib/core', () => {
-    class SharedIniFileCredentialsMock {}
-    class CredentialProviderChainMock {}
+    class SharedIniFileCredentialsMock {
+    }
+
+    class CredentialProviderChainMock {
+    }
 
     return {
         SharedIniFileCredentials: SharedIniFileCredentialsMock,
@@ -54,24 +57,42 @@ jest.mock('aws-sdk/lib/core', () => {
 });
 
 describe("isPostAcquisition() function", () => {
-    test("Return true if acquisition was more than two days ago", () => {
-        const date1 = new Date('2023-03-14');
-        const date2 = new Date('2023-03-01');
+    beforeEach(() => {
+        // Set the current time to a fixed date (2023-03-14)
+        jest.useFakeTimers('modern');
+        jest.setSystemTime(new Date('2023-03-14'));
+    });
 
-        expect(isPostAcquisition(date1, date2)).toStrictEqual(true);
+    afterEach(() => {
+        // Clean up the fake timers after each test
+        jest.useRealTimers();
+    });
+
+    test("Return true if acquisition was more than two days ago", () => {
+        const startTimestamp = "2023-03-01 07:24:38 UTC"
+
+        expect(isPostAcquisition(startTimestamp)).toStrictEqual(true);
     });
 
     test("Return false if acquisition was less than two days ago", () => {
-        const date1 = new Date('2023-03-14');
-        const date2 = new Date('2023-03-13');
+        const startTimestamp = "2023-03-13 07:24:38 UTC"
 
-        expect(isPostAcquisition(date1, date2)).toStrictEqual(false);
+        expect(isPostAcquisition(startTimestamp)).toStrictEqual(false);
     });
 });
 
 describe('acquisitionHandler', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+
+        // Set the current time to a fixed date (2023-03-14)
+        jest.useFakeTimers('modern');
+        jest.setSystemTime(new Date('2023-03-14'));
+    });
+
+    afterEach(() => {
+        // Clean up the fake timers after each test
+        jest.useRealTimers();
     });
 
     it('should process insert records', async () => {
@@ -81,25 +102,48 @@ describe('acquisitionHandler', () => {
                     eventName: 'INSERT',
                     dynamodb: {
                         NewImage: {
-                            subscriptionId: { S: '12345' },
-                            userId: { S: '67890' },
+                            subscriptionId: {S: '12345'},
+                            userId: {S: '67890'},
                         },
                     },
                 },
             ]
         };
 
+        // get the mock instances
+        const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
+        const mockSQS = new (require('aws-sdk/clients/sqs'))();
+
         setMockQuery(async function* (params: { keyCondition: any; indexName: any; }) {
-            console.log(params);
-
-            // expect(params.keyCondition).toEqual('custom_key_condition');
-            // expect(params.indexName).toEqual('custom_index_name');
-
-            // You can yield the custom response here
-            yield { subscriptionId: '133', userId: '123' };
-            yield { subscriptionId: '233', userId: '123' };
+            yield {
+                subscriptionId: '12345',
+                startTimestamp: "2023-03-14 07:24:38 UTC",
+                endTimestamp: "2025-03-01 07:24:38 UTC",
+                cancellationTimestamp: null,
+                autoRenewing: false,
+                productId: '',
+                platform: undefined,
+                freeTrial: undefined,
+                billingPeriod: undefined,
+                googlePayload: undefined,
+                receipt: undefined,
+                applePayload: undefined,
+                ttl: undefined,
+            };
         });
 
         await acquisitionHandler(event);
+
+        expect(mockDataMapper.query).toHaveBeenCalledTimes(1);
+        expect(mockDataMapper.query).toHaveBeenCalledWith(ReadSubscription, {subscriptionId: "12345"}, {indexName: "subscriptionId"});
+
+        expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
+
+        const expectedSendMessageParams1 = {
+            QueueUrl: 'soft-opt-in-consent-setter-queue-DEV',
+            MessageBody: JSON.stringify({identityId: '67890', eventType: 'Acquisition', productName: "InAppPurchase"}),
+        };
+
+        expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSendMessageParams1);
     });
 });

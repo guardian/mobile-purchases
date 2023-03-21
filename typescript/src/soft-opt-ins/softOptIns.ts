@@ -3,17 +3,22 @@ import {dynamoMapper, sendToSqs} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Stage} from "../utils/appIdentity";
 
-export function isPostAcquisition(todaysDate: Date, acquisitionDate: Date): boolean {
+export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
+    const today = new Date();
+    const acquisitionDate = new Date(startTimestamp);
 
-    return todaysDate.getTime() - acquisitionDate.getTime() >= twoDaysInMilliseconds
+    // our timestamps are recorded in seconds hence the conversion to milliseconds
+    return today.getTime() - acquisitionDate.getTime() >= twoDaysInMilliseconds
 }
 
 function logToNewDynamoTable(){}
 
 async function processAcquisition(record: any): Promise<void> {
-    const identityId = record?.dynamodb?.Keys?.userId?.S;
-    const subscriptionId = record?.dynamodb?.Keys?.subscriptionId?.S;
+    console.log(record);
+
+    const identityId = record?.dynamodb?.NewImage?.userId?.S;
+    const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S;
 
     // fetch the subscription record from the `subscriptions` table as we need to get the acquisition date of the sub to know when to send WelcomeDay0 email
     /*
@@ -35,10 +40,7 @@ async function processAcquisition(record: any): Promise<void> {
         console.log("record");
         console.log(JSON.stringify(record));
 
-        const acquisitionDate = new Date(record.startTimestamp);
-        const todayDate = new Date();
-
-        if (isPostAcquisition(todayDate, acquisitionDate)) {
+        if (isPostAcquisition(record.startTimestamp)) {
             await sendToSqs("subs-welcome-email", {
                 To:{Address:"example@gmail.com",
                     ContactAttributes:{SubscriberAttributes: {}}},
