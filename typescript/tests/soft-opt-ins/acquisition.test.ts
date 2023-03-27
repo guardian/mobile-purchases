@@ -35,6 +35,14 @@ jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
 jest.mock('aws-sdk/clients/s3', () => jest.fn());
 jest.mock('aws-sdk/clients/ssm', () => jest.fn());
 
+const fetch = require('node-fetch');
+jest.mock('node-fetch');
+
+jest.mock('../../src/utils/guIdentityApi');
+jest.mock('aws-sdk/clients/ssm', () => jest.fn());
+
+jest.mock('util', () => jest.fn());
+
 jest.mock('aws-sdk/clients/sqs', () => {
     const mockSQS = {
         sendMessage: jest.fn().mockReturnValue({promise: jest.fn()}),
@@ -93,9 +101,11 @@ describe('acquisitionHandler', () => {
     afterEach(() => {
         // Clean up the fake timers after each test
         jest.useRealTimers();
+
+        fetch.mockReset();
     });
 
-    it('should process insert records', async () => {
+    it('should process an acquisition correctly', async () => {
         const event: DynamoDBStreamEvent = {
             Records: [
                 {
@@ -138,6 +148,79 @@ describe('acquisitionHandler', () => {
         expect(mockDataMapper.query).toHaveBeenCalledWith(ReadSubscription, {subscriptionId: "12345"}, {indexName: "subscriptionId"});
 
         expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
+
+        const expectedSendMessageParams1 = {
+            QueueUrl: `soft-opt-in-consent-setter-queue-CODE`,
+            MessageBody: JSON.stringify({identityId: '67890', eventType: 'Acquisition', productName: "InAppPurchase"}),
+        };
+
+        expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSendMessageParams1);
+    });
+
+    it('should process a post acquisition sign-in correctly', async () => {
+        fetch.mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                    "status": "ok",
+                    "user": {
+                        "primaryEmailAddress": "97823f89@gmail.com",
+                        "id": "100005546",
+                        "publicFields": {
+                            "displayName": "user"
+                        },
+                        "dates": {
+                            "accountCreatedDate": "2019-08-20T14:53:04Z"
+                        },
+                        "consents": [],
+                        "hasPassword": true
+                    }
+            }),
+        });
+
+        const event: DynamoDBStreamEvent = {
+            Records: [
+                {
+                    eventName: 'INSERT',
+                    dynamodb: {
+                        NewImage: {
+                            subscriptionId: {S: '12345'},
+                            userId: {S: '67890'},
+                        },
+                    },
+                },
+            ]
+        };
+
+        // get the mock instances
+        const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
+        const mockSQS = new (require('aws-sdk/clients/sqs'))();
+
+        setMockQuery(async function* (params: { keyCondition: any; indexName: any; }) {
+            yield {
+                subscriptionId: '12345',
+                startTimestamp: "2023-03-01 07:24:38 UTC",
+                endTimestamp: "2025-03-01 07:24:38 UTC",
+                cancellationTimestamp: null,
+                autoRenewing: false,
+                productId: '',
+                platform: undefined,
+                freeTrial: undefined,
+                billingPeriod: undefined,
+                googlePayload: undefined,
+                receipt: undefined,
+                applePayload: undefined,
+                ttl: undefined,
+            };
+        });
+
+        await acquisitionHandler(event);
+
+        expect(mockDataMapper.query).toHaveBeenCalledTimes(1);
+        expect(mockDataMapper.query).toHaveBeenCalledWith(ReadSubscription, {subscriptionId: "12345"}, {indexName: "subscriptionId"});
+
+        expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
+
+        expect(fetch).toHaveBeenCalledTimes(1);
 
         const expectedSendMessageParams1 = {
             QueueUrl: `soft-opt-in-consent-setter-queue-CODE`,

@@ -2,16 +2,16 @@ import {HTTPResponses} from '../models/apiGatewayHttp';
 import {UserSubscription} from "../models/userSubscription";
 import {ReadSubscription} from "../models/subscription";
 import {dynamoMapper, putMetric, sendToSqs, sqs} from "../utils/aws";
-import {getUserId, getAuthToken} from "../utils/guIdentityApi";
+import {getUserId, getAuthToken, getIdentityApiKey} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
 import {ProcessingError} from "../models/processingError";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {UserIdResolution} from "../utils/guIdentityApi"
 import {Stage} from "../utils/appIdentity";
-import fetch from 'node-fetch';
 import {SoftOptInLog} from "../models/softOptInLogging";
 import { getConfigValue } from '../utils/ssmConfig';
+const fetch = require('node-fetch');
 
 export interface SubscriptionCheckData {
     subscriptionId: string
@@ -153,10 +153,6 @@ async function updateDynamoLoggingTable(identityId: string) {
         console.warn(`dynamo write failed for record: ${record}`);
         await putMetric("failed_consents_updates", 1)
     }
-}
-
-async function getIdentityApiKey(): Promise<string> {
-    return await getConfigValue<string>("mp-soft-opt-in-identity-api-key");
 }
 
 const soft_opt_in_v1_active: boolean = false;

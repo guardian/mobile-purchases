@@ -2,7 +2,9 @@ import { DynamoDBStreamEvent } from "aws-lambda";
 import {dynamoMapper, putMetric, sendToSqs} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Stage} from "../utils/appIdentity";
+import fetch from 'node-fetch';
 import {SoftOptInLog} from "../models/softOptInLogging";
+import {getIdentityApiKey} from "../utils/guIdentityApi";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -26,6 +28,12 @@ async function updateDynamoLoggingTable(subcriptionId: string, identityId: strin
     }
 }
 
+async function handleError(identityId: string, message: string): Promise<never> {
+    console.warn(message);
+    await putMetric("failed_consents_updates", 1);
+    throw new Error(message);
+}
+
 async function getUserEmailAddress(identityId: string, identityApiKey: string): Promise<string> {
     var url = `https://idapi.code.dev-theguardian.com/user/${identityId}`
     if (Stage === "PROD") {
@@ -37,31 +45,28 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
             Authorization: `Bearer ${identityApiKey}`
         }
     }
+
     try {
         console.log(`url ${url}`);
 
         return fetch(url, params)
             .then(async (response) => {
-                if (response.ok) { // Checks if status code is within the 2xx range
+                if (response.ok) {
                     const json = await response.json();
 
+                    // @ts-ignore
                     if (!json.user || !json.user.primaryEmailAddress) {
-                        await putMetric("failed_consents_updates", 1);
-                        throw new Error('User or primaryEmailAddress is undefined');
+                        return await handleError(identityId, 'User or primaryEmailAddress is undefined');
                     }
 
+                    // @ts-ignore
                     return json.user.primaryEmailAddress;
                 } else {
-                    console.warn(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
-                    await putMetric("failed_consents_updates", 1);
-                    throw new Error()
+                    return await handleError(identityId, `warning, status: ${response.status}, while posting consent data for user ${identityId}`);
                 }
             })
     } catch (error) {
-        console.warn(`error while retrieving user data for identityId: ${identityId}`);
-        console.warn(error);
-        await putMetric("failed_consents_updates", 1)
-        throw error
+        return await handleError(identityId, `error while retrieving user data for identityId: ${identityId}`);
     }
 }
 
@@ -89,10 +94,12 @@ async function processAcquisition(record: any): Promise<void> {
 
     for await (const record of records) {
         if (isPostAcquisition(record.startTimestamp)) {
-            const emailAddress = await getUserEmailAddress(identityId, "")
+            const identityApiKey = await getIdentityApiKey();
+
+            const emailAddress = await getUserEmailAddress(identityId, identityApiKey)
 
             await sendToSqs("subs-welcome-email", {
-                To:{Address:"example@gmail.com",
+                To:{Address: emailAddress,
                     ContactAttributes:{SubscriberAttributes: {}}},
                 DataExtensionName:"SV_PA_SOINotification",
                 SfContactId:"",

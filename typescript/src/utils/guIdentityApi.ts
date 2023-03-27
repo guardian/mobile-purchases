@@ -1,6 +1,7 @@
 import {HttpRequestHeaders} from "../models/apiGatewayHttp";
 import {restClient} from "./restClient";
 import {Stage} from "../utils/appIdentity";
+import {getConfigValue} from "./ssmConfig";
 
 interface UserId {
     id: string
@@ -27,6 +28,10 @@ interface OktaStageParameters {
 export interface UserIdResolution {
     status: "incorrect-token" | "incorrect-scope" | "missing-identity-id" | "success",
     userId: null | string
+}
+
+export async function getIdentityApiKey(): Promise<string> {
+    return await getConfigValue<string>("mp-soft-opt-in-identity-api-key");
 }
 
 export function getAuthToken(headers: HttpRequestHeaders): string | undefined {
