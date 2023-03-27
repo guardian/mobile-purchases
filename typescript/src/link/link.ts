@@ -125,7 +125,7 @@ function softOptInQueryParameterIsPresent(): boolean {
     return false
 }
 
-async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: string) {
+async function updateDynamoLoggingTable(identityId: string) {
     const timestamp = new Date().getTime();
     const record = new SoftOptInLog(identityId, "V1 - no subscription Id", timestamp, "Soft opt-ins processed for acquisition");
 
@@ -237,7 +237,7 @@ export async function parseAndStoreLink<A, B>(
                                 await postSoftOptInConsentToIdentityAPI(userId, userAuthenticationToken);
                                 console.log(`Posted consent data for user ${userId}`);
 
-                                await updateDynamoLoggingTable(subscriptionsFromHttpPayload.map(rec => rec.subscriptionId), userId);
+                                await updateDynamoLoggingTable(userId);
                             } else {
                                 console.warn(`Soft Opt-Ins V1 - No subscriptions found in the Link table`);
                                 await putMetric("failed_consents_updates", 1);

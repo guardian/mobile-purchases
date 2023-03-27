@@ -1,4 +1,4 @@
-import {acquisitionHandler, isPostAcquisition} from "../../src/soft-opt-ins/softOptIns";
+import {acquisitionHandler, isPostAcquisition} from "../../src/soft-opt-ins/acquisitions";
 import {DynamoDBStreamEvent} from "aws-lambda";
 import {ReadSubscription} from "../../src/models/subscription";
 
@@ -140,7 +140,7 @@ describe('acquisitionHandler', () => {
         expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
 
         const expectedSendMessageParams1 = {
-            QueueUrl: 'soft-opt-in-consent-setter-queue-DEV',
+            QueueUrl: `soft-opt-in-consent-setter-queue-CODE`,
             MessageBody: JSON.stringify({identityId: '67890', eventType: 'Acquisition', productName: "InAppPurchase"}),
         };
 
