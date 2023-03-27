@@ -37,7 +37,7 @@
     "@okta/jwt-verifier": "^3.0.1",
     "@types/aws-lambda": "8.10.111",
     "@types/node": "^18.15.1",
-    "aws-sdk": "^2.1333.0",
+    "aws-sdk": "^2.1342.0",
     "node-fetch": "^3.3.1",
     "source-map-support": "^0.5.21",
     "typed-rest-client": "^1.8.9"
