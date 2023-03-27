@@ -11,6 +11,7 @@ import {UserIdResolution} from "../utils/guIdentityApi"
 import {Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import {SoftOptInLog} from "../models/softOptInLogging";
+import { getConfigValue } from '../utils/ssmConfig';
 
 export interface SubscriptionCheckData {
     subscriptionId: string
@@ -88,54 +89,74 @@ function consentPayload(): any {
    ]
 }
 
-async function postSoftOptInConsentToIdentityAPI(identityId: string, identityToken: string): Promise<boolean> {
-    var url = `http://idapi.code.dev-theguardian.com/${identityId}/consents`
+async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApiKey: string): Promise<boolean> {
+    var url = `https://idapi.code.dev-theguardian.com/users/${identityId}/consents`
     if (Stage === "PROD") {
-        url = `https://idapi.theguardian.com/user/${identityId}/consents`
+        url = `https://idapi.theguardian.com/users/${identityId}/consents`
     }
     const params = {
         method: 'PATCH',
         body: JSON.stringify(consentPayload()),
         headers: {
-            Authorization: `Bearer ${identityToken}`,
+            Authorization: `Bearer ${identityApiKey}`,
             'Content-type': 'application/json',
         }
     }
     try {
+        console.log(`url ${url}`);
+        //console.log(`identityApiKey ${identityApiKey}`);
         return fetch(url, params)
             .then((response) => {
                 if (response.status == 200) {
                     return true;
                 } else {
-                    console.warn(`Warning, status: ${response.status}, while posting consent data for user ${identityId}`);
+                    console.warn(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
                     return false
                 }
             })
     } catch (error) {
-        console.warn(`Error while posting consent data for user ${identityId}`);
+        console.warn(`error while posting consent data for user ${identityId}`);
         console.warn(error);
         await putMetric("failed_consents_updates", 1)
         return Promise.resolve(false);
     }
 }
 
-function softOptInQueryParameterIsPresent(): boolean {
-    // Pascal's code: check for query parameter
-    // soft-opt-in-notifcation-shown=true
-    return false
+function softOptInQueryParameterIsPresent(httpRequest: APIGatewayProxyEvent): boolean {
+    // soft-opt-in-notification-shown=true
+    // https://aws.amazon.com/premiumsupport/knowledge-center/pass-api-gateway-rest-api-parameters/
+    // https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-lambda.html
+    // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/46689
+    // console.log(`httpRequest.multiValueQueryStringParameters: ${JSON.stringify(httpRequest.multiValueQueryStringParameters)}`);
+    // we get it as: {"soft-opt-in-notification-shown":["true"]}
+    if (httpRequest.multiValueQueryStringParameters === null) {
+        return false;
+    }
+    if (typeof httpRequest.multiValueQueryStringParameters["soft-opt-in-notification-shown"] === "undefined") {
+        return false;
+    }
+    if (httpRequest.multiValueQueryStringParameters["soft-opt-in-notification-shown"].length == 0) {
+        return false
+    }
+    return httpRequest.multiValueQueryStringParameters["soft-opt-in-notification-shown"][0] === "true"
 }
 
 async function updateDynamoLoggingTable(identityId: string) {
     const timestamp = new Date().getTime();
-    const record = new SoftOptInLog(identityId, "V1 - no subscription Id", timestamp, "Soft opt-ins processed for acquisition");
+    const record = new SoftOptInLog(identityId, "v1 - no subscription id", timestamp, "soft opt-ins processed for acquisition");
 
     try {
         await dynamoMapper.put({item: record});
-        console.log(`Logged soft opt-in setting to Dynamo`);
+        console.log(`logged soft opt-in setting to Dynamo`);
     } catch (error) {
-        console.warn(`Dynamo write failed for record: ${record}`);
+        console.warn(error);
+        console.warn(`dynamo write failed for record: ${record}`);
         await putMetric("failed_consents_updates", 1)
     }
+}
+
+async function getIdentityApiKey(): Promise<string> {
+    return await getConfigValue<string>("mp-soft-opt-in-identity-api-key");
 }
 
 const soft_opt_in_v1_active: boolean = false;
@@ -173,9 +194,10 @@ export async function parseAndStoreLink<A, B>(
 
                     const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
                     const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
-                    console.log(`Put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
+                    console.log(`put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
 
                     if (soft_opt_in_v1_active) {
+                        console.log(`entering soft opt in version 1`);
 
                         /*
 
@@ -202,7 +224,7 @@ export async function parseAndStoreLink<A, B>(
 
                             The trigger for the soft opt in will be the following query parameter:
                             ```
-                            soft-opt-in-notifcation-shown=true
+                            soft-opt-in-notification-shown=true
                             ```
 
                             In this current HTTP request we have a contextual user (corresponding to the userId
@@ -220,31 +242,38 @@ export async function parseAndStoreLink<A, B>(
                             from a UserSubscription.
 
                             Note that toUserSubscription(userId, payload) return an array of such subscriptions
+
+                            ### Why using a metric driven alerting instead of erroring ?
+
+                            These end points have a very strict contract with the mobile apps about which HTTP
+                            error codes to return in which situation, therefore there should not really be any uncaught
+                            error that filter up to the clients.
+
+                            ### Identity API
+
+                            We are using and have created mp-soft-opt-in-identity-api-key just for this.
+                            We could not use the userAuthenticationToken to post the consent object to Identity
+                            because it doesn't carry the right scopes.
+
                         */
 
-                        // We want reading in sequence from here:
-                        // https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
-
-                        /*
-                         Handle post-acquisition sign-ins here!
-                         */
-
-                        if (softOptInQueryParameterIsPresent()) {
-                            const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
+                        if (softOptInQueryParameterIsPresent(httpRequest)) {
+                            console.log(`softOptInQueryParameterIsPresent`);
+                            // const userAuthenticationToken = getAuthToken(httpRequest.headers) as string;
                             const subscriptionsFromHttpPayload = toUserSubscription(userId, payload);
 
+                            const identityApiKey = await getIdentityApiKey();
+
                             if (subscriptionsFromHttpPayload.length > 0) {
-                                await postSoftOptInConsentToIdentityAPI(userId, userAuthenticationToken);
-                                console.log(`Posted consent data for user ${userId}`);
+                                console.log(`posting consent data for user ${userId}`);
+                                await postSoftOptInConsentToIdentityAPI(userId, identityApiKey);
+                                console.log(`posted consent data for user ${userId}`);
 
                                 await updateDynamoLoggingTable(userId);
                             } else {
-                                console.warn(`Soft Opt-Ins V1 - No subscriptions found in the Link table`);
-                                await putMetric("failed_consents_updates", 1);
+                                console.warn(`soft opt-ins v1 - no subscriptions found in the HTTP payload`);
                             }
                         }
-
-                        // Todo: write test.
                     }
 
                     return HTTPResponses.OK;
