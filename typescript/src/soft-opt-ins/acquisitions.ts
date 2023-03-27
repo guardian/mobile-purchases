@@ -26,7 +26,7 @@ async function updateDynamoLoggingTable(subcriptionId: string, identityId: strin
     }
 }
 
-async function getUserEmailAddress(identityId: string, identityApiKey: string): Promise<boolean> {
+async function getUserEmailAddress(identityId: string, identityApiKey: string): Promise<string> {
     var url = `https://idapi.code.dev-theguardian.com/user/${identityId}`
     if (Stage === "PROD") {
         url = `https://idapi.theguardian.com/user/${identityId}`
@@ -42,21 +42,26 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
 
         return fetch(url, params)
             .then(async (response) => {
-                if (response.status == 200) {
+                if (response.ok) { // Checks if status code is within the 2xx range
                     const json = await response.json();
+
+                    if (!json.user || !json.user.primaryEmailAddress) {
+                        await putMetric("failed_consents_updates", 1);
+                        throw new Error('User or primaryEmailAddress is undefined');
+                    }
 
                     return json.user.primaryEmailAddress;
                 } else {
                     console.warn(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
-                    await putMetric("failed_consents_updates", 1)
-                    return false
+                    await putMetric("failed_consents_updates", 1);
+                    throw new Error()
                 }
             })
     } catch (error) {
-        console.warn(`error while posting consent data for user ${identityId}`);
+        console.warn(`error while retrieving user data for identityId: ${identityId}`);
         console.warn(error);
         await putMetric("failed_consents_updates", 1)
-        return Promise.resolve(false);
+        throw error
     }
 }
 
