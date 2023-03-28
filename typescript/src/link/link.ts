@@ -10,8 +10,8 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {UserIdResolution} from "../utils/guIdentityApi"
 import {Stage} from "../utils/appIdentity";
 import {SoftOptInLog} from "../models/softOptInLogging";
-import { getConfigValue } from '../utils/ssmConfig';
 const fetch = require('node-fetch');
+import {Response} from 'node-fetch';
 
 export interface SubscriptionCheckData {
     subscriptionId: string
@@ -104,10 +104,10 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
     }
     try {
         console.log(`url ${url}`);
-        //console.log(`identityApiKey ${identityApiKey}`);
+
         return fetch(url, params)
-            .then((response) => {
-                if (response.status == 200) {
+            .then((response: Response) => {
+                if (response.ok) {
                     return true;
                 } else {
                     console.warn(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);

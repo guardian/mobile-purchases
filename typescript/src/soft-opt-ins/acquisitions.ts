@@ -2,7 +2,8 @@ import { DynamoDBStreamEvent } from "aws-lambda";
 import {dynamoMapper, putMetric, sendToSqs} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Stage} from "../utils/appIdentity";
-import fetch from 'node-fetch';
+const fetch = require('node-fetch');
+import { Response } from 'node-fetch';
 import {SoftOptInLog} from "../models/softOptInLogging";
 import {getIdentityApiKey} from "../utils/guIdentityApi";
 
@@ -50,16 +51,14 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
         console.log(`url ${url}`);
 
         return fetch(url, params)
-            .then(async (response) => {
+            .then(async (response: Response) => {
                 if (response.ok) {
                     const json = await response.json();
 
-                    // @ts-ignore
                     if (!json.user || !json.user.primaryEmailAddress) {
                         return await handleError(identityId, 'User or primaryEmailAddress is undefined');
                     }
 
-                    // @ts-ignore
                     return json.user.primaryEmailAddress;
                 } else {
                     return await handleError(identityId, `warning, status: ${response.status}, while posting consent data for user ${identityId}`);
