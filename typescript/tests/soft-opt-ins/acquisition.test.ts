@@ -218,7 +218,7 @@ describe('acquisitionHandler', () => {
         expect(mockDataMapper.query).toHaveBeenCalledTimes(1);
         expect(mockDataMapper.query).toHaveBeenCalledWith(ReadSubscription, {subscriptionId: "12345"}, {indexName: "subscriptionId"});
 
-        expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
+        expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
 
         expect(fetch).toHaveBeenCalledTimes(1);
 
