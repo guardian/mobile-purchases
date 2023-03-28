@@ -12,7 +12,6 @@ export function isPostAcquisition(startTimestamp: string): boolean {
     const today = new Date();
     const acquisitionDate = new Date(startTimestamp);
 
-    // our timestamps are recorded in seconds hence the conversion to milliseconds
     return today.getTime() - acquisitionDate.getTime() >= twoDaysInMilliseconds
 }
 
