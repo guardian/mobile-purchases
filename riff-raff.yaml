@@ -4,7 +4,7 @@ regions: [eu-west-1]
 templates:
   lambda:
     type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation, mobile-purchases-exports-cloudformation, mobile-purchases-dynamo-cloudformation]
+    dependencies: [mobile-purchases-cloudformation, mobile-purchases-exports-cloudformation]
     parameters:
       bucket: mobile-dist
       prefixStack: false
@@ -103,11 +103,6 @@ deployments:
     type: cloud-formation
     parameters:
       templatePath: exports-cloudformation.yaml
-
-  mobile-purchases-dynamo-cloudformation:
-    type: cloud-formation
-    parameters:
-      templatePath: dynamo.cloudformation.yaml
 
   mobile-purchases-export-historical-data:
     template: lambda
