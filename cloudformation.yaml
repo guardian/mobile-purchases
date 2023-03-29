@@ -1212,7 +1212,7 @@ Resources:
         - Key: App
           Value: !Ref App
 
-  failedSettingSoftOptIns:
+  failedSettingAcquisitionSoftOptIns:
     Condition: IsProd
     Type: AWS::CloudWatch::Alarm
     DependsOn:
@@ -1220,7 +1220,7 @@ Resources:
     Properties:
       AlarmActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
-      AlarmName: !Sub soft-opt-ins-V1-${Stage} failed to set soft-opt-ins for IAP
+      AlarmName: !Sub soft-opt-ins-acquisitions-alarm-${Stage} failed to set soft-opt-ins for IAP
       AlarmDescription: >
         A run failed to set soft-opt-ins for an IAP in the Link endpoint.
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -1235,7 +1235,7 @@ Resources:
       Threshold: 1
       TreatMissingData: notBreaching
 
-  failedCancelSubscriptionHandlerAlarm:
+  failedSettingCancellationSoftOptIns:
     Condition: IsProd
     Type: AWS::CloudWatch::Alarm
     DependsOn:
@@ -1243,15 +1243,15 @@ Resources:
     Properties:
       AlarmActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
-      AlarmName: !Sub cancel-subscription-handler-${Stage} failed
+      AlarmName: !Sub soft-opt-ins-cancellations-alarm-${Stage} failed
       AlarmDescription: >
         An error occurred in the DynamoDB streams cancellation event handler.
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
-        - Name: FunctionName
-          Value: !Ref LambdaFunction
+        - Name: Stage
+          Value: !Sub ${Stage}
       EvaluationPeriods: 1
-      MetricName: failed_cancel_subscription_handler
+      MetricName: failed_cancellation_consents_updates
       Namespace: AWS/Lambda
       Period: 3600
       Statistic: Sum
