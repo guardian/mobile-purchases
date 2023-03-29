@@ -104,7 +104,7 @@ Resources:
         Enabled: true
         AttributeName: ttl
       StreamSpecification:
-        StreamViewType: KEYS_ONLY
+        StreamViewType: NEW_IMAGE
       GlobalSecondaryIndexes:
         - IndexName: ios-endTimestamp-revalidation-index
           KeySchema:
