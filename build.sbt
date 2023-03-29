@@ -60,6 +60,7 @@ lazy val root = project
     riffRaffArtifactResources += file("tsc-target/export-historical-data.zip") -> s"mobile-purchases-export-historical-data/export-historical-data.zip",
     riffRaffArtifactResources += file("tsc-target/apple-revalidate-receipts.zip") -> s"mobile-purchases-apple-revalidate-receipts/apple-revalidate-receipts.zip",
     riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",
+    riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/dynamo.cloudformation.yaml",
     riffRaffArtifactResources += file("exports-cloudformation.yaml") -> s"mobile-purchases-exports-cloudformation/exports-cloudformation.yaml",
   )
 
