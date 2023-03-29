@@ -145,7 +145,7 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       StreamSpecification:
-        StreamViewType: KEYS_ONLY
+        StreamViewType: NEW_IMAGE
       GlobalSecondaryIndexes:
         - IndexName: subscriptionId-userId
           KeySchema:
