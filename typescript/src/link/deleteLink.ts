@@ -26,12 +26,12 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
         return dynamoEvent.eventName === "REMOVE" &&
             dynamoEvent.userIdentity?.type === "Service" &&
             dynamoEvent.userIdentity?.principalId === "dynamodb.amazonaws.com" &&
-            dynamoEvent.dynamodb?.NewImage?.subscriptionId
+            dynamoEvent.dynamodb?.OldImage?.subscriptionId
     });
 
     const subscriptionsPromises = ttlEvents
         // @ts-ignore
-        .map(event => event.dynamodb.NewImage.subscriptionId.S ?? "")
+        .map(event => event.dynamodb.OldImage.subscriptionId.S ?? "")
         .map(deleteUserSubscription);
 
 
