@@ -144,6 +144,8 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
+      StreamSpecification:
+        StreamViewType: KEYS_ONLY
       GlobalSecondaryIndexes:
         - IndexName: subscriptionId-userId
           KeySchema:
@@ -160,3 +162,16 @@ Resources:
           Value: !Ref Stack
         - Key: App
           Value: !Ref App
+
+Outputs:
+  SubscriptionTableStream:
+    Description: The ARN of the dynamo DB stream
+    Value: !GetAtt SubscriptionTable.StreamArn
+    Export:
+      Name: !Sub ${App}-${Stage}-subscriptions-stream-arn
+
+  UserSubscriptionTableStream:
+    Description: The ARN of the dynamo DB stream
+    Value: !GetAtt UserSubscriptionTable.StreamArn
+    Export:
+      Name: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
