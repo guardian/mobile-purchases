@@ -9,7 +9,6 @@ const getEntries = (env) => {
     "google-link-user-subscription": "./typescript/src/link/google.ts",
     "apple-link-user-subscription": "./typescript/src/link/apple.ts",
     "delete-user-subscription": "./typescript/src/link/deleteLink.ts",
-    "cancel-subscription": "./typescript/src/soft-opt-ins/cancelSubscription.ts",
     "user-subscriptions": "./typescript/src/user/user.ts",
     "google-update-subscriptions": "./typescript/src/update-subs/google.ts",
     "apple-update-subscriptions": "./typescript/src/update-subs/apple.ts",
