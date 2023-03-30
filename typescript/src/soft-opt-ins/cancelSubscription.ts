@@ -34,7 +34,7 @@ export async function handler(
 		const cancellationEvents = getCancellationRecords(event);
 
 		for (const cancellationEvent of cancellationEvents) {
-			const userSubscription = await getUserSubscription(cancellationEvent.dynamodb?.Keys?.subscriptionId.S ?? '')
+			const userSubscription = await getUserSubscription(cancellationEvent.dynamodb?.NewImage?.subscriptionId.S ?? '')
 			sendToSqs(`soft-opt-in-consent-setter-queue-${Stage}`, {
 				identityId: userSubscription.userId,
 				eventType: "Cancellation",
