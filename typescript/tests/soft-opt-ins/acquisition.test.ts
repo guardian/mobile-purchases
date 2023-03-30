@@ -1,4 +1,4 @@
-import {acquisitionHandler, isPostAcquisition} from "../../src/soft-opt-ins/acquisitions";
+import {handler, isPostAcquisition} from "../../src/soft-opt-ins/acquisitions";
 import {DynamoDBStreamEvent} from "aws-lambda";
 import {ReadSubscription} from "../../src/models/subscription";
 
@@ -89,7 +89,7 @@ describe("isPostAcquisition() function", () => {
     });
 });
 
-describe('acquisitionHandler', () => {
+describe('handler', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
@@ -142,7 +142,7 @@ describe('acquisitionHandler', () => {
             };
         });
 
-        await acquisitionHandler(event);
+        await handler(event);
 
         expect(mockDataMapper.query).toHaveBeenCalledTimes(1);
         expect(mockDataMapper.query).toHaveBeenCalledWith(ReadSubscription, {subscriptionId: "12345"}, {indexName: "subscriptionId"});
@@ -213,7 +213,7 @@ describe('acquisitionHandler', () => {
             };
         });
 
-        await acquisitionHandler(event);
+        await handler(event);
 
         expect(mockDataMapper.query).toHaveBeenCalledTimes(1);
         expect(mockDataMapper.query).toHaveBeenCalledWith(ReadSubscription, {subscriptionId: "12345"}, {indexName: "subscriptionId"});
