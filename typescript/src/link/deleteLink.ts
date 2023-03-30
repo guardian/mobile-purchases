@@ -38,7 +38,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
     const subscriptionsPromises = ttlEvents
         // @ts-ignore
-        .map(event => event.dynamodb.Keys.subscriptionId.S ?? "")
+        .map(event => (event.dynamodb.Keys?.subscriptionId.S || event.dynamodb.OldImage?.subscriptionId.S) ?? "")
         .map(deleteUserSubscription);
 
 
