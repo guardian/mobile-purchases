@@ -1090,8 +1090,8 @@ Resources:
       Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-cancel-subscription/cancel-subscription.zip
-      FunctionName: !Sub ${App}-cancel-subscription-${Stage}
+        Key: !Sub ${Stack}/${Stage}/${App}-soft-opt-in-cancellations/soft-opt-in-cancellations.zip
+      FunctionName: !Sub ${App}-soft-opt-in-cancellations-${Stage}
       Role: !GetAtt DeleteUserLinkLambdasRole.Arn
       Environment:
         Variables:
