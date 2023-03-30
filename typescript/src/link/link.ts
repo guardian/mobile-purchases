@@ -1,7 +1,7 @@
 import {HTTPResponses} from '../models/apiGatewayHttp';
 import {UserSubscription} from "../models/userSubscription";
 import {ReadSubscription} from "../models/subscription";
-import {dynamoMapper, putMetric, sendToSqs, sqs} from "../utils/aws";
+import {dynamoMapper, putMetric, sqs} from "../utils/aws";
 import {getUserId, getAuthToken, getIdentityApiKey} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
