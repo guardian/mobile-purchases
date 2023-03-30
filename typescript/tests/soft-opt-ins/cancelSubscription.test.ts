@@ -50,6 +50,7 @@ jest.mock('aws-sdk/clients/sqs', () => {
 
 	return jest.fn(() => mockSQS)
 })
+jest.mock('aws-sdk/clients/cloudwatch', () => jest.fn());
 
 const setMockQuery = require('@aws/dynamodb-data-mapper').setMockQuery;
 

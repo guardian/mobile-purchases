@@ -40,6 +40,7 @@ jest.mock('node-fetch');
 
 jest.mock('../../src/utils/guIdentityApi');
 jest.mock('aws-sdk/clients/ssm', () => jest.fn());
+jest.mock('aws-sdk/clients/cloudwatch', () => jest.fn());
 
 jest.mock('util', () => jest.fn());
 

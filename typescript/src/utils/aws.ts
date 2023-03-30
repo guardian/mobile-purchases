@@ -4,12 +4,8 @@ import {DataMapper, ItemNotFoundException} from "@aws/dynamodb-data-mapper";
 import DynamoDB from 'aws-sdk/clients/dynamodb';
 import Sqs from 'aws-sdk/clients/sqs';
 import S3 from 'aws-sdk/clients/s3';
+import CloudWatch from 'aws-sdk/clients/cloudwatch';
 import {PromiseResult} from "aws-sdk/lib/request";
-import {
-    CloudWatchClient,
-    PutMetricDataCommand,
-    MetricDatum
-} from '@aws-sdk/client-cloudwatch';
 import SSM = require("aws-sdk/clients/ssm");
 
 const credentialProvider = new CredentialProviderChain([
@@ -41,10 +37,10 @@ export const ssm: SSM  = new SSM({
     credentialProvider: credentialProvider
 });
 
-const cloudWatchClient = new CloudWatchClient({ region: Region });
+const cloudWatchClient = new CloudWatch({ region: Region });
 
 export async function putMetric(metricName: string, value: number = 1.0): Promise<void> {
-    const metricDatum: MetricDatum = {
+    const metricDatum: AWS.CloudWatch.MetricDatum = {
         MetricName: metricName,
         Unit: "Count",
         Value: value,
@@ -56,12 +52,12 @@ export async function putMetric(metricName: string, value: number = 1.0): Promis
         ],
     };
 
-    const command = new PutMetricDataCommand({
+    const params: AWS.CloudWatch.PutMetricDataInput = {
         Namespace: "soft-opt-ins",
         MetricData: [metricDatum],
-    });
+    };
 
-    await cloudWatchClient.send(command);
+    await cloudWatchClient.putMetricData(params).promise();
 }
 
 export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
