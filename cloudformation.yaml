@@ -1025,7 +1025,7 @@ Resources:
     Condition: IsCode
     Type: AWS::Serverless::Function
     Properties:
-      Handler: soft-opt-ins.acquisitionsHandler
+      Handler: soft-opt-in-acquisitions.handler
       Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
@@ -1086,7 +1086,7 @@ Resources:
     Condition: IsCode
     Type: AWS::Serverless::Function
     Properties:
-      Handler: cancel-subscription.handler
+      Handler: soft-opt-in-cancellations.handler
       Runtime: nodejs14.x
       CodeUri:
         Bucket: !Ref DeployBucket
