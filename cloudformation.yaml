@@ -933,7 +933,9 @@ Resources:
                 - "dynamodb:GetShardIterator"
                 - "dynamodb:DescribeStream"
                 - "dynamodb:ListStreams"
-              Resource: arn:aws:dynamodb:eu-west-1:201359054765:table/mobile-purchases-CODE-subscriptions/stream/2023-03-30T15:54:59.075
+              Resource:
+                - Fn::ImportValue:
+                    !Sub ${App}-${Stage}-subscriptions-stream-arn
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
@@ -1073,7 +1075,9 @@ Resources:
         Schedule:
           Type: DynamoDB
           Properties:
-            Stream: arn:aws:dynamodb:eu-west-1:201359054765:table/mobile-purchases-CODE-subscriptions/stream/2023-03-30T15:54:59.075
+            Stream:
+              Fn::ImportValue:
+                !Sub ${App}-${Stage}-subscriptions-stream-arn
             StartingPosition: LATEST
       Tags:
         Stage: !Ref Stage
@@ -1103,7 +1107,9 @@ Resources:
         Schedule:
           Type: DynamoDB
           Properties:
-            Stream: arn:aws:dynamodb:eu-west-1:201359054765:table/mobile-purchases-CODE-subscriptions/stream/2023-03-30T15:54:59.075
+            Stream:
+              Fn::ImportValue:
+                !Sub ${App}-${Stage}-subscriptions-stream-arn
             StartingPosition: LATEST
       Tags:
         Stage: !Ref Stage
