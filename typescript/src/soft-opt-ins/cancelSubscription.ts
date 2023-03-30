@@ -20,11 +20,9 @@ async function getUserSubscription(subscriptionId: string): Promise<UserSubscrip
 }
 
 export function getCancellationRecords(event: DynamoDBStreamEvent) {
-	return event.Records.filter(dynamoEvent => {
-		return dynamoEvent.eventName === "MODIFY" &&
+	return event.Records.filter(dynamoEvent => dynamoEvent.eventName === "MODIFY" &&
 			dynamoEvent.dynamodb?.NewImage?.cancellationTimestamp
-			&& dynamoEvent.dynamodb.NewImage.cancellationTimestamp.N != null;
-	});
+			&& dynamoEvent.dynamodb.NewImage.cancellationTimestamp.N != null);
 }
 
 export async function handler(
