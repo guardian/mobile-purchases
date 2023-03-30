@@ -202,3 +202,12 @@ Outputs:
     Value: !GetAtt SubscriptionTable.StreamArn
     Export:
       Name: !Sub ${App}-${Stage}-subscriptions-stream-arn
+
+  EmailQueueArn:
+    Description: ARN of the soft opt ins logging table
+    Export:
+      Name: !Sub ${App}-${Stage}-soft-opt-ins-logging-table-arn
+    Value:
+      Fn::GetAtt:
+        - "SoftOptInsLoggingTable"
+        - "Arn"
