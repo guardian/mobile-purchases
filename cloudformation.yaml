@@ -1151,6 +1151,8 @@ Resources:
           AttributeType: S
         - AttributeName: userId
           AttributeType: S
+        - AttributeName: subscriptionId
+          AttributeType: S
       KeySchema:
         - AttributeName: timestamp
           KeyType: RANGE
