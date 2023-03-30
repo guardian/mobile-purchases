@@ -128,7 +128,7 @@ Resources:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
                 - Fn::ImportValue:
-                    !Sub ${App}-${Stage}-soft-opt-ins-logging-table-arn
+                    !Sub ${App}-${Stage}-soft-opt-ins-logs-table-arn
 
         - PolicyName: Sqs
           PolicyDocument:

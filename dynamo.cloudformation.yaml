@@ -163,7 +163,7 @@ Resources:
   SoftOptInsLoggingTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${App}-${Stage}-soft-opt-ins-logging
+      TableName: !Sub ${App}-${Stage}-soft-opt-ins-logs
       AttributeDefinitions:
         - AttributeName: timestamp
           AttributeType: N
@@ -206,7 +206,7 @@ Outputs:
   EmailQueueArn:
     Description: ARN of the soft opt ins logging table
     Export:
-      Name: !Sub ${App}-${Stage}-soft-opt-ins-logging-table-arn
+      Name: !Sub ${App}-${Stage}-soft-opt-ins-logs-table-arn
     Value:
       Fn::GetAtt:
         - "SoftOptInsLoggingTable"
