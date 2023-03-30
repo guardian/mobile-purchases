@@ -107,7 +107,7 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
         //console.log(`identityApiKey ${identityApiKey}`);
         return fetch(url, params)
             .then((response) => {
-                if (response.status == 200) {
+                if (response.ok) {
                     return true;
                 } else {
                     console.warn(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
