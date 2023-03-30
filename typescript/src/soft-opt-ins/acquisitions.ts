@@ -106,7 +106,7 @@ async function processAcquisition(record: any): Promise<void> {
     }
 }
 
-export async function acquisitionHandler(event: DynamoDBStreamEvent): Promise<any> {
+export async function handler(event: DynamoDBStreamEvent): Promise<any> {
     const records = event.Records;
 
     const processRecordPromises = records.map((record) => {
