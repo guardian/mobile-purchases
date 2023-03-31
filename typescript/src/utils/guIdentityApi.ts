@@ -34,6 +34,10 @@ export async function getIdentityApiKey(): Promise<string> {
     return await getConfigValue<string>("mp-soft-opt-in-identity-api-key");
 }
 
+export async function getMembershipAccountId(): Promise<string> {
+    return await getConfigValue<string>("membership-account-id");
+}
+
 export function getAuthToken(headers: HttpRequestHeaders): string | undefined {
     return (headers["Authorization"] ?? headers["authorization"])?.replace("Bearer ", "");
 }

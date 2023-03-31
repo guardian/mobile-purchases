@@ -1,11 +1,11 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
 import {dynamoMapper, putMetric, sendToSqs} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
-import {Stage} from "../utils/appIdentity";
+import {Region, Stage} from "../utils/appIdentity";
 const fetch = require('node-fetch');
 import { Response } from 'node-fetch';
 import {SoftOptInLog} from "../models/softOptInLogging";
-import {getIdentityApiKey} from "../utils/guIdentityApi";
+import {getIdentityApiKey, getMembershipAccountId} from "../utils/guIdentityApi";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -82,7 +82,10 @@ async function processAcquisition(record: any): Promise<void> {
      */
     const records = await dynamoMapper.query(ReadSubscription, {subscriptionId}, {indexName: "subscriptionId"});
 
-    await sendToSqs(Stage ===  "PROD" ? `soft-opt-in-consent-setter-queue-PROD`: `soft-opt-in-consent-setter-queue-DEV`, {
+    const membershipAccountId = await getMembershipAccountId();
+    const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
+
+    await sendToSqs(Stage ===  "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`: `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
         identityId: identityId,
         eventType: "Acquisition",
         productName: "InAppPurchase"
