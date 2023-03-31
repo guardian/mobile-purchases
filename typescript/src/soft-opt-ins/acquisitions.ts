@@ -83,13 +83,25 @@ async function processAcquisition(record: any): Promise<void> {
     const records = await dynamoMapper.query(ReadSubscription, {subscriptionId}, {indexName: "subscriptionId"});
 
     const membershipAccountId = await getMembershipAccountId();
+
+    console.log('membershipAccountId');
+    console.log(membershipAccountId);
+
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
-    await sendToSqs(Stage ===  "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`: `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
-        identityId: identityId,
-        eventType: "Acquisition",
-        productName: "InAppPurchase"
-    })
+    console.log('queueNamePrefix');
+    console.log(queueNamePrefix);
+
+    await sendToSqs(
+        Stage === "PROD"
+            ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
+            : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`,
+        {
+            identityId: identityId,
+            eventType: "Acquisition",
+            productName: "InAppPurchase",
+        }
+    );
 
     await updateDynamoLoggingTable(subscriptionId, identityId)
 
