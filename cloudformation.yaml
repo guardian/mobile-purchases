@@ -975,6 +975,11 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
+                - ssm:GetParametersByPath
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+        - Statement:
+            - Effect: Allow
+              Action:
                 - logs:CreateLogGroup
                 - logs:CreateLogStream
                 - logs:PutLogEvents
