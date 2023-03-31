@@ -99,7 +99,7 @@ describe("handler", () => {
 			productName: "InAppPurchase"
 		};
 		const expectedQueueMessageParams = {
-			QueueUrl: 'soft-opt-in-consent-setter-queue-CODE',
+			QueueUrl: 'soft-opt-in-consent-setter-queue-DEV',
 			MessageBody: JSON.stringify(expectedSoftOptInMessage),
 		};
 
