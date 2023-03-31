@@ -10,9 +10,8 @@ import SSM = require("aws-sdk/clients/ssm");
 
 const credentialProvider = new CredentialProviderChain([
     function () { return new ECSCredentials(); },
-    function () { return new SharedIniFileCredentials({
-        profile: "mobile"
-    }); }
+    function () { return new SharedIniFileCredentials({ profile: "mobile" }); },
+    function () { return new SharedIniFileCredentials({ profile: "membership" }); }
 ]);
 
 export const aws = new DynamoDB({
