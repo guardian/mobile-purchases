@@ -90,10 +90,9 @@ function consentPayload(): any {
 }
 
 async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApiKey: string): Promise<boolean> {
-    var url = `https://idapi.code.dev-theguardian.com/users/${identityId}/consents`
-    if (Stage === "PROD") {
-        url = `https://idapi.theguardian.com/users/${identityId}/consents`
-    }
+    const domain = await getConfigValue<string>("mp-soft-opt-in-identity-user-consent-domain-url");
+    const url = `${domain}/users/${identityId}/consents`;
+
     const params = {
         method: 'PATCH',
         body: JSON.stringify(consentPayload()),
