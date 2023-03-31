@@ -7,11 +7,11 @@ import S3 from 'aws-sdk/clients/s3';
 import CloudWatch from 'aws-sdk/clients/cloudwatch';
 import {PromiseResult} from "aws-sdk/lib/request";
 import SSM = require("aws-sdk/clients/ssm");
+import STS from "aws-sdk/clients/sts";
 
 const credentialProvider = new CredentialProviderChain([
     function () { return new ECSCredentials(); },
     function () { return new SharedIniFileCredentials({ profile: "mobile" }); },
-    function () { return new SharedIniFileCredentials({ profile: "membership" }); }
 ]);
 
 export const aws = new DynamoDB({
@@ -25,6 +25,33 @@ export const sqs = new Sqs({
     region: Region,
     credentialProvider: credentialProvider
 });
+
+let membershipSqsClient: Sqs | undefined;
+
+async function getSqsClientForMembershipAccount(): Promise<Sqs> {
+    if (!membershipSqsClient) {
+        const sts = new STS();
+        const assumeRoleResult = await sts.assumeRole({
+            RoleArn: ``,
+            RoleSessionName: 'CrossAccountSession',
+        }).promise();
+
+        const credentials = assumeRoleResult.Credentials;
+
+        if (!credentials) {
+            throw Error("credentials undefined in getSqsClientForMembershipAccount");
+        }
+
+        membershipSqsClient = new Sqs({
+            accessKeyId: credentials.AccessKeyId,
+            secretAccessKey: credentials.SecretAccessKey,
+            sessionToken: credentials.SessionToken,
+            region: Region,
+        });
+    }
+
+    return membershipSqsClient;
+}
 
 export const s3: S3  = new S3({
     region: Region ,
@@ -65,4 +92,12 @@ export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): 
         MessageBody: JSON.stringify(event),
         DelaySeconds: delaySeconds
     }).promise()
+}
+export async function sendToSqsMembership(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+    const membershipSqs = await getSqsClientForMembershipAccount();
+    return membershipSqs.sendMessage({
+        QueueUrl: queueUrl,
+        MessageBody: JSON.stringify(event),
+        DelaySeconds: delaySeconds
+    }).promise();
 }

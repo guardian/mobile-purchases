@@ -1,5 +1,5 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
-import {dynamoMapper, putMetric, sendToSqs} from "../utils/aws";
+import {dynamoMapper, putMetric, sendToSqsMembership} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
 const fetch = require('node-fetch');
@@ -92,7 +92,7 @@ async function processAcquisition(record: any): Promise<void> {
     console.log('queueNamePrefix');
     console.log(queueNamePrefix);
 
-    await sendToSqs(
+    await sendToSqsMembership(
         Stage === "PROD"
             ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
             : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`,
@@ -111,7 +111,7 @@ async function processAcquisition(record: any): Promise<void> {
 
             const emailAddress = await getUserEmailAddress(identityId, identityApiKey)
 
-            await sendToSqs("subs-welcome-email", {
+            await sendToSqsMembership("subs-welcome-email", {
                 To:{Address: emailAddress,
                     ContactAttributes:{SubscriberAttributes: {}}},
                 DataExtensionName:"SV_PA_SOINotification",
