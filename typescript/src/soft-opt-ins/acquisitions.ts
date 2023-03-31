@@ -82,7 +82,7 @@ async function processAcquisition(record: any): Promise<void> {
      */
     const records = await dynamoMapper.query(ReadSubscription, {subscriptionId}, {indexName: "subscriptionId"});
 
-    await sendToSqs(`soft-opt-in-consent-setter-queue-${Stage}`, {
+    await sendToSqs(Stage ===  "PROD" ? `soft-opt-in-consent-setter-queue-PROD`: `soft-opt-in-consent-setter-queue-DEV`, {
         identityId: identityId,
         eventType: "Acquisition",
         productName: "InAppPurchase"

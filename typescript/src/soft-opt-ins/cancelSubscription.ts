@@ -33,7 +33,7 @@ export async function handler(
 
 		for (const cancellationEvent of cancellationEvents) {
 			const userSubscription = await getUserSubscription(cancellationEvent.dynamodb?.NewImage?.subscriptionId.S ?? '')
-			sendToSqs(`soft-opt-in-consent-setter-queue-${Stage}`, {
+			sendToSqs(Stage ===  "PROD" ? `soft-opt-in-consent-setter-queue-PROD`: `soft-opt-in-consent-setter-queue-DEV`, {
 				identityId: userSubscription.userId,
 				eventType: "Cancellation",
 				productName: "InAppPurchase"
