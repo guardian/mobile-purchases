@@ -979,7 +979,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - sts:AssumeRole
-                Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/SoftOptInsQueueCrossAccountRole"
+                Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/membership-DEV-soft-opt-i-SoftOptInsQueueCrossAcco-16COBHTVZ444E"
         - Statement:
             - Effect: Allow
               Action:
