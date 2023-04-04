@@ -8,6 +8,7 @@ import CloudWatch from 'aws-sdk/clients/cloudwatch';
 import {PromiseResult} from "aws-sdk/lib/request";
 import SSM = require("aws-sdk/clients/ssm");
 import STS from "aws-sdk/clients/sts";
+import {getMembershipAccountId} from "./guIdentityApi";
 
 const credentialProvider = new CredentialProviderChain([
     function () { return new ECSCredentials(); },
@@ -30,9 +31,10 @@ let membershipSqsClient: Sqs | undefined;
 
 async function getSqsClientForMembershipAccount(): Promise<Sqs> {
     if (!membershipSqsClient) {
+        const membershipAccountId = await getMembershipAccountId();
         const sts = new STS();
         const assumeRoleResult = await sts.assumeRole({
-            RoleArn: ``,
+            RoleArn: `arn:aws:iam::${membershipAccountId}:role/membership-DEV-soft-opt-i-SoftOptInsQueueCrossAcco-16COBHTVZ444E`,
             RoleSessionName: 'CrossAccountSession',
         }).promise();
 

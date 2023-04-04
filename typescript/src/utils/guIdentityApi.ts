@@ -35,7 +35,7 @@ export async function getIdentityApiKey(): Promise<string> {
 }
 
 export async function getMembershipAccountId(): Promise<string> {
-    return await getConfigValue<string>("membership-account-id");
+    return await getConfigValue<string>("membershipAccountId");
 }
 
 export function getAuthToken(headers: HttpRequestHeaders): string | undefined {
