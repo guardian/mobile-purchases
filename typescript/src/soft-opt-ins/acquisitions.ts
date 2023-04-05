@@ -2,7 +2,7 @@ import {DynamoDBRecord, DynamoDBStreamEvent} from "aws-lambda";
 import {dynamoMapper, putMetric, sendToSqsComms, sendToSqsSoftOptIns} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import {SoftOptInLog} from "../models/softOptInLogging";
 import {getIdentityApiKey, getMembershipAccountId} from "../utils/guIdentityApi";
