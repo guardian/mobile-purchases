@@ -1,6 +1,6 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
 import {dynamoMapper, putMetric, sendToSqsComms, sendToSqsSoftOptIns} from "../utils/aws";
-import {ReadSubscription, Subscription} from "../models/subscription";
+import {ReadSubscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
 const fetch = require('node-fetch');
 import { Response } from 'node-fetch';
