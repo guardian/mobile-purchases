@@ -29,7 +29,7 @@ export const sqs = new Sqs({
 
 let membershipSqsClient: Sqs | undefined;
 
-async function getSqsClientForMembershipAccount(): Promise<Sqs> {
+async function getSqsClientForSoftOptIns(): Promise<Sqs> {
     if (!membershipSqsClient) {
         const membershipAccountId = await getMembershipAccountId();
         const sts = new STS();
@@ -44,7 +44,34 @@ async function getSqsClientForMembershipAccount(): Promise<Sqs> {
         const credentials = assumeRoleResult.Credentials;
 
         if (!credentials) {
-            throw Error("credentials undefined in getSqsClientForMembershipAccount");
+            throw Error("credentials undefined in getSqsClientForSoftOptIns");
+        }
+
+        membershipSqsClient = new Sqs({
+            accessKeyId: credentials.AccessKeyId,
+            secretAccessKey: credentials.SecretAccessKey,
+            sessionToken: credentials.SessionToken,
+            region: Region,
+        });
+    }
+
+    return membershipSqsClient;
+}
+
+async function getSqsClientForComms(): Promise<Sqs> {
+    if (!membershipSqsClient) {
+        const membershipAccountId = await getMembershipAccountId();
+        const sts = new STS();
+
+        const assumeRoleResult = await sts.assumeRole({
+            RoleArn: `arn:aws:iam::${membershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole`,
+            RoleSessionName: 'CrossAccountSession',
+        }).promise();
+
+        const credentials = assumeRoleResult.Credentials;
+
+        if (!credentials) {
+            throw Error("credentials undefined in getSqsClientForComms");
         }
 
         membershipSqsClient = new Sqs({
@@ -98,8 +125,16 @@ export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): 
         DelaySeconds: delaySeconds
     }).promise()
 }
-export async function sendToSqsMembership(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
-    const membershipSqs = await getSqsClientForMembershipAccount();
+export async function sendToSqsSoftOptIns(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+    const membershipSqs = await getSqsClientForSoftOptIns();
+    return membershipSqs.sendMessage({
+        QueueUrl: queueUrl,
+        MessageBody: JSON.stringify(event),
+        DelaySeconds: delaySeconds
+    }).promise();
+}
+export async function sendToSqsComms(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+    const membershipSqs = await getSqsClientForComms();
     return membershipSqs.sendMessage({
         QueueUrl: queueUrl,
         MessageBody: JSON.stringify(event),

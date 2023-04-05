@@ -1,5 +1,5 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
-import {dynamoMapper, putMetric, sendToSqsMembership} from "../utils/aws";
+import {dynamoMapper, putMetric, sendToSqsComms, sendToSqsMembership, sendToSqsSoftOptIns} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
 const fetch = require('node-fetch');
@@ -92,7 +92,7 @@ async function processAcquisition(record: any): Promise<void> {
     console.log('queueNamePrefix');
     console.log(queueNamePrefix);
 
-    await sendToSqsMembership(
+    await sendToSqsSoftOptIns(
         Stage === "PROD"
             ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
             : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`,
@@ -105,14 +105,13 @@ async function processAcquisition(record: any): Promise<void> {
 
     await updateDynamoLoggingTable(subscriptionId, identityId)
 
-    /*
     for await (const record of records) {
         if (isPostAcquisition(record.startTimestamp)) {
             const identityApiKey = await getIdentityApiKey();
 
             const emailAddress = await getUserEmailAddress(identityId, identityApiKey)
 
-            await sendToSqsMembership(`${queueNamePrefix}/subs-welcome-email`, {
+            await sendToSqsComms(`${queueNamePrefix}/braze-emails-${Stage}`, {
                 To:{Address: emailAddress,
                     ContactAttributes:{SubscriberAttributes: {}}},
                 DataExtensionName:"SV_PA_SOINotification",
@@ -120,7 +119,6 @@ async function processAcquisition(record: any): Promise<void> {
                 IdentityUserId: identityId})
         }
     }
-    */
 }
 
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {
