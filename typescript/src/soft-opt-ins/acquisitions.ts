@@ -1,4 +1,4 @@
-import { DynamoDBStreamEvent } from "aws-lambda";
+import {DynamoDBRecord, DynamoDBStreamEvent} from "aws-lambda";
 import {dynamoMapper, putMetric, sendToSqsComms, sendToSqsSoftOptIns} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
@@ -68,9 +68,9 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
     }
 }
 
-async function processAcquisition(record: any): Promise<void> {
-    const identityId = record?.dynamodb?.NewImage?.userId?.S;
-    const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S;
+async function processAcquisition(record: DynamoDBRecord): Promise<void> {
+    const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
+    const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
 
     // fetch the subscription record from the `subscriptions` table as we need to get the acquisition date of the sub to know when to send WelcomeDay0 email
     /*
@@ -81,9 +81,9 @@ async function processAcquisition(record: any): Promise<void> {
          days since purchase, if it does not exist yet in the table, then we assume the customer has purchased it just now.
      */
     let itemToQuery = new ReadSubscription();
-    itemToQuery.setSubscriptionId(subscriptionId);
+    itemToQuery.setSubscriptionId(subscriptionId || "");
 
-    const record = await dynamoMapper.get(itemToQuery);
+    const subscriptionRecord = await dynamoMapper.get(itemToQuery);
 
     const membershipAccountId = await getMembershipAccountId();
 
@@ -105,7 +105,7 @@ async function processAcquisition(record: any): Promise<void> {
 
     await updateDynamoLoggingTable(subscriptionId, identityId)
 
-    if (isPostAcquisition(record.startTimestamp)) {
+    if (isPostAcquisition(subscriptionRecord.startTimestamp)) {
         const identityApiKey = await getIdentityApiKey();
 
         const emailAddress = await getUserEmailAddress(identityId, identityApiKey);
@@ -128,7 +128,7 @@ async function processAcquisition(record: any): Promise<void> {
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {
     const records = event.Records;
 
-    const processRecordPromises = records.map((record) => {
+    const processRecordPromises = records.map((record: DynamoDBRecord) => {
         const eventName = record.eventName;
 
         if (eventName === "INSERT") {
