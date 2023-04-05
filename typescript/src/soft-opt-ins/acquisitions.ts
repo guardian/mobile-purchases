@@ -64,7 +64,7 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
                 }
             })
     } catch (error) {
-        return await handleError(identityId, `error while retrieving user data for identityId: ${identityId}`);
+        return await handleError(identityId, `error while retrieving user data for identityId: ${identityId}: ${error}`);
     }
 }
 
@@ -81,7 +81,7 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
          days since purchase, if it does not exist yet in the table, then we assume the customer has purchased it just now.
      */
     let itemToQuery = new ReadSubscription();
-    itemToQuery.setSubscriptionId(subscriptionId || "");
+    itemToQuery.setSubscriptionId(subscriptionId);
 
     const subscriptionRecord = await dynamoMapper.get(itemToQuery);
 
