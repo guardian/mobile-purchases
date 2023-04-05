@@ -988,10 +988,15 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
+                - sts:AssumeRole
+              Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole"
+        - Statement:
+            - Effect: Allow
+              Action:
                 - "dynamodb:Query"
               Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
         - Statement:
             - Effect: Allow
               Action:
