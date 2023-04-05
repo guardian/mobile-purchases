@@ -1,6 +1,6 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
 import {dynamoMapper, putMetric, sendToSqsComms, sendToSqsSoftOptIns} from "../utils/aws";
-import {ReadSubscription} from "../models/subscription";
+import {ReadSubscription, Subscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
 const fetch = require('node-fetch');
 import { Response } from 'node-fetch';
@@ -80,45 +80,48 @@ async function processAcquisition(record: any): Promise<void> {
          This is not an issue. Since we are using the subscription record's acquisition date to determine if it has been more than two
          days since purchase, if it does not exist yet in the table, then we assume the customer has purchased it just now.
      */
-    const records = await dynamoMapper.query(ReadSubscription, {subscriptionId: subscriptionId});
+    let itemToQuery = new ReadSubscription();
+    itemToQuery.setSubscriptionId(subscriptionId);
+
+    const record = await dynamoMapper.get(itemToQuery);
 
     const membershipAccountId = await getMembershipAccountId();
 
-    console.log('membershipAccountId');
-    console.log(membershipAccountId);
-
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
-    console.log('queueNamePrefix');
-    console.log(queueNamePrefix);
+    const message = {
+        identityId: identityId,
+        eventType: "Acquisition",
+        productName: "InAppPurchase",
+    };
 
     await sendToSqsSoftOptIns(
         Stage === "PROD"
             ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
             : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`,
-        {
-            identityId: identityId,
-            eventType: "Acquisition",
-            productName: "InAppPurchase",
-        }
+         message
     );
-    console.log("sent message to soft-opt-in-consent-setter-queue")
+    console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${message}`)
 
     await updateDynamoLoggingTable(subscriptionId, identityId)
 
-    for await (const record of records) {
-        if (isPostAcquisition(record.startTimestamp)) {
-            const identityApiKey = await getIdentityApiKey();
+    if (isPostAcquisition(record.startTimestamp)) {
+        const identityApiKey = await getIdentityApiKey();
 
-            const emailAddress = await getUserEmailAddress(identityId, identityApiKey)
+        const emailAddress = await getUserEmailAddress(identityId, identityApiKey);
+        const brazeMessage = {
+            To: {
+                Address: emailAddress,
+                ContactAttributes: {SubscriberAttributes: {}}
+            },
+            DataExtensionName: "SV_PA_SOINotification",
+            SfContactId: "",
+            IdentityUserId: identityId
+        };
 
-            await sendToSqsComms(`${queueNamePrefix}/braze-emails-${Stage}`, {
-                To:{Address: emailAddress,
-                    ContactAttributes:{SubscriberAttributes: {}}},
-                DataExtensionName:"SV_PA_SOINotification",
-                SfContactId:"",
-                IdentityUserId: identityId})
-        }
+        await sendToSqsComms(`${queueNamePrefix}/braze-emails-${Stage}`, brazeMessage);
+
+        console.log(`Sent message to braze-emails queue for user: ${identityId}: ${brazeMessage}`)
     }
 }
 
