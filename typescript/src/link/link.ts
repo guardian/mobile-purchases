@@ -10,7 +10,7 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {UserIdResolution} from "../utils/guIdentityApi"
 import {Stage} from "../utils/appIdentity";
 import {SoftOptInLog} from "../models/softOptInLogging";
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 import {Response} from 'node-fetch';
 
 export interface SubscriptionCheckData {

@@ -28,6 +28,7 @@ export const sqs = new Sqs({
 });
 
 let membershipSqsClient: Sqs | undefined;
+let commsSqsClient: Sqs | undefined;
 
 async function getSqsClientForSoftOptIns(): Promise<Sqs> {
     if (!membershipSqsClient) {
@@ -59,7 +60,7 @@ async function getSqsClientForSoftOptIns(): Promise<Sqs> {
 }
 
 async function getSqsClientForComms(): Promise<Sqs> {
-    if (!membershipSqsClient) {
+    if (!commsSqsClient) {
         const membershipAccountId = await getMembershipAccountId();
         const sts = new STS();
 
@@ -74,7 +75,7 @@ async function getSqsClientForComms(): Promise<Sqs> {
             throw Error("credentials undefined in getSqsClientForComms");
         }
 
-        membershipSqsClient = new Sqs({
+        commsSqsClient = new Sqs({
             accessKeyId: credentials.AccessKeyId,
             secretAccessKey: credentials.SecretAccessKey,
             sessionToken: credentials.SessionToken,
@@ -82,7 +83,7 @@ async function getSqsClientForComms(): Promise<Sqs> {
         });
     }
 
-    return membershipSqsClient;
+    return commsSqsClient;
 }
 
 export const s3: S3  = new S3({
