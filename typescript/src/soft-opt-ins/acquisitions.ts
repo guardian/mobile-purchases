@@ -102,6 +102,7 @@ async function processAcquisition(record: any): Promise<void> {
             productName: "InAppPurchase",
         }
     );
+    console.log("sent message to soft-opt-in-consent-setter-queue")
 
     await updateDynamoLoggingTable(subscriptionId, identityId)
 

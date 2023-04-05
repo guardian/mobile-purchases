@@ -994,9 +994,16 @@ Resources:
             - Effect: Allow
               Action:
                 - "dynamodb:Query"
+                - "dynamodb:GetItem"
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-soft-opt-ins-logging-v2
         - Statement:
             - Effect: Allow
               Action:
@@ -1137,11 +1144,17 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
+                - "dynamodb:GetItem"
                 - "dynamodb:Query"
-                - "dynamodb:DeleteItem"
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-soft-opt-ins-logging-v2
         - Statement:
             - Effect: Allow
               Action:

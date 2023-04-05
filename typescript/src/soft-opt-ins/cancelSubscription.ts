@@ -1,7 +1,7 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
 import { ReadUserSubscription, UserSubscription } from "../models/userSubscription";
 import { Stage } from "../utils/appIdentity";
-import { dynamoMapper, putMetric, sendToSqs } from "../utils/aws";
+import {dynamoMapper, putMetric, sendToSqsSoftOptIns} from "../utils/aws";
 
 async function getUserSubscription(subscriptionId: string): Promise<UserSubscription> {
 	const userLinks = await dynamoMapper.query(ReadUserSubscription, { subscriptionId }, { indexName: "subscriptionId-userId" });
@@ -33,7 +33,7 @@ export async function handler(
 
 		for (const cancellationEvent of cancellationEvents) {
 			const userSubscription = await getUserSubscription(cancellationEvent.dynamodb?.NewImage?.subscriptionId.S ?? '')
-			sendToSqs(Stage ===  "PROD" ? `soft-opt-in-consent-setter-queue-PROD`: `soft-opt-in-consent-setter-queue-DEV`, {
+			sendToSqsSoftOptIns(Stage ===  "PROD" ? `soft-opt-in-consent-setter-queue-PROD`: `soft-opt-in-consent-setter-queue-DEV`, {
 				identityId: userSubscription.userId,
 				eventType: "Cancellation",
 				productName: "InAppPurchase"
