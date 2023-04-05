@@ -80,7 +80,7 @@ async function processAcquisition(record: any): Promise<void> {
          This is not an issue. Since we are using the subscription record's acquisition date to determine if it has been more than two
          days since purchase, if it does not exist yet in the table, then we assume the customer has purchased it just now.
      */
-    const records = await dynamoMapper.query(ReadSubscription, {subscriptionId}, {indexName: "subscriptionId"});
+    const records = await dynamoMapper.query(ReadSubscription, {subscriptionId: subscriptionId});
 
     const membershipAccountId = await getMembershipAccountId();
 
