@@ -105,13 +105,14 @@ async function processAcquisition(record: any): Promise<void> {
 
     await updateDynamoLoggingTable(subscriptionId, identityId)
 
+    /*
     for await (const record of records) {
         if (isPostAcquisition(record.startTimestamp)) {
             const identityApiKey = await getIdentityApiKey();
 
             const emailAddress = await getUserEmailAddress(identityId, identityApiKey)
 
-            await sendToSqsMembership("subs-welcome-email", {
+            await sendToSqsMembership(`${queueNamePrefix}/subs-welcome-email`, {
                 To:{Address: emailAddress,
                     ContactAttributes:{SubscriberAttributes: {}}},
                 DataExtensionName:"SV_PA_SOINotification",
@@ -119,6 +120,7 @@ async function processAcquisition(record: any): Promise<void> {
                 IdentityUserId: identityId})
         }
     }
+    */
 }
 
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {

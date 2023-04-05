@@ -51,8 +51,10 @@ Mappings:
   StageVariables:
     CODE:
       AlarmActionsEnabled: FALSE
+      SoftOptInConsentSetterStage: DEV
     PROD:
       AlarmActionsEnabled: TRUE
+      SoftOptInConsentSetterStage: PROD
 
 Conditions:
   IsCode: !Equals [!Ref "Stage", "CODE"]
@@ -979,7 +981,17 @@ Resources:
               - Effect: Allow
                 Action:
                   - sts:AssumeRole
-                Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/membership-DEV-soft-opt-i-SoftOptInsQueueCrossAcco-16COBHTVZ444E"
+                Resource:
+                  !Sub
+                  - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
+                  - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:Query"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
         - Statement:
             - Effect: Allow
               Action:
