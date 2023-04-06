@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: Validates mobile purchases
 Parameters:
+  MobileAccountId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: 'mobileAccountId'
+
   Stack:
     Description: Stack name
     Type: String
@@ -926,9 +930,7 @@ Resources:
                 - "dynamodb:GetShardIterator"
                 - "dynamodb:DescribeStream"
                 - "dynamodb:ListStreams"
-              Resource:
-                - Fn::ImportValue:
-                    !Sub ${App}-${Stage}-subscriptions-stream-arn
+              Resource: !Sub arn:aws:dynamodb:eu-west-1:${MobileAccountId}:table/mobile-purchases-PROD-subscriptions/stream/2019-09-04T14:11:45.717
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
@@ -1002,9 +1004,7 @@ Resources:
         Schedule:
           Type: DynamoDB
           Properties:
-            Stream:
-              Fn::ImportValue:
-                !Sub ${App}-${Stage}-subscriptions-stream-arn
+            Stream: !Sub arn:aws:dynamodb:eu-west-1:${MobileAccountId}:table/mobile-purchases-PROD-subscriptions/stream/2019-09-04T14:11:45.717
             StartingPosition: LATEST
       Tags:
         Stage: !Ref Stage
