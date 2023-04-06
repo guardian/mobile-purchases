@@ -1,7 +1,8 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
 import { ReadUserSubscription, UserSubscription } from "../models/userSubscription";
-import { Stage } from "../utils/appIdentity";
+import {Region, Stage} from "../utils/appIdentity";
 import {dynamoMapper, putMetric, sendToSqsSoftOptIns} from "../utils/aws";
+import {getMembershipAccountId} from "../utils/guIdentityApi";
 
 async function getUserSubscription(subscriptionId: string): Promise<UserSubscription> {
 	const userLinks = await dynamoMapper.query(ReadUserSubscription, { subscriptionId }, { indexName: "subscriptionId-userId" });
@@ -32,8 +33,12 @@ export async function handler(
 		const cancellationEvents = getCancellationRecords(event);
 
 		for (const cancellationEvent of cancellationEvents) {
-			const userSubscription = await getUserSubscription(cancellationEvent.dynamodb?.NewImage?.subscriptionId.S ?? '')
-			sendToSqsSoftOptIns(Stage ===  "PROD" ? `soft-opt-in-consent-setter-queue-PROD`: `soft-opt-in-consent-setter-queue-DEV`, {
+			const userSubscription = await getUserSubscription(cancellationEvent.dynamodb?.NewImage?.subscriptionId.S ?? '');
+
+			const membershipAccountId = await getMembershipAccountId();
+			const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
+
+			await sendToSqsSoftOptIns(Stage ===  "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`: `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
 				identityId: userSubscription.userId,
 				eventType: "Cancellation",
 				productName: "InAppPurchase"
