@@ -105,12 +105,6 @@ deployments:
       functionNames: [mobile-purchases-soft-opt-in-acquisitions-]
       fileName: soft-opt-in-acquisitions.zip
 
-  mobile-purchases-soft-opt-in-cancellations:
-    template: lambda
-    parameters:
-      functionNames: [mobile-purchases-soft-opt-in-cancellations-]
-      fileName: soft-opt-in-cancellations.zip
-
   mobile-purchases-exports-cloudformation:
     type: cloud-formation
     parameters:

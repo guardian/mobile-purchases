@@ -23,22 +23,15 @@ async function deleteUserSubscription(subscriptionId: string): Promise<number> {
 
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {
     const ttlEvents = event.Records.filter(dynamoEvent => {
-        /*
-            This is a temporary solution to handle both OLD_KEYS and OLD_AND_NEW_IMAGE
-            stream specifications to avoid anything breaking when deploying the new specification.
-         */
-        const hasKeys = dynamoEvent.dynamodb?.Keys?.subscriptionId;
-        const hasOldImage = dynamoEvent.dynamodb?.OldImage?.subscriptionId;
-
         return dynamoEvent.eventName === "REMOVE" &&
             dynamoEvent.userIdentity?.type === "Service" &&
             dynamoEvent.userIdentity?.principalId === "dynamodb.amazonaws.com" &&
-            (hasKeys || hasOldImage)
+            dynamoEvent.dynamodb?.Keys?.subscriptionId
     });
 
     const subscriptionsPromises = ttlEvents
         // @ts-ignore
-        .map(event => (event.dynamodb.Keys?.subscriptionId.S || event.dynamodb.OldImage?.subscriptionId.S) ?? "")
+        .map(event => event.dynamodb.Keys.subscriptionId.S ?? "")
         .map(deleteUserSubscription);
 
 

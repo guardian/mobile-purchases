@@ -14,7 +14,6 @@ Parameters:
     AllowedValues:
       - CODE
       - PROD
-
 Resources:
   userPurchasesTable:
     Type: AWS::DynamoDB::Table
@@ -104,7 +103,7 @@ Resources:
         Enabled: true
         AttributeName: ttl
       StreamSpecification:
-        StreamViewType: NEW_AND_OLD_IMAGES
+        StreamViewType: KEYS_ONLY
       GlobalSecondaryIndexes:
         - IndexName: ios-endTimestamp-revalidation-index
           KeySchema:
@@ -144,8 +143,6 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
-      StreamSpecification:
-        StreamViewType: NEW_IMAGE
       GlobalSecondaryIndexes:
         - IndexName: subscriptionId-userId
           KeySchema:
@@ -153,6 +150,40 @@ Resources:
               KeyType: HASH
             - AttributeName: userId
               KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+
+  SoftOptInsLoggingTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${App}-${Stage}-soft-opt-ins-logging
+      AttributeDefinitions:
+        - AttributeName: timestamp
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: timestamp
+          KeyType: RANGE
+        - AttributeName: userId
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+      GlobalSecondaryIndexes:
+        - IndexName: subscriptionId-index
+          KeySchema:
+            - AttributeName: subscriptionId
+              KeyType: HASH
           Projection:
             ProjectionType: ALL
       Tags:
