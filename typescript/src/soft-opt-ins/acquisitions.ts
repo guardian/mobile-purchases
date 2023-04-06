@@ -101,7 +101,7 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
             : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`,
          message
     );
-    console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${message}`)
+    console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`)
 
     await updateDynamoLoggingTable(subscriptionId, identityId)
 
@@ -121,7 +121,7 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
 
         await sendToSqsComms(`${queueNamePrefix}/braze-emails-${Stage}`, brazeMessage);
 
-        console.log(`Sent message to braze-emails queue for user: ${identityId}: ${brazeMessage}`)
+        console.log(`Sent message to braze-emails queue for user: ${identityId}: ${JSON.stringify(brazeMessage)}`)
     }
 }
 
