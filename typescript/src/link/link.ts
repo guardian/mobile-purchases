@@ -7,11 +7,11 @@ import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
 import {ProcessingError} from "../models/processingError";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {UserIdResolution} from "../utils/guIdentityApi"
-import {Stage} from "../utils/appIdentity";
+import {UserIdResolution} from "../utils/guIdentityApi";
 import {SoftOptInLog} from "../models/softOptInLogging";
 import fetch from 'node-fetch';
 import {Response} from 'node-fetch';
+import {getConfigValue} from "../utils/ssmConfig";
 
 export interface SubscriptionCheckData {
     subscriptionId: string
