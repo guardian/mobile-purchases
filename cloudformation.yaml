@@ -51,8 +51,10 @@ Mappings:
   StageVariables:
     CODE:
       AlarmActionsEnabled: FALSE
+      SoftOptInConsentSetterStage: DEV
     PROD:
       AlarmActionsEnabled: TRUE
+      SoftOptInConsentSetterStage: PROD
 
 Conditions:
   IsProd: !Equals [!Ref "Stage", "PROD"]
@@ -1222,7 +1224,7 @@ Resources:
         - Name: Stage
           Value: !Sub ${Stage}
       EvaluationPeriods: 1
-      MetricName: failed_to_send_message
+      MetricName: failed_to_send_acquisition_message
       Namespace: soft-opt-ins
       Period: 3600
       Statistic: Sum
