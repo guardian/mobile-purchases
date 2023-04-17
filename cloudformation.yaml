@@ -2,6 +2,9 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: Validates mobile purchases
 Parameters:
+  MembershipAccountId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: 'membershipAccountId'
   Stack:
     Description: Stack name
     Type: String
