@@ -6,6 +6,7 @@ import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import {SoftOptInLog} from "../models/softOptInLogging";
 import {getIdentityApiKey, getMembershipAccountId} from "../utils/guIdentityApi";
+import {getConfigValue} from "../utils/ssmConfig";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -35,10 +36,9 @@ async function handleError(identityId: string, message: string): Promise<never> 
 }
 
 async function getUserEmailAddress(identityId: string, identityApiKey: string): Promise<string> {
-    var url = `https://idapi.code.dev-theguardian.com/user/${identityId}`
-    if (Stage === "PROD") {
-        url = `https://idapi.theguardian.com/user/${identityId}`
-    }
+    const domain = await getConfigValue<string>("mp-soft-opt-in-identity-user-consent-domain-url");
+    const url = `${domain}/user/${identityId}`;
+
     const params = {
         method: 'GET',
         headers: {
