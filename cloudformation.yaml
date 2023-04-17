@@ -51,6 +51,10 @@ Mappings:
     PROD:
       AlarmActionsEnabled: TRUE
 
+Conditions:
+  IsProd: !Equals [!Ref "Stage", "PROD"]
+  IsCode: !Equals [!Ref "Stage", "CODE"]
+
 Resources:
   MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
@@ -1200,6 +1204,7 @@ Resources:
           Value: !Ref App
 
   failedSettingSoftOptIns:
+    Condition: IsProd
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - UserSubscriptionsLambda
@@ -1214,7 +1219,7 @@ Resources:
         - Name: Stage
           Value: !Sub ${Stage}
       EvaluationPeriods: 1
-      MetricName: failed_consents_updates
+      MetricName: failed_to_send_message
       Namespace: soft-opt-ins
       Period: 3600
       Statistic: Sum

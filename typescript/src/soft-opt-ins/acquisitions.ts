@@ -24,13 +24,13 @@ async function updateDynamoLoggingTable(subcriptionId: string, identityId: strin
         console.log(`Logged soft opt-in setting to Dynamo`);
     } catch (error) {
         console.warn(`Dynamo write failed for record: ${record}`);
-        await putMetric("failed_consents_updates", 1)
+        await putMetric("failed_to_send_message", 1)
     }
 }
 
 async function handleError(identityId: string, message: string): Promise<never> {
     console.warn(message);
-    await putMetric("failed_consents_updates", 1);
+    await putMetric("failed_to_send_message", 1);
     throw new Error(message);
 }
 
