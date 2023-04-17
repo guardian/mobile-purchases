@@ -5,7 +5,7 @@ import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import {SoftOptInLog} from "../models/softOptInLogging";
-import {getIdentityApiKey, getMembershipAccountId} from "../utils/guIdentityApi";
+import {getIdentityApiKey, getIdentityUrl, getMembershipAccountId} from "../utils/guIdentityApi";
 import {getConfigValue} from "../utils/ssmConfig";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
@@ -36,7 +36,7 @@ async function handleError(identityId: string, message: string): Promise<never> 
 }
 
 async function getUserEmailAddress(identityId: string, identityApiKey: string): Promise<string> {
-    const domain = await getConfigValue<string>("mp-soft-opt-in-identity-user-consent-domain-url");
+    const domain = await getIdentityUrl();
     const url = `${domain}/user/${identityId}`;
 
     const params = {

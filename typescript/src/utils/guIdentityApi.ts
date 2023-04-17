@@ -38,6 +38,10 @@ export async function getMembershipAccountId(): Promise<string> {
     return await getConfigValue<string>("membershipAccountId");
 }
 
+export async function getIdentityUrl(): Promise<string> {
+    return await getConfigValue<string>("mp-soft-opt-in-identity-user-consent-domain-url");
+}
+
 export function getAuthToken(headers: HttpRequestHeaders): string | undefined {
     return (headers["Authorization"] ?? headers["authorization"])?.replace("Bearer ", "");
 }
