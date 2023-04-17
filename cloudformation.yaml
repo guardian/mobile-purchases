@@ -2,6 +2,9 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: Validates mobile purchases
 Parameters:
+  MembershipAccountId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: 'membershipAccountId'
   Stack:
     Description: Stack name
     Type: String
@@ -48,8 +51,14 @@ Mappings:
   StageVariables:
     CODE:
       AlarmActionsEnabled: FALSE
+      SoftOptInConsentSetterStage: DEV
     PROD:
       AlarmActionsEnabled: TRUE
+      SoftOptInConsentSetterStage: PROD
+
+Conditions:
+  IsProd: !Equals [!Ref "Stage", "PROD"]
+  IsCode: !Equals [!Ref "Stage", "CODE"]
 
 Resources:
   MobilePurchasesLambdasRole:
@@ -115,12 +124,12 @@ Resources:
             Statement:
               Effect: Allow
               Action:
-                  - "dynamodb:GetItem"
-                  - "dynamodb:BatchGetItem"
-                  - "dynamodb:BatchWriteItem"
-                  - "dynamodb:PutItem"
-                  - "dynamodb:UpdateItem"
-                  - "dynamodb:Query"
+                - "dynamodb:GetItem"
+                - "dynamodb:BatchGetItem"
+                - "dynamodb:BatchWriteItem"
+                - "dynamodb:PutItem"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:Query"
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
@@ -162,11 +171,11 @@ Resources:
     Properties:
       StageName: !Ref Stage
       MethodSettings: [{
-                         "MetricsEnabled": True,
-                         "LoggingLevel": "OFF",
-                         "ResourcePath": "/*",
-                         "HttpMethod": "*"
-                       }]
+        "MetricsEnabled": True,
+        "LoggingLevel": "OFF",
+        "ResourcePath": "/*",
+        "HttpMethod": "*"
+      }]
       DefinitionBody:
         swagger: "2.0"
         info:
@@ -1040,6 +1049,93 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
+  SoftOptInAcquisitionsLambda:
+    Condition: IsCode
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: soft-opt-in-acquisitions.handler
+      Runtime: nodejs14.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-soft-opt-in-acquisitions/soft-opt-in-acquisitions.zip
+      FunctionName: !Sub ${App}-soft-opt-in-acquisitions-${Stage}
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: asdf
+      MemorySize: 512
+      Timeout: 60
+      Events:
+        Schedule:
+          Type: DynamoDB
+          Properties:
+            Stream:
+              Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+            StartingPosition: LATEST
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sts:AssumeRole
+              Resource:
+                !Sub
+                - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
+                - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sts:AssumeRole
+              Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:Query"
+                - "dynamodb:GetItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-soft-opt-ins-logging-v2
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParametersByPath
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - cloudwatch:putMetricData
+              Resource: "*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetRecords"
+                - "dynamodb:GetShardIterator"
+                - "dynamodb:DescribeStream"
+                - "dynamodb:ListStreams"
+              Resource:
+                - Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+                - sqs:ReceiveMessage
+              Resource: "*"
+
   SoftOptInsLoggingTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -1113,6 +1209,7 @@ Resources:
           Value: !Ref App
 
   failedSettingSoftOptIns:
+    Condition: IsProd
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - UserSubscriptionsLambda
@@ -1127,7 +1224,7 @@ Resources:
         - Name: Stage
           Value: !Sub ${Stage}
       EvaluationPeriods: 1
-      MetricName: failed_consents_updates
+      MetricName: failed_to_send_acquisition_message
       Namespace: soft-opt-ins
       Period: 3600
       Statistic: Sum
