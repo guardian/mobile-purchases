@@ -907,6 +907,49 @@ Resources:
         - Ref: AlarmTopic
       TreatMissingData: notBreaching
 
+  DeleteUserLinkLambdasRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - cloudwatch:putMetricData
+              Resource: "*"
+        - PolicyName: dynamoStream
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - "dynamodb:GetRecords"
+                - "dynamodb:GetShardIterator"
+                - "dynamodb:DescribeStream"
+                - "dynamodb:ListStreams"
+              Resource: !Sub arn:aws:dynamodb:eu-west-1:${MobileAccountId}:table/mobile-purchases-PROD-subscriptions/stream/2019-09-04T14:11:45.717
+        - PolicyName: dynamo
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - "dynamodb:Query"
+                - "dynamodb:DeleteItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
+
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1034,7 +1077,6 @@ Resources:
                 - sqs:ReceiveMessage
               Resource: "*"
 
-
   DeleteUserSubscriptionLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -1044,6 +1086,7 @@ Resources:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-delete-user-subscription/delete-user-subscription.zip
       FunctionName: !Sub ${App}-delete-user-subscription-${Stage}
+      Role: !GetAtt DeleteUserLinkLambdasRole.Arn
       Environment:
         Variables:
           App: !Sub ${App}
@@ -1064,33 +1107,6 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - logs:CreateLogGroup
-                - logs:CreateLogStream
-                - logs:PutLogEvents
-                - cloudwatch:putMetricData
-              Resource: "*"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "dynamodb:GetRecords"
-                - "dynamodb:GetShardIterator"
-                - "dynamodb:DescribeStream"
-                - "dynamodb:ListStreams"
-              Resource:
-                - Fn::ImportValue:
-                    !Sub ${App}-${Stage}-subscriptions-stream-arn
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "dynamodb:Query"
-                - "dynamodb:DeleteItem"
-              Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
 
   SoftOptInCancellationsLambda:
     Condition: IsCode
