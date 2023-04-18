@@ -21,15 +21,15 @@
   "private": true,
   "devDependencies": {
     "@types/jest": "^27.4.1",
+    "@types/node-fetch": "^2.6.2",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.6",
     "ts-loader": "^9.4.2",
     "typescript": "^4.9.5",
-    "webpack": "^5.77.0",
+    "webpack": "^5.78.0",
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
-    "@aws-sdk/client-cloudwatch": "^3.303.0",
     "@aws/dynamodb-data-mapper": "^0.7.3",
     "@aws/dynamodb-data-mapper-annotations": "^0.7.3",
     "@aws/dynamodb-expressions": "^0.7.3",
@@ -37,8 +37,8 @@
     "@okta/jwt-verifier": "^3.0.1",
     "@types/aws-lambda": "8.10.114",
     "@types/node": "^18.15.11",
-    "aws-sdk": "^2.1347.0",
-    "node-fetch": "^3.3.1",
+    "node-fetch": "2.6.7",
+    "aws-sdk": "^2.1353.0",
     "source-map-support": "^0.5.21",
     "typed-rest-client": "^1.8.9"
   }

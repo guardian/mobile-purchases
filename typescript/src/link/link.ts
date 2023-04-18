@@ -1,17 +1,17 @@
 import {HTTPResponses} from '../models/apiGatewayHttp';
 import {UserSubscription} from "../models/userSubscription";
 import {ReadSubscription} from "../models/subscription";
-import {dynamoMapper, putMetric, sendToSqs, sqs} from "../utils/aws";
-import {getUserId, getAuthToken} from "../utils/guIdentityApi";
+import {dynamoMapper, putMetric, sqs} from "../utils/aws";
+import {getUserId, getAuthToken, getIdentityApiKey} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
 import {SendMessageBatchRequestEntry} from "aws-sdk/clients/sqs";
 import {ProcessingError} from "../models/processingError";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {UserIdResolution} from "../utils/guIdentityApi"
-import {Stage} from "../utils/appIdentity";
-import fetch from 'node-fetch';
+import {UserIdResolution} from "../utils/guIdentityApi";
 import {SoftOptInLog} from "../models/softOptInLogging";
-import { getConfigValue } from '../utils/ssmConfig';
+import fetch from 'node-fetch';
+import {Response} from 'node-fetch';
+import {getConfigValue} from "../utils/ssmConfig";
 
 export interface SubscriptionCheckData {
     subscriptionId: string
@@ -103,9 +103,9 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
     }
     try {
         console.log(`url ${url}`);
-        //console.log(`identityApiKey ${identityApiKey}`);
+
         return fetch(url, params)
-            .then((response) => {
+            .then((response: Response) => {
                 if (response.ok) {
                     return true;
                 } else {
@@ -116,7 +116,7 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
     } catch (error) {
         console.warn(`error while posting consent data for user ${identityId}`);
         console.warn(error);
-        await putMetric("failed_consents_updates", 1)
+        await putMetric("failed_to_send_acquisition_message", 1)
         return Promise.resolve(false);
     }
 }
@@ -140,7 +140,7 @@ function softOptInQueryParameterIsPresent(httpRequest: APIGatewayProxyEvent): bo
     return httpRequest.multiValueQueryStringParameters["soft-opt-in-notification-shown"][0] === "true"
 }
 
-async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: string) {
+async function updateDynamoLoggingTable(identityId: string) {
     const timestamp = new Date().getTime();
     const record = new SoftOptInLog(identityId, "v1 - no subscription id", timestamp, "soft opt-ins processed for acquisition");
 
@@ -150,12 +150,8 @@ async function updateDynamoLoggingTable(subcriptionIds: string[], identityId: st
     } catch (error) {
         console.warn(error);
         console.warn(`dynamo write failed for record: ${record}`);
-        await putMetric("failed_consents_updates", 1)
+        await putMetric("failed_to_send_acquisition_message", 1)
     }
-}
-
-async function getIdentityApiKey(): Promise<string> {
-    return await getConfigValue<string>("mp-soft-opt-in-identity-api-key");
 }
 
 const soft_opt_in_v1_active: boolean = false;
@@ -268,7 +264,7 @@ export async function parseAndStoreLink<A, B>(
                                 await postSoftOptInConsentToIdentityAPI(userId, identityApiKey);
                                 console.log(`posted consent data for user ${userId}`);
 
-                                await updateDynamoLoggingTable(subscriptionsFromHttpPayload.map(rec => rec.subscriptionId), userId);
+                                await updateDynamoLoggingTable(userId);
                             } else {
                                 console.warn(`soft opt-ins v1 - no subscriptions found in the HTTP payload`);
                             }
