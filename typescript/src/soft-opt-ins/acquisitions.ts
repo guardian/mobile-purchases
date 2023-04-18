@@ -5,7 +5,8 @@ import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import {SoftOptInLog} from "../models/softOptInLogging";
-import {getIdentityApiKey, getMembershipAccountId} from "../utils/guIdentityApi";
+import {getIdentityApiKey, getIdentityUrl, getMembershipAccountId} from "../utils/guIdentityApi";
+import {getConfigValue} from "../utils/ssmConfig";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -24,21 +25,20 @@ async function updateDynamoLoggingTable(subcriptionId: string, identityId: strin
         console.log(`Logged soft opt-in setting to Dynamo`);
     } catch (error) {
         console.warn(`Dynamo write failed for record: ${record}`);
-        await putMetric("failed_consents_updates", 1)
+        await putMetric("failed_to_send_acquisition_message", 1)
     }
 }
 
 async function handleError(identityId: string, message: string): Promise<never> {
     console.warn(message);
-    await putMetric("failed_consents_updates", 1);
+    await putMetric("failed_to_send_acquisition_message", 1);
     throw new Error(message);
 }
 
 async function getUserEmailAddress(identityId: string, identityApiKey: string): Promise<string> {
-    var url = `https://idapi.code.dev-theguardian.com/user/${identityId}`
-    if (Stage === "PROD") {
-        url = `https://idapi.theguardian.com/user/${identityId}`
-    }
+    const domain = await getIdentityUrl();
+    const url = `${domain}/user/${identityId}`;
+
     const params = {
         method: 'GET',
         headers: {

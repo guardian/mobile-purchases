@@ -116,7 +116,7 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
     } catch (error) {
         console.warn(`error while posting consent data for user ${identityId}`);
         console.warn(error);
-        await putMetric("failed_consents_updates", 1)
+        await putMetric("failed_to_send_acquisition_message", 1)
         return Promise.resolve(false);
     }
 }
@@ -150,7 +150,7 @@ async function updateDynamoLoggingTable(identityId: string) {
     } catch (error) {
         console.warn(error);
         console.warn(`dynamo write failed for record: ${record}`);
-        await putMetric("failed_consents_updates", 1)
+        await putMetric("failed_to_send_acquisition_message", 1)
     }
 }
 
