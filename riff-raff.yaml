@@ -99,6 +99,12 @@ deployments:
       functionNames: [mobile-purchases-delete-user-subscription-]
       fileName: delete-user-subscription.zip
 
+  mobile-purchases-soft-opt-in-acquisitions:
+    template: lambda
+    parameters:
+      functionNames: [mobile-purchases-soft-opt-in-acquisitions-]
+      fileName: soft-opt-in-acquisitions.zip
+
   mobile-purchases-soft-opt-in-cancellations:
     template: lambda
     parameters:

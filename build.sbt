@@ -54,6 +54,7 @@ lazy val root = project
     riffRaffArtifactResources += file("tsc-target/google-update-subscriptions.zip") -> s"mobile-purchases-google-update-subscriptions/google-update-subscriptions.zip",
     riffRaffArtifactResources += file("tsc-target/apple-update-subscriptions.zip") -> s"mobile-purchases-apple-update-subscriptions/apple-update-subscriptions.zip",
     riffRaffArtifactResources += file("tsc-target/user-subscriptions.zip") -> s"mobile-purchases-user-subscriptions/user-subscriptions.zip",
+    riffRaffArtifactResources += file("tsc-target/soft-opt-in-acquisitions.zip") -> s"mobile-purchases-soft-opt-in-acquisitions/soft-opt-in-acquisitions.zip",
     riffRaffArtifactResources += file("tsc-target/soft-opt-in-cancellations.zip") -> s"mobile-purchases-soft-opt-in-cancellations/soft-opt-in-cancellations.zip",
     riffRaffArtifactResources += file("tsc-target/export-subscription-tables.zip") -> s"mobile-purchases-export-subscription-tables/export-subscription-tables.zip",
     riffRaffArtifactResources += file("tsc-target/export-subscription-table-v2.zip") -> s"mobile-purchases-export-subscription-table-v2/export-subscription-table-v2.zip",
