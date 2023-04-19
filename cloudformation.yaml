@@ -2,6 +2,9 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: Validates mobile purchases
 Parameters:
+  MobileAccountId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: 'mobileAccountId'
   MembershipAccountId:
     Type: AWS::SSM::Parameter::Value<String>
     Default: 'membershipAccountId'
@@ -989,6 +992,64 @@ Resources:
                 - "sqs:SendMessage"
               Resource:
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-subscriptions-to-fetch
+
+  DeleteUserSubscriptionLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: delete-user-subscription.handler
+      Runtime: nodejs14.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-delete-user-subscription/delete-user-subscription.zip
+      FunctionName: !Sub ${App}-delete-user-subscription-${Stage}
+      Role: !GetAtt DeleteUserLinkLambdasRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: Delete the link to user IDs when the subscription has reached its end of life
+      MemorySize: 512
+      Timeout: 60
+      Events:
+        Schedule:
+          Type: DynamoDB
+          Properties:
+            Stream: !Sub arn:aws:dynamodb:eu-west-1:${MobileAccountId}:table/mobile-purchases-PROD-subscriptions/stream/2019-09-04T14:11:45.717
+            StartingPosition: LATEST
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  AppleRevalidateReceiptsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apple-revalidate-receipts.handler
+      Runtime: nodejs14.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-apple-revalidate-receipts/apple-revalidate-receipts.zip
+      FunctionName: !Sub ${App}-apple-revalidate-receipts-${Stage}
+      Role: !GetAtt AppleRevalidateSubscriptionRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          SqsUrl: !Ref AppleSubscriptionsQueue
+      Description: Finds recently expired subscriptions
+      MemorySize: 2048
+      Timeout: 180
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(6 hours)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
 
   SoftOptInAcquisitionsLambda:
     Condition: IsCode
