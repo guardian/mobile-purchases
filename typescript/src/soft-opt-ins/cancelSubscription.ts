@@ -23,7 +23,7 @@ async function getUserSubscription(subscriptionId: string): Promise<UserSubscrip
 export function getCancellationRecords(event: DynamoDBStreamEvent) {
 	return event.Records.filter(dynamoEvent => dynamoEvent.eventName === "MODIFY" &&
 			dynamoEvent.dynamodb?.NewImage?.cancellationTimestamp
-			&& dynamoEvent.dynamodb.NewImage.cancellationTimestamp.N != null);
+			&& dynamoEvent.dynamodb.NewImage.cancellationTimestamp.S != null);
 }
 
 export async function handler(
@@ -33,6 +33,8 @@ export async function handler(
 		event.Records.filter(x => console.log(JSON.stringify(x)));
 
 		const cancellationEvents = getCancellationRecords(event);
+
+		console.log(`${cancellationEvents.length} to process`)
 
 		for (const cancellationEvent of cancellationEvents) {
 			const userSubscription = await getUserSubscription(cancellationEvent.dynamodb?.NewImage?.subscriptionId.S ?? '');

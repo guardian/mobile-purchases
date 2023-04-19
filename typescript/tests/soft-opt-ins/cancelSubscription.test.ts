@@ -195,7 +195,7 @@ const cancellationRecord: DynamoDBRecord = {
 				S: "1",
 			},
 			cancellationTimestamp: {
-				N: "1",
+				S: "1",
 			},
 		},
 	},
