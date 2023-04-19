@@ -1015,7 +1015,9 @@ Resources:
         Schedule:
           Type: DynamoDB
           Properties:
-            Stream: !Sub arn:aws:dynamodb:eu-west-1:${MobileAccountId}:table/mobile-purchases-PROD-subscriptions/stream/2019-09-04T14:11:45.717
+            Stream:
+              Fn::ImportValue:
+                !Sub ${App}-${Stage}-subscriptions-stream-arn
             StartingPosition: LATEST
       Tags:
         Stage: !Ref Stage
