@@ -1,4 +1,4 @@
-import { DynamoDBStreamEvent } from "aws-lambda";
+import {DynamoDBRecord, DynamoDBStreamEvent} from "aws-lambda";
 import { ReadUserSubscription, UserSubscription } from "../models/userSubscription";
 import {Region, Stage} from "../utils/appIdentity";
 import {dynamoMapper, putMetric, sendToSqsSoftOptIns} from "../utils/aws";
@@ -36,8 +36,8 @@ export async function handler(
 
 		console.log(`${cancellationEvents.length} to process`)
 
-		for (const cancellationEvent of cancellationEvents) {
-			const userSubscription = await getUserSubscription(cancellationEvent.dynamodb?.NewImage?.subscriptionId.S ?? '');
+		cancellationEvents.map(async (record: DynamoDBRecord) => {
+			const userSubscription = await getUserSubscription(record.dynamodb?.NewImage?.subscriptionId.S ?? '');
 
 			const membershipAccountId = await getMembershipAccountId();
 			const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
@@ -47,7 +47,7 @@ export async function handler(
 				eventType: "Cancellation",
 				productName: "InAppPurchase"
 			})
-		}
+		})
 	}
 	catch (error) {
 		console.log(error);
