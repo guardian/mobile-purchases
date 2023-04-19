@@ -30,6 +30,8 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
         const hasKeys = dynamoEvent.dynamodb?.Keys?.subscriptionId;
         const hasOldImage = dynamoEvent.dynamodb?.OldImage?.subscriptionId;
 
+        console.log(`DynamoDB stream specification, hasOldImage has value: ${hasOldImage}`)
+
         return dynamoEvent.eventName === "REMOVE" &&
             dynamoEvent.userIdentity?.type === "Service" &&
             dynamoEvent.userIdentity?.principalId === "dynamodb.amazonaws.com" &&

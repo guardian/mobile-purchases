@@ -60,8 +60,8 @@ Mappings:
       SoftOptInConsentSetterStage: PROD
 
 Conditions:
-  IsProd: !Equals [!Ref "Stage", "PROD"]
   IsCode: !Equals [!Ref "Stage", "CODE"]
+  IsProd: !Equals [!Ref "Stage", "PROD"]
 
 Resources:
   MobilePurchasesLambdasRole:
@@ -139,7 +139,7 @@ Resources:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events-v2
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
-                - !GetAtt SoftOptInsLoggingTable2.Arn
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-soft-opt-ins-logging-v2
 
         - PolicyName: Sqs
           PolicyDocument:
@@ -155,7 +155,7 @@ Resources:
           PolicyDocument:
             Statement:
               Effect: Allow
-              Action: [ "kms:GenerateDataKey", "kms:Decrypt" ]
+              Action: ["kms:GenerateDataKey", "kms:Decrypt"]
               Resource:
                 - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0215d06c-81c4-4896-a5da-c818770ea8db
 
@@ -173,12 +173,15 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Stage
-      MethodSettings: [{
-        "MetricsEnabled": True,
-        "LoggingLevel": "OFF",
-        "ResourcePath": "/*",
-        "HttpMethod": "*"
-      }]
+      MethodSettings:
+        [
+          {
+            "MetricsEnabled": True,
+            "LoggingLevel": "OFF",
+            "ResourcePath": "/*",
+            "HttpMethod": "*",
+          },
+        ]
       DefinitionBody:
         swagger: "2.0"
         info:
@@ -191,8 +194,8 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePubSubLambda.Arn}/invocations
-              consumes: [ application/json ]
-              produces: [ application/json ]
+              consumes: [application/json]
+              produces: [application/json]
               responses:
                 "200":
                   "description": "200 response"
@@ -202,8 +205,8 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePlaySubStatusLambda.Arn}/invocations
-              consumes: [ application/json ]
-              produces: [ application/json ]
+              consumes: [application/json]
+              produces: [application/json]
               responses:
                 "200":
                   "description": "200 response"
@@ -213,8 +216,8 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleSubStatusLambda.Arn}/invocations
-              consumes: [ application/json ]
-              produces: [ application/json ]
+              consumes: [application/json]
+              produces: [application/json]
               responses:
                 "200":
                   "description": "200 response"
@@ -224,8 +227,8 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApplePubSubLambda.Arn}/invocations
-              consumes: [ application/json ]
-              produces: [ application/json ]
+              consumes: [application/json]
+              produces: [application/json]
               responses:
                 "200":
                   "description": "200 response"
@@ -236,8 +239,8 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleLinkUserToSubLambda.Arn}/invocations
-              consumes: [ application/json ]
-              produces: [ application/json ]
+              consumes: [application/json]
+              produces: [application/json]
               responses:
                 "200":
                   "description": "200 response"
@@ -248,8 +251,8 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoogleLinkUserToSubLambda.Arn}/invocations
-              consumes: [ application/json ]
-              produces: [ application/json ]
+              consumes: [application/json]
+              produces: [application/json]
               responses:
                 "200":
                   "description": "200 response"
@@ -260,12 +263,11 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSubscriptionsLambda.Arn}/invocations
-              consumes: [ application/json ]
-              produces: [ application/json ]
+              consumes: [application/json]
+              produces: [application/json]
               responses:
                 "200":
                   "description": "200 response"
-
 
           "/user/subscriptions/{userId}":
             get:
@@ -273,8 +275,8 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSubscriptionsLambda.Arn}/invocations
-              consumes: [ application/json ]
-              produces: [ application/json ]
+              consumes: [application/json]
+              produces: [application/json]
               responses:
                 "200":
                   "description": "200 response"
@@ -296,7 +298,6 @@ Resources:
                   default:
                     statusCode: "200"
 
-
   ApiDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
@@ -308,7 +309,6 @@ Resources:
     Properties:
       CertificateArn: !Ref AppCertArn
       DomainName: !Ref AppDNS
-
 
   ApiRoute53:
     Type: AWS::Route53::RecordSetGroup
@@ -612,7 +612,8 @@ Resources:
   GoogleTokenRefreshFailureAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      ActionsEnabled: !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      ActionsEnabled:
+        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
       AlarmActions:
         - Ref: AlarmTopic
       OKActions:
@@ -634,7 +635,8 @@ Resources:
   GooglePlaySubsStatus5xxErrors:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      ActionsEnabled: !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      ActionsEnabled:
+        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
       AlarmActions:
         - Ref: AlarmTopic
       OKActions:
@@ -707,7 +709,6 @@ Resources:
       Timeout: 25
       Runtime: nodejs14.x
 
-
   UpdateGoogleSubscriptionsEventSource:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
@@ -716,11 +717,11 @@ Resources:
       EventSourceArn: !GetAtt GoogleSubscriptionsQueue.Arn
       BatchSize: 1
 
-
   AppleSubsStatus5xxErrors:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      ActionsEnabled: !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      ActionsEnabled:
+        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
       AlarmActions:
         - Ref: AlarmTopic
       OKActions:
@@ -775,7 +776,8 @@ Resources:
   ApplePubsub5xxErrors:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      ActionsEnabled: !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      ActionsEnabled:
+        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
       AlarmActions:
         - Ref: AlarmTopic
       OKActions:
@@ -799,7 +801,6 @@ Resources:
       Statistic: Sum
       Threshold: 2
       TreatMissingData: notBreaching
-
 
   UserSubscriptionsLambda:
     Type: AWS::Serverless::Function
@@ -868,13 +869,14 @@ Resources:
   AppleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      ActionsEnabled: !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      ActionsEnabled:
+        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
       AlarmDescription: "Ensure that the apple subscription dead letter queue is empty"
       Namespace: "AWS/SQS"
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
-          Value: !GetAtt 'AppleSubscriptionsQueueDlq.QueueName'
+          Value: !GetAtt "AppleSubscriptionsQueueDlq.QueueName"
       Period: 60
       Statistic: Sum
       EvaluationPeriods: 1
@@ -889,13 +891,14 @@ Resources:
   GoogleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      ActionsEnabled: !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      ActionsEnabled:
+        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
       AlarmDescription: "Ensure that the google subscription dead letter queue is empty"
       Namespace: "AWS/SQS"
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
-          Value: !GetAtt 'GoogleSubscriptionsQueueDlq.QueueName'
+          Value: !GetAtt "GoogleSubscriptionsQueueDlq.QueueName"
       Period: 60
       Statistic: Sum
       EvaluationPeriods: 1
@@ -1135,6 +1138,137 @@ Resources:
                 - sqs:ReceiveMessage
               Resource: "*"
 
+  DeleteUserSubscriptionLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: delete-user-subscription.handler
+      Runtime: nodejs14.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-delete-user-subscription/delete-user-subscription.zip
+      FunctionName: !Sub ${App}-delete-user-subscription-${Stage}
+      Role: !GetAtt DeleteUserLinkLambdasRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: Delete the link to user IDs when the subscription has reached its end of life
+      MemorySize: 512
+      Timeout: 60
+      Events:
+        Schedule:
+          Type: DynamoDB
+          Properties:
+            Stream:
+              Fn::ImportValue:
+                !Sub ${App}-${Stage}-subscriptions-stream-arn
+            StartingPosition: LATEST
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  SoftOptInCancellationsLambda:
+    Condition: IsCode
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: soft-opt-in-cancellations.handler
+      Runtime: nodejs14.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-soft-opt-in-cancellations/soft-opt-in-cancellations.zip
+      FunctionName: !Sub ${App}-soft-opt-in-cancellations-${Stage}
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: Put a message on the soft opt in consent setter queue when a subscription cancellation occurs
+      MemorySize: 512
+      Timeout: 60
+      Events:
+        Schedule:
+          Type: DynamoDB
+          Properties:
+            Stream:
+              Fn::ImportValue:
+                !Sub ${App}-${Stage}-subscriptions-stream-arn
+            StartingPosition: LATEST
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - cloudwatch:putMetricData
+              Resource: "*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetRecords"
+                - "dynamodb:GetShardIterator"
+                - "dynamodb:DescribeStream"
+                - "dynamodb:ListStreams"
+              Resource:
+                - Fn::ImportValue:
+                    !Sub ${App}-${Stage}-subscriptions-stream-arn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:Query"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-soft-opt-ins-logging-v2
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+                - sqs:ReceiveMessage
+              Resource: "*"
+
+  AppleRevalidateReceiptsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apple-revalidate-receipts.handler
+      Runtime: nodejs14.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-apple-revalidate-receipts/apple-revalidate-receipts.zip
+      FunctionName: !Sub ${App}-apple-revalidate-receipts-${Stage}
+      Role: !GetAtt AppleRevalidateSubscriptionRole.Arn
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          SqsUrl: !Ref AppleSubscriptionsQueue
+      Description: Finds recently expired subscriptions
+      MemorySize: 2048
+      Timeout: 180
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(6 hours)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
   SoftOptInsLoggingTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -1147,10 +1281,10 @@ Resources:
         - AttributeName: subscriptionId
           AttributeType: S
       KeySchema:
-        - AttributeName: userId
-          KeyType: HASH
         - AttributeName: timestamp
           KeyType: RANGE
+        - AttributeName: userId
+          KeyType: HASH
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       BillingMode: PAY_PER_REQUEST
@@ -1207,7 +1341,7 @@ Resources:
         - Key: App
           Value: !Ref App
 
-  failedSettingSoftOptIns:
+  failedSettingAcquisitionSoftOptIns:
     Condition: IsProd
     Type: AWS::CloudWatch::Alarm
     DependsOn:
@@ -1215,7 +1349,7 @@ Resources:
     Properties:
       AlarmActions:
         - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
-      AlarmName: !Sub soft-opt-ins-V1-${Stage} failed to set soft-opt-ins for IAP
+      AlarmName: !Sub soft-opt-ins-acquisitions-alarm-${Stage} failed to set soft-opt-ins for IAP
       AlarmDescription: >
         A run failed to set soft-opt-ins for an IAP in the Link endpoint.
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -1223,8 +1357,31 @@ Resources:
         - Name: Stage
           Value: !Sub ${Stage}
       EvaluationPeriods: 1
-      MetricName: failed_to_send_acquisition_message
+      MetricName: failed_consents_updates
       Namespace: soft-opt-ins
+      Period: 3600
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+
+  failedSettingCancellationSoftOptIns:
+    Condition: IsProd
+    Type: AWS::CloudWatch::Alarm
+    DependsOn:
+      - SoftOptInCancellationsLambda
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+      AlarmName: !Sub soft-opt-ins-cancellations-alarm-${Stage} failed
+      AlarmDescription: >
+        An error occurred in the DynamoDB streams cancellation event handler.
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: Stage
+          Value: !Sub ${Stage}
+      EvaluationPeriods: 1
+      MetricName: failed_cancellation_consents_updates
+      Namespace: AWS/Lambda
       Period: 3600
       Statistic: Sum
       Threshold: 1
