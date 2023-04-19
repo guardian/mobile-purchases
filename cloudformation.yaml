@@ -941,7 +941,9 @@ Resources:
                 - "dynamodb:GetShardIterator"
                 - "dynamodb:DescribeStream"
                 - "dynamodb:ListStreams"
-              Resource: !Sub arn:aws:dynamodb:eu-west-1:${MobileAccountId}:table/mobile-purchases-PROD-subscriptions/stream/2019-09-04T14:11:45.717
+              Resource:
+                Fn::ImportValue:
+                  !Sub ${App}-${Stage}-subscriptions-stream-arn
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
