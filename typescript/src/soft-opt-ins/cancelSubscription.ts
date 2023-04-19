@@ -34,20 +34,24 @@ export async function handler(
 
 		const cancellationEvents = getCancellationRecords(event);
 
-		console.log(`${cancellationEvents.length} to process`)
+		console.log(`${cancellationEvents.length} records to process`)
 
-		cancellationEvents.map(async (record: DynamoDBRecord) => {
+		for (const record of cancellationEvents) {
 			const userSubscription = await getUserSubscription(record.dynamodb?.NewImage?.subscriptionId.S ?? '');
+
+			console.log(`userSubscription is: ${JSON.stringify(userSubscription)}`)
 
 			const membershipAccountId = await getMembershipAccountId();
 			const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
-			await sendToSqsSoftOptIns(Stage ===  "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`: `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
+			await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
 				identityId: userSubscription.userId,
 				eventType: "Cancellation",
 				productName: "InAppPurchase"
 			})
-		})
+		}
+
+		console.log(`Processed ${cancellationEvents.length} records`)
 	}
 	catch (error) {
 		console.log(error);
