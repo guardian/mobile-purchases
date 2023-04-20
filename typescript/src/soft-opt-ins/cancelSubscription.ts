@@ -35,8 +35,6 @@ export async function handler(
 	event: DynamoDBStreamEvent,
 ) {
 	try {
-		event.Records.filter(x => console.log(JSON.stringify(x)));
-
 		const cancellationEvents = getCancellationRecords(event);
 
 		console.log(`${cancellationEvents.length} records to process`)
