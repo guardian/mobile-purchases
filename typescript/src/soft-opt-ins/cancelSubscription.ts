@@ -49,8 +49,8 @@ export async function handler(
 		const cancellationEvents = getCancellationRecords(event);
 		const uncancellationEvents = getUncancellationRecords(event);
 
-		console.log(`${cancellationEvents.length} records to process`);
-		console.log(`${uncancellationEvents.length} records to process`);
+		console.log(`${cancellationEvents.length} cancellation events to process`);
+		console.log(`${uncancellationEvents.length} uncancellation events to process`);
 
 		const membershipAccountId = await getMembershipAccountId();
 		const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
@@ -75,8 +75,8 @@ export async function handler(
 			})
 		}
 
-		console.log(`Processed ${cancellationEvents.length} records`);
-		console.log(`Processed ${uncancellationEvents.length} records`);
+		console.log(`Processed ${cancellationEvents.length} cancellation events`);
+		console.log(`Processed ${uncancellationEvents.length} uncancellation events`);
 	}
 	catch (error) {
 		console.log(error);
