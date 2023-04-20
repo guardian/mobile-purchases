@@ -152,15 +152,21 @@ describe("handler", () => {
 
 const updateDynamoRecord: DynamoDBRecord = {
 	dynamodb: {
-		Keys: {
+		OldImage: {
 			subscriptionId: {
-				S: "1",
+				S: "2",
+			},
+			cancellationTimestamp: {
+				S: "2",
 			},
 		},
 		NewImage: {
 			subscriptionId: {
-				S: "1",
-			}
+				S: "2",
+			},
+			cancellationTimestamp: {
+				S: "2",
+			},
 		},
 	},
 	eventName: "MODIFY",
@@ -169,14 +175,14 @@ const updateDynamoRecord: DynamoDBRecord = {
 
 const insertDynamoRecord: DynamoDBRecord = {
 	dynamodb: {
-		Keys: {
+		OldImage: {
 			subscriptionId: {
-				S: "1",
+				S: "3",
 			},
 		},
 		NewImage: {
 			subscriptionId: {
-				S: "1",
+				S: "3",
 			},
 		},
 	},
@@ -185,7 +191,7 @@ const insertDynamoRecord: DynamoDBRecord = {
 
 const cancellationRecord: DynamoDBRecord = {
 	dynamodb: {
-		Keys: {
+		OldImage: {
 			subscriptionId: {
 				S: "1",
 			},
@@ -195,7 +201,7 @@ const cancellationRecord: DynamoDBRecord = {
 				S: "1",
 			},
 			cancellationTimestamp: {
-				N: "1",
+				S: "1",
 			},
 		},
 	},

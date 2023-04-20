@@ -1174,6 +1174,19 @@ Resources:
         App: !Ref App
       Policies:
         - Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Resource:
+              !Sub
+              - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
+              - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
+        - Statement:
+          - Effect: Allow
+            Action:
+              - ssm:GetParametersByPath
+            Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+        - Statement:
             - Effect: Allow
               Action:
                 - logs:CreateLogGroup
