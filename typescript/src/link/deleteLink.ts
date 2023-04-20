@@ -71,11 +71,15 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
     console.log(`Processed ${records} records from dynamo stream to delete ${rows} rows`);
 
-    for (const subscriptionId of subscriptionIds) {
-        await disableSoftOptIns(subscriptionId);
-    }
+    const featureFlag = false;
 
-    console.log(`Processed ${records} records from dynamo stream to disable soft opt-ins for ${records} users`);
+    if (featureFlag) {
+        for (const subscriptionId of subscriptionIds) {
+            await disableSoftOptIns(subscriptionId);
+        }
+
+        console.log(`Processed ${records} records from dynamo stream to disable soft opt-ins for ${records} users`);
+    }
 
     return {
         recordCount: records,
