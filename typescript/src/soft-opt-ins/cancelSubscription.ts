@@ -31,21 +31,32 @@ export function getCancellationRecords(event: DynamoDBStreamEvent) {
 	});
 }
 
+export function getUncancellationRecords(event: DynamoDBStreamEvent) {
+	return event.Records.filter(dynamoEvent => {
+		const oldImage = dynamoEvent.dynamodb?.OldImage;
+		const newImage = dynamoEvent.dynamodb?.NewImage;
+
+		return dynamoEvent.eventName === "MODIFY" &&
+			oldImage?.cancellationTimestamp && oldImage?.cancellationTimestamp?.S !== undefined &&
+			(!newImage?.cancellationTimestamp || newImage?.cancellationTimestamp?.S === undefined);
+	});
+}
+
 export async function handler(
 	event: DynamoDBStreamEvent,
 ) {
 	try {
 		const cancellationEvents = getCancellationRecords(event);
+		const uncancellationEvents = getUncancellationRecords(event);
 
-		console.log(`${cancellationEvents.length} records to process`)
+		console.log(`${cancellationEvents.length} records to process`);
+		console.log(`${uncancellationEvents.length} records to process`);
+
+		const membershipAccountId = await getMembershipAccountId();
+		const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
 		for (const record of cancellationEvents) {
 			const userSubscription = await getUserSubscription(record.dynamodb?.NewImage?.subscriptionId.S ?? '');
-
-			console.log(`userSubscription is: ${JSON.stringify(userSubscription)}`)
-
-			const membershipAccountId = await getMembershipAccountId();
-			const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
 			await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
 				identityId: userSubscription.userId,
@@ -54,7 +65,18 @@ export async function handler(
 			})
 		}
 
-		console.log(`Processed ${cancellationEvents.length} records`)
+		for (const record of uncancellationEvents) {
+			const userSubscription = await getUserSubscription(record.dynamodb?.NewImage?.subscriptionId.S ?? '');
+
+			await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
+				identityId: userSubscription.userId,
+				eventType: "Acquisition",
+				productName: "InAppPurchase"
+			})
+		}
+
+		console.log(`Processed ${cancellationEvents.length} records`);
+		console.log(`Processed ${uncancellationEvents.length} records`);
 	}
 	catch (error) {
 		console.log(error);
