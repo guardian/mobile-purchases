@@ -126,7 +126,14 @@ export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): 
         DelaySeconds: delaySeconds
     }).promise()
 }
-export async function sendToSqsSoftOptIns(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+
+interface SoftOptInEvent {
+    identityId: string;
+    eventType: "Acquisition" | "Cancellation" | "Switch";
+    productName: "InAppPurchase";
+}
+
+export async function sendToSqsSoftOptIns(queueUrl: string, event: SoftOptInEvent, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
     const membershipSqs = await getSqsClientForSoftOptIns();
     return membershipSqs.sendMessage({
         QueueUrl: queueUrl,

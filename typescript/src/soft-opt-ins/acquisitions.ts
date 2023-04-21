@@ -29,7 +29,7 @@ async function updateDynamoLoggingTable(subcriptionId: string, identityId: strin
     }
 }
 
-async function handleError(identityId: string, message: string): Promise<never> {
+async function handleError(message: string): Promise<never> {
     console.warn(message);
     await putMetric("failed_to_send_acquisition_message", 1);
     throw new Error(message);
@@ -55,16 +55,16 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
                     const json = await response.json();
 
                     if (!json.user || !json.user.primaryEmailAddress) {
-                        return await handleError(identityId, 'User or primaryEmailAddress is undefined');
+                        return await handleError(`User or primaryEmailAddress is undefined for user ${identityId}`);
                     }
 
                     return json.user.primaryEmailAddress;
                 } else {
-                    return await handleError(identityId, `warning, status: ${response.status}, while posting consent data for user ${identityId}`);
+                    return await handleError(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
                 }
             })
     } catch (error) {
-        return await handleError(identityId, `error while retrieving user data for identityId: ${identityId}: ${error}`);
+        return await handleError(`error while retrieving user data for identityId: ${identityId}: ${error}`);
     }
 }
 
