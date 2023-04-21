@@ -1,11 +1,10 @@
 import 'source-map-support/register'
-import {DynamoDBStreamEvent} from "aws-lambda";
+import {DynamoDBRecord, DynamoDBStreamEvent} from "aws-lambda";
 import {dynamoMapper, putMetric, sendToSqsSoftOptIns} from "../utils/aws";
 import {ReadUserSubscription} from "../models/userSubscription";
 import {getMembershipAccountId} from "../utils/guIdentityApi";
 import {Region, Stage} from "../utils/appIdentity";
 import {SoftOptInLog} from "../models/softOptInLogging";
-import {QueryIterator} from "@aws/dynamodb-data-mapper";
 
 async function updateDynamoLoggingTable(subcriptionId: string, identityId: string) {
     const timestamp = new Date().getTime();
@@ -30,34 +29,28 @@ async function getUserLinks(subscriptionId: string) {
     return userLinks;
 }
 
-async function deleteUserSubscription(userLinks: QueryIterator<ReadUserSubscription>): Promise<number> {
+async function deleteUserSubscription(userLinks: ReadUserSubscription[]): Promise<number> {
     let count = 0;
-    for await (const userLink of userLinks) {
+    for (const userLink of userLinks) {
         const deletionResult = await dynamoMapper.delete(userLink);
         if (deletionResult) {
             count++;
         }
     }
 
-    if (userLinks.count != count) {
-        console.warn(`Queried ${userLinks.count} rows, but only deleted ${count}`)
+    if (userLinks.length != count) {
+        console.warn(`Queried ${userLinks.length} rows, but only deleted ${count}`)
     }
 
     console.log(`Deleted ${count} rows`);
     return count;
 }
 
-async function disableSoftOptIns(userLinks: QueryIterator<ReadUserSubscription>, subscriptionId: string) {
+async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscriptionId: string) {
     const membershipAccountId = await getMembershipAccountId();
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
-    const userSubscriptions = [];
-
-    for await (const userLink of userLinks) {
-        userSubscriptions.push(userLink);
-    }
-
-    const user = userSubscriptions[0];
+    const user = userLinks[0];
 
     try {
         await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
@@ -65,7 +58,7 @@ async function disableSoftOptIns(userLinks: QueryIterator<ReadUserSubscription>,
             eventType: "Cancellation",
             productName: "InAppPurchase"
         });
-        console.log(`send soft opt-in message for identityId ${user.userId}`);
+        console.log(`sent soft opt-in message for identityId ${user.userId}`);
     } catch (e) {
         handleSoftOptInsError(`Soft opt-in message send failed for identityId: ${user.userId}`)
     }
@@ -91,12 +84,19 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
     const featureFlag = false;
 
     for (const subscriptionId of subscriptionIds) {
-        const userLinks = await getUserLinks(subscriptionId);
-        rows += await deleteUserSubscription(userLinks);
+        const userLinksIterator = await getUserLinks(subscriptionId);
+
+        const userSubscriptions: ReadUserSubscription[] = [];
+        for await (const userLink of userLinksIterator) {
+            userSubscriptions.push(userLink);
+        }
+
+        rows += await deleteUserSubscription(userSubscriptions);
 
         if (featureFlag) {
-            await disableSoftOptIns(userLinks, subscriptionId);
+            await disableSoftOptIns(userSubscriptions, subscriptionId);
         }
+
         records++;
     }
 
