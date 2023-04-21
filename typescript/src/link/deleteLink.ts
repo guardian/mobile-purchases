@@ -14,7 +14,7 @@ async function updateDynamoLoggingTable(subcriptionId: string, identityId: strin
         await dynamoMapper.put({item: record});
         console.log(`Logged soft opt-in setting to Dynamo`);
     } catch (error) {
-        handleSoftOptInsError(`Dynamo write failed for record: ${record}`);
+        handleSoftOptInsError(`Dynamo write failed for record: ${record} with identityId: ${identityId}. ${error}`);
     }
 }
 
@@ -60,7 +60,7 @@ async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscription
         });
         console.log(`sent soft opt-in message for identityId ${user.userId}`);
     } catch (e) {
-        handleSoftOptInsError(`Soft opt-in message send failed for identityId: ${user.userId}`)
+        handleSoftOptInsError(`Soft opt-in message send failed for identityId: ${user.userId}. ${e}`)
     }
 
     await updateDynamoLoggingTable(subscriptionId, user.userId);
