@@ -1,5 +1,5 @@
 import {DynamoDBRecord, DynamoDBStreamEvent} from "aws-lambda";
-import {dynamoMapper, putMetric, sendToSqsComms, sendToSqsSoftOptIns} from "../utils/aws";
+import {dynamoMapper, putMetric, sendToSqsComms, sendToSqsSoftOptIns, SoftOptInEvent} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
@@ -89,7 +89,7 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
 
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
-    const message = {
+    const message: SoftOptInEvent = {
         identityId: identityId,
         eventType: "Acquisition",
         productName: "InAppPurchase",

@@ -127,7 +127,7 @@ export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): 
     }).promise()
 }
 
-interface SoftOptInEvent {
+export interface SoftOptInEvent {
     identityId: string;
     eventType: "Acquisition" | "Cancellation" | "Switch";
     productName: "InAppPurchase";
