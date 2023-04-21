@@ -91,13 +91,17 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
             userSubscriptions.push(userLink);
         }
 
-        rows += await deleteUserSubscription(userSubscriptions);
+        if (userSubscriptions.length === 0) {
+            console.log(`No user links to delete for subscriptionId: ${subscriptionId}`)
+        } else {
+            rows += await deleteUserSubscription(userSubscriptions);
 
-        if (featureFlag) {
-            await disableSoftOptIns(userSubscriptions, subscriptionId);
+            if (featureFlag) {
+                await disableSoftOptIns(userSubscriptions, subscriptionId);
+            }
+
+            records++;
         }
-
-        records++;
     }
 
     console.log(`Processed ${records} records from dynamo stream to delete ${rows} rows`);
