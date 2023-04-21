@@ -910,51 +910,6 @@ Resources:
         - Ref: AlarmTopic
       TreatMissingData: notBreaching
 
-  DeleteUserLinkLambdasRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Path: /
-      Policies:
-        - PolicyName: logs
-          PolicyDocument:
-            Statement:
-              Effect: Allow
-              Action:
-                - logs:CreateLogGroup
-                - logs:CreateLogStream
-                - logs:PutLogEvents
-                - cloudwatch:putMetricData
-              Resource: "*"
-        - PolicyName: dynamoStream
-          PolicyDocument:
-            Statement:
-              Effect: Allow
-              Action:
-                - "dynamodb:GetRecords"
-                - "dynamodb:GetShardIterator"
-                - "dynamodb:DescribeStream"
-                - "dynamodb:ListStreams"
-              Resource:
-                Fn::ImportValue:
-                  !Sub ${App}-${Stage}-subscriptions-stream-arn
-        - PolicyName: dynamo
-          PolicyDocument:
-            Statement:
-              Effect: Allow
-              Action:
-                - "dynamodb:Query"
-                - "dynamodb:DeleteItem"
-              Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
-
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1004,7 +959,6 @@ Resources:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-delete-user-subscription/delete-user-subscription.zip
       FunctionName: !Sub ${App}-delete-user-subscription-${Stage}
-      Role: !GetAtt DeleteUserLinkLambdasRole.Arn
       Environment:
         Variables:
           App: !Sub ${App}
@@ -1025,6 +979,52 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - cloudwatch:putMetricData
+              Resource: "*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetRecords"
+                - "dynamodb:GetShardIterator"
+                - "dynamodb:DescribeStream"
+                - "dynamodb:ListStreams"
+              Resource:
+                - Fn::ImportValue:
+                    !Sub ${App}-${Stage}-subscriptions-stream-arn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:Query"
+                - "dynamodb:DeleteItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sts:AssumeRole
+              Resource:
+                !Sub
+                - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
+                - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sts:AssumeRole
+              Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-soft-opt-ins-logging-v2
 
   AppleRevalidateReceiptsLambda:
     Type: AWS::Serverless::Function
@@ -1213,3 +1213,26 @@ Resources:
           Value: !Ref Stack
         - Key: App
           Value: !Ref App
+
+  failedSettingCancellationSoftOptIns:
+    Condition: IsProd
+    Type: AWS::CloudWatch::Alarm
+    DependsOn:
+      - DeleteUserSubscriptionLambda
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+      AlarmName: !Sub soft-opt-ins-cancellations-alarm-${Stage} failed
+      AlarmDescription: >
+        An error occurred in the DeleteUserSubscriptionLambda.
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: Stage
+          Value: !Sub ${Stage}
+      EvaluationPeriods: 1
+      MetricName: failed_to_send_cancellation_message
+      Namespace: AWS/Lambda
+      Period: 3600
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
