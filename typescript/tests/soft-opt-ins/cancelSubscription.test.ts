@@ -99,7 +99,7 @@ describe("handler", () => {
 		jest.clearAllMocks();
 	});
 
-	it('should process cancel records, put message on queue', async () => {
+	it('should process cancellation and uncancellation records, put messages on queue', async () => {
 
 		// get the mock instances
 		const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
@@ -125,27 +125,39 @@ describe("handler", () => {
 		});
 
 		const event: DynamoDBStreamEvent = {
-			Records: [cancellationRecord, insertDynamoRecord, updateDynamoRecord]
+			Records: [cancellationRecord, insertDynamoRecord, updateDynamoRecord, uncancellationRecord]
 		}
 
 		await handler(event);
 
-		expect(mockDataMapper.query).toHaveBeenCalledTimes(1);
+		expect(mockDataMapper.query).toHaveBeenCalledTimes(2);
 		expect(mockDataMapper.query).toHaveBeenCalledWith(ReadUserSubscription, { subscriptionId: "1" }, { indexName: "subscriptionId-userId" });
 
-		expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
+		expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
 
-		const expectedSoftOptInMessage = {
+		const expectedSoftOptInMessage1 = {
 			identityId: "123",
 			eventType: "Cancellation",
 			productName: "InAppPurchase"
 		};
-		const expectedQueueMessageParams = {
-			QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV',
-			MessageBody: JSON.stringify(expectedSoftOptInMessage),
+		const expectedSoftOptInMessage2 = {
+			identityId: "123",
+			eventType: "Acquisition",
+			productName: "InAppPurchase"
 		};
 
-		expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedQueueMessageParams);
+		const expectedQueueMessageParams1 = {
+			QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV',
+			MessageBody: JSON.stringify(expectedSoftOptInMessage1),
+		};
+
+		const expectedQueueMessageParams2 = {
+			QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV',
+			MessageBody: JSON.stringify(expectedSoftOptInMessage2),
+		};
+
+		expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedQueueMessageParams1);
+		expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedQueueMessageParams2);
 	})
 })
 
@@ -202,6 +214,25 @@ const cancellationRecord: DynamoDBRecord = {
 			},
 			cancellationTimestamp: {
 				S: "1",
+			},
+		},
+	},
+	eventName: "MODIFY",
+};
+
+const uncancellationRecord: DynamoDBRecord = {
+	dynamodb: {
+		OldImage: {
+			subscriptionId: {
+				S: "4",
+			},
+			cancellationTimestamp: {
+				S: "4",
+			},
+		},
+		NewImage: {
+			subscriptionId: {
+				S: "4",
 			},
 		},
 	},
