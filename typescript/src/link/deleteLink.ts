@@ -81,7 +81,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
     let records = 0;
     let rows = 0;
 
-    const featureFlag = true;
+    const featureFlag = false;
 
     for (const subscriptionId of subscriptionIds) {
         const userLinksIterator = await getUserLinks(subscriptionId);
