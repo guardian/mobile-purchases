@@ -99,9 +99,9 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
             if (featureFlag) {
                 await disableSoftOptIns(userSubscriptions, subscriptionId);
             }
-
-            records++;
         }
+
+        records++;
     }
 
     console.log(`Processed ${records} records from dynamo stream to delete ${rows} rows`);
