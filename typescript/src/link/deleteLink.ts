@@ -32,6 +32,7 @@ async function getUserLinks(subscriptionId: string) {
 async function deleteUserSubscription(userLinks: ReadUserSubscription[]): Promise<number> {
     let count = 0;
     for (const userLink of userLinks) {
+        console.log('is deleting');
         const deletionResult = await dynamoMapper.delete(userLink);
         if (deletionResult) {
             count++;
@@ -86,10 +87,15 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
     for (const subscriptionId of subscriptionIds) {
         const userLinksIterator = await getUserLinks(subscriptionId);
 
+        console.log(userLinksIterator);
+
         const userSubscriptions: ReadUserSubscription[] = [];
         for await (const userLink of userLinksIterator) {
+            console.log(userLink);
             userSubscriptions.push(userLink);
         }
+
+        console.log(userSubscriptions);
 
         rows += await deleteUserSubscription(userSubscriptions);
 
