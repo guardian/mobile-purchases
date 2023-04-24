@@ -107,6 +107,7 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
         return fetch(url, params)
             .then((response: Response) => {
                 if (response.ok) {
+                    console.log(`posted consent data for user ${identityId}`);
                     return true;
                 } else {
                     console.warn(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
@@ -259,10 +260,11 @@ export async function parseAndStoreLink<A, B>(
 
                             if (subscriptionsFromHttpPayload.length > 0) {
                                 console.log(`posting consent data for user ${userId}`);
-                                await postSoftOptInConsentToIdentityAPI(userId, identityApiKey);
-                                console.log(`posted consent data for user ${userId}`);
+                                const success = await postSoftOptInConsentToIdentityAPI(userId, identityApiKey);
 
-                                await updateDynamoLoggingTable(userId);
+                                if (success) {
+                                    await updateDynamoLoggingTable(userId);
+                                }
                             } else {
                                 console.warn(`soft opt-ins v1 - no subscriptions found in the HTTP payload`);
                             }
