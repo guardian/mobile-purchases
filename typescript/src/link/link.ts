@@ -73,7 +73,7 @@ interface IdentityResponse {
 }
 
 function consentPayload(): any {
-   [
+   return [
     {
        "id" : "your_support_onboarding",
        "consented" : true
