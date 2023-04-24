@@ -154,7 +154,7 @@ async function updateDynamoLoggingTable(identityId: string) {
     }
 }
 
-const soft_opt_in_v1_active: boolean = false;
+const soft_opt_in_v1_active: boolean = true;
 
 /*
     Date: March 2023, 6th
