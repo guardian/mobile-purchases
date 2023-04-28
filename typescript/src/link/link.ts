@@ -73,7 +73,7 @@ interface IdentityResponse {
 }
 
 function consentPayload(): any {
-   [
+   return [
     {
        "id" : "your_support_onboarding",
        "consented" : true
@@ -107,6 +107,7 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
         return fetch(url, params)
             .then((response: Response) => {
                 if (response.ok) {
+                    console.log(`posted consent data for user ${identityId}`);
                     return true;
                 } else {
                     console.warn(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
@@ -116,7 +117,6 @@ async function postSoftOptInConsentToIdentityAPI(identityId: string, identityApi
     } catch (error) {
         console.warn(`error while posting consent data for user ${identityId}`);
         console.warn(error);
-        await putMetric("failed_to_send_acquisition_message", 1)
         return Promise.resolve(false);
     }
 }
@@ -150,11 +150,10 @@ async function updateDynamoLoggingTable(identityId: string) {
     } catch (error) {
         console.warn(error);
         console.warn(`dynamo write failed for record: ${record}`);
-        await putMetric("failed_to_send_acquisition_message", 1)
     }
 }
 
-const soft_opt_in_v1_active: boolean = false;
+const soft_opt_in_v1_active: boolean = true;
 
 /*
     Date: March 2023, 6th
@@ -261,10 +260,11 @@ export async function parseAndStoreLink<A, B>(
 
                             if (subscriptionsFromHttpPayload.length > 0) {
                                 console.log(`posting consent data for user ${userId}`);
-                                await postSoftOptInConsentToIdentityAPI(userId, identityApiKey);
-                                console.log(`posted consent data for user ${userId}`);
+                                const success = await postSoftOptInConsentToIdentityAPI(userId, identityApiKey);
 
-                                await updateDynamoLoggingTable(userId);
+                                if (success) {
+                                    await updateDynamoLoggingTable(userId);
+                                }
                             } else {
                                 console.warn(`soft opt-ins v1 - no subscriptions found in the HTTP payload`);
                             }
