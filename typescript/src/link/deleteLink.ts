@@ -1,5 +1,5 @@
 import 'source-map-support/register'
-import {DynamoDBRecord, DynamoDBStreamEvent} from "aws-lambda";
+import {DynamoDBStreamEvent} from "aws-lambda";
 import {dynamoMapper, putMetric, sendToSqsSoftOptIns} from "../utils/aws";
 import {ReadUserSubscription} from "../models/userSubscription";
 import {getMembershipAccountId} from "../utils/guIdentityApi";
@@ -10,18 +10,13 @@ async function updateDynamoLoggingTable(subcriptionId: string, identityId: strin
     const timestamp = new Date().getTime();
     const record = new SoftOptInLog(identityId, subcriptionId, timestamp, "Soft opt-ins processed for expired subscription");
 
-    try {
-        await dynamoMapper.put({item: record});
-        console.log(`Logged soft opt-in setting to Dynamo`);
-    } catch (error) {
-        handleSoftOptInsError(`Dynamo write failed for record: ${record} with identityId: ${identityId}. ${error}`);
-    }
+    await dynamoMapper.put({item: record});
+    console.log(`Logged soft opt-in setting to Dynamo`);
 }
 
-async function handleSoftOptInsError(message: string): Promise<never> {
-    console.warn(message);
+async function handleSoftOptInsError(message: string) {
+    console.error(message);
     await putMetric("failed_to_send_cancellation_message", 1);
-    throw new Error(message);
 }
 
 async function getUserLinks(subscriptionId: string) {
@@ -52,16 +47,12 @@ async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscription
 
     const user = userLinks[0];
 
-    try {
-        await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
-            identityId: user.userId,
-            eventType: "Cancellation",
-            productName: "InAppPurchase"
-        });
-        console.log(`sent soft opt-in message for identityId ${user.userId}`);
-    } catch (e) {
-        handleSoftOptInsError(`Soft opt-in message send failed for identityId: ${user.userId}. ${e}`)
-    }
+    await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
+        identityId: user.userId,
+        eventType: "Cancellation",
+        productName: "InAppPurchase"
+    });
+    console.log(`sent soft opt-in message for identityId ${user.userId}`);
 
     await updateDynamoLoggingTable(subscriptionId, user.userId);
 }
@@ -81,7 +72,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
     let records = 0;
     let rows = 0;
 
-    const featureFlag = true;
+    const featureFlag = false;
 
     for (const subscriptionId of subscriptionIds) {
         const userLinksIterator = await getUserLinks(subscriptionId);
@@ -97,7 +88,11 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
             rows += await deleteUserSubscription(userSubscriptions);
 
             if (featureFlag) {
-                await disableSoftOptIns(userSubscriptions, subscriptionId);
+                try {
+                    await disableSoftOptIns(userSubscriptions, subscriptionId);
+                } catch (e) {
+                    handleSoftOptInsError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
+                }
             }
         }
 
