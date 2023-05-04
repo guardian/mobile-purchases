@@ -38,7 +38,7 @@
     "@types/aws-lambda": "8.10.114",
     "node-fetch": "2.6.7",
     "@types/node": "^18.16.0",
-    "aws-sdk": "^2.1362.0",
+    "aws-sdk": "^2.1371.0",
     "source-map-support": "^0.5.21",
     "typed-rest-client": "^1.8.9"
   }
