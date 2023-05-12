@@ -72,8 +72,6 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
     let records = 0;
     let rows = 0;
 
-    const featureFlag = false;
-
     for (const subscriptionId of subscriptionIds) {
         const userLinksIterator = await getUserLinks(subscriptionId);
 
@@ -87,12 +85,10 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
         } else {
             rows += await deleteUserSubscription(userSubscriptions);
 
-            if (featureFlag) {
-                try {
-                    await disableSoftOptIns(userSubscriptions, subscriptionId);
-                } catch (e) {
-                    handleSoftOptInsError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
-                }
+            try {
+                await disableSoftOptIns(userSubscriptions, subscriptionId);
+            } catch (e) {
+                handleSoftOptInsError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
             }
         }
 
@@ -101,9 +97,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
     console.log(`Processed ${records} records from dynamo stream to delete ${rows} rows`);
 
-    if (featureFlag) {
-        console.log(`Processed ${records} records from dynamo stream to disable soft opt-ins for ${records} users`);
-    }
+    console.log(`Processed ${records} records from dynamo stream to disable soft opt-ins for ${records} users`);
 
     return {
         recordCount: records,
