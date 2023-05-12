@@ -41,6 +41,8 @@ async function deleteUserSubscription(userLinks: ReadUserSubscription[]): Promis
     return count;
 }
 
+let softOptInSuccessCount = 0;
+
 async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscriptionId: string) {
     const membershipAccountId = await getMembershipAccountId();
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
@@ -55,6 +57,8 @@ async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscription
     console.log(`sent soft opt-in message for identityId ${user.userId}`);
 
     await updateDynamoLoggingTable(subscriptionId, user.userId);
+
+    softOptInSuccessCount++;
 }
 
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {
@@ -97,7 +101,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
     console.log(`Processed ${records} records from dynamo stream to delete ${rows} rows`);
 
-    console.log(`Processed ${records} records from dynamo stream to disable soft opt-ins for ${records} users`);
+    console.log(`Processed ${records} records from dynamo stream to disable soft opt-ins for ${softOptInSuccessCount} users`);
 
     return {
         recordCount: records,
