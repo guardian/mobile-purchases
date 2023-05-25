@@ -121,7 +121,8 @@ describe("handler", () => {
         const expectedSoftOptInMessage1 = {
             identityId: "123",
             eventType: "Cancellation",
-            productName: "InAppPurchase"
+            productName: "InAppPurchase",
+            subscriptionId: "1"
         };
 
         const expectedQueueMessageParams1 = {

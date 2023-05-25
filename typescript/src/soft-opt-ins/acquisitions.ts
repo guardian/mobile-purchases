@@ -79,6 +79,7 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
         identityId: identityId,
         eventType: "Acquisition",
         productName: "InAppPurchase",
+        subscriptionId: subscriptionId
     };
 
     await sendToSqsSoftOptIns(
