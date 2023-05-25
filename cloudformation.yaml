@@ -1114,12 +1114,6 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
-                - "dynamodb:PutItem"
-              Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-soft-opt-ins-logging-v2
-        - Statement:
-            - Effect: Allow
-              Action:
                 - ssm:GetParametersByPath
               Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
         - Statement:
