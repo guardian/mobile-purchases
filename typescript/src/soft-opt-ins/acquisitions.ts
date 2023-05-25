@@ -4,9 +4,7 @@ import {ReadSubscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
-import {SoftOptInLog} from "../models/softOptInLogging";
 import {getIdentityApiKey, getIdentityUrl, getMembershipAccountId} from "../utils/guIdentityApi";
-import {getConfigValue} from "../utils/ssmConfig";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -16,18 +14,6 @@ export function isPostAcquisition(startTimestamp: string): boolean {
     return today.getTime() - acquisitionDate.getTime() >= twoDaysInMilliseconds
 }
 
-async function updateDynamoLoggingTable(subcriptionId: string, identityId: string) {
-    const timestamp = new Date().getTime();
-    const record = new SoftOptInLog(identityId, subcriptionId, timestamp, "Soft opt-ins processed for acquisition");
-
-    try {
-        await dynamoMapper.put({item: record});
-        console.log(`Logged soft opt-in setting to Dynamo`);
-    } catch (error) {
-        console.warn(`Dynamo write failed for record: ${record}`);
-        await putMetric("failed_to_send_acquisition_message", 1)
-    }
-}
 
 async function handleError(message: string): Promise<never> {
     console.warn(message);
@@ -102,8 +88,6 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
          message
     );
     console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`)
-
-    await updateDynamoLoggingTable(subscriptionId, identityId)
 
     if (isPostAcquisition(subscriptionRecord.startTimestamp)) {
         const identityApiKey = await getIdentityApiKey();
