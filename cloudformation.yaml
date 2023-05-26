@@ -1141,7 +1141,7 @@ Resources:
                 - sqs:ReceiveMessage
               Resource: "*"
 
-  # Deprecated
+  # Deprecated, cloudformation does not allow removing DynamoDB tables.
   SoftOptInsLoggingTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -1178,7 +1178,7 @@ Resources:
         - Key: App
           Value: !Ref App
 
-  # Deprecated
+  # Deprecated, cloudformation does not allow removing DynamoDB tables.
   SoftOptInsLoggingTable2:
     Type: AWS::DynamoDB::Table
     Properties:
