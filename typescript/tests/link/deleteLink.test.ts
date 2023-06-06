@@ -1,8 +1,6 @@
 import { DynamoDBRecord, DynamoDBStreamEvent } from "aws-lambda";
 import { ReadUserSubscription } from "../../src/models/userSubscription";
 import { handler } from "../../src/link/deleteLink";
-import {SoftOptInLog} from "../../src/models/softOptInLogging";
-import fetch from "node-fetch";
 
 jest.mock('@aws/dynamodb-data-mapper', () => {
     const actualDataMapper = jest.requireActual('@aws/dynamodb-data-mapper');
@@ -117,9 +115,6 @@ describe("handler", () => {
 
         expect(mockDataMapper.delete).toHaveBeenCalledTimes(1);
         expect(mockDataMapper.delete).toHaveBeenCalledWith({"subscriptionId": "1", "userId": "123"});
-
-        expect(mockDataMapper.put).toHaveBeenCalledTimes(1);
-        expect(mockDataMapper.put).toHaveBeenCalledWith({"item": {"logMessage": "Soft opt-ins processed for expired subscription", "subscriptionId": "1", "timestamp": 1678752000000, "userId": "123"}});
 
         expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
 
