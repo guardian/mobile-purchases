@@ -118,8 +118,6 @@ describe("handler", () => {
         expect(mockDataMapper.delete).toHaveBeenCalledTimes(1);
         expect(mockDataMapper.delete).toHaveBeenCalledWith({"subscriptionId": "1", "userId": "123"});
 
-        /* Following is commented out as the feature flag for soft opt-ins is switched off:
-
         expect(mockDataMapper.put).toHaveBeenCalledTimes(1);
         expect(mockDataMapper.put).toHaveBeenCalledWith({"item": {"logMessage": "Soft opt-ins processed for expired subscription", "subscriptionId": "1", "timestamp": 1678752000000, "userId": "123"}});
 
@@ -128,7 +126,8 @@ describe("handler", () => {
         const expectedSoftOptInMessage1 = {
             identityId: "123",
             eventType: "Cancellation",
-            productName: "InAppPurchase"
+            productName: "InAppPurchase",
+            subscriptionId: "1"
         };
 
         const expectedQueueMessageParams1 = {
@@ -137,7 +136,6 @@ describe("handler", () => {
         };
 
         expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedQueueMessageParams1);
-         */
 
         expect(result).toEqual({ recordCount: 1, rowCount: 1 })
     })

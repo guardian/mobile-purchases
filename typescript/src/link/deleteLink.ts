@@ -52,7 +52,8 @@ async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscription
     await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
         identityId: user.userId,
         eventType: "Cancellation",
-        productName: "InAppPurchase"
+        productName: "InAppPurchase",
+        subscriptionId: subscriptionId
     });
     console.log(`sent soft opt-in message for identityId ${user.userId}`);
 
