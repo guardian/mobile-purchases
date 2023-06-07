@@ -131,6 +131,7 @@ export interface SoftOptInEvent {
     identityId: string;
     eventType: "Acquisition" | "Cancellation" | "Switch";
     productName: "InAppPurchase";
+    subscriptionId: string;
 }
 
 export async function sendToSqsSoftOptIns(queueUrl: string, event: SoftOptInEvent, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {

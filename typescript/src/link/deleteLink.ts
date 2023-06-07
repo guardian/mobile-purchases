@@ -4,15 +4,6 @@ import {dynamoMapper, putMetric, sendToSqsSoftOptIns} from "../utils/aws";
 import {ReadUserSubscription} from "../models/userSubscription";
 import {getMembershipAccountId} from "../utils/guIdentityApi";
 import {Region, Stage} from "../utils/appIdentity";
-import {SoftOptInLog} from "../models/softOptInLogging";
-
-async function updateDynamoLoggingTable(subcriptionId: string, identityId: string) {
-    const timestamp = new Date().getTime();
-    const record = new SoftOptInLog(identityId, subcriptionId, timestamp, "Soft opt-ins processed for expired subscription");
-
-    await dynamoMapper.put({item: record});
-    console.log(`Logged soft opt-in setting to Dynamo`);
-}
 
 async function handleSoftOptInsError(message: string) {
     console.error(message);
@@ -52,11 +43,10 @@ async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscription
     await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
         identityId: user.userId,
         eventType: "Cancellation",
-        productName: "InAppPurchase"
+        productName: "InAppPurchase",
+        subscriptionId: subscriptionId
     });
     console.log(`sent soft opt-in message for identityId ${user.userId}`);
-
-    await updateDynamoLoggingTable(subscriptionId, user.userId);
 
     softOptInSuccessCount++;
 }
