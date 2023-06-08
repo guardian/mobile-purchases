@@ -1061,7 +1061,6 @@ Resources:
         App: !Ref App
 
   SoftOptInAcquisitionsLambda:
-    Condition: IsCode
     Type: AWS::Serverless::Function
     Properties:
       Handler: soft-opt-in-acquisitions.handler
@@ -1236,6 +1235,29 @@ Resources:
           Value: !Sub ${Stage}
       EvaluationPeriods: 1
       MetricName: failed_to_send_cancellation_message
+      Namespace: AWS/Lambda
+      Period: 3600
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+
+  failedSettingAcquisitionSoftOptIns:
+    Condition: IsProd
+    Type: AWS::CloudWatch::Alarm
+    DependsOn:
+      - SoftOptInAcquisitionsLambda
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+      AlarmName: !Sub soft-opt-ins-acquisitions-alarm-${Stage} failed
+      AlarmDescription: >
+        An error occurred in the SoftOptInAcquisitionsLambda.
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: Stage
+          Value: !Sub ${Stage}
+      EvaluationPeriods: 1
+      MetricName: failed_to_send_acquisition_message
       Namespace: AWS/Lambda
       Period: 3600
       Statistic: Sum
