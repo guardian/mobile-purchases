@@ -14,7 +14,6 @@ export function isPostAcquisition(startTimestamp: string): boolean {
     return today.getTime() - acquisitionDate.getTime() >= twoDaysInMilliseconds
 }
 
-
 async function handleError(message: string): Promise<never> {
     console.warn(message);
     await putMetric("failed_to_send_acquisition_message", 1);
