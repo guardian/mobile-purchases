@@ -1259,26 +1259,3 @@ Resources:
       Statistic: Sum
       Threshold: 1
       TreatMissingData: notBreaching
-
-  failedSettingAcquisitionSoftOptIns:
-    Condition: IsProd
-    Type: AWS::CloudWatch::Alarm
-    DependsOn:
-      - SoftOptInAcquisitionsLambda
-    Properties:
-      AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
-      AlarmName: !Sub ${App}-soft-opt-in-acquisitions-${Stage} failed to set soft opt-ins for a user
-      AlarmDescription: >
-        An error occurred in the SoftOptInAcquisitionsLambda and failed to set soft opt-ins for a user
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Dimensions:
-        - Name: Stage
-          Value: !Sub ${Stage}
-      EvaluationPeriods: 1
-      MetricName: failed_to_send_acquisition_message
-      Namespace: AWS/Lambda
-      Period: 3600
-      Statistic: Sum
-      Threshold: 1
-      TreatMissingData: notBreaching
