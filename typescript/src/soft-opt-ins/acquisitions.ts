@@ -54,8 +54,12 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
 }
 
 async function processAcquisition(record: DynamoDBRecord): Promise<void> {
+    console.log("Setting soft opt-ins for acquisition event");
+
     const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
     const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
+
+    console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}`);
 
     // fetch the subscription record from the `subscriptions` table as we need to get the acquisition date of the sub to know when to send WelcomeDay0 email
     /*
@@ -112,15 +116,18 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {
     const records = event.Records;
 
+    let processedCount = 0;
+
     const processRecordPromises = records.map((record: DynamoDBRecord) => {
         const eventName = record.eventName;
 
         if (eventName === "INSERT") {
+            processedCount++;
             return processAcquisition(record);
         }
     });
 
     await Promise.all(processRecordPromises);
 
-    console.log(`Processed ${records.length} newly inserted records from the link (insert full name) DynamoDB table`);
+    console.log(`Processed ${processedCount} newly inserted records from the link (mobile-purchases-${Stage}-user-subscriptions) DynamoDB table`);
 }
