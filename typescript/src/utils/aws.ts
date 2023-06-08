@@ -27,11 +27,15 @@ export const sqs = new Sqs({
     credentialProvider: credentialProvider
 });
 
-let membershipSqsClient: Sqs | undefined;
+let SOISqsClient: Sqs | undefined;
 let commsSqsClient: Sqs | undefined;
 
+let lastAssumedSOI: Date | undefined;
+let lastAssumedComms: Date | undefined;
+
 async function getSqsClientForSoftOptIns(): Promise<Sqs> {
-    if (!membershipSqsClient) {
+    const now = new Date();
+    if (!SOISqsClient || !lastAssumedSOI || now.getTime() - lastAssumedSOI.getTime() >= 1800000) {  // refresh every 30 minutes
         const membershipAccountId = await getMembershipAccountId();
         const sts = new STS();
 
@@ -48,19 +52,22 @@ async function getSqsClientForSoftOptIns(): Promise<Sqs> {
             throw Error("credentials undefined in getSqsClientForSoftOptIns");
         }
 
-        membershipSqsClient = new Sqs({
+        SOISqsClient = new Sqs({
             accessKeyId: credentials.AccessKeyId,
             secretAccessKey: credentials.SecretAccessKey,
             sessionToken: credentials.SessionToken,
             region: Region,
         });
+
+        lastAssumedSOI = now;
     }
 
-    return membershipSqsClient;
+    return SOISqsClient;
 }
 
 async function getSqsClientForComms(): Promise<Sqs> {
-    if (!commsSqsClient) {
+    const now = new Date();
+    if (!commsSqsClient || !lastAssumedComms || now.getTime() - lastAssumedComms.getTime() >= 1800000) {  // refresh every 30 minutes
         const membershipAccountId = await getMembershipAccountId();
         const sts = new STS();
 
@@ -81,6 +88,8 @@ async function getSqsClientForComms(): Promise<Sqs> {
             sessionToken: credentials.SessionToken,
             region: Region,
         });
+
+        lastAssumedComms = now;
     }
 
     return commsSqsClient;

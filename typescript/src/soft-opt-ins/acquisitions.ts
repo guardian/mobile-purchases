@@ -5,6 +5,7 @@ import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import {getIdentityApiKey, getIdentityUrl, getMembershipAccountId} from "../utils/guIdentityApi";
+import {ReadUserSubscription} from "../models/userSubscription";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -16,7 +17,6 @@ export function isPostAcquisition(startTimestamp: string): boolean {
 
 async function handleError(message: string): Promise<never> {
     console.warn(message);
-    await putMetric("failed_to_send_acquisition_message", 1);
     throw new Error(message);
 }
 
@@ -45,12 +45,29 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
 
                     return json.user.primaryEmailAddress;
                 } else {
-                    return await handleError(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
+                    return await handleError(`Could not fetch details from identity API for user ${identityId}`);
                 }
             })
     } catch (error) {
         return await handleError(`error while retrieving user data for identityId: ${identityId}: ${error}`);
     }
+}
+
+async function sendSoftOptIns(identityId: string, subscriptionId: string, queueNamePrefix: string) {
+    const message: SoftOptInEvent = {
+        identityId: identityId,
+        eventType: "Acquisition",
+        productName: "InAppPurchase",
+        subscriptionId: subscriptionId
+    };
+
+    await sendToSqsSoftOptIns(
+        Stage === "PROD"
+            ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
+            : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`,
+        message
+    );
+    console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`)
 }
 
 async function processAcquisition(record: DynamoDBRecord): Promise<void> {
@@ -81,23 +98,13 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
     }
 
     const membershipAccountId = await getMembershipAccountId();
-
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
-    const message: SoftOptInEvent = {
-        identityId: identityId,
-        eventType: "Acquisition",
-        productName: "InAppPurchase",
-        subscriptionId: subscriptionId
-    };
-
-    await sendToSqsSoftOptIns(
-        Stage === "PROD"
-            ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
-            : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`,
-         message
-    );
-    console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`)
+    try {
+        await sendSoftOptIns(identityId, subscriptionId, queueNamePrefix);
+    } catch (e) {
+        handleError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
+    }
 
     if (subscriptionRecord && isPostAcquisition(subscriptionRecord.startTimestamp)) {
         const identityApiKey = await getIdentityApiKey();
@@ -112,7 +119,11 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
             IdentityUserId: identityId
         };
 
-        await sendToSqsComms(`${queueNamePrefix}/braze-emails-${Stage}`, brazeMessage);
+        try {
+            await sendToSqsComms(`${queueNamePrefix}/braze-emails-${Stage}`, brazeMessage);
+        } catch (e) {
+            handleError(`Failed to send comms for subscriptionId: ${subscriptionId}. ${e}`)
+        }
 
         console.log(`Sent message to braze-emails queue for user: ${identityId}: ${JSON.stringify(brazeMessage)}`)
     }
