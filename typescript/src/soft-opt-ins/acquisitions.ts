@@ -103,7 +103,6 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
                 ContactAttributes: {SubscriberAttributes: {}}
             },
             DataExtensionName: "SV_PA_SOINotification",
-            SfContactId: "",
             IdentityUserId: identityId
         };
 
