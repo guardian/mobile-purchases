@@ -72,7 +72,13 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
     let itemToQuery = new ReadSubscription();
     itemToQuery.setSubscriptionId(subscriptionId);
 
-    const subscriptionRecord = await dynamoMapper.get(itemToQuery);
+    let subscriptionRecord;
+
+    try {
+        subscriptionRecord = await dynamoMapper.get(itemToQuery);
+    } catch (error) {
+        console.log("Subscription record not found in the subscriptions table. Assuming the customer has purchased it just now. Error: ", error);
+    }
 
     const membershipAccountId = await getMembershipAccountId();
 
@@ -93,7 +99,7 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
     );
     console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`)
 
-    if (isPostAcquisition(subscriptionRecord.startTimestamp)) {
+    if (subscriptionRecord && isPostAcquisition(subscriptionRecord.startTimestamp)) {
         const identityApiKey = await getIdentityApiKey();
 
         const emailAddress = await getUserEmailAddress(identityId, identityApiKey);
