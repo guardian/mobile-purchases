@@ -5,7 +5,7 @@ import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import {getIdentityApiKey, getIdentityUrl, getMembershipAccountId} from "../utils/guIdentityApi";
-import {ReadUserSubscription} from "../models/userSubscription";
+import {plusDays} from "../utils/dates";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -71,21 +71,11 @@ async function sendSoftOptIns(identityId: string, subscriptionId: string, queueN
 }
 
 async function processAcquisition(record: DynamoDBRecord): Promise<void> {
-    console.log("Setting soft opt-ins for acquisition event");
-
     const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
     const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
 
     console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}`);
 
-    // fetch the subscription record from the `subscriptions` table as we need to get the acquisition date of the sub to know when to send WelcomeDay0 email
-    /*
-        Note: the subscription record may have not been created yet. On purchase, the link endpoint and the webhook that
-        creates the subscription in the subscription table are executed asynchronously.
-
-         This is not an issue. Since we are using the subscription record's acquisition date to determine if it has been more than two
-         days since purchase, if it does not exist yet in the table, then we assume the customer has purchased it just now.
-     */
     let itemToQuery = new ReadSubscription();
     itemToQuery.setSubscriptionId(subscriptionId);
 
@@ -94,8 +84,22 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
     try {
         subscriptionRecord = await dynamoMapper.get(itemToQuery);
     } catch (error) {
-        console.log("Subscription record not found in the subscriptions table. Assuming the customer has purchased it just now. Error: ", error);
+        console.log("Subscription record not found in the subscriptions table. Error: ", error);
+        return;
     }
+
+    // Check if the subscription is active
+    const now = new Date();
+    const end = new Date(Date.parse(subscriptionRecord.endTimestamp));
+    const endWithGracePeriod = plusDays(end, 30);
+    const valid: boolean = now.getTime() <= endWithGracePeriod.getTime();
+
+    if (!valid) {
+        console.log(`Subscription ${subscriptionId} is not active. Stopping processing.`);
+        return;
+    }
+
+    console.log("Setting soft opt-ins for acquisition event");
 
     const membershipAccountId = await getMembershipAccountId();
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
