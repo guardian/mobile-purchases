@@ -5,6 +5,7 @@ import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import {getIdentityApiKey, getIdentityUrl, getMembershipAccountId} from "../utils/guIdentityApi";
+import {plusDays} from "../utils/dates";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -16,7 +17,6 @@ export function isPostAcquisition(startTimestamp: string): boolean {
 
 async function handleError(message: string): Promise<never> {
     console.warn(message);
-    await putMetric("failed_to_send_acquisition_message", 1);
     throw new Error(message);
 }
 
@@ -45,7 +45,7 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
 
                     return json.user.primaryEmailAddress;
                 } else {
-                    return await handleError(`warning, status: ${response.status}, while posting consent data for user ${identityId}`);
+                    return await handleError(`Could not fetch details from identity API for user ${identityId}`);
                 }
             })
     } catch (error) {
@@ -53,31 +53,7 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
     }
 }
 
-async function processAcquisition(record: DynamoDBRecord): Promise<void> {
-    console.log("Setting soft opt-ins for acquisition event");
-
-    const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
-    const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
-
-    console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}`);
-
-    // fetch the subscription record from the `subscriptions` table as we need to get the acquisition date of the sub to know when to send WelcomeDay0 email
-    /*
-        Note: the subscription record may have not been created yet. On purchase, the link endpoint and the webhook that
-        creates the subscription in the subscription table are executed asynchronously.
-
-         This is not an issue. Since we are using the subscription record's acquisition date to determine if it has been more than two
-         days since purchase, if it does not exist yet in the table, then we assume the customer has purchased it just now.
-     */
-    let itemToQuery = new ReadSubscription();
-    itemToQuery.setSubscriptionId(subscriptionId);
-
-    const subscriptionRecord = await dynamoMapper.get(itemToQuery);
-
-    const membershipAccountId = await getMembershipAccountId();
-
-    const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
-
+async function sendSoftOptIns(identityId: string, subscriptionId: string, queueNamePrefix: string) {
     const message: SoftOptInEvent = {
         identityId: identityId,
         eventType: "Acquisition",
@@ -89,11 +65,52 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
         Stage === "PROD"
             ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
             : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`,
-         message
+        message
     );
     console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`)
+}
 
-    if (isPostAcquisition(subscriptionRecord.startTimestamp)) {
+async function processAcquisition(record: DynamoDBRecord): Promise<void> {
+    const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
+    const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
+
+    console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}`);
+
+    let itemToQuery = new ReadSubscription();
+    itemToQuery.setSubscriptionId(subscriptionId);
+
+    let subscriptionRecord;
+
+    try {
+        subscriptionRecord = await dynamoMapper.get(itemToQuery);
+    } catch (error) {
+        console.log("Subscription record not found in the subscriptions table. Error: ", error);
+        return;
+    }
+
+    // Check if the subscription is active
+    const now = new Date();
+    const end = new Date(Date.parse(subscriptionRecord.endTimestamp));
+    const endWithGracePeriod = plusDays(end, 30);
+    const valid: boolean = now.getTime() <= endWithGracePeriod.getTime();
+
+    if (!valid) {
+        console.log(`Subscription ${subscriptionId} is not active. Stopping processing.`);
+        return;
+    }
+
+    console.log("Setting soft opt-ins for acquisition event");
+
+    const membershipAccountId = await getMembershipAccountId();
+    const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
+
+    try {
+        await sendSoftOptIns(identityId, subscriptionId, queueNamePrefix);
+    } catch (e) {
+        handleError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
+    }
+
+    if (subscriptionRecord && isPostAcquisition(subscriptionRecord.startTimestamp)) {
         const identityApiKey = await getIdentityApiKey();
 
         const emailAddress = await getUserEmailAddress(identityId, identityApiKey);
@@ -106,7 +123,11 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
             IdentityUserId: identityId
         };
 
-        await sendToSqsComms(`${queueNamePrefix}/braze-emails-${Stage}`, brazeMessage);
+        try {
+            await sendToSqsComms(`${queueNamePrefix}/braze-emails-${Stage}`, brazeMessage);
+        } catch (e) {
+            handleError(`Failed to send comms for subscriptionId: ${subscriptionId}. ${e}`)
+        }
 
         console.log(`Sent message to braze-emails queue for user: ${identityId}: ${JSON.stringify(brazeMessage)}`)
     }
