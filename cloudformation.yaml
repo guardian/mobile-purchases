@@ -1074,6 +1074,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
+          DLQUrl: !GetAtt AcquisitionsDeadLetterQueue.Arn
       Description: asdf
       MemorySize: 512
       Timeout: 60
@@ -1139,6 +1140,96 @@ Resources:
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
               Resource: "*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt AcquisitionsDeadLetterQueue.Arn
+
+  AcquisitionsDLQProcessorLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: soft-opt-ins-acquisitions-dlq-processor.handler
+      Runtime: nodejs14.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-soft-opt-ins-acquisitions-dlq-processor/soft-opt-ins-acquisitions-dlq-processor.zip
+      FunctionName: !Sub ${App}-soft-opt-ins-acquisitions-dlq-processor-${Stage}
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          DLQUrl: !GetAtt AcquisitionsDeadLetterQueue.Arn
+      Description: Process DLQ messages
+      MemorySize: 512
+      Timeout: 60
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sts:AssumeRole
+              Resource:
+                !Sub
+                - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
+                - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sts:AssumeRole
+              Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:Query"
+                - "dynamodb:GetItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParametersByPath
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - cloudwatch:putMetricData
+              Resource: "*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+                - sqs:ReceiveMessage
+              Resource: "*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt AcquisitionsDeadLetterQueue.Arn
+
+  AcquisitionsDLQProcessorSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Schedule for DLQ processing
+      ScheduleExpression: cron(0 0/12 * * ? *) # Twice a day
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt AcquisitionsDLQProcessorLambda.Arn
+          Id: EventRuleTarget
+
+  AcquisitionsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-soft-opt-in-acquisitions-DLQ-${Stage}
 
   # Deprecated, cloudformation does not allow removing DynamoDB tables.
   SoftOptInsLoggingTable:

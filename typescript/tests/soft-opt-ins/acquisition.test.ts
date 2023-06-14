@@ -1,4 +1,5 @@
-import {handler, isPostAcquisition} from "../../src/soft-opt-ins/acquisitions";
+import {isPostAcquisition} from "../../src/soft-opt-ins/processSubscription";
+import {handler} from "../../src/soft-opt-ins/acquisitions";
 import {DynamoDBStreamEvent} from "aws-lambda";
 import {ReadSubscription} from "../../src/models/subscription";
 
@@ -105,6 +106,7 @@ describe("isPostAcquisition() function", () => {
 
 describe('handler', () => {
     beforeEach(() => {
+        process.env.DLQUrl = 'https://example.com';
         jest.clearAllMocks();
 
         // Set the current time to a fixed date (2023-03-14)
