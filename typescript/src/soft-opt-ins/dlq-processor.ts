@@ -64,11 +64,12 @@ export async function handler(event: any): Promise<void> {
             const { identityId, subscriptionId, timestamp } = body;
 
             if (messageIsOneDayOld(timestamp)) {
+                console.log(`Message ${message.MessageId} is more than one day old. Deleting message from DLQ`)
                 await deleteMessage(dlqUrl, message.ReceiptHandle);
                 continue;
             }
 
-            console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}`);
+            console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}, timestamp: ${timestamp}`);
 
             let itemToQuery = new ReadSubscription();
             itemToQuery.setSubscriptionId(subscriptionId);
