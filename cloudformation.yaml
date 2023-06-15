@@ -1079,7 +1079,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
-          DLQUrl: !GetAtt AcquisitionsDeadLetterQueue.Arn
+          DLQUrl: !Ref AcquisitionsDeadLetterQueue
       Description: asdf
       MemorySize: 512
       Timeout: 60
@@ -1165,7 +1165,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
-          DLQUrl: !GetAtt AcquisitionsDeadLetterQueue.Arn
+          DLQUrl: !Ref AcquisitionsDeadLetterQueue
       Description: Process DLQ messages
       MemorySize: 512
       Timeout: 60
