@@ -1159,7 +1159,7 @@ Resources:
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-soft-opt-in-acquisitions-dlq-processor/soft-opt-in-acquisitions-dlq-processor.zip
-      FunctionName: !Sub ${App}-soft-opt-ins-acquisitions-dlq-processor-${Stage}
+      FunctionName: !Sub ${App}-soft-opt-in-acquisitions-dlq-processor-${Stage}
       Environment:
         Variables:
           App: !Sub ${App}
