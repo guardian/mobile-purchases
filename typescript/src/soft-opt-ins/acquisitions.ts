@@ -1,11 +1,12 @@
 import {DynamoDBRecord, DynamoDBStreamEvent} from "aws-lambda";
-import {dynamoMapper, putMetric, sendToSqsComms, sendToSqsSoftOptIns, SoftOptInEvent} from "../utils/aws";
+import {dynamoMapper, sendToSqsComms, sendToSqsSoftOptIns, SoftOptInEvent} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import {getIdentityApiKey, getIdentityUrl, getMembershipAccountId} from "../utils/guIdentityApi";
 import {plusDays} from "../utils/dates";
+import * as retry from 'retry';
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -70,6 +71,33 @@ async function sendSoftOptIns(identityId: string, subscriptionId: string, queueN
     console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`)
 }
 
+async function getSubscriptionRecordWithRetry(itemToQuery: ReadSubscription): Promise<ReadSubscription | null> {
+    return new Promise((resolve, reject) => {
+        const retryOptions = {
+            retries: 3,
+            factor: 2, // Exponential backoff factor
+            minTimeout: 60 * 1000, // Initial wait time (1 minute)
+            maxTimeout: 5 * 60 * 1000 // Maximum wait time (5 minutes)
+        };
+        const operation = retry.operation(retryOptions);
+
+        operation.attempt(async function(currentAttempt: any) {
+            try {
+                const subscriptionRecord = await dynamoMapper.get(itemToQuery);
+                resolve(subscriptionRecord);
+            } catch (error) {
+                if (operation.retry(error)) {
+                    console.log(`Attempt #${currentAttempt} to get subscription ${itemToQuery.subscriptionId} record failed. Retrying...`);
+                    return;
+                }
+                console.log(`Subscription ${itemToQuery.subscriptionId} record not found in the subscriptions table. Error: `, error);
+                resolve(null);
+            }
+        });
+    });
+}
+
+
 async function processAcquisition(record: DynamoDBRecord): Promise<void> {
     const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
     const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
@@ -79,12 +107,9 @@ async function processAcquisition(record: DynamoDBRecord): Promise<void> {
     let itemToQuery = new ReadSubscription();
     itemToQuery.setSubscriptionId(subscriptionId);
 
-    let subscriptionRecord;
+    let subscriptionRecord = await getSubscriptionRecordWithRetry(itemToQuery);
 
-    try {
-        subscriptionRecord = await dynamoMapper.get(itemToQuery);
-    } catch (error) {
-        console.log("Subscription record not found in the subscriptions table. Error: ", error);
+    if (!subscriptionRecord) {
         return;
     }
 
