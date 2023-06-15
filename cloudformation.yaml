@@ -1220,7 +1220,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Schedule for DLQ processing
-      ScheduleExpression: cron(0 0/12 * * ? *) # Twice a day
+      ScheduleExpression: cron(0 0/3 * * ? *) # Every 3 hours
       State: ENABLED
       Targets:
         - Arn: !GetAtt AcquisitionsDLQProcessorLambda.Arn
@@ -1338,6 +1338,29 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref SoftOptInAcquisitionsLambda
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 3600
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+
+  acquisitionsDlqProcessorExceptionsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProd
+    DependsOn:
+      - AcquisitionsDLQProcessorLambda
+    Properties:
+      AlarmActions:
+        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+      AlarmName: !Sub ${App}-soft-opt-ins-acquisitions-dlq-processor-${Stage} threw an unhandled exception
+      AlarmDescription: >
+        An error occurred in the AcquisitionsDLQProcessorLambda
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AcquisitionsDLQProcessorLambda
       EvaluationPeriods: 1
       MetricName: Errors
       Namespace: AWS/Lambda
