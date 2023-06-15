@@ -40,7 +40,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
                     const timestamp = Date.now();
                     await sendToSqs(dlqUrl, {subscriptionId, identityId, timestamp});
                 } catch(e) {
-                    console.log(`could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}`)
+                    console.log(`could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}. Error: `, e)
                 }
 
                 return false;

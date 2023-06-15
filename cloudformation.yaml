@@ -1060,6 +1060,11 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
+  AcquisitionsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-soft-opt-in-acquisitions-DLQ-${Stage}
+      
   SoftOptInAcquisitionsLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -1225,11 +1230,6 @@ Resources:
       Targets:
         - Arn: !GetAtt AcquisitionsDLQProcessorLambda.Arn
           Id: EventRuleTarget
-
-  AcquisitionsDeadLetterQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub ${App}-soft-opt-in-acquisitions-DLQ-${Stage}
 
   # Deprecated, cloudformation does not allow removing DynamoDB tables.
   SoftOptInsLoggingTable:

@@ -13,7 +13,7 @@ const getEntries = (env) => {
     "google-update-subscriptions": "./typescript/src/update-subs/google.ts",
     "apple-update-subscriptions": "./typescript/src/update-subs/apple.ts",
     "soft-opt-in-acquisitions": "./typescript/src/soft-opt-ins/acquisitions.ts",
-    "soft-opt-in-acquisitions-dql-processor": "./typescript/src/soft-opt-ins/dql-processor.ts",
+    "soft-opt-in-acquisitions-dlq-processor": "./typescript/src/soft-opt-ins/dlq-processor.ts",
     "export-subscription-tables": "./typescript/src/export/exportSubscriptions.ts",
     "export-subscription-table-v2": "./typescript/src/export/exportSubscriptions-v2.ts",
     "export-subscription-events-table": "./typescript/src/export/exportEvents.ts",
