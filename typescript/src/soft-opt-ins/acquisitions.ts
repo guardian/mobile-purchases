@@ -11,6 +11,8 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
         throw new Error("process.env.DLQUrl is undefined");
     }
 
+    console.log(`dlqUrl: ${dlqUrl}`);
+
     const records = event.Records;
 
     let processedCount = 0;

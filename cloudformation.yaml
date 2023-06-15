@@ -1064,7 +1064,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${App}-soft-opt-in-acquisitions-DLQ-${Stage}
-      
+
   SoftOptInAcquisitionsLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -1215,11 +1215,6 @@ Resources:
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
               Resource: "*"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - sqs:SendMessage
-              Resource: !GetAtt AcquisitionsDeadLetterQueue.Arn
 
   AcquisitionsDLQProcessorSchedule:
     Type: AWS::Events::Rule
