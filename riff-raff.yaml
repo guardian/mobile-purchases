@@ -105,6 +105,12 @@ deployments:
       functionNames: [ mobile-purchases-soft-opt-in-acquisitions- ]
       fileName: soft-opt-in-acquisitions.zip
 
+  mobile-purchases-soft-opt-in-acquisitions-dlq-processor:
+    template: lambda
+    parameters:
+      functionNames: [ mobile-purchases-soft-opt-in-acquisitions-dlq-processor- ]
+      fileName: soft-opt-in-acquisitions-dlq-processor.zip
+
   mobile-purchases-exports-cloudformation:
     type: cloud-formation
     parameters:
