@@ -53,9 +53,11 @@ Parameters:
 Mappings:
   StageVariables:
     CODE:
+      Schedule: 'rate(365 days)'
       AlarmActionsEnabled: FALSE
       SoftOptInConsentSetterStage: DEV
     PROD:
+      Schedule: 'rate(30 minutes)'
       AlarmActionsEnabled: TRUE
       SoftOptInConsentSetterStage: PROD
 
@@ -1173,6 +1175,13 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
+      Events:
+        ScheduledRun:
+          Type: Schedule
+          Properties:
+            Schedule: !FindInMap [ StageVariables, !Ref Stage, Schedule]
+            Description: Runs AcquisitionsDLQProcessorLambda
+            Enabled: True
       Policies:
         - Statement:
             - Effect: Allow
@@ -1215,16 +1224,6 @@ Resources:
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
               Resource: "*"
-
-  AcquisitionsDLQProcessorSchedule:
-    Type: AWS::Events::Rule
-    Properties:
-      Description: Schedule for DLQ processing
-      ScheduleExpression: cron(0 * * * ? *) # Every hour
-      State: ENABLED
-      Targets:
-        - Arn: !GetAtt AcquisitionsDLQProcessorLambda.Arn
-          Id: EventRuleTarget
 
   # Deprecated, cloudformation does not allow removing DynamoDB tables.
   SoftOptInsLoggingTable:
