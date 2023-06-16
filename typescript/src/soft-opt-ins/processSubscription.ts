@@ -69,6 +69,7 @@ async function sendSoftOptIns(identityId: string, subscriptionId: string, queueN
     console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`)
 }
 
+// returns true if message successfully processed
 export async function processAcquisition(subscriptionRecord: ReadSubscription, identityId: string): Promise<boolean> {
     const subscriptionId = subscriptionRecord.subscriptionId;
 
@@ -80,7 +81,7 @@ export async function processAcquisition(subscriptionRecord: ReadSubscription, i
 
     if (!valid) {
         console.log(`Subscription ${subscriptionRecord.subscriptionId} is not active. Stopping processing.`);
-        return false;
+        return true;
     }
 
     console.log("Setting soft opt-ins for acquisition event");
