@@ -1220,7 +1220,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Schedule for DLQ processing
-      ScheduleExpression: cron(0 0/3 * * ? *) # Every 3 hours
+      ScheduleExpression: cron(0 * * * ? *) # Every hour
       State: ENABLED
       Targets:
         - Arn: !GetAtt AcquisitionsDLQProcessorLambda.Arn
