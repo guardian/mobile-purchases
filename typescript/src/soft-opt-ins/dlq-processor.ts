@@ -8,7 +8,7 @@ interface MessageBody {
     timestamp: number;
 }
 
-function messageIsOneDayOld(timestamp: number): boolean {
+export function messageIsOneDayOld(timestamp: number): boolean {
     const now = Date.now();
 
     return now - timestamp >= 86400000;
@@ -43,14 +43,12 @@ export async function handler(event: any): Promise<void> {
 
         // Process each message
         for (const message of data.Messages) {
-            if (!message.Body) {
-                console.error(`Message ${message.MessageId} does not have a Body property`);
-                continue; // Skip to next message
+            if (!message.Body) { // Should never happen
+                throw new Error(`Message ${message.MessageId} does not have a Body property`);
             }
 
-            if (!message.ReceiptHandle) {
-                console.error(`Message ${message.MessageId} does not have a ReceiptHandle property`);
-                continue; // Skip to next message
+            if (!message.ReceiptHandle) {  // Should never happen
+                throw new Error(`Message ${message.MessageId} does not have a ReceiptHandle property`);
             }
 
             let body: MessageBody;
