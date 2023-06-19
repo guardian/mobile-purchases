@@ -264,6 +264,14 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
         return err("The notification from Apple didn't have any data we can parse")
     }
     console.log(`The keys of the payload: ${Object.keys(payload)}`);
+
+    // --------------------------------
+    // Date: 19th June 2023
+    // Author: Pascal
+    // I am temporarily adding an extra amount of logging while doing an investigation
+    console.log(`[60bc2421] payload: ${payload}`);
+    // --------------------------------
+
     const unifiedReceipt = parseUnifiedReceipt(payload.unified_receipt);
     if(unifiedReceipt.kind === ResultKind.Err) {
         return unifiedReceipt
