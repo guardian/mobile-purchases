@@ -30,6 +30,14 @@ export function parsePayload(body: Option<string>): Error | DeveloperNotificatio
     try {
         const rawNotification = Buffer.from(JSON.parse(body ?? "").message.data, 'base64');
         const parsedNotification = JSON.parse(rawNotification.toString()) as DeveloperNotification;
+
+        // --------------------------------
+        // Date: 20 June 2023
+        // Author: Pascal
+        // I am temporarily adding an extra amount of logging while doing an investigation
+        console.log(`[4cea8e98] rawNotification: ${rawNotification.toString()}`);
+        // --------------------------------
+
         const eventDate = optionalMsToDate(parsedNotification.eventTimeMillis);
         if (eventDate === null) {
             return new Error(`Unable to parse the eventTimeMillis field ${parsedNotification.eventTimeMillis}`)
