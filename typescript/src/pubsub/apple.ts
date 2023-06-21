@@ -303,14 +303,6 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
 export function parsePayload(body: Option<string>): Error | StatusUpdateNotification {
     try {
         const notification: unknown = JSON.parse(body ?? "");
-
-        // --------------------------------
-        // Date: 20 June 2023
-        // Author: Pascal
-        // I am temporarily adding an extra amount of logging while doing an investigation
-        console.log(`[b8493959] body: ${body ?? "no body"}`);
-        // --------------------------------
-
         const parsedNotification = parseNotification(notification);
         if(parsedNotification.kind === ResultKind.Ok) {
             return parsedNotification.value;
