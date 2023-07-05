@@ -6,7 +6,7 @@ import scala.collection.immutable
 
 val testAndCompileDependencies: String = "test->test;compile->compile"
 val awsVersion: String = "1.11.375"
-val simpleConfigurationVersion: String = "1.5.7"
+val simpleConfigurationVersion: String = "1.5.8"
 
 val jacksonData: String = "2.13.3"
 
@@ -117,6 +117,5 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
       "-Ywarn-dead-code",
       "-Xfatal-warnings",
     )
-
   )
 }
