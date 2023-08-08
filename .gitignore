@@ -11,4 +11,4 @@ dist
 project/.bloop/
 project/metals.sbt
 .bsp/
-
+.yarn/

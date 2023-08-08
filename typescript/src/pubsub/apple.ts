@@ -305,6 +305,7 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
         const notification: unknown = JSON.parse(body ?? "");
         const parsedNotification = parseNotification(notification);
         if(parsedNotification.kind === ResultKind.Ok) {
+            console.log(`[2e4a0281] ${JSON.stringify(parsedNotification)}`)
             return parsedNotification.value;
         }
         console.log(`debugLogPayload (parse error: ${parsedNotification.err}): ${debugLogPayload(notification)}`)
