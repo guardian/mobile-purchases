@@ -39,6 +39,12 @@ deployments:
       functionNames: [mobile-purchases-apple-subscription-status-]
       fileName: apple-subscription-status.zip
 
+  mobile-purchases-apple-fetch-offer-details:
+    template: lambda
+    parameters:
+      functionNames: [mobile-purchases-apple-fetch-offer-details-]
+      fileName: apple-fetch-offer-details.zip
+
   mobile-purchases-google-oauth:
     template: lambda
     parameters:
