@@ -234,7 +234,6 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
           "/apple/linkToSubscriptions":
             post:
               x-amazon-apigateway-integration:
@@ -246,7 +245,6 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
           "/google/linkToSubscriptions":
             post:
               x-amazon-apigateway-integration:
@@ -258,7 +256,6 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
           "/user/subscriptions/me":
             get:
               x-amazon-apigateway-integration:
@@ -270,7 +267,6 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
           "/user/subscriptions/{userId}":
             get:
               x-amazon-apigateway-integration:
@@ -282,7 +278,17 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
+          "/apple/fetchOfferDetails":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleSubStatusLambda.Arn}/invocations
+              consumes: [application/json]
+              produces: [application/json]
+              responses:
+                "200":
+                  "description": "200 response"
           "/healthcheck":
             get:
               responses:
