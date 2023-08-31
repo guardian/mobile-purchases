@@ -12,3 +12,4 @@ project/.bloop/
 project/metals.sbt
 .bsp/
 
+.DS_Store

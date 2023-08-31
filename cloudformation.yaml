@@ -288,7 +288,7 @@ Resources:
               produces: [application/json]
               responses:
                 "200":
-                  "description": "200 response"
+                  "description": "200 response (+)"
           "/healthcheck":
             get:
               responses:
@@ -574,7 +574,7 @@ Resources:
           Stage: !Ref Stage
           Stack: !Ref Stack
           App: !Ref App
-      Description: apple fetch offer details lambda
+      Description: apple fetch offer details lambda (+)
       MemorySize: 128
       Timeout: 29
       Events:
