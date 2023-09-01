@@ -2,7 +2,15 @@ import 'source-map-support/register'
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import { HTTPResponses } from '../models/apiGatewayHttp';
 
+interface HttpRequestPayload {
+    username: string,
+    productIdentifier: string,
+    offerIdentifier: string
+}
+
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
+    const requestBody = request.body;
+    console.log("[a19489e1] " + requestBody);
     const answer = {
         statusCode: 200,
         body: JSON.stringify({
