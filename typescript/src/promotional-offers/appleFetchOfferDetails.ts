@@ -26,8 +26,11 @@ function payloadToResponse(payload: HttpRequestPayload): Response {
     // nonce               : (server generated)
     // timestamp           : (server generated)
 
-    const appBundleId = 'appBundleID';
-    const keyIdentifier = 'keyIdentifier';
+    // release: uk.co.guardian.iphone2
+    // debug  : uk.co.guardian.iphone2.debug
+
+    const appBundleId = 'uk.co.guardian.iphone2.debug';
+    const keyIdentifier = 'PGRFM5F82T';
     const productIdentifier = payload.productIdentifier;
     const offerIdentifier = payload.offerIdentifier;
     const applicationUsername = payload.username;
