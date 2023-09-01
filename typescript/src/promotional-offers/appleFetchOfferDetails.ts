@@ -18,7 +18,7 @@ interface Response {
 function payloadToResponse(payload: HttpRequestPayload): Response {
 
     // https://developer.apple.com/documentation/storekit/in-app_purchase/original_api_for_in-app_purchase/subscriptions_and_offers/generating_a_signature_for_promotional_offers
-    // appBundleID         :
+    // appBundleId         :
     // keyIdentifier       :
     // productIdentifier   : (from request payload)
     // offerIdentifier     : (from request payload)
@@ -26,13 +26,15 @@ function payloadToResponse(payload: HttpRequestPayload): Response {
     // nonce               : (server generated)
     // timestamp           : (server generated)
 
-    const appBundleID = 'appBundleID';
+    const appBundleId = 'appBundleID';
     const keyIdentifier = 'keyIdentifier';
     const productIdentifier = payload.productIdentifier;
     const offerIdentifier = payload.offerIdentifier;
     const applicationUsername = payload.username;
     const nonce = "6e090f4d-484d-490d-94df-18cad3a73138";
     const timestamp = Date. now(); // generates the currenty unixtime in milliseconds
+
+    const str1 = appBundleId + '\u2063' + keyIdentifier + '\u2063' + productIdentifier + '\u2063' + offerIdentifier + '\u2063' + applicationUsername + '\u2063' + nonce + '\u2063' + timestamp;
 
     return {
         nonce: nonce,
