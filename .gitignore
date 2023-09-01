@@ -13,3 +13,5 @@ project/metals.sbt
 .bsp/
 
 .DS_Store
+.pnp.*
+.yarn
