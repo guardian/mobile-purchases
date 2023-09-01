@@ -11,6 +11,8 @@ interface HttpRequestPayload {
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
     const requestBody = request.body;
     console.log("[a19489e1] " + requestBody);
+    const payloadObject = JSON.parse(requestBody ?? "")
+    console.log("[a19489e2] " + JSON.stringify(payloadObject));
     const answer = {
         statusCode: 200,
         body: JSON.stringify({
