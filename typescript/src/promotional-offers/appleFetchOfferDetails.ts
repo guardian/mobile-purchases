@@ -17,7 +17,7 @@ interface Response {
     signature: string
 }
 
-function payloadToResponse(payload: HttpRequestPayload): Response {
+async function payloadToResponse(payload: HttpRequestPayload): Promise<Response> {
 
     // https://developer.apple.com/documentation/storekit/in-app_purchase/original_api_for_in-app_purchase/subscriptions_and_offers/generating_a_signature_for_promotional_offers
     // appBundleId         :
@@ -42,10 +42,9 @@ function payloadToResponse(payload: HttpRequestPayload): Response {
     const str1 = appBundleId + '\u2063' + keyIdentifier + '\u2063' + productIdentifier + '\u2063' + offerIdentifier + '\u2063' + applicationUsername + '\u2063' + nonce + '\u2063' + timestamp;
 
     const data = Buffer.from(str1, 'utf8');
-
-    const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'sect233k1' });
-
-    const signature = crypto.sign("SHA256", data , privateKey);
+    const privateKey1 = await getConfigValue<string>("promotional-offers-encryption-private-key");
+    const privateKey2 = crypto.createPrivateKey({ key: privateKey1 });
+    const signature = crypto.sign("SHA256", data , privateKey2);
 
     return {
         nonce: nonce,
@@ -57,13 +56,10 @@ function payloadToResponse(payload: HttpRequestPayload): Response {
 
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
 
-    const key = await getConfigValue<string>("promotional-offers-encryption-private-key");
-    console.log(key);
-
     const requestBody = request.body;
     const payloadObject = JSON.parse(requestBody ?? "");
     try {
-        const responseObject = payloadToResponse(payloadObject);
+        const responseObject = await payloadToResponse(payloadObject);
         const answer = {
             statusCode: 200,
             body: JSON.stringify(responseObject)
