@@ -48,6 +48,15 @@ function payloadToResponse(payload: HttpRequestPayload): Response {
 } 
 
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
+
+    let crypto;
+    try {
+      crypto = await import('node:crypto');
+      console.log("looks like this is working");
+    } catch (err) {
+      console.error('crypto support is disabled!');
+    } 
+
     const requestBody = request.body;
     const payloadObject = JSON.parse(requestBody ?? "");
     try {
