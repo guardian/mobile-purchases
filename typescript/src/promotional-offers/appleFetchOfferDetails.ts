@@ -40,11 +40,21 @@ function payloadToResponse(payload: HttpRequestPayload): Response {
 
     const str1 = appBundleId + '\u2063' + keyIdentifier + '\u2063' + productIdentifier + '\u2063' + offerIdentifier + '\u2063' + applicationUsername + '\u2063' + nonce + '\u2063' + timestamp;
 
+    const data = Buffer.from(str1, 'utf8');
+
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'sect233k1' });
+
+    // See crypto.createSign(algorithm[, options])
+    // Here: https://nodejs.org/docs/latest-v18.x/api/crypto.html
+    // https://www.geeksforgeeks.org/node-js-crypto-sign-function/
+
+    const signature = crypto.sign("SHA256", data , privateKey);
+
     return {
         nonce: nonce,
         timestamp: timestamp,
         keyIdentifier: keyIdentifier,
-        signature: "284A0C2BCFEF44809BAC4C286708DA51"
+        signature: signature.toString('base64')
     };
 } 
 
