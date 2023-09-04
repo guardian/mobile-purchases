@@ -1,6 +1,7 @@
 import 'source-map-support/register'
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import { HTTPResponses } from '../models/apiGatewayHttp';
+import * as crypto from "crypto";
 
 interface HttpRequestPayload {
     username: string,
@@ -49,13 +50,7 @@ function payloadToResponse(payload: HttpRequestPayload): Response {
 
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
 
-    let crypto;
-    try {
-      crypto = await import('node:crypto');
-      console.log("looks like this is working");
-    } catch (err) {
-      console.error('crypto support is disabled!');
-    } 
+    console.log(crypto.getHashes());
 
     const requestBody = request.body;
     const payloadObject = JSON.parse(requestBody ?? "");
