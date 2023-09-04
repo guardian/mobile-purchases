@@ -1,7 +1,8 @@
 import 'source-map-support/register'
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { HTTPResponses } from '../models/apiGatewayHttp';
 import * as crypto from "crypto";
+import { getConfigValue } from "../utils/ssmConfig";
 
 interface HttpRequestPayload {
     username: string,
@@ -44,10 +45,6 @@ function payloadToResponse(payload: HttpRequestPayload): Response {
 
     const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'sect233k1' });
 
-    // See crypto.createSign(algorithm[, options])
-    // Here: https://nodejs.org/docs/latest-v18.x/api/crypto.html
-    // https://www.geeksforgeeks.org/node-js-crypto-sign-function/
-
     const signature = crypto.sign("SHA256", data , privateKey);
 
     return {
@@ -60,13 +57,8 @@ function payloadToResponse(payload: HttpRequestPayload): Response {
 
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
 
-    const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'sect233k1' });
-
-    const sign = crypto.createSign('SHA256');
-    sign.update('some data to sign');
-    sign.end();
-    const signature = sign.sign(privateKey);
-    console.log(signature);
+    const key = await getConfigValue<string>("promotional-offers-encryption-private-key");
+    console.log(key);
 
     const requestBody = request.body;
     const payloadObject = JSON.parse(requestBody ?? "");
