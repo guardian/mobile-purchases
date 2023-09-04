@@ -36,7 +36,7 @@ async function payloadToResponse(payload: HttpRequestPayload): Promise<Response>
     const productIdentifier = payload.productIdentifier;
     const offerIdentifier = payload.offerIdentifier;
     const applicationUsername = payload.username;
-    const nonce = "6e090f4d-484d-490d-94df-18cad3a73138";
+    const nonce = crypto.randomUUID().toLowerCase();
     const timestamp = Date. now(); // generates the currenty unixtime in milliseconds
 
     const str1 = appBundleId + '\u2063' + keyIdentifier + '\u2063' + productIdentifier + '\u2063' + offerIdentifier + '\u2063' + applicationUsername + '\u2063' + nonce + '\u2063' + timestamp;
