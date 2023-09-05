@@ -77,6 +77,7 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
         }
         return Promise.resolve(answer);
     } catch (error) {
+        console.log("error while computing response: " + error);
         const answer = {
             statusCode: 500,
             body: "error while computing response"
