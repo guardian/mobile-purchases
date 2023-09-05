@@ -50,7 +50,8 @@ async function payloadToResponse(payload: HttpRequestPayload): Promise<Response>
     const nonce = crypto.randomUUID().toLowerCase();
     const timestamp = Date.now();
 
-    const str1 = appBundleId + '\u2063' + keyIdentifier + '\u2063' + productIdentifier + '\u2063' + offerIdentifier + '\u2063' + applicationUsername + '\u2063' + nonce + '\u2063' + timestamp;
+    const separator = '\u2063';
+    const str1 = appBundleId + separator + keyIdentifier + separator + productIdentifier + separator + offerIdentifier + separator + applicationUsername + separator + nonce + separator + timestamp;
 
     const data = Buffer.from(str1, 'utf8');
     const privateKey1 = await getConfigValue<string>("promotional-offers-encryption-private-key");
