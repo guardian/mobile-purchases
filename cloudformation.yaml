@@ -234,7 +234,6 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
           "/apple/linkToSubscriptions":
             post:
               x-amazon-apigateway-integration:
@@ -246,7 +245,6 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
           "/google/linkToSubscriptions":
             post:
               x-amazon-apigateway-integration:
@@ -258,7 +256,6 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
           "/user/subscriptions/me":
             get:
               x-amazon-apigateway-integration:
@@ -270,7 +267,6 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
           "/user/subscriptions/{userId}":
             get:
               x-amazon-apigateway-integration:
@@ -282,7 +278,17 @@ Resources:
               responses:
                 "200":
                   "description": "200 response"
-
+          "/apple/fetchOfferDetails":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleFetchOfferDetailsLambda.Arn}/invocations
+              consumes: [application/json]
+              produces: [application/json]
+              responses:
+                "200":
+                  "description": "200 response (+)"
           "/healthcheck":
             get:
               responses:
@@ -546,6 +552,36 @@ Resources:
           Type: Api
           Properties:
             Path: "/apple/subscription/status"
+            Method: POST
+            RestApiId: !Ref MobilePuchasesApi
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
+  AppleFetchOfferDetailsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apple-fetch-offer-details.handler
+      Runtime: nodejs18.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-apple-fetch-offer-details/apple-fetch-offer-details.zip
+      FunctionName: !Sub ${App}-apple-fetch-offer-details-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+      Description: apple fetch offer details lambda (+)
+      MemorySize: 128
+      Timeout: 29
+      Events:
+        PostApi:
+          Type: Api
+          Properties:
+            Path: "/apple/fetchOfferDetails"
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
