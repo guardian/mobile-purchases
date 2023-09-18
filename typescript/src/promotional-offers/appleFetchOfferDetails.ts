@@ -46,7 +46,7 @@ async function payloadToResponse(payload: HttpRequestPayload): Promise<Response>
     const keyIdentifier = await getConfigValue<string>("promotional-offers-keyIdentifier");
     const productIdentifier = payload.productIdentifier;
     const offerIdentifier = payload.offerIdentifier;
-    const applicationUsername = payload.username;
+    const applicationUsername = payload.username.toLowerCase();
     const nonce = crypto.randomUUID().toLowerCase();
     const timestamp = Date.now();
 
