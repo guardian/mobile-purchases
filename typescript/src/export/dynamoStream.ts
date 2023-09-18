@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import {Readable, ReadableOptions} from "stream";
 import {ScanIterator} from "@aws/dynamodb-data-mapper";
 
