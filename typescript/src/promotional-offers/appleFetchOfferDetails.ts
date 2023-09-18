@@ -14,7 +14,8 @@ interface Response {
     nonce: string,
     timestamp: number,
     keyIdentifier: string,
-    signature: string
+    signature: string,
+    message: string
 }
 
 async function payloadToResponse(payload: HttpRequestPayload): Promise<Response> {
@@ -46,14 +47,15 @@ async function payloadToResponse(payload: HttpRequestPayload): Promise<Response>
     const keyIdentifier = await getConfigValue<string>("promotional-offers-keyIdentifier");
     const productIdentifier = payload.productIdentifier;
     const offerIdentifier = payload.offerIdentifier;
-    const applicationUsername = payload.username;
+    const applicationUsername = payload.username.toLowerCase(); // aka: appAccountToken (in the apple documentation)
     const nonce = crypto.randomUUID().toLowerCase();
     const timestamp = Date.now();
 
     const separator = '\u2063';
-    const str1 = appBundleId + separator + keyIdentifier + separator + productIdentifier + separator + offerIdentifier + separator + applicationUsername + separator + nonce + separator + timestamp;
 
-    const data = Buffer.from(str1, 'utf8');
+    const message = appBundleId + separator + keyIdentifier + separator + productIdentifier + separator + offerIdentifier + separator + applicationUsername + separator + nonce + separator + timestamp;
+
+    const data = Buffer.from(message, 'utf8');
     const privateKey1 = await getConfigValue<string>("promotional-offers-encryption-private-key");
     const privateKey2 = crypto.createPrivateKey({ key: privateKey1 });
     const signature = crypto.sign("SHA256", data , privateKey2);
@@ -62,7 +64,8 @@ async function payloadToResponse(payload: HttpRequestPayload): Promise<Response>
         nonce: nonce,
         timestamp: timestamp,
         keyIdentifier: keyIdentifier,
-        signature: signature.toString('base64')
+        signature: signature.toString('base64'),
+        message: message
     };
 } 
 
