@@ -48,7 +48,7 @@ async function payloadToResponse(payload: HttpRequestPayload): Promise<Response>
     const productIdentifier = payload.productIdentifier;
     const offerIdentifier = payload.offerIdentifier;
     const applicationUsername = payload.username.toLowerCase(); // aka: appAccountToken (in the apple documentation)
-    const nonce = crypto.randomUUID().toLowerCase();
+    const nonce = "29d5583d-1167-4868-850e-433eef45fbaa"; // (temporary) crypto.randomUUID().toLowerCase();
     const timestamp = Date.now();
 
     const separator = '\u2063';
