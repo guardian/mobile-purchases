@@ -30,7 +30,9 @@ export interface AppleReceiptInfo {
     unique_identifier?: string,
     unique_vendor_identifier?: string,
     bvrs?: string,
-    version_external_identifier?: string
+    version_external_identifier?: string,
+    promotional_offer_id?: string,
+    offer_code_ref_name?: string
 }
 
 export interface UnifiedReceiptInfo {
@@ -131,6 +133,8 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
     if(typeof payload.is_trial_period !== "string") return err("missing field: is_trial_period")
     if(typeof payload.bvrs !== "string" && typeof payload.bvrs !== "undefined") return err(`incorrect optional field: bvrs ${typeof(payload.bvrs)}`)
     if(typeof payload.version_external_identifier !== "string" && typeof payload.version_external_identifier !== "undefined") return err(`incorrect optional field: version_external_identifier ${typeof(payload.version_external_identifier)}`)
+    if(typeof payload.promotional_offer_id !== "string" && typeof payload.promotional_offer_id !== "undefined") return err(`incorrect optional field: promotional_offer_id ${typeof(payload.promotional_offer_id)}`)
+    if(typeof payload.offer_code_ref_name !== "string" && typeof payload.offer_code_ref_name !== "undefined") return err(`incorrect optional field: offer_code_ref_name ${typeof(payload.offer_code_ref_name)}`)
 
     return ok({
         transaction_id: payload.transaction_id,
@@ -149,7 +153,9 @@ function parseAppleReceiptInfo(payload: unknown):  Result<string, AppleReceiptIn
         is_in_intro_offer_period: payload.is_in_intro_offer_period,
         is_trial_period: payload.is_trial_period,
         bvrs: payload.bvrs,
-        version_external_identifier: payload.version_external_identifier
+        version_external_identifier: payload.version_external_identifier,
+        promotional_offer_id: payload.promotional_offer_id,
+        offer_code_ref_name: payload.offer_code_ref_name
     })
 }
 
