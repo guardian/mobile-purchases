@@ -1,0 +1,38 @@
+name: CI
+
+on: [push]
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: corretto
+          java-version: 11
+          cache: sbt
+      - name: Build and Test TypeScript
+        run: ./build-tc.sh
+      - name: Build and Test Scala
+        run: sbt -v +test
+      - name: Assume AWS Role
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          aws-region: eu-west-1
+      - name: Clean, Compile and Upload to Riff-Raff
+        run: |
+          LAST_TEAMCITY_BUILD=2740
+          export GITHUB_RUN_NUMBER=$(( $GITHUB_RUN_NUMBER + $LAST_TEAMCITY_BUILD ))
+          sbt clean compile riffRaffUpload
