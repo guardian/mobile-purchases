@@ -222,7 +222,7 @@ function parsePendingRenewalInfo(payload: unknown):  Result<string, PendingRenew
         billingRetryPeriod.kind === ResultKind.Ok &&
         typeof payload.original_transaction_id === "string" &&
         typeof payload.product_id === "string" &&
-        typeof payload.price_consent_status === "string" &&
+        (typeof payload.price_consent_status === "string" || typeof payload.price_consent_status === "undefined") &&
         typeof payload.price_increase_status === "string"
     ) {
         return ok({

@@ -15,7 +15,7 @@ export interface PendingRenewalInfo {
     is_in_billing_retry_period?: "0" | "1"
     original_transaction_id: string
     product_id: string,
-    price_consent_status: string,
+    price_consent_status?: string,
     price_increase_status: string
 }
 
