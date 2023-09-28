@@ -155,7 +155,9 @@ describe("The apple pubsub", () => {
                             auto_renew_product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
                             auto_renew_status: "1",
                             original_transaction_id: "TEST",
-                            product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial"
+                            product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+                            price_consent_status: '',
+                            price_increase_status: '',
                         }
                     ],
                     status: 0
