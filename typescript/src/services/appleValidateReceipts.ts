@@ -14,7 +14,9 @@ export interface PendingRenewalInfo {
     grace_period_expires_date_ms?: string,
     is_in_billing_retry_period?: "0" | "1"
     original_transaction_id: string
-    product_id: string
+    product_id: string,
+    price_consent_status: string,
+    price_increase_status: string
 }
 
 export interface AppleValidatedReceiptServerInfo {

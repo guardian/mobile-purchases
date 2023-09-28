@@ -221,7 +221,9 @@ function parsePendingRenewalInfo(payload: unknown):  Result<string, PendingRenew
         (typeof payload.grace_period_expires_date_ms === "string" || typeof payload.grace_period_expires_date_ms === "undefined") &&
         billingRetryPeriod.kind === ResultKind.Ok &&
         typeof payload.original_transaction_id === "string" &&
-        typeof payload.product_id === "string"
+        typeof payload.product_id === "string" &&
+        typeof payload.price_consent_status === "string" &&
+        typeof payload.price_increase_status === "string"
     ) {
         return ok({
             auto_renew_product_id: payload.auto_renew_product_id,
