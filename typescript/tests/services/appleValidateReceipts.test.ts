@@ -301,7 +301,9 @@ describe("The apple validation service", () => {
                     original_transaction_id: '1235',
                     is_in_billing_retry_period: '0',
                     product_id: 'uk.co.guardian.gla.6months.2018May.withFreeTrial',
-                    auto_renew_status: '0'
+                    auto_renew_status: '0',
+                    price_consent_status: '',
+                    price_increase_status: '',
                 },
                 {
                     expiration_intent: '1',
@@ -309,7 +311,9 @@ describe("The apple validation service", () => {
                     original_transaction_id: '1236',
                     is_in_billing_retry_period: '0',
                     product_id: 'uk.co.guardian.gla.6months.2018May.withFreeTrial',
-                    auto_renew_status: '1'
+                    auto_renew_status: '1',
+                    price_consent_status: '',
+                    price_increase_status: '',
                 }
             ]
         };
