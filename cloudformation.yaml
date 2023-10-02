@@ -361,7 +361,7 @@ Resources:
           Stack: !Ref Stack
           App: !Ref App
       Description: Fetches access tokens for the Google Play Developer API
-      MemorySize: 512
+      MemorySize: 1024
       Timeout: 45
       Events:
         Schedule:
