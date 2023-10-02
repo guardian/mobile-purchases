@@ -34,36 +34,11 @@ lazy val googleOauth = project.in(scalaRoot / "google-oauth").enablePlugins(Asse
   .dependsOn(common % testAndCompileDependencies)
 
 lazy val root = project
-  .enablePlugins(RiffRaffArtifact).in(file("."))
+  .in(file("."))
   .aggregate(common, googleOauth)
   .settings(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     name := "mobile-purchases",
-    riffRaffPackageType := file(".nothing"),
-    riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
-    riffRaffUploadManifestBucket := Option("riffraff-builds"),
-    riffRaffManifestProjectName := s"Mobile::${name.value}",
-    riffRaffArtifactResources += (googleOauth / assembly).value -> s"${(googleOauth / name).value}/${(googleOauth / assembly).value.getName}",
-    riffRaffArtifactResources += file("tsc-target/google-pubsub.zip") -> s"mobile-purchases-google-pubsub/google-pubsub.zip",
-    riffRaffArtifactResources += file("tsc-target/apple-pubsub.zip") -> s"mobile-purchases-apple-pubsub/apple-pubsub.zip",
-    riffRaffArtifactResources += file("tsc-target/google-subscription-status.zip") -> s"mobile-purchases-google-subscription-status/google-subscription-status.zip",
-    riffRaffArtifactResources += file("tsc-target/apple-subscription-status.zip") -> s"mobile-purchases-apple-subscription-status/apple-subscription-status.zip",
-    riffRaffArtifactResources += file("tsc-target/apple-fetch-offer-details.zip") -> s"mobile-purchases-apple-fetch-offer-details/apple-fetch-offer-details.zip",
-    riffRaffArtifactResources += file("tsc-target/apple-link-user-subscription.zip") -> s"mobile-purchases-apple-link-user-subscription/apple-link-user-subscription.zip",
-    riffRaffArtifactResources += file("tsc-target/google-link-user-subscription.zip") -> s"mobile-purchases-google-link-user-subscription/google-link-user-subscription.zip",
-    riffRaffArtifactResources += file("tsc-target/delete-user-subscription.zip") -> s"mobile-purchases-delete-user-subscription/delete-user-subscription.zip",
-    riffRaffArtifactResources += file("tsc-target/google-update-subscriptions.zip") -> s"mobile-purchases-google-update-subscriptions/google-update-subscriptions.zip",
-    riffRaffArtifactResources += file("tsc-target/apple-update-subscriptions.zip") -> s"mobile-purchases-apple-update-subscriptions/apple-update-subscriptions.zip",
-    riffRaffArtifactResources += file("tsc-target/user-subscriptions.zip") -> s"mobile-purchases-user-subscriptions/user-subscriptions.zip",
-    riffRaffArtifactResources += file("tsc-target/soft-opt-in-acquisitions.zip") -> s"mobile-purchases-soft-opt-in-acquisitions/soft-opt-in-acquisitions.zip",
-    riffRaffArtifactResources += file("tsc-target/soft-opt-in-acquisitions-dlq-processor.zip") -> s"mobile-purchases-soft-opt-in-acquisitions-dlq-processor/soft-opt-in-acquisitions-dlq-processor.zip",
-    riffRaffArtifactResources += file("tsc-target/export-subscription-tables.zip") -> s"mobile-purchases-export-subscription-tables/export-subscription-tables.zip",
-    riffRaffArtifactResources += file("tsc-target/export-subscription-table-v2.zip") -> s"mobile-purchases-export-subscription-table-v2/export-subscription-table-v2.zip",
-    riffRaffArtifactResources += file("tsc-target/export-subscription-events-table.zip") -> s"mobile-purchases-export-subscription-events-table/export-subscription-events-table.zip",
-    riffRaffArtifactResources += file("tsc-target/export-historical-data.zip") -> s"mobile-purchases-export-historical-data/export-historical-data.zip",
-    riffRaffArtifactResources += file("tsc-target/apple-revalidate-receipts.zip") -> s"mobile-purchases-apple-revalidate-receipts/apple-revalidate-receipts.zip",
-    riffRaffArtifactResources += file("cloudformation.yaml") -> s"mobile-purchases-cloudformation/cloudformation.yaml",
-    riffRaffArtifactResources += file("exports-cloudformation.yaml") -> s"mobile-purchases-exports-cloudformation/exports-cloudformation.yaml",
   )
 
 def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = commonSettings(module) ++ List(
