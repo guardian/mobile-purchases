@@ -221,7 +221,9 @@ function parsePendingRenewalInfo(payload: unknown):  Result<string, PendingRenew
         (typeof payload.grace_period_expires_date_ms === "string" || typeof payload.grace_period_expires_date_ms === "undefined") &&
         billingRetryPeriod.kind === ResultKind.Ok &&
         typeof payload.original_transaction_id === "string" &&
-        typeof payload.product_id === "string"
+        typeof payload.product_id === "string" &&
+        (typeof payload.price_consent_status === "string" || typeof payload.price_consent_status === "undefined") &&
+        typeof payload.price_increase_status === "string"
     ) {
         return ok({
             auto_renew_product_id: payload.auto_renew_product_id,
@@ -230,7 +232,9 @@ function parsePendingRenewalInfo(payload: unknown):  Result<string, PendingRenew
             grace_period_expires_date_ms: payload.grace_period_expires_date_ms,
             is_in_billing_retry_period: billingRetryPeriod.value,
             original_transaction_id: payload.original_transaction_id,
-            product_id: payload.product_id
+            product_id: payload.product_id,
+            price_consent_status: payload.price_consent_status,
+            price_increase_status: payload.price_increase_status
         })
     }
     return err("Pending Renewal Info object from Apple cannot be parsed")
