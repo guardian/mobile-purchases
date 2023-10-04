@@ -16,7 +16,7 @@ export interface PendingRenewalInfo {
     original_transaction_id: string
     product_id: string,
     price_consent_status?: string,
-    price_increase_status: string
+    price_increase_status?: string
 }
 
 export interface AppleValidatedReceiptServerInfo {
