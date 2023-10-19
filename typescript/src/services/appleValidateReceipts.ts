@@ -210,7 +210,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
             },
             originalResponse: response
         };
-    })
+    }).slice(0, 20)
 }
 
 async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerResponse, receipt: string, options: ValidationOptions): Promise<AppleValidationServerResponse> {
