@@ -261,7 +261,7 @@ function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptIn
         environment: payload.environment,
         latest_receipt: payload.latest_receipt,
         status: payload.status,
-        latest_receipt_info: latestReceiptInfo.value,
+        latest_receipt_info: latestReceiptInfo.value.slice(0, 20),
         pending_renewal_info: pendingRenewalInfo.value
     })
 }
