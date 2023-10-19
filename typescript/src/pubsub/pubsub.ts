@@ -49,12 +49,17 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
             const queueUrl = process.env.QueueUrl;
             if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
 
+            console.log("[586bc9c6] 07");
             const metaData = await fetchMetadata(notification);
+            console.log("[586bc9c6] 08");
             const dynamoEvent = toDynamoEvent(notification, metaData);
+            console.log("[586bc9c6] 09");
             const dynamoPromise = storeInDynamo(dynamoEvent);
-
+            console.log("[586bc9c6] 10");
             const sqsEvent = toSqsEvent(notification);
+            console.log("[586bc9c6] 11");
             const sqsPromise = sendToSqsFunction(queueUrl, sqsEvent);
+            console.log("[586bc9c6] 12");
 
             return Promise.all([sqsPromise, dynamoPromise])
                 .then(value => HTTPResponses.OK)
