@@ -33,12 +33,13 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
     sendToSqsFunction: (queueUrl: string, event: SqsEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
 ): Promise<APIGatewayProxyResult> {
     const secret = process.env.Secret;
+    console.log(`[4ba45228] secret: ${secret}`);
     return catchingServerErrors(async () => {
         if (secret === undefined) {
             console.error("PubSub secret in env is 'undefined'");
             return HTTPResponses.INTERNAL_ERROR
         }
-
+        console.log(`[4ba45228] request.queryStringParameters?.secret: ${request.queryStringParameters?.secret}`);
         if (request.queryStringParameters?.secret === secret) {
             const notification = parsePayload(request.body);
             if (notification instanceof Error) {
