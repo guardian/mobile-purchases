@@ -359,7 +359,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 }
 
 export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
-    const receipt = event.unified_receipt.latest_receipt;
+    const receipt = event.unified_receipt.latest_receipt.slice(0, 20);
     return {
         receipt: receipt
     }
