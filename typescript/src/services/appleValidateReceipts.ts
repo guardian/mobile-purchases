@@ -145,7 +145,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
                 }
 
                 // only keep receipts that have an expiry date, those who don't aren't subscriptions or are pre 2011
-                const filteredLatestReceipt = latestReceipt.filter(receipt => receipt.expires_date || receipt.expires_date_ms);
+                const filteredLatestReceipt = latestReceipt.filter(receipt => receipt.expires_date || receipt.expires_date_ms).slice(0, 20);
 
                 const deDupedReceipts = filteredLatestReceipt
                     .sort((r1, r2) => expiryDate(r1) - expiryDate(r2)) // most recent last
@@ -156,7 +156,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
 
                 return Object.values(deDupedReceipts)
             } else {
-                return [response.latest_receipt_info as AppleValidatedReceiptServerInfo];
+                return [response.latest_receipt_info as AppleValidatedReceiptServerInfo].slice(0, 20);
             }
         } else {
             if (response.latest_expired_receipt_info) {
