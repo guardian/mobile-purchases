@@ -366,6 +366,10 @@ export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscri
 }
 
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
+    console.log(`[4ba45228] request.path ${request.path}`);
+    console.log(`[4ba45228] request.pathParameters ${request.pathParameters}`);
+    console.log(`[4ba45228] request.queryStringParameters ${request.queryStringParameters}`);
+    console.log(`[4ba45228] request.body ${request.body}`);
     return parseStoreAndSend(
         request,
         parsePayload,
