@@ -20,6 +20,7 @@ async function catchingServerErrors(block: () => Promise<APIGatewayProxyResult>)
 }
 
 function storeInDynamoImpl(event: SubscriptionEvent): Promise<SubscriptionEvent> {
+    console.log(`[246ff796] storeInDynamoImpl ${JSON.stringify(event)}`);
     return dynamoMapper.put({item: event}).then(result => result.item);
 }
 

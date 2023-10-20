@@ -129,6 +129,7 @@ export async function putMetric(metricName: string, value: number = 1.0): Promis
 }
 
 export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+    console.log(`[fddc199d] sendToSqs ${JSON.stringify(event)}`);
     return sqs.sendMessage({
         QueueUrl: queueUrl,
         MessageBody: JSON.stringify(event),
