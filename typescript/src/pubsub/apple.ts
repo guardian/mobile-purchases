@@ -259,8 +259,7 @@ function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptIn
 
     return ok({
         environment: payload.environment,
-        latest_receipt: "TEST", // payload.latest_receipt, removing the latest_receipt until I figure out how to clean it just before the database of SQS event that fails.
-                                // Using the value that is going to make the test pass.
+        latest_receipt: payload.latest_receipt,
         status: payload.status,
         latest_receipt_info: latestReceiptInfo.value,
         pending_renewal_info: pendingRenewalInfo.value
@@ -361,8 +360,22 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 
 export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
     const receipt = event.unified_receipt.latest_receipt;
-    return {
-        receipt: receipt
+    // SQS has a limitation by which the message body needs to be less than 256Kb
+    // source: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html#
+    // We are building an object which is going to be JSON serialised and then used as the body of such a SQS message
+    // It appears that Apple sometimes sends events with latest_receipt that is too large
+
+    console.log(`[93a21898] receipt.length: ${receipt.length}`);
+    const isBig = receipt.length > 200*2024; // bigger than 200Kb
+    if (isBig) {
+        
+        return {
+            receipt: ''
+        }
+    } else {
+        return {
+            receipt: receipt
+        }
     }
 }
 
