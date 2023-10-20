@@ -288,6 +288,15 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
         typeof payload.auto_renew_product_id === "string" &&
         (typeof payload.expiration_intent === "string" || typeof payload.expiration_intent === "undefined")
     ) {
+
+        const a1 = unifiedReceipt.value;
+        const a2 = {
+            environment: a1.environment,
+            latest_receipt: a1.latest_receipt,
+            latest_receipt_info: a1.latest_receipt_info.slice(0, 20),
+            pending_renewal_info: a1.pending_renewal_info.slice(0, 20),
+            status: a1.status
+        }
         return ok({
             environment: payload.environment,
             bid: payload.bid,
@@ -300,7 +309,7 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
             auto_renew_adam_id: payload.auto_renew_adam_id,
             auto_renew_product_id: payload.auto_renew_product_id,
             expiration_intent: payload.expiration_intent,
-            unified_receipt: unifiedReceipt.value
+            unified_receipt: a2
         })
     }
     return err("Notification from Apple cannot be parsed")
@@ -325,7 +334,7 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
 export function toDynamoEvent(notification: StatusUpdateNotification): SubscriptionEvent {
     const now = new Date();
     const eventType = notification.notification_type;
-    const receiptInfo = notification.unified_receipt.latest_receipt_info.slice(0, 20);
+    const receiptInfo = notification.unified_receipt.latest_receipt_info;
     console.log(`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.unified_receipt.latest_receipt_info === undefined}`);
     const platform = fromAppleBundle(notification.bid);
     if (!platform) {

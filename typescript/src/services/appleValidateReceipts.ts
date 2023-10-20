@@ -40,7 +40,7 @@ export interface ValidationOptions {
 // https://developer.apple.com/library/archive/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateRemotely.html
 // And
 // https://developer.apple.com/documentation/appstoreservernotifications/responsebody
-// Both documentation are equally wrong when compared to the reality, so some of the definition bellow match neither.
+// Both documentation are equally wrong when compared to the reality, so some of the definition below match neither.
 export interface AppleValidationServerResponse {
     auto_renew_status: 0 | 1,
     "is-retryable"?: boolean,
