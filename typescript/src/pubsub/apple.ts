@@ -343,6 +343,11 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
     const freeTrial = sortByExpiryDate[0].is_trial_period === "true" || sortByExpiryDate[0].is_in_intro_offer_period === "true";
 
+    // Preventin:g ERROR: Unable to process event[object Object] ValidationException: Item size has exceeded the maximum allowed size 
+    if (notification.unified_receipt.latest_receipt.length > 100*1024) { // bigger than 100Kb
+        notification.unified_receipt.latest_receipt = ''
+    }
+
     return new SubscriptionEvent(
         sortByExpiryDate[0].original_transaction_id,
         now.toISOString() + "|" + eventType,
