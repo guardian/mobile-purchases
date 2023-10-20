@@ -262,7 +262,7 @@ function parseUnifiedReceipt(payload: unknown):  Result<string, UnifiedReceiptIn
         latest_receipt: "TEST", // payload.latest_receipt, removing the latest_receipt until I figure out how to clean it just before the database of SQS event that fails.
                                 // Using the value that is going to make the test pass.
         status: payload.status,
-        latest_receipt_info: latestReceiptInfo.value.slice(0, 20),
+        latest_receipt_info: latestReceiptInfo.value,
         pending_renewal_info: pendingRenewalInfo.value
     })
 }
@@ -289,15 +289,6 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
         typeof payload.auto_renew_product_id === "string" &&
         (typeof payload.expiration_intent === "string" || typeof payload.expiration_intent === "undefined")
     ) {
-
-        const a1 = unifiedReceipt.value;
-        const a2 = {
-            environment: a1.environment,
-            latest_receipt: a1.latest_receipt,
-            latest_receipt_info: a1.latest_receipt_info.slice(0, 20),
-            pending_renewal_info: a1.pending_renewal_info.slice(0, 20),
-            status: a1.status
-        }
         return ok({
             environment: payload.environment,
             bid: payload.bid,
@@ -310,7 +301,7 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
             auto_renew_adam_id: payload.auto_renew_adam_id,
             auto_renew_product_id: payload.auto_renew_product_id,
             expiration_intent: payload.expiration_intent,
-            unified_receipt: a2
+            unified_receipt: unifiedReceipt.value
         })
     }
     return err("Notification from Apple cannot be parsed")
@@ -369,7 +360,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 }
 
 export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
-    const receipt = event.unified_receipt.latest_receipt.slice(0, 20);
+    const receipt = event.unified_receipt.latest_receipt;
     return {
         receipt: receipt
     }
