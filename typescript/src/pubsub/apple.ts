@@ -325,7 +325,7 @@ export function parsePayload(body: Option<string>): Error | StatusUpdateNotifica
 export function toDynamoEvent(notification: StatusUpdateNotification): SubscriptionEvent {
     const now = new Date();
     const eventType = notification.notification_type;
-    const receiptInfo = notification.unified_receipt.latest_receipt_info;
+    const receiptInfo = notification.unified_receipt.latest_receipt_info.slice(0, 20);
     console.log(`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.unified_receipt.latest_receipt_info === undefined}`);
     const platform = fromAppleBundle(notification.bid);
     if (!platform) {
