@@ -344,7 +344,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     const freeTrial = sortByExpiryDate[0].is_trial_period === "true" || sortByExpiryDate[0].is_in_intro_offer_period === "true";
 
     // Preventin:g ERROR: Unable to process event[object Object] ValidationException: Item size has exceeded the maximum allowed size 
-    if (notification.unified_receipt.latest_receipt.length > 100*1024) { // bigger than 100Kb
+    if (notification.unified_receipt.latest_receipt.length > 100*1024) { // Bigger than 100Kb
         notification.unified_receipt.latest_receipt = ''
     }
 
