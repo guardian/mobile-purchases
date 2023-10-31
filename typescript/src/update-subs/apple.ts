@@ -53,8 +53,8 @@ function sqsRecordToAppleSubscription(record: SQSRecord): Promise<Subscription[]
 }
 
 export async function handler(event: SQSEvent): Promise<string> {
+    console.log(`[ea8dff7a] ${JSON.stringify(event)}`);
     const promises = event.Records.map( record => parseAndStoreSubscriptionUpdate(record, sqsRecordToAppleSubscription));
-
     return Promise.all(promises)
         .then( _ => "OK");
 }
