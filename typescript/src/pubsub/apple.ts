@@ -271,6 +271,8 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
         return err("The notification from Apple didn't have any data we can parse")
     }
 
+    console.log(`[512f4ed7] ${JSON.stringify(payload)}`);
+
     const unifiedReceipt = parseUnifiedReceipt(payload.unified_receipt);
     if(unifiedReceipt.kind === ResultKind.Err) {
         return unifiedReceipt
