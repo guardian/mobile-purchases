@@ -14,7 +14,7 @@ async function queueHistoricalSubscription(subscription: Subscription): Promise<
 
     const payload = subscription.googlePayload ?? subscription.applePayload;
     if (payload) {
-        console.log(`[0e22c3c2] ${payload}`);
+        console.log(`[0e22c3c2] ${JSON.stringify(payload)}`);
         await sendToSqs(queueUrl, {
             subscriptionId: subscription.subscriptionId,
             snapshotDate: (new Date()).toISOString(),
