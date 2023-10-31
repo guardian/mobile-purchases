@@ -159,12 +159,9 @@ export async function sendToSqsSoftOptIns(queueUrl: string, event: SoftOptInEven
 }
 export async function sendToSqsComms(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
     const membershipSqs = await getSqsClientForComms();
-    console.log(`[ac7339f6(1)] sendToSqs ${JSON.stringify(event)}`);
-    const messageBody = JSON.stringify(event, (k, v) => v === undefined ? null : v);
-    console.log(`[ac7339f6(2)] sendToSqs ${messageBody}`);
     return membershipSqs.sendMessage({
         QueueUrl: queueUrl,
-        MessageBody: messageBody,
+        MessageBody: JSON.stringify(event),
         DelaySeconds: delaySeconds
     }).promise();
 }
