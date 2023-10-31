@@ -148,12 +148,9 @@ export interface SoftOptInEvent {
 
 export async function sendToSqsSoftOptIns(queueUrl: string, event: SoftOptInEvent, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
     const membershipSqs = await getSqsClientForSoftOptIns();
-    console.log(`[efb32f83(1)] sendToSqs ${JSON.stringify(event)}`);
-    const messageBody = JSON.stringify(event, (k, v) => v === undefined ? null : v);
-    console.log(`[efb32f83(2)] sendToSqs ${messageBody}`);
     return membershipSqs.sendMessage({
         QueueUrl: queueUrl,
-        MessageBody: messageBody,
+        MessageBody: JSON.stringify(event),
         DelaySeconds: delaySeconds
     }).promise();
 }
