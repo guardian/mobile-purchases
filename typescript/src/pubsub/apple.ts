@@ -56,7 +56,12 @@ export interface StatusUpdateNotification {
     auto_renew_status: string,
     auto_renew_adam_id?: string,
     auto_renew_product_id: string,
-    expiration_intent?: string
+    expiration_intent?: string,
+    promotional_offer_id: string | null,
+    promotional_offer_name: string | null,
+    product_id: any,
+    purchase_date_ms: any,
+    expires_date_ms: any
 }
 
 type binaryStatus = "0" | "1"
@@ -277,6 +282,27 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
     if(unifiedReceipt.kind === ResultKind.Err) {
         return unifiedReceipt
     }
+
+    const extractPromotionalOfferId = (payload: unknown): string => {
+        return "[1650] promotional_offer_id"
+    }
+
+    const extractPromotionalOfferName = (payload: unknown): string => {
+        return "[1650] promotional_offer_name";
+    }
+
+    const extractProductId = (payload: unknown): string => {
+        return "[1650] product_id";
+    }
+
+    const purchaseDateMs = (payload: unknown): number => {
+        return 0;
+    }
+
+    const expiresDateMs = (payload: unknown): number => {
+        return 0;
+    }
+
     if(
         typeof payload.environment === "string" &&
         typeof payload.bid === "string" &&
@@ -302,7 +328,12 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
             auto_renew_adam_id: payload.auto_renew_adam_id,
             auto_renew_product_id: payload.auto_renew_product_id,
             expiration_intent: payload.expiration_intent,
-            unified_receipt: unifiedReceipt.value
+            unified_receipt: unifiedReceipt.value,
+            promotional_offer_id: extractPromotionalOfferId(payload),
+            promotional_offer_name: extractPromotionalOfferName(payload),
+            product_id: extractProductId(payload),
+            purchase_date_ms: purchaseDateMs(payload),
+            expires_date_ms: expiresDateMs(payload)
         })
     }
     return err("Notification from Apple cannot be parsed")
@@ -350,26 +381,6 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         notification.unified_receipt.latest_receipt = ''
     }
 
-    const extractPromotionalOfferId = (notification: StatusUpdateNotification): string => {
-        return "[2] extractPromotionalOfferId";
-    }
-
-    const extractPromotionalOfferName = (notification: StatusUpdateNotification): string => {
-        return "[2] promotional_offer_name";
-    }
-
-    const extractProductId = (notification: StatusUpdateNotification): string => {
-        return "[2] product_id";
-    }
-
-    const purchaseDateMs = (notification: StatusUpdateNotification): number => {
-        return 0;
-    }
-
-    const expiresDateMs = (notification: StatusUpdateNotification): number => {
-        return 0;
-    }
-
     return new SubscriptionEvent(
         sortByExpiryDate[0].original_transaction_id,
         now.toISOString() + "|" + eventType,
@@ -382,11 +393,11 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         null,
         notification, // applePayload
         dateToSecondTimestamp(thirtyMonths(now)),
-        extractPromotionalOfferId(notification),   // SubscriptionEvent.promotional_offer_id
-        extractPromotionalOfferName(notification), // SubscriptionEvent.promotional_offer_name
-        extractProductId(notification),            // SubscriptionEvent.product_id
-        purchaseDateMs(notification),              // SubscriptionEvent.purchase_date_ms
-        expiresDateMs(notification)                // SubscriptionEvent.expires_date_ms
+        notification.promotional_offer_id,   // SubscriptionEvent.promotional_offer_id
+        notification.promotional_offer_name, // SubscriptionEvent.promotional_offer_name
+        notification.product_id,             // SubscriptionEvent.product_id
+        notification.purchase_date_ms,       // SubscriptionEvent.purchase_date_ms
+        notification.expires_date_ms         // SubscriptionEvent.expires_date_ms
     );
 }
 

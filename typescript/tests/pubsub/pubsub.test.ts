@@ -166,8 +166,13 @@ describe("The apple pubsub", () => {
                         }
                     ],
                     status: 0
-                }
-        };
+                },
+                promotional_offer_id: "promotional_offer_id",
+                promotional_offer_name: "promotional_offer_name",
+                product_id: "product_id",
+                purchase_date_ms: 0,
+                expires_date_ms: 0
+            };
 
         const input: APIGatewayProxyEvent = {
             queryStringParameters: {secret: "MYSECRET"},
