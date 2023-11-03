@@ -345,6 +345,26 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
     const freeTrial = sortByExpiryDate[0].is_trial_period === "true" || sortByExpiryDate[0].is_in_intro_offer_period === "true";
 
+    const extractPromotionalOfferId = (notification: StatusUpdateNotification): string => {
+        return "[2] extractPromotionalOfferId";
+    }
+
+    const extractPromotionalOfferName = (notification: StatusUpdateNotification): string => {
+        return "[2] promotional_offer_name";
+    }
+
+    const extractProductId = (notification: StatusUpdateNotification): string => {
+        return "[2] product_id";
+    }
+
+    const purchaseDateMs = (notification: StatusUpdateNotification): number => {
+        return 0;
+    }
+
+    const expiresDateMs = (notification: StatusUpdateNotification): number => {
+        return 0;
+    }
+
     return new SubscriptionEvent(
         sortByExpiryDate[0].original_transaction_id,
         now.toISOString() + "|" + eventType,
@@ -355,13 +375,13 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         notification.bid,
         freeTrial,
         null,
-        notification,
+        notification, // applePayload
         dateToSecondTimestamp(thirtyMonths(now)),
-        "[*] promotional_offer_id",
-        "[*] promotional_offer_name",
-        "[*] product_id",
-        1009,
-        1010
+        extractPromotionalOfferId(notification),   // SubscriptionEvent.promotional_offer_id
+        extractPromotionalOfferName(notification), // SubscriptionEvent.promotional_offer_name
+        extractProductId(notification),            // SubscriptionEvent.product_id
+        purchaseDateMs(notification),              // SubscriptionEvent.purchase_date_ms
+        expiresDateMs(notification)                // SubscriptionEvent.expires_date_ms
     );
 }
 
