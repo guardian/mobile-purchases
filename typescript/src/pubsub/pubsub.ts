@@ -20,6 +20,7 @@ async function catchingServerErrors(block: () => Promise<APIGatewayProxyResult>)
 }
 
 function storeInDynamoImpl(event: SubscriptionEvent): Promise<SubscriptionEvent> {
+    console.log(`[246ff796] storeInDynamoImpl ${JSON.stringify(event)}`);
     return dynamoMapper.put({item: event}).then(result => result.item);
 }
 
@@ -33,12 +34,13 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
     sendToSqsFunction: (queueUrl: string, event: SqsEvent) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
 ): Promise<APIGatewayProxyResult> {
     const secret = process.env.Secret;
+    console.log(`[4ba45228] secret: ${secret}`);
     return catchingServerErrors(async () => {
         if (secret === undefined) {
             console.error("PubSub secret in env is 'undefined'");
             return HTTPResponses.INTERNAL_ERROR
         }
-
+        console.log(`[4ba45228] request.queryStringParameters?.secret: ${request.queryStringParameters?.secret}`);
         if (request.queryStringParameters?.secret === secret) {
             const notification = parsePayload(request.body);
             if (notification instanceof Error) {
@@ -48,12 +50,17 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
             const queueUrl = process.env.QueueUrl;
             if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
 
+            console.log("[586bc9c6] 07");
             const metaData = await fetchMetadata(notification);
+            console.log("[586bc9c6] 08");
             const dynamoEvent = toDynamoEvent(notification, metaData);
+            console.log("[586bc9c6] 09");
             const dynamoPromise = storeInDynamo(dynamoEvent);
-
+            console.log("[586bc9c6] 10");
             const sqsEvent = toSqsEvent(notification);
+            console.log("[586bc9c6] 11");
             const sqsPromise = sendToSqsFunction(queueUrl, sqsEvent);
+            console.log("[586bc9c6] 12");
 
             return Promise.all([sqsPromise, dynamoPromise])
                 .then(value => HTTPResponses.OK)

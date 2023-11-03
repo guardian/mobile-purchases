@@ -134,7 +134,7 @@ export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): 
     console.log(`[fddc199d(2)] sendToSqs ${messageBody}`);
     return sqs.sendMessage({
         QueueUrl: queueUrl,
-        MessageBody: JSON.stringify(event),
+        MessageBody: messageBody,
         DelaySeconds: delaySeconds
     }).promise()
 }

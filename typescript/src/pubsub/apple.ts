@@ -345,6 +345,11 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
     const freeTrial = sortByExpiryDate[0].is_trial_period === "true" || sortByExpiryDate[0].is_in_intro_offer_period === "true";
 
+    // Preventin:g ERROR: Unable to process event[object Object] ValidationException: Item size has exceeded the maximum allowed size 
+    if (notification.unified_receipt.latest_receipt.length > 100*1024) { // Bigger than 100Kb
+        notification.unified_receipt.latest_receipt = ''
+    }
+
     const extractPromotionalOfferId = (notification: StatusUpdateNotification): string => {
         return "[2] extractPromotionalOfferId";
     }
@@ -387,8 +392,22 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 
 export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
     const receipt = event.unified_receipt.latest_receipt;
-    return {
-        receipt: receipt
+    // SQS has a limitation by which the message body needs to be less than 256Kb
+    // source: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html#
+    // We are building an object which is going to be JSON serialised and then used as the body of such a SQS message
+    // It appears that Apple sometimes sends events with latest_receipt that is too large
+
+    console.log(`[93a21898] receipt.length: ${receipt.length}`);
+    const isBig = receipt.length > 200*2024; // bigger than 200Kb
+    if (isBig) {
+        
+        return {
+            receipt: ''
+        }
+    } else {
+        return {
+            receipt: receipt
+        }
     }
 }
 
