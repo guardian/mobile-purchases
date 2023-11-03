@@ -5,6 +5,7 @@ import {ProcessingError} from "../models/processingError";
 import {GracefulProcessingError} from "../models/GracefulProcessingError";
 
 function putSubscription(subscription: Subscription): Promise<Subscription> {
+    console.log(`[1f085081] ${JSON.stringify(subscription)}`);
     return dynamoMapper.put({item: subscription}).then(result => result.item)
 }
 
