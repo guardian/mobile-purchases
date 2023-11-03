@@ -88,7 +88,12 @@ describe("The google pubsub", () => {
                 version: "1.0"
             },
             null,
-            1582319167
+            1582319167,
+            null,
+            null,
+            undefined,
+            undefined,
+            undefined
         );
 
         const expectedSubscriptionReferenceInSqs = {packageName: "com.guardian.debug", purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"};

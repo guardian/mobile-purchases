@@ -356,7 +356,12 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         freeTrial,
         null,
         notification,
-        dateToSecondTimestamp(thirtyMonths(now))
+        dateToSecondTimestamp(thirtyMonths(now)),
+        "[*] promotional_offer_id",
+        "[*] promotional_offer_name",
+        "[*] product_id",
+        1009,
+        1010
     );
 }
 
