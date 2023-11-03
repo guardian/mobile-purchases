@@ -283,23 +283,42 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
         return unifiedReceipt
     }
 
-    const extractPromotionalOfferId = (payload: unknown): string => {
-        return "[1650] promotional_offer_id"
+    const extractPromotionalOfferId = (unifiedReceipt: UnifiedReceiptInfo): string | null => {
+        if (unifiedReceipt.latest_receipt_info.length > 0) {
+            return unifiedReceipt.latest_receipt_info[0].promotional_offer_id || null;
+        }
+        return null;
     }
 
-    const extractPromotionalOfferName = (payload: unknown): string => {
-        return "[1650] promotional_offer_name";
+    const extractPromotionalOfferName = (unifiedReceipt: UnifiedReceiptInfo): string | null => {
+        // essentially return the first product id and empty string if it could not be found
+        // This should be corrected, but I cannot see a promotional offer name
+        if (unifiedReceipt.latest_receipt_info.length > 0) {
+            return unifiedReceipt.latest_receipt_info[0].offer_code_ref_name || null;
+        }
+        return null;
     }
 
-    const extractProductId = (payload: unknown): string => {
-        return "[1650] product_id";
+    const extractProductId = (unifiedReceipt: UnifiedReceiptInfo): string => {
+        // essentially return the first product id and empty string if it could not be found
+        // This should be corrected, but I cannot see a promotional offer name
+        if (unifiedReceipt.latest_receipt_info.length > 0) {
+            return unifiedReceipt.latest_receipt_info[0].product_id;
+        }
+        return "";
     }
-
-    const purchaseDateMs = (payload: unknown): number => {
+    
+    const purchaseDateMs = (unifiedReceipt: UnifiedReceiptInfo): number => {
+        if (unifiedReceipt.latest_receipt_info.length > 0) {
+            return Number(unifiedReceipt.latest_receipt_info[0].purchase_date_ms || "0");
+        }
         return 0;
     }
 
-    const expiresDateMs = (payload: unknown): number => {
+    const expiresDateMs = (unifiedReceipt: UnifiedReceiptInfo): number => {
+        if (unifiedReceipt.latest_receipt_info.length > 0) {
+            return Number(unifiedReceipt.latest_receipt_info[0].purchase_date_ms || "0");
+        }
         return 0;
     }
 
@@ -329,11 +348,11 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
             auto_renew_product_id: payload.auto_renew_product_id,
             expiration_intent: payload.expiration_intent,
             unified_receipt: unifiedReceipt.value,
-            promotional_offer_id: extractPromotionalOfferId(payload),
-            promotional_offer_name: extractPromotionalOfferName(payload),
-            product_id: extractProductId(payload),
-            purchase_date_ms: purchaseDateMs(payload),
-            expires_date_ms: expiresDateMs(payload)
+            promotional_offer_id: extractPromotionalOfferId(unifiedReceipt.value),
+            promotional_offer_name: extractPromotionalOfferName(unifiedReceipt.value),
+            product_id: extractProductId(unifiedReceipt.value),
+            purchase_date_ms: purchaseDateMs(unifiedReceipt.value),
+            expires_date_ms: expiresDateMs(unifiedReceipt.value)
         })
     }
     return err("Notification from Apple cannot be parsed")
