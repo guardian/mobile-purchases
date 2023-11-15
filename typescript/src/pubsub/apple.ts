@@ -9,6 +9,7 @@ import {fromAppleBundle} from "../services/appToPlatform";
 import {PendingRenewalInfo} from "../services/appleValidateReceipts";
 import type {Result} from "@guardian/types";
 import {ok, err, ResultKind} from "@guardian/types";
+import { Stage } from '../utils/appIdentity';
 
 // this is the definition of a receipt as received by the server to server notification system.
 // Not to be confused with apple's receipt validation receipt info (although they do look similar, they are different)
@@ -276,8 +277,6 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
         return err("The notification from Apple didn't have any data we can parse")
     }
 
-    console.log(`[512f4ed7] ${JSON.stringify(payload)}`);
-
     const unifiedReceipt = parseUnifiedReceipt(payload.unified_receipt);
     if(unifiedReceipt.kind === ResultKind.Err) {
         return unifiedReceipt
@@ -396,7 +395,8 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     const freeTrial = sortByExpiryDate[0].is_trial_period === "true" || sortByExpiryDate[0].is_in_intro_offer_period === "true";
 
     // Preventin:g ERROR: Unable to process event[object Object] ValidationException: Item size has exceeded the maximum allowed size 
-    if (notification.unified_receipt.latest_receipt.length > 100*1024) { // Bigger than 100Kb
+    // Which for some reasons has only been observed in CODE
+    if (Stage === "CODE" && notification.unified_receipt.latest_receipt.length > 100*1024) { // Bigger than 100Kb
         notification.unified_receipt.latest_receipt = ''
     }
 
@@ -422,22 +422,21 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
 
 export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
     const receipt = event.unified_receipt.latest_receipt;
+
     // SQS has a limitation by which the message body needs to be less than 256Kb
     // source: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html#
     // We are building an object which is going to be JSON serialised and then used as the body of such a SQS message
     // It appears that Apple sometimes sends events with latest_receipt that is too large
 
-    console.log(`[93a21898] receipt.length: ${receipt.length}`);
-    const isBig = receipt.length > 200*2024; // bigger than 200Kb
-    if (isBig) {
-        
+    // Bigger than 200Kb and only ever observed in CODE
+    if (Stage === "CODE" && receipt.length > 200*2024) {   
         return {
             receipt: ''
         }
-    } else {
-        return {
-            receipt: receipt
-        }
+    }
+
+    return {
+        receipt: receipt
     }
 }
 

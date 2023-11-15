@@ -5,7 +5,6 @@ import {ProcessingError} from "../models/processingError";
 import {GracefulProcessingError} from "../models/GracefulProcessingError";
 
 function putSubscription(subscription: Subscription): Promise<Subscription> {
-    console.log(`[1f085081] ${JSON.stringify(subscription)}`);
     return dynamoMapper.put({item: subscription}).then(result => result.item)
 }
 
@@ -15,7 +14,6 @@ async function queueHistoricalSubscription(subscription: Subscription): Promise<
 
     const payload = subscription.googlePayload ?? subscription.applePayload;
     if (payload) {
-        console.log(`[0e22c3c2] ${JSON.stringify(payload)}`);
         await sendToSqs(queueUrl, {
             subscriptionId: subscription.subscriptionId,
             snapshotDate: (new Date()).toISOString(),
