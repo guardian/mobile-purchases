@@ -27,7 +27,7 @@ export async function parseAndStoreSubscriptionUpdate(
     fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription[]>
 ) : Promise<string> {
     try {
-        const subscriptions = await fetchSubscriberDetails(sqsRecord);
+        const subscriptions = await fetchSubscriberDetails(sqsRecord); // Subscription[]
         await Promise.all(subscriptions.map(putSubscription));
         await Promise.all(subscriptions.map(queueHistoricalSubscription));
         console.log(`Processed ${subscriptions.length} subscriptions: ${subscriptions.map(s => s.subscriptionId)}`);

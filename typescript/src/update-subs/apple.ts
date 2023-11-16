@@ -49,12 +49,11 @@ function sqsRecordToAppleSubscription(record: SQSRecord): Promise<Subscription[]
     // sandboxRetry is set to false such that in production we don't store any sandbox receipt that would have snuck all the way here
     // In CODE or locally the default endpoint will be sanbox therefore no retry is necessary
     return validateReceipt(subRef.receipt, {sandboxRetry: false})
-        .then(subs => subs.map(toAppleSubscription))
+        .then(subs => subs.map(toAppleSubscription)) // `subs` here is a AppleValidationResponse[]
 }
 
 export async function handler(event: SQSEvent): Promise<string> {
     const promises = event.Records.map( record => parseAndStoreSubscriptionUpdate(record, sqsRecordToAppleSubscription));
-
     return Promise.all(promises)
         .then( _ => "OK");
 }

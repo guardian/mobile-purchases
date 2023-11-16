@@ -38,7 +38,6 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
             console.error("PubSub secret in env is 'undefined'");
             return HTTPResponses.INTERNAL_ERROR
         }
-
         if (request.queryStringParameters?.secret === secret) {
             const notification = parsePayload(request.body);
             if (notification instanceof Error) {
@@ -51,7 +50,6 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
             const metaData = await fetchMetadata(notification);
             const dynamoEvent = toDynamoEvent(notification, metaData);
             const dynamoPromise = storeInDynamo(dynamoEvent);
-
             const sqsEvent = toSqsEvent(notification);
             const sqsPromise = sendToSqsFunction(queueUrl, sqsEvent);
 

@@ -101,7 +101,12 @@ export function toDynamoEvent(notification: DeveloperNotification, metaData?: Me
         metaData?.freeTrial,
         notification,
         null,
-        dateToSecondTimestamp(thirtyMonths(eventTime))
+        dateToSecondTimestamp(thirtyMonths(eventTime)),
+        null,      // string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        null,      // string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        undefined  // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
     );
 }
 

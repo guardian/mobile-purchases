@@ -88,7 +88,12 @@ describe("The google pubsub", () => {
                 version: "1.0"
             },
             null,
-            1582319167
+            1582319167,
+            null,
+            null,
+            undefined,
+            undefined,
+            undefined
         );
 
         const expectedSubscriptionReferenceInSqs = {packageName: "com.guardian.debug", purchaseToken: "PURCHASE_TOKEN", subscriptionId: "my.sku"};
@@ -161,8 +166,13 @@ describe("The apple pubsub", () => {
                         }
                     ],
                     status: 0
-                }
-        };
+                },
+                promotional_offer_id: "promotional_offer_id",
+                promotional_offer_name: "promotional_offer_name",
+                product_id: "product_id",
+                purchase_date_ms: 0,
+                expires_date_ms: 0
+            };
 
         const input: APIGatewayProxyEvent = {
             queryStringParameters: {secret: "MYSECRET"},

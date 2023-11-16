@@ -9,6 +9,7 @@ import {fromAppleBundle} from "../services/appToPlatform";
 import {PendingRenewalInfo} from "../services/appleValidateReceipts";
 import type {Result} from "@guardian/types";
 import {ok, err, ResultKind} from "@guardian/types";
+import { Stage } from '../utils/appIdentity';
 
 // this is the definition of a receipt as received by the server to server notification system.
 // Not to be confused with apple's receipt validation receipt info (although they do look similar, they are different)
@@ -56,7 +57,12 @@ export interface StatusUpdateNotification {
     auto_renew_status: string,
     auto_renew_adam_id?: string,
     auto_renew_product_id: string,
-    expiration_intent?: string
+    expiration_intent?: string,
+    promotional_offer_id: string | null,
+    promotional_offer_name: string | null,
+    product_id: any,
+    purchase_date_ms: any,
+    expires_date_ms: any
 }
 
 type binaryStatus = "0" | "1"
@@ -275,6 +281,46 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
     if(unifiedReceipt.kind === ResultKind.Err) {
         return unifiedReceipt
     }
+
+    const extractPromotionalOfferId = (unifiedReceipt: UnifiedReceiptInfo): string | null => {
+        if (unifiedReceipt.latest_receipt_info.length > 0) {
+            return unifiedReceipt.latest_receipt_info[0].promotional_offer_id || null;
+        }
+        return null;
+    }
+
+    const extractPromotionalOfferName = (unifiedReceipt: UnifiedReceiptInfo): string | null => {
+        // essentially return the first product id and empty string if it could not be found
+        // This should be corrected, but I cannot see a promotional offer name
+        if (unifiedReceipt.latest_receipt_info.length > 0) {
+            return unifiedReceipt.latest_receipt_info[0].offer_code_ref_name || null;
+        }
+        return null;
+    }
+
+    const extractProductId = (unifiedReceipt: UnifiedReceiptInfo): string => {
+        // essentially return the first product id and empty string if it could not be found
+        // This should be corrected, but I cannot see a promotional offer name
+        if (unifiedReceipt.latest_receipt_info.length > 0) {
+            return unifiedReceipt.latest_receipt_info[0].product_id;
+        }
+        return "";
+    }
+    
+    const purchaseDateMs = (unifiedReceipt: UnifiedReceiptInfo): number => {
+        if (unifiedReceipt.latest_receipt_info.length > 0) {
+            return Number(unifiedReceipt.latest_receipt_info[0].purchase_date_ms || "0");
+        }
+        return 0;
+    }
+
+    const expiresDateMs = (unifiedReceipt: UnifiedReceiptInfo): number => {
+        if (unifiedReceipt.latest_receipt_info.length > 0) {
+            return Number(unifiedReceipt.latest_receipt_info[0].purchase_date_ms || "0");
+        }
+        return 0;
+    }
+
     if(
         typeof payload.environment === "string" &&
         typeof payload.bid === "string" &&
@@ -300,7 +346,12 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
             auto_renew_adam_id: payload.auto_renew_adam_id,
             auto_renew_product_id: payload.auto_renew_product_id,
             expiration_intent: payload.expiration_intent,
-            unified_receipt: unifiedReceipt.value
+            unified_receipt: unifiedReceipt.value,
+            promotional_offer_id: extractPromotionalOfferId(unifiedReceipt.value),
+            promotional_offer_name: extractPromotionalOfferName(unifiedReceipt.value),
+            product_id: extractProductId(unifiedReceipt.value),
+            purchase_date_ms: purchaseDateMs(unifiedReceipt.value),
+            expires_date_ms: expiresDateMs(unifiedReceipt.value)
         })
     }
     return err("Notification from Apple cannot be parsed")
@@ -343,6 +394,12 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
     const freeTrial = sortByExpiryDate[0].is_trial_period === "true" || sortByExpiryDate[0].is_in_intro_offer_period === "true";
 
+    // Preventin:g ERROR: Unable to process event[object Object] ValidationException: Item size has exceeded the maximum allowed size 
+    // Which for some reasons has only been observed in CODE
+    if (Stage === "CODE" && notification.unified_receipt.latest_receipt.length > 100*1024) { // Bigger than 100Kb
+        notification.unified_receipt.latest_receipt = ''
+    }
+
     return new SubscriptionEvent(
         sortByExpiryDate[0].original_transaction_id,
         now.toISOString() + "|" + eventType,
@@ -353,19 +410,38 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
         notification.bid,
         freeTrial,
         null,
-        notification,
-        dateToSecondTimestamp(thirtyMonths(now))
+        notification, // applePayload
+        dateToSecondTimestamp(thirtyMonths(now)),
+        notification.promotional_offer_id,   // SubscriptionEvent.promotional_offer_id
+        notification.promotional_offer_name, // SubscriptionEvent.promotional_offer_name
+        notification.product_id,             // SubscriptionEvent.product_id
+        notification.purchase_date_ms,       // SubscriptionEvent.purchase_date_ms
+        notification.expires_date_ms         // SubscriptionEvent.expires_date_ms
     );
 }
 
 export function toSqsSubReference(event: StatusUpdateNotification): AppleSubscriptionReference {
     const receipt = event.unified_receipt.latest_receipt;
+
+    // SQS has a limitation by which the message body needs to be less than 256Kb
+    // source: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html#
+    // We are building an object which is going to be JSON serialised and then used as the body of such a SQS message
+    // It appears that Apple sometimes sends events with latest_receipt that is too large
+
+    // Bigger than 200Kb and only ever observed in CODE
+    if (Stage === "CODE" && receipt.length > 200*2024) {   
+        return {
+            receipt: ''
+        }
+    }
+
     return {
         receipt: receipt
     }
 }
 
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
+    console.log(`[23ad7cb3] ${JSON.stringify(request)}`);
     return parseStoreAndSend(
         request,
         parsePayload,
