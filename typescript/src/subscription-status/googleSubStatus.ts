@@ -1,15 +1,10 @@
 import 'source-map-support/register'
 import {
     HTTPResponses,
-    HttpRequestHeaders,
-    PathParameters
+    HttpRequestHeaders
 } from '../models/apiGatewayHttp';
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {fetchGoogleSubscription} from "../services/google-play";
-import {fetchGoogleSubscriptionV2} from "../services/google-play-v2";
-import {Subscription} from '../models/subscription';
-import {fromGooglePackageName} from "../services/appToPlatform";
-import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/dates";
 import {ReadSubscription} from "../models/subscription";
 import {dynamoMapper} from "../utils/aws";
 import {createHash} from 'crypto'
@@ -21,10 +16,6 @@ type SubscriptionStatus = {
 
 function getPurchaseToken(headers: HttpRequestHeaders): string | undefined {
     return headers["Play-Purchase-Token"] ?? headers["play-purchase-token"];
-}
-
-function getSubscriptionId(parameters: PathParameters | null): string | undefined {
-    return parameters?.subscriptionId;
 }
 
 function googlePackageName(headers: HttpRequestHeaders): string {
@@ -39,23 +30,15 @@ function googlePackageName(headers: HttpRequestHeaders): string {
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 
     const purchaseToken = getPurchaseToken(request.headers);
-    const subscriptionId = getSubscriptionId(request.pathParameters);
     const packageName = googlePackageName(request.headers);
 
-    if (purchaseToken && subscriptionId) {
-
-        // We're testing the new implementation in production, but want to limit traffic through this codepath
-        const roll = Math.floor(Math.random() * 100 + 1)
-        if (roll <= 5) {
-            await updateParallelTestTable(purchaseToken, packageName)
-        }
-
+    if (purchaseToken) {
         const purchaseTokenHash = createHash('sha256').update(purchaseToken).digest('hex')
-        console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}, for purchaseToken hash: ${purchaseTokenHash}`)
+        console.log(`Searching for valid subscription for Android app with package name: ${packageName}, for purchaseToken hash: ${purchaseTokenHash}`)
         try {
             const subscriptionStatus = 
                 await getSubscriptionStatusFromDynamo(purchaseToken, purchaseTokenHash) ?? 
-                await getSubscriptionStatusFromGoogle(subscriptionId, purchaseToken, packageName, purchaseTokenHash)
+                await getSubscriptionStatusFromGoogle(purchaseToken, packageName, purchaseTokenHash)
             
             if (subscriptionStatus !== null) {
                 return { statusCode: 200, body: JSON.stringify(subscriptionStatus) }
@@ -77,12 +60,10 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
     }
 }
 
-
-async function getSubscriptionStatusFromGoogle(subscriptionId: string, purchaseToken: string, packageName: string, purchaseTokenHash: string): Promise<SubscriptionStatus | null> {
+async function getSubscriptionStatusFromGoogle(purchaseToken: string, packageName: string, purchaseTokenHash: string): Promise<SubscriptionStatus> {
     console.log(`Fetching subscription from Google for purchaseToken hash: ${purchaseTokenHash}`)
-    const subscription = await fetchGoogleSubscription(subscriptionId, purchaseToken, packageName)
-    const subscriptionExpiryDate = optionalMsToDate(subscription?.expiryTimeMillis)
-    const googleSubscriptionStatus = subscriptionExpiryDate ? subscriptionStatus(subscriptionExpiryDate) : null
+    const subscription = await fetchGoogleSubscription(purchaseToken, packageName)
+    const googleSubscriptionStatus = subscriptionStatus(subscription.expiryTime)
     console.log(`Google SubscriptionStatus for purchaseToken hash: ${purchaseTokenHash}: ${JSON.stringify(googleSubscriptionStatus)}`)
     return googleSubscriptionStatus
 }
@@ -105,35 +86,6 @@ async function getSubscriptionStatusFromDynamo(purchaseToken: string, purchaseTo
         }
         // All exceptions are swallowed here as we fall-back on the Google API for all failure modes (including cache misses)
         return null
-    }
-}
-
-async function updateParallelTestTable(purchaseToken: string, packageName: string) {
-    try {
-        const googleSubscription =
-            await fetchGoogleSubscriptionV2(purchaseToken, packageName)
-
-        const subscription =
-            new Subscription(
-                purchaseToken,
-                googleSubscription.startTime?.toISOString() ?? "",
-                googleSubscription.expiryTime.toISOString(),
-                googleSubscription.userCancellationTime?.toISOString(),
-                googleSubscription.autoRenewing,
-                googleSubscription.productId,
-                fromGooglePackageName(packageName),
-                googleSubscription.freeTrial,
-                googleSubscription.billingPeriodDuration,
-                googleSubscription,
-                undefined,
-                null,
-                dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)),
-                "subscriptions-parallel-test"
-            )
-
-        await dynamoMapper.put({item: subscription})
-    } catch (err) {
-        console.log(`ANDROID-PARALLEL-TEST: Error: ${JSON.stringify(err)}`)
     }
 }
 

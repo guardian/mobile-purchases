@@ -6,7 +6,7 @@ import {GoogleSubscriptionReference} from "../models/subscriptionReference";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
 import {fromGooglePackageName} from "../services/appToPlatform";
-import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE} from "../services/google-play";
+import {fetchGoogleSubscription} from "../services/google-play";
 
 interface DeveloperNotification {
     version: string,
@@ -58,12 +58,11 @@ const GOOGLE_SUBS_EVENT_TYPE: {[_: number]: string} = {
 async function fetchMetadata(notification: DeveloperNotification): Promise<MetaData | undefined> {
     try {
         const subscription = await fetchGoogleSubscription(
-            notification.subscriptionNotification.subscriptionId,
             notification.subscriptionNotification.purchaseToken,
             notification.packageName
         );
         return {
-            freeTrial : subscription?.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL
+            freeTrial : subscription.freeTrial
         }
     } catch (exception) {
         // here we really don't want to stop the processing of that event if we can't fetch metadata,
