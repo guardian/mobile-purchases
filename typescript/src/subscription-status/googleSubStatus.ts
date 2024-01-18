@@ -41,6 +41,8 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
         "subscriptionExpiryDate": subscriptionExpiryDate
     }
 
+    console.log("Returning a stub 200 response")
+
     // We are returning a stubbed response as a temporary workaround to a rate limit issue that
     // is currently causing a production incident for our Android subscribers.
     return { statusCode: 200, body: JSON.stringify(responseBody) }
