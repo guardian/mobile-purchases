@@ -33,40 +33,17 @@ function googlePackageName(headers: HttpRequestHeaders): string {
 
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 
-    const purchaseToken = getPurchaseToken(request.headers);
-    const subscriptionId = getSubscriptionId(request.pathParameters);
-    if (purchaseToken && subscriptionId) {
-        const packageName = googlePackageName(request.headers);
-        console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}`);
+    const today = new Date()
+    const subscriptionExpiryDate = new Date(today.setMonth(today.getMonth() + 1))
 
-        try {
-            const subscription = await fetchGoogleSubscription(subscriptionId, purchaseToken, packageName);
-
-            const subscriptionExpiryDate: Option<Date> = optionalMsToDate(subscription?.expiryTimeMillis);
-            if (subscriptionExpiryDate !== null) {
-                const now: Date = new Date(Date.now());
-                const subscriptionHasLapsed: boolean = now > subscriptionExpiryDate;
-                const responseBody: SubscriptionStatusResponse = {
-                    "subscriptionHasLapsed": subscriptionHasLapsed,
-                    "subscriptionExpiryDate": subscriptionExpiryDate
-                };
-                console.log(`Successfully retrieved subscription details from Play Developer API. Response body will be: ${JSON.stringify(responseBody)}`);
-                return {statusCode: 200, body: JSON.stringify(responseBody)};
-            } else {
-                console.log(`Failed to establish expiry time of subscription`);
-                return HTTPResponses.NOT_FOUND;
-            }
-        } catch (error: any) {
-            if (error.statusCode === 410) {
-                console.log(`Purchase expired a very long time ago`);
-                return HTTPResponses.NOT_FOUND;
-            } else {
-                console.log(`Serving an Internal Server Error due to: ${error.toString().split('/tokens/')[0]}`);
-                return HTTPResponses.INTERNAL_ERROR;
-            }
-        }
-    } else {
-        return HTTPResponses.INVALID_REQUEST;
+    const responseBody: SubscriptionStatusResponse = {
+        "subscriptionHasLapsed": false,
+        "subscriptionExpiryDate": subscriptionExpiryDate
     }
 
+    console.log("Returning a stub 200 response")
+
+    // We are returning a stubbed response as a temporary workaround to a rate limit issue that
+    // is currently causing a production incident for our Android subscribers.
+    return { statusCode: 200, body: JSON.stringify(responseBody) }
 }
