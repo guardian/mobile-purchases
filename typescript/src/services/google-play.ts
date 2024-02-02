@@ -38,23 +38,27 @@ export async function fetchGoogleSubscription(
             await initialiseAndroidPublisherClient()
 
         const purchase =
-            await client.purchases.subscriptionsv2.get({ packageName: packageName, token: purchaseToken })
-
-        console.log(`purchase: ${JSON.stringify(purchase.data)}`)
+            await client.purchases.subscriptionsv2.get({ packageName, token: purchaseToken })
 
         // A subscription purchase refers to one or many underlying products ("line items".) However, by convention (and by
         // constraining/controling the UX within the app), we will always assume that a subscription purchase refers to exactly
         // one product.
+        if (purchase.data.lineItems?.length != 1) {
+            throw Error("The subscription purchase must refer to exactly one product")
+        }
+
         const product =
-            purchase.data.lineItems?.find(x => x !== undefined) ??
-            throwError("The subscription purchase does not refer to a product")
+            purchase.data.lineItems[0]
 
         const startTime =
             purchase.data.startTime ?? null
 
         const expiryTime =
-            product.expiryTime ??
-            throwError("The subscription purchase does not have an expiry time")
+            product.expiryTime
+
+        if (!expiryTime) {
+            throw Error("The subscription purchase does not have an expiry time")
+        }
 
         const userCancellationTime =
             purchase.data.canceledStateContext?.userInitiatedCancellation?.cancelTime ?? null
@@ -66,41 +70,56 @@ export async function fetchGoogleSubscription(
             purchase.data?.testPurchase ? true : false
 
         const productId =
-            product.productId ??
-            throwError("The product does not have an ID")
+            product.productId
+
+        if (!productId) {
+            throw Error("The product does not have an ID")
+        }
 
         const basePlanId =
-            product.offerDetails?.basePlanId ??
-            throwError("Unable to determine the base plan for the product")
+            product.offerDetails?.basePlanId
+
+        if (!basePlanId) {
+            throw Error("Unable to determine the base plan for the product")
+        }
 
         const subscription =
-            await client.monetization.subscriptions.get({ packageName: packageName, productId: productId } )
+            await client.monetization.subscriptions.get({ packageName, productId } )
 
         const basePlan =
-            subscription.data.basePlans?.find(x => x.basePlanId == basePlanId) ??
-            throwError("Unable to determine the base plan for the product")
+            subscription.data.basePlans?.find(x => x.basePlanId == basePlanId)
+
+        if (!basePlan) {
+            throw Error("Unable to determine the base plan for the product")
+        }
 
         const billingPeriodDuration =
             basePlan.autoRenewingBasePlanType?.billingPeriodDuration ??
-            basePlan.prepaidBasePlanType?.billingPeriodDuration ??
-            throwError("Unable to determine a billing period duration for the base plan")
+            basePlan.prepaidBasePlanType?.billingPeriodDuration
+
+        if (!billingPeriodDuration) {
+            throw Error("Unable to determine a billing period duration for the base plan")
+        }
 
         const offerId =
             product.offerDetails?.offerId ?? null
 
         const latestOrderId =
-            purchase.data.latestOrderId ??
-            throwError("An order ID is expected to be associated with the purchase, but was not present")
+            purchase.data.latestOrderId
+
+        if (!latestOrderId) {
+            throw Error("An order ID is expected to be associated with the purchase, but was not present")
+        }
 
         return {
             startTime: parseNullableDate(startTime),
             expiryTime: new Date(expiryTime),
             userCancellationTime: parseNullableDate(userCancellationTime),
-            autoRenewing: autoRenewing,
-            productId: productId,
-            billingPeriodDuration: billingPeriodDuration,
+            autoRenewing,
+            productId,
+            billingPeriodDuration,
             freeTrial: isFreeTrial(offerId, latestOrderId),
-            testPurchase: testPurchase
+            testPurchase
         }
     } catch (error: any) {
         if (error?.status == 400 || error?.status == 404 || error?.status == 410) {
@@ -135,10 +154,6 @@ export async function fetchGoogleSubscription(
 // See: https://developer.android.com/google/play/billing/compatibility (search in-page for "paymentState".)
 function isFreeTrial(offerId: string | null, latestOrderId: string): boolean {
     return offerId !== null && !latestOrderId.includes("..")
-}
-
-function throwError(message: string): never {
-    throw Error(message)
 }
 
 function parseNullableDate(date: string | null): Date | null {
