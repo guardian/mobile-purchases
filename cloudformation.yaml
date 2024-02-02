@@ -141,7 +141,6 @@ Resources:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events-v2
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-soft-opt-ins-logging-v2
 
         - PolicyName: Sqs
           PolicyDocument:
@@ -1062,12 +1061,6 @@ Resources:
               Action:
                 - ssm:GetParametersByPath
               Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "dynamodb:PutItem"
-              Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-soft-opt-ins-logging-v2
 
   AppleRevalidateReceiptsLambda:
     Type: AWS::Serverless::Function
@@ -1260,80 +1253,6 @@ Resources:
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
               Resource: "*"
-
-  # Deprecated, cloudformation does not allow removing DynamoDB tables.
-  SoftOptInsLoggingTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${App}-${Stage}-soft-opt-ins-logging
-      AttributeDefinitions:
-        - AttributeName: timestamp
-          AttributeType: S
-        - AttributeName: userId
-          AttributeType: S
-        - AttributeName: subscriptionId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: timestamp
-          KeyType: RANGE
-        - AttributeName: userId
-          KeyType: HASH
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      GlobalSecondaryIndexes:
-        - IndexName: subscriptionId-index
-          KeySchema:
-            - AttributeName: subscriptionId
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
-
-  # Deprecated, cloudformation does not allow removing DynamoDB tables.
-  SoftOptInsLoggingTable2:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${App}-${Stage}-soft-opt-ins-logging-v2
-      AttributeDefinitions:
-        - AttributeName: timestamp
-          AttributeType: N
-        - AttributeName: userId
-          AttributeType: S
-        - AttributeName: subscriptionId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: userId
-          KeyType: HASH
-        - AttributeName: timestamp
-          KeyType: RANGE
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      GlobalSecondaryIndexes:
-        - IndexName: subscriptionId-index
-          KeySchema:
-            - AttributeName: subscriptionId
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
 
   failedSettingCancellationSoftOptIns:
     Condition: IsProd
