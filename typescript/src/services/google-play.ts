@@ -19,6 +19,8 @@ export type GoogleSubscription = {
     billingPeriodDuration: string,
     // Whether the subscription is currently benefitting from a free trial
     freeTrial: boolean
+    // Whether the subscription was taken out as a test purchase
+    testPurchase: boolean
 }
 
 // Given a `purchaseToken` and `packageName`, attempts to build a `GoogleSubscription` by:
@@ -37,6 +39,8 @@ export async function fetchGoogleSubscription(
 
         const purchase =
             await client.purchases.subscriptionsv2.get({ packageName: packageName, token: purchaseToken })
+
+        console.log(`purchase: ${JSON.stringify(purchase.data)}`)
 
         // A subscription purchase refers to one or many underlying products ("line items".) However, by convention (and by
         // constraining/controling the UX within the app), we will always assume that a subscription purchase refers to exactly
@@ -57,6 +61,9 @@ export async function fetchGoogleSubscription(
 
         const autoRenewing =
             product.autoRenewingPlan?.autoRenewEnabled ?? false
+        
+        const testPurchase =
+            purchase.data?.testPurchase ? true : false
 
         const productId =
             product.productId ??
@@ -92,7 +99,8 @@ export async function fetchGoogleSubscription(
             autoRenewing: autoRenewing,
             productId: productId,
             billingPeriodDuration: billingPeriodDuration,
-            freeTrial: isFreeTrial(offerId, latestOrderId)
+            freeTrial: isFreeTrial(offerId, latestOrderId),
+            testPurchase: testPurchase
         }
     } catch (error: any) {
         if (error?.status == 400 || error?.status == 404 || error?.status == 410) {
