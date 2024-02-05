@@ -82,6 +82,8 @@ Resources:
           Value: !Ref Stack
         - Key: App
           Value: !Ref App
+        - Key: devx-backup-enabled
+          Value: true
 
   SubscriptionTable:
     Type: AWS::DynamoDB::Table
@@ -124,6 +126,8 @@ Resources:
           Value: !Ref Stack
         - Key: App
           Value: !Ref App
+        - Key: devx-backup-enabled
+          Value: true
 
   UserSubscriptionTable:
     Type: AWS::DynamoDB::Table
@@ -162,6 +166,8 @@ Resources:
           Value: !Ref Stack
         - Key: App
           Value: !Ref App
+        - Key: devx-backup-enabled
+          Value: true
 
 Outputs:
   SubscriptionTableStream:
