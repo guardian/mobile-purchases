@@ -68,7 +68,7 @@ Resources:
           Projection:
             ProjectionType: ALL
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
+        PointInTimeRecoveryEnabled: false
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
