@@ -2,6 +2,10 @@ import {hashKey, attribute} from '@aws/dynamodb-data-mapper-annotations';
 import {DynamoDbTable} from "@aws/dynamodb-data-mapper";
 import {App, Stage} from "../utils/appIdentity";
 
+function upgradePayloadIfNeeded(payload: any): any {
+    console.log(`[771d7cc8] ${payload}`);
+    return payload;
+}
 
 export class Subscription {
 
@@ -70,7 +74,7 @@ export class Subscription {
         this.billingPeriod = billingPeriod;
         this.googlePayload = googlePayload;
         this.receipt = receipt;
-        this.applePayload = applePayload;
+        this.applePayload = upgradePayloadIfNeeded(applePayload);
         this.ttl = ttl;
     }
 
