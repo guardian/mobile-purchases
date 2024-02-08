@@ -3,7 +3,7 @@ import {DynamoDbTable} from "@aws/dynamodb-data-mapper";
 import {App, Stage} from "../utils/appIdentity";
 
 function upgradePayloadIfNeeded(payload: any): any {
-    console.log(`[771d7cc8] ${payload}`);
+    console.log(`[771d7cc8] ${JSON.stringify(payload)}`);
     return payload;
 }
 
