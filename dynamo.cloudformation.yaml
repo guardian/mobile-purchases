@@ -105,6 +105,50 @@ Resources:
         - Key: devx-backup-enabled
           Value: true
 
+  SubscriptionParallelTestTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${App}-${Stage}-subscriptions-parallel-test
+      AttributeDefinitions:
+        - AttributeName: subscriptionId
+          AttributeType: S
+        - AttributeName: endTimestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: subscriptionId
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+      TimeToLiveSpecification:
+        Enabled: true
+        AttributeName: ttl
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      GlobalSecondaryIndexes:
+        - IndexName: ios-endTimestamp-revalidation-index
+          KeySchema:
+            - AttributeName: subscriptionId
+              KeyType: HASH
+            - AttributeName: endTimestamp
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - autoRenewing
+              - receipt
+            ProjectionType: INCLUDE
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+        - Key: devx-backup-enabled
+          Value: true
+
   UserSubscriptionTable:
     Type: AWS::DynamoDB::Table
     Properties:
