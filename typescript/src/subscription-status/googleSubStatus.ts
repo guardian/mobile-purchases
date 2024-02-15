@@ -6,7 +6,10 @@ import {
 } from '../models/apiGatewayHttp';
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {fetchGoogleSubscription} from "../services/google-play";
-import {optionalMsToDate} from "../utils/dates";
+import {fetchGoogleSubscriptionV2} from "../services/google-play-v2";
+import {Subscription} from '../models/subscription';
+import {fromGooglePackageName} from "../services/appToPlatform";
+import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/dates";
 import {ReadSubscription} from "../models/subscription";
 import {dynamoMapper} from "../utils/aws";
 import {createHash} from 'crypto'
@@ -40,6 +43,13 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
     const packageName = googlePackageName(request.headers);
 
     if (purchaseToken && subscriptionId) {
+
+        // We're testing the new implementation in production, but want to limit traffic through this codepath
+        const roll = Math.floor(Math.random() * 100 + 1)
+        if (roll <= 100) {
+            await updateParallelTestTable(purchaseToken, packageName)
+        }
+
         const purchaseTokenHash = createHash('sha256').update(purchaseToken).digest('hex')
         console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}, for purchaseToken hash: ${purchaseTokenHash}`)
         try {
@@ -95,6 +105,35 @@ async function getSubscriptionStatusFromDynamo(purchaseToken: string, purchaseTo
         }
         // All exceptions are swallowed here as we fall-back on the Google API for all failure modes (including cache misses)
         return null
+    }
+}
+
+async function updateParallelTestTable(purchaseToken: string, packageName: string) {
+    try {
+        const googleSubscription =
+            await fetchGoogleSubscriptionV2(purchaseToken, packageName)
+
+        const subscription =
+            new Subscription(
+                purchaseToken,
+                googleSubscription.startTime?.toISOString() ?? "",
+                googleSubscription.expiryTime.toISOString(),
+                googleSubscription.userCancellationTime?.toISOString(),
+                googleSubscription.autoRenewing,
+                googleSubscription.productId,
+                fromGooglePackageName(packageName),
+                googleSubscription.freeTrial,
+                googleSubscription.billingPeriodDuration,
+                googleSubscription,
+                undefined,
+                null,
+                dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)),
+                "subscriptions-parallel-test"
+            )
+
+        await dynamoMapper.put({item: subscription})
+    } catch (err) {
+        console.log(`ANDROID-PARALLEL-TEST: Error: ${JSON.stringify(err)}`)
     }
 }
 

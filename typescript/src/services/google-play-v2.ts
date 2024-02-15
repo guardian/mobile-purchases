@@ -29,7 +29,7 @@ export type GoogleSubscription = {
 // 3. Looking up detailed information about the purchased subscription product from the `android-publisher` API:
 //    https://developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions/get
 // 4. Applying heuristics to attempt to determine whether the subscription is currently beneffiting from a free trial (see detailed discussion below.)
-export async function fetchGoogleSubscription(
+export async function fetchGoogleSubscriptionV2(
     purchaseToken: string,
     packageName: string
 ): Promise<GoogleSubscription> {
