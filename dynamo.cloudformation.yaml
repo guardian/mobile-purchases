@@ -19,7 +19,7 @@ Resources:
   userPurchasesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${App}-${Stage}-${Stack}-user-purchases
+      TableName: !Sub ${App}-${Stage}-user-purchases
       AttributeDefinitions:
         - AttributeName: userIdColonAppId
           AttributeType: S
