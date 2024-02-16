@@ -20,6 +20,9 @@ deployments:
     parameters:
       templatePath: dynamo.cloudformation.yaml
       cloudFormationStackName: mobile-purchases-dynamo
+      appendStageToCloudFormationStackName: true
+      cloudFormationStackByTags: false
+      prependStackToCloudFormationStackName: false
     dependencies: [mobile-purchases-cloudformation]
 
   mobile-purchases-google-pubsub:
