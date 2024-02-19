@@ -16,30 +16,6 @@ Parameters:
       - PROD
 
 Resources:
-  userPurchasesTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub ${App}-${Stage}-user-purchases
-      AttributeDefinitions:
-        - AttributeName: userIdColonAppId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: userIdColonAppId
-          KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      TimeToLiveSpecification:
-        Enabled: true
-        AttributeName: 'ttl'
-      Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
-
   UserSubscriptionEventsTableV2:
     Type: AWS::DynamoDB::Table
     Properties:
