@@ -48,6 +48,8 @@ jobs:
           contentDirectories: |
             mobile-purchases-cloudformation:
               - cloudformation.yaml
+            mobile-purchases-dynamo-cloudformation:
+              - dynamo.cloudformation.yaml
             mobile-purchases-exports-cloudformation:
               - exports-cloudformation.yaml
             mobile-purchases-google-oauth:
