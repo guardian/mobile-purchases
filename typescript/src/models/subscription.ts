@@ -44,6 +44,8 @@ export class Subscription {
     @attribute()
     ttl?: number;
 
+    tableName: string
+
     constructor(
         subscriptionId: string,
         startTimestamp: string,
@@ -57,7 +59,8 @@ export class Subscription {
         googlePayload?: any,
         receipt?: string,
         applePayload?: any,
-        ttl?:number
+        ttl?:number,
+        tableName: string = "subscriptions"
     ) {
         this.subscriptionId = subscriptionId;
         this.startTimestamp = startTimestamp;
@@ -72,10 +75,11 @@ export class Subscription {
         this.receipt = receipt;
         this.applePayload = applePayload;
         this.ttl = ttl;
+        this.tableName = tableName;
     }
 
     get [DynamoDbTable]() {
-        return `${App}-${Stage}-subscriptions`
+        return `${App}-${Stage}-${this.tableName}`
     }
 }
 
@@ -91,7 +95,7 @@ export class ReadSubscription extends Subscription {
     }
 
     get [DynamoDbTable]() {
-        return `${App}-${Stage}-subscriptions`
+        return `${App}-${Stage}-${this.tableName}`
     }
 }
 
