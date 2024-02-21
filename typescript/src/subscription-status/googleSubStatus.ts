@@ -46,7 +46,7 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
 
         // We're testing the new implementation in production, but want to limit traffic through this codepath
         const roll = Math.floor(Math.random() * 100 + 1)
-        if (roll <= 100) {
+        if (roll <= 5) {
             await updateParallelTestTable(purchaseToken, packageName)
         }
 
