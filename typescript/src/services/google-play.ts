@@ -26,9 +26,7 @@ export type GoogleSubscription = {
 // Given a `purchaseToken` and `packageName`, attempts to build a `GoogleSubscription` by:
 // 1. Looking up the `SubscriptionPurchaseV2` from the `android-publisher` API: https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptionsv2/get
 // 2. Assuming that the purchase is of _exactly one_ subscription product
-// 3. Looking up detailed information about the purchased subscription product from the `android-publisher` API:
-//    https://developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions/get
-// 4. Applying heuristics to attempt to determine whether the subscription is currently beneffiting from a free trial (see detailed discussion below.)
+// 3. Looking up detailed information about the purchased subscription product from the `android-publisher` API: https://developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions/get
 export async function fetchGoogleSubscription(
     purchaseToken: string,
     packageName: string
@@ -101,15 +99,16 @@ export async function fetchGoogleSubscription(
             throw Error("Unable to determine a billing period duration for the base plan")
         }
 
-        const offerId =
-            product.offerDetails?.offerId ?? null
-
-        const latestOrderId =
-            purchase.data.latestOrderId
-
-        if (!latestOrderId) {
-            throw Error("An order ID is expected to be associated with the purchase, but was not present")
-        }
+        // It does not appear to be possible to determine if a subscription currently benefits from a free trial in version 2 of the API, without maintaining 
+        // additional state or reference data in our own system. This was not the case in version 1 of the API (https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptions/get), 
+        // where a `paymentState` value of `2` would directly signal the free trial status, however, `paymentState` is not present in version 2 (https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptionsv2/get).
+        //
+        // We are fixing the `freeTrial` status to `false` here as we currently offer no subscription products on the Android platform that come with free trials.
+        //
+        // See: https://github.com/android/play-billing-samples/issues/585#issuecomment-1788695432
+        // See: https://stackoverflow.com/a/76867605
+        // See: https://developer.android.com/google/play/billing/compatibility (search in-page for "paymentState".)
+        const freeTrial = false
 
         return {
             startTime: parseNullableDate(startTime),
@@ -118,7 +117,7 @@ export async function fetchGoogleSubscription(
             autoRenewing,
             productId,
             billingPeriodDuration,
-            freeTrial: isFreeTrial(offerId, latestOrderId),
+            freeTrial,
             testPurchase
         }
     } catch (error: any) {
@@ -130,30 +129,6 @@ export async function fetchGoogleSubscription(
         throw error
     }
 
-}
-
-// Determining if a subscription currently benefits from a free trial is quite indirect in version 2 of the API, as compared
-// to in version 1 (https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptions/get), where a
-// `paymentState` value of 2 would directly signal the free trial status. Unfortunately, `paymentState` is not present in
-// version 2 (https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptionsv2/get), so the free
-// trial status must be inferred as follows:
-//
-// 1. The `offerId` associated with the purchased subscription must be non-null, so as to be able to refer to an offer which
-//    confers a free trial
-// 2. However, if present in the first place, the `offerId` remains associated with the purchased subscription even after the
-//    free trial period has elapsed. Therefore, the most recent "transaction ID" (here, `latestOrderId`) must be inspected to
-//    determine whether it refers to the first or subsequent transactions:
-//      - The first transaction for a subscription will have an ID of the form:             GPA.XXXX-XXXX-XXXX-XXXXX
-//      - Subsequent transaction IDs for the same subscription purchase will have the form: GPA.XXXX-XXXX-XXXX-XXXXX..N
-//        (where N is a zero-indexed, incrementing reference to the sequence of transactions against a subscription purchase)
-//  3. Therefore, if the `offerId` is non-null, and the most recent transaction ID refers to an initial (non-subsequent)
-//     transaction, the subscription must be in a free trial state
-//
-// See: https://github.com/android/play-billing-samples/issues/585#issuecomment-1788695432
-// See: https://stackoverflow.com/a/76867605
-// See: https://developer.android.com/google/play/billing/compatibility (search in-page for "paymentState".)
-function isFreeTrial(offerId: string | null, latestOrderId: string): boolean {
-    return offerId !== null && !latestOrderId.includes("..")
 }
 
 function parseNullableDate(date: string | null): Date | null {
