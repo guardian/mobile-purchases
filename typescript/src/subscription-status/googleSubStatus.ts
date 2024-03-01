@@ -47,8 +47,8 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
                 return HTTPResponses.NOT_FOUND;
             }
         } catch (error: any) {
-            if (error.statusCode == 410) {
-                console.log(`No subscription found for purchaseToken hash: ${purchaseTokenHash} (410-Gone from upstream API)`)
+            if (error.status == 404 || error.status == 410) {
+                console.log(`No subscription found for purchaseToken hash: ${purchaseTokenHash} (${error.status} from upstream API)`)
                 return HTTPResponses.NOT_FOUND
             } else {
                 console.log(`Serving an Internal Server Error due to: ${error.toString().split('/tokens/')[0]}`)
