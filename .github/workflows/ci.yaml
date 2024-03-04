@@ -27,6 +27,9 @@ jobs:
           java-version: 11
           cache: sbt
 
+      - name: Generate CFN templates using GuCDK # This step MUST run before 'Test and Build Typescript'
+        run: bash ./script/cdk-synth.sh
+
       - name: Test and Build TypeScript
         run: ./build-tc.sh
 
@@ -38,9 +41,6 @@ jobs:
         with:
           role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
           aws-region: eu-west-1
-
-      - name: Generate CFN templates using GuCDK
-        run: bash ./script/cdk-synth.sh
 
       - name: Upload to Riff-Raff
         uses: guardian/actions-riff-raff@v2
