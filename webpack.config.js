@@ -30,6 +30,7 @@ const getEntries = (env) => {
 module.exports = (env) => ({
   devtool: 'inline-cheap-source-map',
   module: {
+    noParse: /cdk/,
     rules: [
       {
         test: /\.tsx?$/,
