@@ -21,6 +21,10 @@ export type GoogleSubscription = {
     freeTrial: boolean
     // Whether the subscription was taken out as a test purchase
     testPurchase: boolean
+    // ISO 3166-1 alpha-2 billing country/region code of the user at the time the subscription was granted
+    countryCode: string | null
+    // The three-letter currency code defined in ISO 4217, representing the currency used in the region determined by the `countryCode` above
+    priceCurrencyCode: string | null
 }
 
 // Given a `purchaseToken` and `packageName`, attempts to build a `GoogleSubscription` by:
@@ -99,6 +103,12 @@ export async function fetchGoogleSubscription(
             throw Error("Unable to determine a billing period duration for the base plan")
         }
 
+        const countryCode =
+            purchase.data.regionCode ?? null
+        
+        const priceCurrencyCode =
+            basePlan.regionalConfigs?.find(x => x.regionCode == countryCode)?.price?.currencyCode ?? null
+
         // It does not appear to be possible to determine if a subscription currently benefits from a free trial in version 2 of the API, without maintaining 
         // additional state or reference data in our own system. This was not the case in version 1 of the API (https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptions/get), 
         // where a `paymentState` value of `2` would directly signal the free trial status, however, `paymentState` is not present in version 2 (https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptionsv2/get).
@@ -118,7 +128,9 @@ export async function fetchGoogleSubscription(
             productId,
             billingPeriodDuration,
             freeTrial,
-            testPurchase
+            testPurchase,
+            countryCode,
+            priceCurrencyCode
         }
     } catch (error: any) {
         if (error?.status == 400 || error?.status == 404 || error?.status == 410) {
