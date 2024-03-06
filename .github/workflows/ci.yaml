@@ -39,6 +39,9 @@ jobs:
           role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
           aws-region: eu-west-1
 
+      - name: Generate CFN templates using GuCDK
+        run: bash ./script/cdk-synth.sh
+
       - name: Upload to Riff-Raff
         uses: guardian/actions-riff-raff@v2
         with:
@@ -46,6 +49,9 @@ jobs:
           buildNumberOffset: 2740
           configPath: riff-raff.yaml
           contentDirectories: |
+            mobile-purchases-feast-cloudformation:
+              - cdk/cdk.out/MobilePurchasesFeast-CODE.template.json
+              - cdk/cdk.out/MobilePurchasesFeast-PROD.template.json
             mobile-purchases-cloudformation:
               - cloudformation.yaml
             mobile-purchases-dynamo-cloudformation:
