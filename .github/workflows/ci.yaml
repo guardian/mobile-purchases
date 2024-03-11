@@ -49,9 +49,9 @@ jobs:
           buildNumberOffset: 2740
           configPath: riff-raff.yaml
           contentDirectories: |
-            mobile-purchases-feast-cloudformation:
-              - cdk/cdk.out/MobilePurchasesFeast-CODE.template.json
-              - cdk/cdk.out/MobilePurchasesFeast-PROD.template.json
+            feast-mobile-purchases-cloudformation:
+              - cdk/cdk.out/FeastMobilePurchases-CODE.template.json
+              - cdk/cdk.out/FeastMobilePurchases-PROD.template.json
             mobile-purchases-cloudformation:
               - cloudformation.yaml
             mobile-purchases-dynamo-cloudformation:
