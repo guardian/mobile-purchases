@@ -3,9 +3,9 @@ import { GuStack } from "@guardian/cdk/lib/constructs/core";
 import {GuLambdaFunction} from "@guardian/cdk/lib/constructs/lambda";
 import type { App } from "aws-cdk-lib";
 import {Duration} from "aws-cdk-lib";
+import {Alias, Key} from 'aws-cdk-lib/aws-kms'
 import {Runtime} from "aws-cdk-lib/aws-lambda";
 import {Queue, QueueEncryption} from "aws-cdk-lib/aws-sqs";
-import {Alias, Key} from 'aws-cdk-lib/aws-kms'
 
 export class FeastMobilePurchases extends GuStack {
   constructor(scope: App, id: string, props: GuStackProps) {
