@@ -66,12 +66,16 @@ jobs:
               - tsc-target/apple-link-user-subscription.zip
             mobile-purchases-apple-pubsub:
               - tsc-target/apple-pubsub.zip
+            mobile-purchases-apple-pubsub-feast:
+              - tsc-target/apple-pubsub-feast.zip
             mobile-purchases-apple-revalidate-receipts:
               - tsc-target/apple-revalidate-receipts.zip
             mobile-purchases-apple-subscription-status:
               - tsc-target/apple-subscription-status.zip
             mobile-purchases-apple-update-subscriptions:
               - tsc-target/apple-update-subscriptions.zip
+            mobile-purchases-apple-update-subscriptions-feast:
+              - tsc-target/apple-update-subscriptions-feast.zip
             mobile-purchases-delete-user-subscription:
               - tsc-target/delete-user-subscription.zip
             mobile-purchases-export-historical-data:

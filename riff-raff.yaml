@@ -10,12 +10,12 @@ templates:
       prefixStack: false
 
 deployments:
-  mobile-purchases-feast-cloudformation:
+  feast-mobile-purchases-cloudformation:
     type: cloud-formation
     parameters:
       templateStagePaths:
-        CODE: MobilePurchasesFeast-CODE.template.json
-        PROD: MobilePurchasesFeast-PROD.template.json
+        CODE: FeastMobilePurchases-CODE.template.json
+        PROD: FeastMobilePurchases-PROD.template.json
 
   mobile-purchases-cloudformation:
     type: cloud-formation
@@ -43,6 +43,12 @@ deployments:
     parameters:
       functionNames: [mobile-purchases-applepubsub-]
       fileName: apple-pubsub.zip
+
+  feast-mobile-purchases-apple-pubsub:
+    template: lambda
+    parameters:
+      functionNames: [ mobile-purchases-feast-applepubsub- ]
+      fileName: feast-apple-pubsub.zip
 
   mobile-purchases-google-subscription-status:
     template: lambda
@@ -97,6 +103,12 @@ deployments:
     parameters:
       functionNames: [mobile-purchases-apple-update-subscriptions-]
       fileName: apple-update-subscriptions.zip
+
+  mobile-purchases-feast-apple-update-subscriptions:
+    template: lambda
+    parameters:
+      functionNames: [ mobile-purchases-feast-apple-update-subscriptions- ]
+      fileName: feast-apple-update-subscriptions.zip
 
   mobile-purchases-export-subscription-tables:
     template: lambda

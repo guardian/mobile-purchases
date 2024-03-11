@@ -1,11 +1,11 @@
 import type { GuStackProps } from "@guardian/cdk/lib/constructs/core";
 import { GuStack } from "@guardian/cdk/lib/constructs/core";
-import type { App } from "aws-cdk-lib";
 import {GuLambdaFunction} from "@guardian/cdk/lib/constructs/lambda";
-import {Runtime} from "aws-cdk-lib/aws-lambda";
+import type { App } from "aws-cdk-lib";
 import {Duration} from "aws-cdk-lib";
+import {Runtime} from "aws-cdk-lib/aws-lambda";
 
-export class MobilePurchases extends GuStack {
+export class FeastMobilePurchases extends GuStack {
   constructor(scope: App, id: string, props: GuStackProps) {
     super(scope, id, props);
 
@@ -13,15 +13,15 @@ export class MobilePurchases extends GuStack {
 
 
     // Lambda Functions
-    new GuLambdaFunction(this,"applepubsub-v2", {
+    new GuLambdaFunction(this,"feast-apple-pubsub-lambda", {
       app: app,
       description: "Records new App Store Feast subs",
-      functionName: `${app}-applepubsub-v2-${this.stage}`,
-      fileName: "", // TODO
-      handler: "apple-pubsub-v2.handler",
+      functionName: `${app}-feast-apple-pubsub-${this.stage}`,
+      fileName: "feast-apple-pubsub.zip",
+      handler: "feast-apple-pubsub.handler",
       runtime: Runtime.NODEJS_20_X,
       memorySize: 128,
-      timeout: Duration.seconds(29),
+      timeout: Duration.seconds(30),
       environment: {
         App: app,
         Stack: this.stack,
@@ -29,15 +29,15 @@ export class MobilePurchases extends GuStack {
       },
     })
 
-    new GuLambdaFunction(this,"apple-v2-update-subscriptions-lambda", {
+    new GuLambdaFunction(this,"feast-apple-update-subscriptions-lambda", {
       app: app,
       description: "Updates App Store Feast subs",
-      functionName: `${app}-apple-v2-update-subscriptions-${this.stage}`,
-      fileName: "", // TODO
-      handler: "apple-update-subscriptions-v2.handler",
+      functionName: `${app}-feast-apple-update-subscriptions-${this.stage}`,
+      fileName: "feast-apple-update-subscriptions.zip",
+      handler: "feast-apple-update-subscriptions.handler",
       runtime: Runtime.NODEJS_20_X,
       memorySize: 512,
-      timeout: Duration.seconds(25),
+      timeout: Duration.seconds(30),
       environment: {
         App: app,
         Stack: this.stack,
