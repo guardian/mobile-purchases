@@ -44,7 +44,7 @@ deployments:
       functionNames: [mobile-purchases-applepubsub-]
       fileName: apple-pubsub.zip
 
-  feast-mobile-purchases-apple-pubsub:
+  mobile-purchases-feast-apple-pubsub:
     template: lambda
     parameters:
       functionNames: [ mobile-purchases-feast-apple-pubsub- ]
