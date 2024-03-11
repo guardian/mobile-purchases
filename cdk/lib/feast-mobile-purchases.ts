@@ -5,6 +5,7 @@ import type { App } from "aws-cdk-lib";
 import {Duration} from "aws-cdk-lib";
 import {Runtime} from "aws-cdk-lib/aws-lambda";
 import {Queue, QueueEncryption} from "aws-cdk-lib/aws-sqs";
+import {Alias, Key} from 'aws-cdk-lib/aws-kms'
 
 export class FeastMobilePurchases extends GuStack {
   constructor(scope: App, id: string, props: GuStackProps) {
@@ -48,14 +49,19 @@ export class FeastMobilePurchases extends GuStack {
 
 
     // Queues
+    const key = new Key(this, 'Key')
+    const alias = new Alias(this, 'Alias', { aliasName: 'alias/sqs', targetKey: key })
+
     const feastAppleSubscriptionsDeadLetterQueue = new Queue(this, "feast-apple-subscriptions-to-fetch-dlq", {
       queueName: `${app}-${this.stage}-feast-apple-subscriptions-to-fetch-dlq`,
       encryption: QueueEncryption.KMS,
+      encryptionMasterKey: alias,
     })
 
     new Queue(this, "feast-apple-subscriptions-to-fetch", {
       queueName: `${app}-${this.stage}-feast-apple-subscriptions-to-fetch`,
       encryption: QueueEncryption.KMS,
+      encryptionMasterKey: alias,
       deadLetterQueue: {
         queue: feastAppleSubscriptionsDeadLetterQueue,
         maxReceiveCount: 8
