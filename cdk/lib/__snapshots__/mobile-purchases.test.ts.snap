@@ -1,0 +1,3458 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`The MobilePurchases stack matches the snapshot 1`] = `
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Conditions": {
+    "IsCode": {
+      "Fn::Equals": [
+        {
+          "Ref": "Stage",
+        },
+        "CODE",
+      ],
+    },
+    "IsProd": {
+      "Fn::Equals": [
+        {
+          "Ref": "Stage",
+        },
+        "PROD",
+      ],
+    },
+  },
+  "Description": "Validates mobile purchases",
+  "Mappings": {
+    "StageVariables": {
+      "CODE": {
+        "AlarmActionsEnabled": false,
+        "Schedule": "rate(365 days)",
+        "SoftOptInConsentSetterStage": "DEV",
+      },
+      "PROD": {
+        "AlarmActionsEnabled": true,
+        "Schedule": "rate(30 minutes)",
+        "SoftOptInConsentSetterStage": "PROD",
+      },
+    },
+  },
+  "Metadata": {
+    "gu:cdk:constructs": [],
+    "gu:cdk:version": "TEST",
+  },
+  "Parameters": {
+    "AlarmTopic": {
+      "Description": "The ARN of the SNS topic to send all the cloudwatch alarms to",
+      "Type": "String",
+    },
+    "ApiCertArn": {
+      "Description": "ACM Certificate for api use",
+      "Type": "String",
+    },
+    "App": {
+      "Description": "Application name",
+      "Type": "String",
+    },
+    "AppCertArn": {
+      "Description": "ACM Certificate for app use",
+      "Type": "String",
+    },
+    "AppDNS": {
+      "Description": "DNS used by app",
+      "Type": "String",
+    },
+    "ApplePubSubSecret": {
+      "Description": "The secret used by google's pubsub",
+      "NoEcho": true,
+      "Type": "String",
+    },
+    "DeployBucket": {
+      "Description": "Bucket where RiffRaff uploads artifacts on deploy",
+      "Type": "String",
+    },
+    "GooglePubSubSecret": {
+      "Description": "The secret used by google's pubsub",
+      "NoEcho": true,
+      "Type": "String",
+    },
+    "HostedZoneId": {
+      "Description": "HostedZoneId",
+      "Type": "String",
+    },
+    "HostedZoneName": {
+      "Description": "HostedZoneName",
+      "Type": "String",
+    },
+    "MembershipAccountId": {
+      "Default": "membershipAccountId",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "MobileAccountId": {
+      "Default": "mobileAccountId",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "Stack": {
+      "Description": "Stack name",
+      "Type": "String",
+    },
+    "Stage": {
+      "AllowedValues": [
+        "CODE",
+        "PROD",
+      ],
+      "Description": "Stage name",
+      "Type": "String",
+    },
+  },
+  "Resources": {
+    "AcquisitionsDLQProcessorLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-soft-opt-in-acquisitions-dlq-processor/soft-opt-in-acquisitions-dlq-processor.zip",
+          },
+        },
+        "Description": "Process DLQ messages",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Fn::Sub": "\${App}",
+            },
+            "DLQUrl": {
+              "Ref": "AcquisitionsDeadLetterQueue",
+            },
+            "Stack": {
+              "Fn::Sub": "\${Stack}",
+            },
+            "Stage": {
+              "Fn::Sub": "\${Stage}",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-soft-opt-in-acquisitions-dlq-processor-\${Stage}",
+        },
+        "Handler": "soft-opt-in-acquisitions-dlq-processor.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "AcquisitionsDLQProcessorLambdaRole",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AcquisitionsDLQProcessorLambdaRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Sub": [
+                      "arn:aws:iam::\${MembershipAccountId}:role/membership-\${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole",
+                      {
+                        "SoftOptInConsentSetterStage": {
+                          "Fn::FindInMap": [
+                            "StageVariables",
+                            {
+                              "Ref": "Stage",
+                            },
+                            "SoftOptInConsentSetterStage",
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+            "PolicyName": "AcquisitionsDLQProcessorLambdaRolePolicy0",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:iam::\${MembershipAccountId}:role/comms-\${Stage}-EmailQueueCrossAccountRole",
+                  },
+                },
+              ],
+            },
+            "PolicyName": "AcquisitionsDLQProcessorLambdaRolePolicy1",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "dynamodb:Query",
+                    "dynamodb:GetItem",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-subscriptions",
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-subscriptions/*",
+                    },
+                  ],
+                },
+              ],
+            },
+            "PolicyName": "AcquisitionsDLQProcessorLambdaRolePolicy2",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:GetParametersByPath",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/\${App}/\${Stage}/\${Stack}/*",
+                  },
+                },
+              ],
+            },
+            "PolicyName": "AcquisitionsDLQProcessorLambdaRolePolicy3",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "cloudwatch:putMetricData",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+            },
+            "PolicyName": "AcquisitionsDLQProcessorLambdaRolePolicy4",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes",
+                    "sqs:ReceiveMessage",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+            },
+            "PolicyName": "AcquisitionsDLQProcessorLambdaRolePolicy5",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcquisitionsDLQProcessorLambdaScheduledRun": {
+      "Properties": {
+        "Description": "Runs AcquisitionsDLQProcessorLambda",
+        "ScheduleExpression": {
+          "Fn::FindInMap": [
+            "StageVariables",
+            {
+              "Ref": "Stage",
+            },
+            "Schedule",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "AcquisitionsDLQProcessorLambda",
+                "Arn",
+              ],
+            },
+            "Id": "AcquisitionsDLQProcessorLambdaScheduledRunLambdaTarget",
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "AcquisitionsDLQProcessorLambdaScheduledRunPermission": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "AcquisitionsDLQProcessorLambda",
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "AcquisitionsDLQProcessorLambdaScheduledRun",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AcquisitionsDeadLetterQueue": {
+      "Properties": {
+        "QueueName": {
+          "Fn::Sub": "\${App}-soft-opt-in-acquisitions-DLQ-\${Stage}",
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+    },
+    "ApiDomainName": {
+      "Properties": {
+        "CertificateArn": {
+          "Ref": "ApiCertArn",
+        },
+        "DomainName": {
+          "Fn::Sub": "\${App}.\${HostedZoneName}",
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::DomainName",
+    },
+    "ApiMapping": {
+      "Properties": {
+        "DomainName": {
+          "Ref": "ApiDomainName",
+        },
+        "RestApiId": {
+          "Ref": "MobilePuchasesApi",
+        },
+        "Stage": {
+          "Ref": "Stage",
+        },
+      },
+      "Type": "AWS::ApiGateway::BasePathMapping",
+    },
+    "ApiRoute53": {
+      "Properties": {
+        "HostedZoneId": {
+          "Ref": "HostedZoneId",
+        },
+        "RecordSets": [
+          {
+            "AliasTarget": {
+              "DNSName": {
+                "Fn::GetAtt": [
+                  "ApiDomainName",
+                  "DistributionDomainName",
+                ],
+              },
+              "HostedZoneId": "Z2FDTNDATAQYW2",
+            },
+            "Name": {
+              "Ref": "ApiDomainName",
+            },
+            "Type": "A",
+          },
+        ],
+      },
+      "Type": "AWS::Route53::RecordSetGroup",
+    },
+    "AppDomainName": {
+      "Properties": {
+        "CertificateArn": {
+          "Ref": "AppCertArn",
+        },
+        "DomainName": {
+          "Ref": "AppDNS",
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::DomainName",
+    },
+    "AppMapping": {
+      "Properties": {
+        "DomainName": {
+          "Ref": "AppDomainName",
+        },
+        "RestApiId": {
+          "Ref": "MobilePuchasesApi",
+        },
+        "Stage": {
+          "Ref": "Stage",
+        },
+      },
+      "Type": "AWS::ApiGateway::BasePathMapping",
+    },
+    "AppleFetchOfferDetailsLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-apple-fetch-offer-details/apple-fetch-offer-details.zip",
+          },
+        },
+        "Description": "apple fetch offer details lambda (+)",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Ref": "App",
+            },
+            "Stack": {
+              "Ref": "Stack",
+            },
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-apple-fetch-offer-details-\${Stage}",
+        },
+        "Handler": "apple-fetch-offer-details.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "nodejs18.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 29,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AppleFetchOfferDetailsLambdaPostApiPermissionStage": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "AppleFetchOfferDetailsLambda",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:\${AWS::Region}:\${AWS::AccountId}:\${__ApiId__}/\${__Stage__}/POST/apple/fetchOfferDetails",
+            {
+              "__ApiId__": {
+                "Ref": "MobilePuchasesApi",
+              },
+              "__Stage__": "*",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AppleLinkUserToSubLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-apple-link-user-subscription/apple-link-user-subscription.zip",
+          },
+        },
+        "Description": "Links users to subscriptions",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Ref": "App",
+            },
+            "QueueUrl": {
+              "Ref": "AppleSubscriptionsQueue",
+            },
+            "Stack": {
+              "Ref": "Stack",
+            },
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-apple-link-user-subscription-\${Stage}",
+        },
+        "Handler": "apple-link-user-subscription.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 29,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AppleLinkUserToSubLambdaPostApiPermissionStage": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "AppleLinkUserToSubLambda",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:\${AWS::Region}:\${AWS::AccountId}:\${__ApiId__}/\${__Stage__}/POST/apple/linkToSubscriptions",
+            {
+              "__ApiId__": {
+                "Ref": "MobilePuchasesApi",
+              },
+              "__Stage__": "*",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApplePubSubLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-apple-pubsub/apple-pubsub.zip",
+          },
+        },
+        "Description": "Records play store events",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Ref": "App",
+            },
+            "QueueUrl": {
+              "Ref": "AppleSubscriptionsQueue",
+            },
+            "Secret": {
+              "Ref": "ApplePubSubSecret",
+            },
+            "Stack": {
+              "Ref": "Stack",
+            },
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-applepubsub-\${Stage}",
+        },
+        "Handler": "apple-pubsub.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 29,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ApplePubSubLambdaPostApiPermissionStage": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "ApplePubSubLambda",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:\${AWS::Region}:\${AWS::AccountId}:\${__ApiId__}/\${__Stage__}/POST/apple/pubsub",
+            {
+              "__ApiId__": {
+                "Ref": "MobilePuchasesApi",
+              },
+              "__Stage__": "*",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApplePubsub5xxErrors": {
+      "Properties": {
+        "ActionsEnabled": {
+          "Fn::FindInMap": [
+            "StageVariables",
+            {
+              "Ref": "Stage",
+            },
+            "AlarmActionsEnabled",
+          ],
+        },
+        "AlarmActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "AlarmDescription": "A HTTP request to the pubsub endpoint resulted in a 5XX error.",
+        "AlarmName": {
+          "Fn::Sub": "mobile-purchases-\${Stage}-apple-pubsub-check-errors",
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "ApiName",
+            "Value": {
+              "Fn::Sub": "\${App}-\${Stage}",
+            },
+          },
+          {
+            "Name": "Method",
+            "Value": "POST",
+          },
+          {
+            "Name": "Resource",
+            "Value": "/apple/pubsub",
+          },
+          {
+            "Name": "Stage",
+            "Value": {
+              "Ref": "Stage",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "5XXError",
+        "Namespace": "AWS/ApiGateway",
+        "OKActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 2,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "AppleRevalidateReceiptsLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-apple-revalidate-receipts/apple-revalidate-receipts.zip",
+          },
+        },
+        "Description": "Finds recently expired subscriptions",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Fn::Sub": "\${App}",
+            },
+            "SqsUrl": {
+              "Ref": "AppleSubscriptionsQueue",
+            },
+            "Stack": {
+              "Fn::Sub": "\${Stack}",
+            },
+            "Stage": {
+              "Fn::Sub": "\${Stage}",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-apple-revalidate-receipts-\${Stage}",
+        },
+        "Handler": "apple-revalidate-receipts.handler",
+        "MemorySize": 2048,
+        "Role": {
+          "Fn::GetAtt": "AppleRevalidateSubscriptionRole.Arn",
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 180,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AppleRevalidateReceiptsLambdaSchedule": {
+      "Properties": {
+        "ScheduleExpression": "rate(6 hours)",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "AppleRevalidateReceiptsLambda",
+                "Arn",
+              ],
+            },
+            "Id": "AppleRevalidateReceiptsLambdaScheduleLambdaTarget",
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "AppleRevalidateReceiptsLambdaSchedulePermission": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "AppleRevalidateReceiptsLambda",
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "AppleRevalidateReceiptsLambdaSchedule",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AppleRevalidateSubscriptionRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com",
+                ],
+              },
+            },
+          ],
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "logs:CreateLogGroup",
+                  "logs:CreateLogStream",
+                  "logs:PutLogEvents",
+                  "cloudwatch:putMetricData",
+                ],
+                "Effect": "Allow",
+                "Resource": "*",
+              },
+            },
+            "PolicyName": "logs",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "dynamodb:Scan",
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                  {
+                    "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-subscriptions/index/ios-endTimestamp-revalidation-index",
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-subscriptions",
+                  },
+                ],
+              },
+            },
+            "PolicyName": "dynamo",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "sqs:SendMessage",
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                  {
+                    "Fn::Sub": "arn:aws:sqs:\${AWS::Region}:\${AWS::AccountId}:\${App}-\${Stage}-apple-subscriptions-to-fetch",
+                  },
+                ],
+              },
+            },
+            "PolicyName": "sqs",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AppleSubStatusLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-apple-subscription-status/apple-subscription-status.zip",
+          },
+        },
+        "Description": "Checks the status of an Apple App store subscription using the apple API",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Ref": "App",
+            },
+            "Stack": {
+              "Ref": "Stack",
+            },
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-apple-subscription-status-\${Stage}",
+        },
+        "Handler": "apple-subscription-status.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 29,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AppleSubStatusLambdaPostApiPermissionStage": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "AppleSubStatusLambda",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:\${AWS::Region}:\${AWS::AccountId}:\${__ApiId__}/\${__Stage__}/POST/apple/subscription/status",
+            {
+              "__ApiId__": {
+                "Ref": "MobilePuchasesApi",
+              },
+              "__Stage__": "*",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AppleSubsStatus5xxErrors": {
+      "Properties": {
+        "ActionsEnabled": {
+          "Fn::FindInMap": [
+            "StageVariables",
+            {
+              "Ref": "Stage",
+            },
+            "AlarmActionsEnabled",
+          ],
+        },
+        "AlarmActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "AlarmDescription": "More than 10% of attempts to check Apple subscription status resulted in a 5XX error.
+",
+        "AlarmName": {
+          "Fn::Sub": "mobile-purchases-\${Stage}-apple-subscription-status-check-errors",
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "100*(m1/m2)",
+            "Id": "e1",
+            "Label": "Percentage of requests which result in a 5XX error",
+          },
+          {
+            "Id": "m1",
+            "Label": "Number of 5XX responses",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ApiName",
+                    "Value": {
+                      "Fn::Sub": "\${App}-\${Stage}",
+                    },
+                  },
+                  {
+                    "Name": "Method",
+                    "Value": "POST",
+                  },
+                  {
+                    "Name": "Resource",
+                    "Value": "/apple/subscription/status",
+                  },
+                  {
+                    "Name": "Stage",
+                    "Value": {
+                      "Ref": "Stage",
+                    },
+                  },
+                ],
+                "MetricName": "5XXError",
+                "Namespace": "AWS/ApiGateway",
+              },
+              "Period": 600,
+              "Stat": "Sum",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2",
+            "Label": "Total number of requests",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ApiName",
+                    "Value": {
+                      "Fn::Sub": "\${App}-\${Stage}",
+                    },
+                  },
+                  {
+                    "Name": "Method",
+                    "Value": "POST",
+                  },
+                  {
+                    "Name": "Resource",
+                    "Value": "/apple/subscription/status",
+                  },
+                  {
+                    "Name": "Stage",
+                    "Value": {
+                      "Ref": "Stage",
+                    },
+                  },
+                ],
+                "MetricName": "Count",
+                "Namespace": "AWS/ApiGateway",
+              },
+              "Period": 600,
+              "Stat": "Sum",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "OKActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "Threshold": 10,
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "AppleSubscriptionDlqDepthAlarm": {
+      "Properties": {
+        "ActionsEnabled": {
+          "Fn::FindInMap": [
+            "StageVariables",
+            {
+              "Ref": "Stage",
+            },
+            "AlarmActionsEnabled",
+          ],
+        },
+        "AlarmActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "AlarmDescription": "Ensure that the apple subscription dead letter queue is empty",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": {
+              "Fn::GetAtt": "AppleSubscriptionsQueueDlq.QueueName",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "OKActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "Period": 60,
+        "Statistic": "Sum",
+        "Threshold": 0,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "AppleSubscriptionsEventSource": {
+      "Properties": {
+        "BatchSize": 1,
+        "Enabled": true,
+        "EventSourceArn": {
+          "Fn::GetAtt": "AppleSubscriptionsQueue.Arn",
+        },
+        "FunctionName": {
+          "Ref": "UpdateAppleSubscriptionsLambda",
+        },
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "AppleSubscriptionsQueue": {
+      "Properties": {
+        "KmsMasterKeyId": "alias/aws/sqs",
+        "QueueName": {
+          "Fn::Sub": "\${App}-\${Stage}-apple-subscriptions-to-fetch",
+        },
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": "AppleSubscriptionsQueueDlq.Arn",
+          },
+          "maxReceiveCount": 8,
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+    },
+    "AppleSubscriptionsQueueDlq": {
+      "Properties": {
+        "KmsMasterKeyId": "alias/aws/sqs",
+        "QueueName": {
+          "Fn::Sub": "\${App}-\${Stage}-apple-subscriptions-to-fetch-dlq",
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+    },
+    "DeleteUserSubscriptionLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-delete-user-subscription/delete-user-subscription.zip",
+          },
+        },
+        "Description": "Delete the link to user IDs when the subscription has reached its end of life",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Fn::Sub": "\${App}",
+            },
+            "Stack": {
+              "Fn::Sub": "\${Stack}",
+            },
+            "Stage": {
+              "Fn::Sub": "\${Stage}",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-delete-user-subscription-\${Stage}",
+        },
+        "Handler": "delete-user-subscription.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "DeleteUserSubscriptionLambdaRole",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "DeleteUserSubscriptionLambdaRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole",
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "cloudwatch:putMetricData",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+            },
+            "PolicyName": "DeleteUserSubscriptionLambdaRolePolicy0",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:DescribeStream",
+                    "dynamodb:ListStreams",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": "\${App}-\${Stage}-subscriptions-stream-arn",
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            "PolicyName": "DeleteUserSubscriptionLambdaRolePolicy1",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "dynamodb:Query",
+                    "dynamodb:DeleteItem",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-user-subscriptions",
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-user-subscriptions/*",
+                    },
+                  ],
+                },
+              ],
+            },
+            "PolicyName": "DeleteUserSubscriptionLambdaRolePolicy2",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Sub": [
+                      "arn:aws:iam::\${MembershipAccountId}:role/membership-\${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole",
+                      {
+                        "SoftOptInConsentSetterStage": {
+                          "Fn::FindInMap": [
+                            "StageVariables",
+                            {
+                              "Ref": "Stage",
+                            },
+                            "SoftOptInConsentSetterStage",
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+            "PolicyName": "DeleteUserSubscriptionLambdaRolePolicy3",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:iam::\${MembershipAccountId}:role/comms-\${Stage}-EmailQueueCrossAccountRole",
+                  },
+                },
+              ],
+            },
+            "PolicyName": "DeleteUserSubscriptionLambdaRolePolicy4",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:GetParametersByPath",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/\${App}/\${Stage}/\${Stack}/*",
+                  },
+                },
+              ],
+            },
+            "PolicyName": "DeleteUserSubscriptionLambdaRolePolicy5",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DeleteUserSubscriptionLambdaSchedule": {
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "\${App}-\${Stage}-subscriptions-stream-arn",
+          },
+        },
+        "FunctionName": {
+          "Ref": "DeleteUserSubscriptionLambda",
+        },
+        "StartingPosition": "LATEST",
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "GoogleLinkUserToSubLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-google-link-user-subscription/google-link-user-subscription.zip",
+          },
+        },
+        "Description": "Links users to subscriptions",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Ref": "App",
+            },
+            "QueueUrl": {
+              "Ref": "GoogleSubscriptionsQueue",
+            },
+            "Stack": {
+              "Ref": "Stack",
+            },
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-google-link-user-subscription-\${Stage}",
+        },
+        "Handler": "google-link-user-subscription.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 29,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "GoogleLinkUserToSubLambdaPostApiPermissionStage": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "GoogleLinkUserToSubLambda",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:\${AWS::Region}:\${AWS::AccountId}:\${__ApiId__}/\${__Stage__}/POST/google/linkToSubscriptions",
+            {
+              "__ApiId__": {
+                "Ref": "MobilePuchasesApi",
+              },
+              "__Stage__": "*",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "GoogleOAuthLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-google-oauth/\${App}-google-oauth.jar",
+          },
+        },
+        "Description": "Fetches access tokens for the Google Play Developer API",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Ref": "App",
+            },
+            "Stack": {
+              "Ref": "Stack",
+            },
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-googleoauth-\${Stage}",
+        },
+        "Handler": "com.gu.mobilepurchases.googleoauth.lambda.GoogleOAuth::handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "java8",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 45,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "GoogleOAuthLambdaSchedule": {
+      "Properties": {
+        "ScheduleExpression": "rate(15 minutes)",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "GoogleOAuthLambda",
+                "Arn",
+              ],
+            },
+            "Id": "GoogleOAuthLambdaScheduleLambdaTarget",
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "GoogleOAuthLambdaSchedulePermission": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "GoogleOAuthLambda",
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "GoogleOAuthLambdaSchedule",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "GooglePlaySubStatusLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-google-subscription-status/google-subscription-status.zip",
+          },
+        },
+        "Description": "Checks the status of a Play Store subscription using the Google Play Developer API",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Ref": "App",
+            },
+            "Stack": {
+              "Ref": "Stack",
+            },
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-google-subscription-status-\${Stage}",
+        },
+        "Handler": "google-subscription-status.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 29,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "GooglePlaySubStatusLambdaPostApiPermissionStage": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "GooglePlaySubStatusLambda",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:\${AWS::Region}:\${AWS::AccountId}:\${__ApiId__}/\${__Stage__}/GET/google/subscription/*/status",
+            {
+              "__ApiId__": {
+                "Ref": "MobilePuchasesApi",
+              },
+              "__Stage__": "*",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "GooglePlaySubsStatus5xxErrors": {
+      "Properties": {
+        "ActionsEnabled": {
+          "Fn::FindInMap": [
+            "StageVariables",
+            {
+              "Ref": "Stage",
+            },
+            "AlarmActionsEnabled",
+          ],
+        },
+        "AlarmActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "AlarmDescription": "More than 20% of attempts to check Play subscription status resulted in a 5XX error.
+Runbook: https://docs.google.com/document/d/1OwNDf_xSK3hhq1K0DP_4Uq7vIBFgfvlkd4zfiRZDczw/edit#heading=h.cnuchxbdu0tl
+",
+        "AlarmName": {
+          "Fn::Sub": "mobile-purchases-\${Stage}-play-subscription-status-check-errors",
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "Metrics": [
+          {
+            "Expression": "100*(m1/m2)",
+            "Id": "e1",
+            "Label": "Percentage of requests which result in a 5XX error",
+          },
+          {
+            "Id": "m1",
+            "Label": "Number of 5XX responses",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ApiName",
+                    "Value": {
+                      "Fn::Sub": "\${App}-\${Stage}",
+                    },
+                  },
+                  {
+                    "Name": "Method",
+                    "Value": "GET",
+                  },
+                  {
+                    "Name": "Resource",
+                    "Value": "/google/subscription/{subscriptionId}/status",
+                  },
+                  {
+                    "Name": "Stage",
+                    "Value": {
+                      "Ref": "Stage",
+                    },
+                  },
+                ],
+                "MetricName": "5XXError",
+                "Namespace": "AWS/ApiGateway",
+              },
+              "Period": 600,
+              "Stat": "Sum",
+            },
+            "ReturnData": false,
+          },
+          {
+            "Id": "m2",
+            "Label": "Total number of requests",
+            "MetricStat": {
+              "Metric": {
+                "Dimensions": [
+                  {
+                    "Name": "ApiName",
+                    "Value": {
+                      "Fn::Sub": "\${App}-\${Stage}",
+                    },
+                  },
+                  {
+                    "Name": "Method",
+                    "Value": "GET",
+                  },
+                  {
+                    "Name": "Resource",
+                    "Value": "/google/subscription/{subscriptionId}/status",
+                  },
+                  {
+                    "Name": "Stage",
+                    "Value": {
+                      "Ref": "Stage",
+                    },
+                  },
+                ],
+                "MetricName": "Count",
+                "Namespace": "AWS/ApiGateway",
+              },
+              "Period": 600,
+              "Stat": "Sum",
+            },
+            "ReturnData": false,
+          },
+        ],
+        "OKActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "Threshold": 20,
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "GooglePubSubLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-google-pubsub/google-pubsub.zip",
+          },
+        },
+        "Description": "Records play store events",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Ref": "App",
+            },
+            "QueueUrl": {
+              "Ref": "GoogleSubscriptionsQueue",
+            },
+            "Secret": {
+              "Ref": "GooglePubSubSecret",
+            },
+            "Stack": {
+              "Ref": "Stack",
+            },
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-googlepubsub-\${Stage}",
+        },
+        "Handler": "google-pubsub.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 29,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "GooglePubSubLambdaPostApiPermissionStage": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "GooglePubSubLambda",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:\${AWS::Region}:\${AWS::AccountId}:\${__ApiId__}/\${__Stage__}/POST/google/pubsub",
+            {
+              "__ApiId__": {
+                "Ref": "MobilePuchasesApi",
+              },
+              "__Stage__": "*",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "GoogleSubscriptionDlqDepthAlarm": {
+      "Properties": {
+        "ActionsEnabled": {
+          "Fn::FindInMap": [
+            "StageVariables",
+            {
+              "Ref": "Stage",
+            },
+            "AlarmActionsEnabled",
+          ],
+        },
+        "AlarmActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "AlarmDescription": "Ensure that the google subscription dead letter queue is empty",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": {
+              "Fn::GetAtt": "GoogleSubscriptionsQueueDlq.QueueName",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "OKActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "Period": 60,
+        "Statistic": "Sum",
+        "Threshold": 0,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "GoogleSubscriptionsQueue": {
+      "Properties": {
+        "KmsMasterKeyId": "alias/aws/sqs",
+        "QueueName": {
+          "Fn::Sub": "\${App}-\${Stage}-google-subscriptions-to-fetch",
+        },
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": "GoogleSubscriptionsQueueDlq.Arn",
+          },
+          "maxReceiveCount": 8,
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+    },
+    "GoogleSubscriptionsQueueDlq": {
+      "Properties": {
+        "KmsMasterKeyId": "alias/aws/sqs",
+        "QueueName": {
+          "Fn::Sub": "\${App}-\${Stage}-google-subscriptions-to-fetch-dlq",
+        },
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+    },
+    "GoogleTokenRefreshFailureAlarm": {
+      "Properties": {
+        "ActionsEnabled": {
+          "Fn::FindInMap": [
+            "StageVariables",
+            {
+              "Ref": "Stage",
+            },
+            "AlarmActionsEnabled",
+          ],
+        },
+        "AlarmActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "AlarmDescription": {
+          "Fn::Sub": "Trigger the GoogleOAuth lambda manually to refresh the token",
+        },
+        "AlarmName": {
+          "Fn::Sub": "mobile-purchases-\${Stage}-google-oauth-token-refresh-failure",
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "GoogleOAuthLambda",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "OKActions": [
+          {
+            "Ref": "AlarmTopic",
+          },
+        ],
+        "Period": 60,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "LogGroupUserPurchases": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/\${App}-iosuserpurchases-\${Stage}",
+        },
+        "RetentionInDays": 7,
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+    },
+    "LogGroupValidateReceipts": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/\${App}-iosvalidatereceipts-\${Stage}",
+        },
+        "RetentionInDays": 7,
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+    },
+    "MobilePuchasesApi": {
+      "Properties": {
+        "Body": {
+          "info": {
+            "title": {
+              "Fn::Sub": "\${App}-\${Stage}",
+            },
+            "version": "1.0.0",
+          },
+          "paths": {
+            "/apple/fetchOfferDetails": {
+              "post": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response (+)",
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:lambda:path/2015-03-31/functions/\${AppleFetchOfferDetailsLambda.Arn}/invocations",
+                  },
+                },
+              },
+            },
+            "/apple/linkToSubscriptions": {
+              "post": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:lambda:path/2015-03-31/functions/\${AppleLinkUserToSubLambda.Arn}/invocations",
+                  },
+                },
+              },
+            },
+            "/apple/pubsub": {
+              "post": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:lambda:path/2015-03-31/functions/\${ApplePubSubLambda.Arn}/invocations",
+                  },
+                },
+              },
+            },
+            "/apple/subscription/status": {
+              "post": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:lambda:path/2015-03-31/functions/\${AppleSubStatusLambda.Arn}/invocations",
+                  },
+                },
+              },
+            },
+            "/google/linkToSubscriptions": {
+              "post": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:lambda:path/2015-03-31/functions/\${GoogleLinkUserToSubLambda.Arn}/invocations",
+                  },
+                },
+              },
+            },
+            "/google/pubsub": {
+              "post": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:lambda:path/2015-03-31/functions/\${GooglePubSubLambda.Arn}/invocations",
+                  },
+                },
+              },
+            },
+            "/google/subscription/{subscriptionId}/status": {
+              "get": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:lambda:path/2015-03-31/functions/\${GooglePlaySubStatusLambda.Arn}/invocations",
+                  },
+                },
+              },
+            },
+            "/healthcheck": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "GET",
+                  "requestTemplates": {
+                    "application/json": "{
+  "statusCode" : 200
+}
+",
+                  },
+                  "responses": {
+                    "default": {
+                      "statusCode": "200",
+                    },
+                  },
+                  "type": "mock",
+                },
+              },
+            },
+            "/user/subscriptions/me": {
+              "get": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:lambda:path/2015-03-31/functions/\${UserSubscriptionsLambda.Arn}/invocations",
+                  },
+                },
+              },
+            },
+            "/user/subscriptions/{userId}": {
+              "get": {
+                "consumes": [
+                  "application/json",
+                ],
+                "produces": [
+                  "application/json",
+                ],
+                "responses": {
+                  "200": {
+                    "description": "200 response",
+                  },
+                },
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:aws:apigateway:\${AWS::Region}:lambda:path/2015-03-31/functions/\${UserSubscriptionsLambda.Arn}/invocations",
+                  },
+                },
+              },
+            },
+          },
+          "swagger": "2.0",
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::RestApi",
+    },
+    "MobilePuchasesApiDeployment6f928b2600": {
+      "Properties": {
+        "Description": "RestApi deployment id: 6f928b2600b3ba39ac48861fef8f2653a0f177fe",
+        "RestApiId": {
+          "Ref": "MobilePuchasesApi",
+        },
+        "StageName": "Stage",
+      },
+      "Type": "AWS::ApiGateway::Deployment",
+    },
+    "MobilePuchasesApiStage": {
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "MobilePuchasesApiDeployment6f928b2600",
+        },
+        "MethodSettings": [
+          {
+            "HttpMethod": "*",
+            "LoggingLevel": "OFF",
+            "MetricsEnabled": true,
+            "ResourcePath": "/*",
+          },
+        ],
+        "RestApiId": {
+          "Ref": "MobilePuchasesApi",
+        },
+        "StageName": {
+          "Ref": "Stage",
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::ApiGateway::Stage",
+    },
+    "MobilePurchasesLambdasRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com",
+                ],
+              },
+            },
+          ],
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "logs:CreateLogGroup",
+                  "logs:CreateLogStream",
+                  "logs:PutLogEvents",
+                  "cloudwatch:putMetricData",
+                ],
+                "Effect": "Allow",
+                "Resource": "*",
+              },
+            },
+            "PolicyName": "logs",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "ssm:GetParametersByPath",
+                ],
+                "Effect": "Allow",
+                "Resource": {
+                  "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/\${App}/\${Stage}/\${Stack}/*",
+                },
+              },
+            },
+            "PolicyName": "config",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "ssm:GetParametersByPath",
+                ],
+                "Effect": "Allow",
+                "Resource": {
+                  "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/\${App}-iosuserpurchases/\${Stage}/\${Stack}",
+                },
+              },
+            },
+            "PolicyName": "iosuserpurchases-config",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "ssm:GetParametersByPath",
+                ],
+                "Effect": "Allow",
+                "Resource": {
+                  "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/\${App}-iosvalidatereceipts/\${Stage}/\${Stack}",
+                },
+              },
+            },
+            "PolicyName": "iosvalidatereceipts-config",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "ssm:GetParametersByPath",
+                ],
+                "Effect": "Allow",
+                "Resource": {
+                  "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/\${App}/\${Stage}/google-oauth-lambda",
+                },
+              },
+            },
+            "PolicyName": "googleoauth-config",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "s3:GetObject",
+                  "s3:PutObject",
+                ],
+                "Effect": "Allow",
+                "Resource": {
+                  "Fn::Sub": "arn:aws:s3:::gu-mobile-access-tokens/\${Stage}/google-play-developer-api/*",
+                },
+              },
+            },
+            "PolicyName": "google-access-tokens",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "dynamodb:GetItem",
+                  "dynamodb:BatchGetItem",
+                  "dynamodb:BatchWriteItem",
+                  "dynamodb:PutItem",
+                  "dynamodb:UpdateItem",
+                  "dynamodb:Query",
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                  {
+                    "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-\${Stack}-user-purchases",
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-subscription-events",
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-subscription-events-v2",
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-subscriptions",
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-subscriptions-parallel-test",
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-user-subscriptions",
+                  },
+                ],
+              },
+            },
+            "PolicyName": "dynamo",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": "sqs:*",
+                "Effect": "Allow",
+                "Resource": [
+                  {
+                    "Fn::GetAtt": "GoogleSubscriptionsQueue.Arn",
+                  },
+                  {
+                    "Fn::GetAtt": "AppleSubscriptionsQueue.Arn",
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:sqs:\${AWS::Region}:\${AWS::AccountId}:\${App}-\${Stage}-apple-historical-subscriptions",
+                  },
+                  {
+                    "Fn::Sub": "arn:aws:sqs:\${AWS::Region}:\${AWS::AccountId}:\${App}-\${Stage}-google-historical-subscriptions",
+                  },
+                ],
+              },
+            },
+            "PolicyName": "Sqs",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": {
+                "Action": [
+                  "kms:GenerateDataKey",
+                  "kms:Decrypt",
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                  {
+                    "Fn::Sub": "arn:aws:kms:\${AWS::Region}:\${AWS::AccountId}:key/0215d06c-81c4-4896-a5da-c818770ea8db",
+                  },
+                ],
+              },
+            },
+            "PolicyName": "Kms",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SoftOptInAcquisitionsLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-soft-opt-in-acquisitions/soft-opt-in-acquisitions.zip",
+          },
+        },
+        "Description": "asdf",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Fn::Sub": "\${App}",
+            },
+            "DLQUrl": {
+              "Ref": "AcquisitionsDeadLetterQueue",
+            },
+            "Stack": {
+              "Fn::Sub": "\${Stack}",
+            },
+            "Stage": {
+              "Fn::Sub": "\${Stage}",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-soft-opt-in-acquisitions-\${Stage}",
+        },
+        "Handler": "soft-opt-in-acquisitions.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "SoftOptInAcquisitionsLambdaRole",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "SoftOptInAcquisitionsLambdaRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole",
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Sub": [
+                      "arn:aws:iam::\${MembershipAccountId}:role/membership-\${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole",
+                      {
+                        "SoftOptInConsentSetterStage": {
+                          "Fn::FindInMap": [
+                            "StageVariables",
+                            {
+                              "Ref": "Stage",
+                            },
+                            "SoftOptInConsentSetterStage",
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+            "PolicyName": "SoftOptInAcquisitionsLambdaRolePolicy0",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:iam::\${MembershipAccountId}:role/comms-\${Stage}-EmailQueueCrossAccountRole",
+                  },
+                },
+              ],
+            },
+            "PolicyName": "SoftOptInAcquisitionsLambdaRolePolicy1",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "dynamodb:Query",
+                    "dynamodb:GetItem",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-subscriptions",
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:dynamodb:\${AWS::Region}:\${AWS::AccountId}:table/\${App}-\${Stage}-subscriptions/*",
+                    },
+                  ],
+                },
+              ],
+            },
+            "PolicyName": "SoftOptInAcquisitionsLambdaRolePolicy2",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:GetParametersByPath",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:ssm:\${AWS::Region}:\${AWS::AccountId}:parameter/\${App}/\${Stage}/\${Stack}/*",
+                  },
+                },
+              ],
+            },
+            "PolicyName": "SoftOptInAcquisitionsLambdaRolePolicy3",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "cloudwatch:putMetricData",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+            },
+            "PolicyName": "SoftOptInAcquisitionsLambdaRolePolicy4",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:DescribeStream",
+                    "dynamodb:ListStreams",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": "\${App}-\${Stage}-user-subscriptions-stream-arn",
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            "PolicyName": "SoftOptInAcquisitionsLambdaRolePolicy5",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes",
+                    "sqs:ReceiveMessage",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+            },
+            "PolicyName": "SoftOptInAcquisitionsLambdaRolePolicy6",
+          },
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "sqs:SendMessage",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": "AcquisitionsDeadLetterQueue.Arn",
+                  },
+                },
+              ],
+            },
+            "PolicyName": "SoftOptInAcquisitionsLambdaRolePolicy7",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SoftOptInAcquisitionsLambdaSchedule": {
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "\${App}-\${Stage}-user-subscriptions-stream-arn",
+          },
+        },
+        "FunctionName": {
+          "Ref": "SoftOptInAcquisitionsLambda",
+        },
+        "StartingPosition": "LATEST",
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "UpdateAppleSubscriptionsLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-apple-update-subscriptions/apple-update-subscriptions.zip",
+          },
+        },
+        "Description": "Consumes subscription data updates from app store from sqs and stores them in dynamo",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Fn::Sub": "\${App}",
+            },
+            "HistoricalQueueUrl": {
+              "Fn::Sub": "https://sqs.\${AWS::Region}.amazonaws.com/\${AWS::AccountId}/\${App}-\${Stage}-apple-historical-subscriptions",
+            },
+            "Stack": {
+              "Fn::Sub": "\${Stack}",
+            },
+            "Stage": {
+              "Fn::Sub": "\${Stage}",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-apple-update-subscriptions-\${Stage}",
+        },
+        "Handler": "apple-update-subscriptions.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 25,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UpdateGoogleSubscriptionsEventSource": {
+      "Properties": {
+        "BatchSize": 1,
+        "Enabled": true,
+        "EventSourceArn": {
+          "Fn::GetAtt": "GoogleSubscriptionsQueue.Arn",
+        },
+        "FunctionName": {
+          "Ref": "UpdateGoogleSubscriptionsLambda",
+        },
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "UpdateGoogleSubscriptionsLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-google-update-subscriptions/google-update-subscriptions.zip",
+          },
+        },
+        "Description": "Consomes subscription data updates from google playstore from sqs and stores them in dynamo",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Fn::Sub": "\${App}",
+            },
+            "HistoricalQueueUrl": {
+              "Fn::Sub": "https://sqs.\${AWS::Region}.amazonaws.com/\${AWS::AccountId}/\${App}-\${Stage}-google-historical-subscriptions",
+            },
+            "Stack": {
+              "Fn::Sub": "\${Stack}",
+            },
+            "Stage": {
+              "Fn::Sub": "\${Stage}",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-google-update-subscriptions-\${Stage}",
+        },
+        "Handler": "google-update-subscriptions.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 25,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UserSubscriptionsLambda": {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeployBucket",
+          },
+          "S3Key": {
+            "Fn::Sub": "\${Stack}/\${Stage}/\${App}-user-subscriptions/user-subscriptions.zip",
+          },
+        },
+        "Description": "Retrieves subscription details for a given user",
+        "Environment": {
+          "Variables": {
+            "App": {
+              "Ref": "App",
+            },
+            "Stack": {
+              "Ref": "Stack",
+            },
+            "Stage": {
+              "Ref": "Stage",
+            },
+          },
+        },
+        "FunctionName": {
+          "Fn::Sub": "\${App}-user-subscriptions-\${Stage}",
+        },
+        "Handler": "user-subscriptions.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": "MobilePurchasesLambdasRole.Arn",
+        },
+        "Runtime": "nodejs14.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": {
+              "Ref": "App",
+            },
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 29,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UserSubscriptionsLambdaDirectAccessPermissionStage": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "UserSubscriptionsLambda",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:\${AWS::Region}:\${AWS::AccountId}:\${__ApiId__}/\${__Stage__}/GET/user/subscriptions/me",
+            {
+              "__ApiId__": {
+                "Ref": "MobilePuchasesApi",
+              },
+              "__Stage__": "*",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "UserSubscriptionsLambdaInternalAccessPermissionStage": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "UserSubscriptionsLambda",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:\${AWS::Region}:\${AWS::AccountId}:\${__ApiId__}/\${__Stage__}/GET/user/subscriptions/*",
+            {
+              "__ApiId__": {
+                "Ref": "MobilePuchasesApi",
+              },
+              "__Stage__": "*",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "acquisitionsDlqProcessorExceptionsAlarm": {
+      "Condition": "IsProd",
+      "DependsOn": [
+        "AcquisitionsDLQProcessorLambda",
+      ],
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:\${AWS::Region}:\${AWS::AccountId}:retention-dev",
+          },
+        ],
+        "AlarmDescription": "An error occurred in the AcquisitionsDLQProcessorLambda
+",
+        "AlarmName": {
+          "Fn::Sub": "\${App}-soft-opt-ins-acquisitions-dlq-processor-\${Stage} threw an unhandled exception",
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "AcquisitionsDLQProcessorLambda",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Period": 3600,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "acquisitionsLambdaExceptionsAlarm": {
+      "Condition": "IsProd",
+      "DependsOn": [
+        "SoftOptInAcquisitionsLambda",
+      ],
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:\${AWS::Region}:\${AWS::AccountId}:retention-dev",
+          },
+        ],
+        "AlarmDescription": "An error occurred in the SoftOptInAcquisitionsLambda and failed to set soft opt-ins for a user
+",
+        "AlarmName": {
+          "Fn::Sub": "\${App}-soft-opt-in-acquisitions-\${Stage} threw an unhandled exception and failed to set soft opt-ins for a user",
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "SoftOptInAcquisitionsLambda",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Period": 3600,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "failedSettingCancellationSoftOptIns": {
+      "Condition": "IsProd",
+      "DependsOn": [
+        "DeleteUserSubscriptionLambda",
+      ],
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:\${AWS::Region}:\${AWS::AccountId}:retention-dev",
+          },
+        ],
+        "AlarmDescription": "An error occurred in the DeleteUserSubscriptionLambda and failed to set soft opt-ins for a user
+",
+        "AlarmName": {
+          "Fn::Sub": "\${App}-delete-user-subscription-\${Stage} failed to set soft opt-ins for a user",
+        },
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "Stage",
+            "Value": {
+              "Fn::Sub": "\${Stage}",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "failed_to_send_cancellation_message",
+        "Namespace": "AWS/Lambda",
+        "Period": 3600,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+  },
+}
+`;
