@@ -1,0 +1,613 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`The FeastMobilePurchases stack matches the snapshot 1`] = `
+{
+  "Metadata": {
+    "gu:cdk:constructs": [
+      "GuDistributionBucketParameter",
+      "GuLambdaFunction",
+      "GuLambdaFunction",
+    ],
+    "gu:cdk:version": "TEST",
+  },
+  "Parameters": {
+    "DistributionBucketName": {
+      "Default": "/account/services/artifact.bucket",
+      "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "Alias325C5727": {
+      "Properties": {
+        "AliasName": "alias/sqs",
+        "TargetKeyId": {
+          "Fn::GetAtt": [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+    "Key961B73FD": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "feastapplepubsublambdaAB31630C": {
+      "DependsOn": [
+        "feastapplepubsublambdaServiceRoleDefaultPolicy56B866A3",
+        "feastapplepubsublambdaServiceRole2BCF6294",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "mobile/TEST/mobile-purchases/feast-apple-pubsub.zip",
+        },
+        "Description": "Records new App Store Feast subs",
+        "Environment": {
+          "Variables": {
+            "APP": "mobile-purchases",
+            "App": "mobile-purchases",
+            "STACK": "mobile",
+            "STAGE": "TEST",
+            "Stack": "mobile",
+            "Stage": "TEST",
+          },
+        },
+        "FunctionName": "mobile-purchases-feast-apple-pubsub-TEST",
+        "Handler": "feast-apple-pubsub.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "feastapplepubsublambdaServiceRole2BCF6294",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "mobile-purchases",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "feastapplepubsublambdaServiceRole2BCF6294": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "mobile-purchases",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "feastapplepubsublambdaServiceRoleDefaultPolicy56B866A3": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/mobile/TEST/mobile-purchases/feast-apple-pubsub.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/mobile/mobile-purchases",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/mobile/mobile-purchases/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "feastapplepubsublambdaServiceRoleDefaultPolicy56B866A3",
+        "Roles": [
+          {
+            "Ref": "feastapplepubsublambdaServiceRole2BCF6294",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "feastapplesubscriptionstofetchF8EA7152": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsMasterKeyId": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":kms:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":alias/sqs",
+            ],
+          ],
+        },
+        "QueueName": "mobile-purchases-TEST-feast-apple-subscriptions-to-fetch",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "feastapplesubscriptionstofetchdlq905D753B",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 8,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "feastapplesubscriptionstofetchdlq905D753B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsMasterKeyId": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":kms:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":alias/sqs",
+            ],
+          ],
+        },
+        "QueueName": "mobile-purchases-TEST-feast-apple-subscriptions-to-fetch-dlq",
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "feastappleupdatesubscriptionslambda1978042C": {
+      "DependsOn": [
+        "feastappleupdatesubscriptionslambdaServiceRoleDefaultPolicy5A7EE401",
+        "feastappleupdatesubscriptionslambdaServiceRole4A99363C",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "mobile/TEST/mobile-purchases/feast-apple-update-subscriptions.zip",
+        },
+        "Description": "Updates App Store Feast subs",
+        "Environment": {
+          "Variables": {
+            "APP": "mobile-purchases",
+            "App": "mobile-purchases",
+            "STACK": "mobile",
+            "STAGE": "TEST",
+            "Stack": "mobile",
+            "Stage": "TEST",
+          },
+        },
+        "FunctionName": "mobile-purchases-feast-apple-update-subscriptions-TEST",
+        "Handler": "feast-apple-update-subscriptions.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "feastappleupdatesubscriptionslambdaServiceRole4A99363C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "mobile-purchases",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "feastappleupdatesubscriptionslambdaServiceRole4A99363C": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "mobile-purchases",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "TEST",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "feastappleupdatesubscriptionslambdaServiceRoleDefaultPolicy5A7EE401": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/mobile/TEST/mobile-purchases/feast-apple-update-subscriptions.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/mobile/mobile-purchases",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/TEST/mobile/mobile-purchases/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "feastappleupdatesubscriptionslambdaServiceRoleDefaultPolicy5A7EE401",
+        "Roles": [
+          {
+            "Ref": "feastappleupdatesubscriptionslambdaServiceRole4A99363C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;
