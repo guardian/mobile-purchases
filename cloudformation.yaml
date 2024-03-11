@@ -1,39 +1,15 @@
-AWSTemplateFormatVersion: 2010-09-09
-Transform: AWS::Serverless-2016-10-31
+---
+AWSTemplateFormatVersion: '2010-09-09'
 Description: Validates mobile purchases
 Parameters:
-  MobileAccountId:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: 'mobileAccountId'
-  MembershipAccountId:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: 'membershipAccountId'
-  Stack:
-    Description: Stack name
-    Type: String
-  App:
-    Description: Application name
-    Type: String
-  Stage:
-    Description: Stage name
-    Type: String
-    AllowedValues:
-      - CODE
-      - PROD
-  DeployBucket:
-    Description: Bucket where RiffRaff uploads artifacts on deploy
-    Type: String
-  HostedZoneId:
-    Description: HostedZoneId
+  ApiCertArn:
+    Description: ACM Certificate for api use
     Type: String
   HostedZoneName:
     Description: HostedZoneName
     Type: String
-  ApiCertArn:
-    Description: ACM Certificate for api use
-    Type: String
-  AppCertArn:
-    Description: ACM Certificate for app use
+  App:
+    Description: Application name
     Type: String
   AppDNS:
     Description: DNS used by app
@@ -42,30 +18,516 @@ Parameters:
     Type: String
     Description: The secret used by google's pubsub
     NoEcho: true
+  DeployBucket:
+    Description: Bucket where RiffRaff uploads artifacts on deploy
+    Type: String
+  MembershipAccountId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: membershipAccountId
   ApplePubSubSecret:
     Type: String
     Description: The secret used by google's pubsub
     NoEcho: true
+  AppCertArn:
+    Description: ACM Certificate for app use
+    Type: String
+  HostedZoneId:
+    Description: HostedZoneId
+    Type: String
+  MobileAccountId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: mobileAccountId
+  Stack:
+    Description: Stack name
+    Type: String
   AlarmTopic:
     Type: String
     Description: The ARN of the SNS topic to send all the cloudwatch alarms to
-
+  Stage:
+    Description: Stage name
+    Type: String
+    AllowedValues:
+      - CODE
+      - PROD
 Mappings:
   StageVariables:
     CODE:
-      Schedule: 'rate(365 days)'
-      AlarmActionsEnabled: FALSE
+      Schedule: rate(365 days)
+      AlarmActionsEnabled: false
       SoftOptInConsentSetterStage: DEV
     PROD:
-      Schedule: 'rate(30 minutes)'
-      AlarmActionsEnabled: TRUE
+      Schedule: rate(30 minutes)
+      AlarmActionsEnabled: true
       SoftOptInConsentSetterStage: PROD
-
-Conditions:
-  IsCode: !Equals [!Ref "Stage", "CODE"]
-  IsProd: !Equals [!Ref "Stage", "PROD"]
-
 Resources:
+  AppleSubscriptionDlqDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled:
+        Fn::FindInMap:
+          - StageVariables
+          - Ref: Stage
+          - AlarmActionsEnabled
+      AlarmDescription: Ensure that the apple subscription dead letter queue is empty
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value:
+            Fn::GetAtt: AppleSubscriptionsQueueDlq.QueueName
+      Period: 60
+      Statistic: Sum
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      TreatMissingData: notBreaching
+  AppleSubStatusLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-apple-subscription-status/apple-subscription-status.zip"
+      Description: Checks the status of an Apple App store subscription using the
+        apple API
+      FunctionName:
+        Fn::Sub: "${App}-apple-subscription-status-${Stage}"
+      Handler: apple-subscription-status.handler
+      MemorySize: 128
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 29
+      Environment:
+        Variables:
+          Stage:
+            Ref: Stage
+          Stack:
+            Ref: Stack
+          App:
+            Ref: App
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  ApplePubsub5xxErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled:
+        Fn::FindInMap:
+          - StageVariables
+          - Ref: Stage
+          - AlarmActionsEnabled
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      AlarmName:
+        Fn::Sub: mobile-purchases-${Stage}-apple-pubsub-check-errors
+      AlarmDescription: A HTTP request to the pubsub endpoint resulted in a 5XX error.
+      Dimensions:
+        - Name: ApiName
+          Value:
+            Fn::Sub: "${App}-${Stage}"
+        - Name: Method
+          Value: POST
+        - Name: Resource
+          Value: "/apple/pubsub"
+        - Name: Stage
+          Value:
+            Ref: Stage
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Period: 300
+      Statistic: Sum
+      Threshold: 2
+      TreatMissingData: notBreaching
+  AppleFetchOfferDetailsLambdaPostApiPermissionStage:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: AppleFetchOfferDetailsLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/apple/fetchOfferDetails
+          - __ApiId__:
+              Ref: MobilePuchasesApi
+            __Stage__: "*"
+  GoogleSubscriptionDlqDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled:
+        Fn::FindInMap:
+          - StageVariables
+          - Ref: Stage
+          - AlarmActionsEnabled
+      AlarmDescription: Ensure that the google subscription dead letter queue is empty
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value:
+            Fn::GetAtt: GoogleSubscriptionsQueueDlq.QueueName
+      Period: 60
+      Statistic: Sum
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      TreatMissingData: notBreaching
+  SoftOptInAcquisitionsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-soft-opt-in-acquisitions/soft-opt-in-acquisitions.zip"
+      Description: asdf
+      FunctionName:
+        Fn::Sub: "${App}-soft-opt-in-acquisitions-${Stage}"
+      Handler: soft-opt-in-acquisitions.handler
+      MemorySize: 512
+      Role:
+        Fn::GetAtt:
+          - SoftOptInAcquisitionsLambdaRole
+          - Arn
+      Runtime: nodejs14.x
+      Timeout: 60
+      Environment:
+        Variables:
+          App:
+            Fn::Sub: "${App}"
+          Stack:
+            Fn::Sub: "${Stack}"
+          Stage:
+            Fn::Sub: "${Stage}"
+          DLQUrl:
+            Ref: AcquisitionsDeadLetterQueue
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  UpdateGoogleSubscriptionsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: "${App}-google-update-subscriptions-${Stage}"
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-google-update-subscriptions/google-update-subscriptions.zip"
+      Environment:
+        Variables:
+          App:
+            Fn::Sub: "${App}"
+          Stack:
+            Fn::Sub: "${Stack}"
+          Stage:
+            Fn::Sub: "${Stage}"
+          HistoricalQueueUrl:
+            Fn::Sub: https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-google-historical-subscriptions
+      Description: Consomes subscription data updates from google playstore from sqs
+        and stores them in dynamo
+      Handler: google-update-subscriptions.handler
+      MemorySize: 512
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
+      Timeout: 25
+      Runtime: nodejs14.x
+  MobilePuchasesApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Body:
+        info:
+          version: 1.0.0
+          title:
+            Fn::Sub: "${App}-${Stage}"
+        paths:
+          "/google/subscription/{subscriptionId}/status":
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePlaySubStatusLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response
+              consumes:
+                - application/json
+          "/user/subscriptions/{userId}":
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSubscriptionsLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response
+              consumes:
+                - application/json
+          "/apple/pubsub":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApplePubSubLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response
+              consumes:
+                - application/json
+          "/apple/linkToSubscriptions":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleLinkUserToSubLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response
+              consumes:
+                - application/json
+          "/google/pubsub":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePubSubLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response
+              consumes:
+                - application/json
+          "/google/linkToSubscriptions":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoogleLinkUserToSubLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response
+              consumes:
+                - application/json
+          "/apple/subscription/status":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleSubStatusLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response
+              consumes:
+                - application/json
+          "/user/subscriptions/me":
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSubscriptionsLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response
+              consumes:
+                - application/json
+          "/apple/fetchOfferDetails":
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleFetchOfferDetailsLambda.Arn}/invocations
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response (+)
+              consumes:
+                - application/json
+          "/healthcheck":
+            get:
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: |
+                    {
+                      "statusCode" : 200
+                    }
+                responses:
+                  default:
+                    statusCode: '200'
+                httpMethod: GET
+              responses:
+                '200':
+                  description: 200 response
+        swagger: '2.0'
+  AppleFetchOfferDetailsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-apple-fetch-offer-details/apple-fetch-offer-details.zip"
+      Description: apple fetch offer details lambda (+)
+      FunctionName:
+        Fn::Sub: "${App}-apple-fetch-offer-details-${Stage}"
+      Handler: apple-fetch-offer-details.handler
+      MemorySize: 128
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
+      Runtime: nodejs18.x
+      Timeout: 29
+      Environment:
+        Variables:
+          Stage:
+            Ref: Stage
+          Stack:
+            Ref: Stack
+          App:
+            Ref: App
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  GoogleOAuthLambdaSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(15 minutes)
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - GoogleOAuthLambda
+              - Arn
+          Id: GoogleOAuthLambdaScheduleLambdaTarget
+  AppleRevalidateReceiptsLambdaSchedulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: AppleRevalidateReceiptsLambda
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - AppleRevalidateReceiptsLambdaSchedule
+          - Arn
+  acquisitionsDlqProcessorExceptionsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProd
+    DependsOn:
+      - AcquisitionsDLQProcessorLambda
+    Properties:
+      AlarmActions:
+        - Fn::Sub: arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+      AlarmName:
+        Fn::Sub: "${App}-soft-opt-ins-acquisitions-dlq-processor-${Stage} threw an
+          unhandled exception"
+      AlarmDescription: 'An error occurred in the AcquisitionsDLQProcessorLambda
+
+        '
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value:
+            Ref: AcquisitionsDLQProcessorLambda
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 3600
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+  GoogleTokenRefreshFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled:
+        Fn::FindInMap:
+          - StageVariables
+          - Ref: Stage
+          - AlarmActionsEnabled
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      AlarmName:
+        Fn::Sub: mobile-purchases-${Stage}-google-oauth-token-refresh-failure
+      AlarmDescription:
+        Fn::Sub: Trigger the GoogleOAuth lambda manually to refresh the token
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value:
+            Ref: GoogleOAuthLambda
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
   MobilePurchasesLambdasRole:
     Type: AWS::IAM::Role
     Properties:
@@ -76,7 +538,7 @@ Resources:
               Service:
                 - lambda.amazonaws.com
             Action: sts:AssumeRole
-      Path: /
+      Path: "/"
       Policies:
         - PolicyName: logs
           PolicyDocument:
@@ -94,28 +556,32 @@ Resources:
               Action:
                 - ssm:GetParametersByPath
               Effect: Allow
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+              Resource:
+                Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
         - PolicyName: iosuserpurchases-config
           PolicyDocument:
             Statement:
               Action:
                 - ssm:GetParametersByPath
               Effect: Allow
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}-iosuserpurchases/${Stage}/${Stack}
+              Resource:
+                Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}-iosuserpurchases/${Stage}/${Stack}
         - PolicyName: iosvalidatereceipts-config
           PolicyDocument:
             Statement:
               Action:
                 - ssm:GetParametersByPath
               Effect: Allow
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}-iosvalidatereceipts/${Stage}/${Stack}
+              Resource:
+                Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}-iosvalidatereceipts/${Stage}/${Stack}
         - PolicyName: googleoauth-config
           PolicyDocument:
             Statement:
               Action:
                 - ssm:GetParametersByPath
               Effect: Allow
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/google-oauth-lambda
+              Resource:
+                Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/google-oauth-lambda
         - PolicyName: google-access-tokens
           PolicyDocument:
             Statement:
@@ -123,831 +589,989 @@ Resources:
                 - s3:GetObject
                 - s3:PutObject
               Effect: Allow
-              Resource: !Sub arn:aws:s3:::gu-mobile-access-tokens/${Stage}/google-play-developer-api/*
+              Resource:
+                Fn::Sub: arn:aws:s3:::gu-mobile-access-tokens/${Stage}/google-play-developer-api/*
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
               Effect: Allow
               Action:
-                - "dynamodb:GetItem"
-                - "dynamodb:BatchGetItem"
-                - "dynamodb:BatchWriteItem"
-                - "dynamodb:PutItem"
-                - "dynamodb:UpdateItem"
-                - "dynamodb:Query"
+                - dynamodb:GetItem
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:Query
               Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events-v2
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions-parallel-test
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
-
+                - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
+                - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
+                - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events-v2
+                - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions-parallel-test
+                - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
         - PolicyName: Sqs
           PolicyDocument:
             Statement:
               Effect: Allow
               Action: sqs:*
               Resource:
-                - !GetAtt GoogleSubscriptionsQueue.Arn
-                - !GetAtt AppleSubscriptionsQueue.Arn
-                - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-historical-subscriptions
-                - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-google-historical-subscriptions
+                - Fn::GetAtt: GoogleSubscriptionsQueue.Arn
+                - Fn::GetAtt: AppleSubscriptionsQueue.Arn
+                - Fn::Sub: arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-historical-subscriptions
+                - Fn::Sub: arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-google-historical-subscriptions
         - PolicyName: Kms
           PolicyDocument:
             Statement:
               Effect: Allow
-              Action: ["kms:GenerateDataKey", "kms:Decrypt"]
+              Action:
+                - kms:GenerateDataKey
+                - kms:Decrypt
               Resource:
-                - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0215d06c-81c4-4896-a5da-c818770ea8db
-
-  LogGroupValidateReceipts:
-    Type: "AWS::Logs::LogGroup"
-    Properties:
-      LogGroupName: !Sub /aws/lambda/${App}-iosvalidatereceipts-${Stage}
-      RetentionInDays: 7
-  LogGroupUserPurchases:
-    Type: "AWS::Logs::LogGroup"
-    Properties:
-      LogGroupName: !Sub /aws/lambda/${App}-iosuserpurchases-${Stage}
-      RetentionInDays: 7
-  MobilePuchasesApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: !Ref Stage
-      MethodSettings:
-        [
-          {
-            "MetricsEnabled": True,
-            "LoggingLevel": "OFF",
-            "ResourcePath": "/*",
-            "HttpMethod": "*",
-          },
-        ]
-      DefinitionBody:
-        swagger: "2.0"
-        info:
-          version: "1.0.0"
-          title: !Sub ${App}-${Stage}
-        paths:
-          "/google/pubsub":
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePubSubLambda.Arn}/invocations
-              consumes: [application/json]
-              produces: [application/json]
-              responses:
-                "200":
-                  "description": "200 response"
-          "/google/subscription/{subscriptionId}/status":
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GooglePlaySubStatusLambda.Arn}/invocations
-              consumes: [application/json]
-              produces: [application/json]
-              responses:
-                "200":
-                  "description": "200 response"
-          "/apple/subscription/status":
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleSubStatusLambda.Arn}/invocations
-              consumes: [application/json]
-              produces: [application/json]
-              responses:
-                "200":
-                  "description": "200 response"
-          "/apple/pubsub":
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApplePubSubLambda.Arn}/invocations
-              consumes: [application/json]
-              produces: [application/json]
-              responses:
-                "200":
-                  "description": "200 response"
-          "/apple/linkToSubscriptions":
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleLinkUserToSubLambda.Arn}/invocations
-              consumes: [application/json]
-              produces: [application/json]
-              responses:
-                "200":
-                  "description": "200 response"
-          "/google/linkToSubscriptions":
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GoogleLinkUserToSubLambda.Arn}/invocations
-              consumes: [application/json]
-              produces: [application/json]
-              responses:
-                "200":
-                  "description": "200 response"
-          "/user/subscriptions/me":
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSubscriptionsLambda.Arn}/invocations
-              consumes: [application/json]
-              produces: [application/json]
-              responses:
-                "200":
-                  "description": "200 response"
-          "/user/subscriptions/{userId}":
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSubscriptionsLambda.Arn}/invocations
-              consumes: [application/json]
-              produces: [application/json]
-              responses:
-                "200":
-                  "description": "200 response"
-          "/apple/fetchOfferDetails":
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppleFetchOfferDetailsLambda.Arn}/invocations
-              consumes: [application/json]
-              produces: [application/json]
-              responses:
-                "200":
-                  "description": "200 response (+)"
-          "/healthcheck":
-            get:
-              responses:
-                "200":
-                  description: "200 response"
-              x-amazon-apigateway-integration:
-                type: mock
-                requestTemplates:
-                  application/json: |
-                    {
-                      "statusCode" : 200
-                    }
-                httpMethod: GET
-                responses:
-                  default:
-                    statusCode: "200"
-
-  ApiDomainName:
-    Type: AWS::ApiGateway::DomainName
-    Properties:
-      CertificateArn: !Ref ApiCertArn
-      DomainName: !Sub ${App}.${HostedZoneName}
-
-  AppDomainName:
-    Type: AWS::ApiGateway::DomainName
-    Properties:
-      CertificateArn: !Ref AppCertArn
-      DomainName: !Ref AppDNS
-
-  ApiRoute53:
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      HostedZoneId: !Ref HostedZoneId
-      RecordSets:
-        - Name: !Ref ApiDomainName
-          Type: A
-          AliasTarget:
-            HostedZoneId: Z2FDTNDATAQYW2
-            DNSName: !GetAtt
-              - ApiDomainName
-              - DistributionDomainName
-
-  ApiMapping:
-    Type: AWS::ApiGateway::BasePathMapping
-    Properties:
-      DomainName: !Ref ApiDomainName
-      RestApiId: !Ref MobilePuchasesApi
-      Stage: !Ref Stage
-
-  AppMapping:
-    Type: AWS::ApiGateway::BasePathMapping
-    Properties:
-      DomainName: !Ref AppDomainName
-      RestApiId: !Ref MobilePuchasesApi
-      Stage: !Ref Stage
-
-  GoogleOAuthLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: com.gu.mobilepurchases.googleoauth.lambda.GoogleOAuth::handler
-      Runtime: java8
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-google-oauth/${App}-google-oauth.jar
-      FunctionName: !Sub ${App}-googleoauth-${Stage}
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
-      Environment:
-        Variables:
-          Stage: !Ref Stage
-          Stack: !Ref Stack
-          App: !Ref App
-      Description: Fetches access tokens for the Google Play Developer API
-      MemorySize: 512
-      Timeout: 45
-      Events:
-        Schedule:
-          Type: Schedule
-          Properties:
-            Schedule: rate(15 minutes)
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-
-  GooglePubSubLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: google-pubsub.handler
-      Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-google-pubsub/google-pubsub.zip
-      FunctionName: !Sub ${App}-googlepubsub-${Stage}
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
-      Environment:
-        Variables:
-          Stage: !Ref Stage
-          Stack: !Ref Stack
-          App: !Ref App
-          Secret: !Ref GooglePubSubSecret
-          QueueUrl: !Ref GoogleSubscriptionsQueue
-      Description: Records play store events
-      MemorySize: 128
-      Timeout: 29
-      Events:
-        PostApi:
-          Type: Api
-          Properties:
-            Path: "/google/pubsub"
-            Method: POST
-            RestApiId: !Ref MobilePuchasesApi
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-
-  ApplePubSubLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: apple-pubsub.handler
-      Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-apple-pubsub/apple-pubsub.zip
-      FunctionName: !Sub ${App}-applepubsub-${Stage}
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
-      Environment:
-        Variables:
-          Stage: !Ref Stage
-          Stack: !Ref Stack
-          App: !Ref App
-          Secret: !Ref ApplePubSubSecret
-          QueueUrl: !Ref AppleSubscriptionsQueue
-      Description: Records play store events
-      MemorySize: 128
-      Timeout: 29
-      Events:
-        PostApi:
-          Type: Api
-          Properties:
-            Path: "/apple/pubsub"
-            Method: POST
-            RestApiId: !Ref MobilePuchasesApi
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-
-  GoogleLinkUserToSubLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: google-link-user-subscription.handler
-      Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-google-link-user-subscription/google-link-user-subscription.zip
-      FunctionName: !Sub ${App}-google-link-user-subscription-${Stage}
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
-      Environment:
-        Variables:
-          Stage: !Ref Stage
-          Stack: !Ref Stack
-          App: !Ref App
-          QueueUrl: !Ref GoogleSubscriptionsQueue
-      Description: Links users to subscriptions
-      MemorySize: 128
-      Timeout: 29
-      Events:
-        PostApi:
-          Type: Api
-          Properties:
-            Path: "/google/linkToSubscriptions"
-            Method: POST
-            RestApiId: !Ref MobilePuchasesApi
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-
-  AppleLinkUserToSubLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: apple-link-user-subscription.handler
-      Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-apple-link-user-subscription/apple-link-user-subscription.zip
-      FunctionName: !Sub ${App}-apple-link-user-subscription-${Stage}
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
-      Environment:
-        Variables:
-          Stage: !Ref Stage
-          Stack: !Ref Stack
-          App: !Ref App
-          QueueUrl: !Ref AppleSubscriptionsQueue
-      Description: Links users to subscriptions
-      MemorySize: 128
-      Timeout: 29
-      Events:
-        PostApi:
-          Type: Api
-          Properties:
-            Path: "/apple/linkToSubscriptions"
-            Method: POST
-            RestApiId: !Ref MobilePuchasesApi
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-
-  GooglePlaySubStatusLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: google-subscription-status.handler
-      Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-google-subscription-status/google-subscription-status.zip
-      FunctionName: !Sub ${App}-google-subscription-status-${Stage}
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
-      Environment:
-        Variables:
-          Stage: !Ref Stage
-          Stack: !Ref Stack
-          App: !Ref App
-      Description: Checks the status of a Play Store subscription using the Google Play Developer API
-      MemorySize: 128
-      Timeout: 29
-      Events:
-        PostApi:
-          Type: Api
-          Properties:
-            Path: "/google/subscription/{subscriptionId}/status"
-            Method: GET
-            RestApiId: !Ref MobilePuchasesApi
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-
-  AppleSubStatusLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: apple-subscription-status.handler
-      Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-apple-subscription-status/apple-subscription-status.zip
-      FunctionName: !Sub ${App}-apple-subscription-status-${Stage}
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
-      Environment:
-        Variables:
-          Stage: !Ref Stage
-          Stack: !Ref Stack
-          App: !Ref App
-      Description: Checks the status of an Apple App store subscription using the apple API
-      MemorySize: 128
-      Timeout: 29
-      Events:
-        PostApi:
-          Type: Api
-          Properties:
-            Path: "/apple/subscription/status"
-            Method: POST
-            RestApiId: !Ref MobilePuchasesApi
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-
-  AppleFetchOfferDetailsLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: apple-fetch-offer-details.handler
-      Runtime: nodejs18.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-apple-fetch-offer-details/apple-fetch-offer-details.zip
-      FunctionName: !Sub ${App}-apple-fetch-offer-details-${Stage}
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
-      Environment:
-        Variables:
-          Stage: !Ref Stage
-          Stack: !Ref Stack
-          App: !Ref App
-      Description: apple fetch offer details lambda (+)
-      MemorySize: 128
-      Timeout: 29
-      Events:
-        PostApi:
-          Type: Api
-          Properties:
-            Path: "/apple/fetchOfferDetails"
-            Method: POST
-            RestApiId: !Ref MobilePuchasesApi
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-
-  GoogleSubscriptionsQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub ${App}-${Stage}-google-subscriptions-to-fetch
-      RedrivePolicy:
-        deadLetterTargetArn: !GetAtt GoogleSubscriptionsQueueDlq.Arn
-        maxReceiveCount: 8
-      KmsMasterKeyId: alias/aws/sqs
-      Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
-
-  GoogleSubscriptionsQueueDlq:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub ${App}-${Stage}-google-subscriptions-to-fetch-dlq
-      KmsMasterKeyId: alias/aws/sqs
-      Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
-
-  AppleSubscriptionsQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub ${App}-${Stage}-apple-subscriptions-to-fetch
-      RedrivePolicy:
-        deadLetterTargetArn: !GetAtt AppleSubscriptionsQueueDlq.Arn
-        maxReceiveCount: 8
-      KmsMasterKeyId: alias/aws/sqs
-      Tags:
-        - Key: Stage
-          Value: !Ref Stage
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: App
-          Value: !Ref App
-
+                - Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0215d06c-81c4-4896-a5da-c818770ea8db
   AppleSubscriptionsQueueDlq:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${App}-${Stage}-apple-subscriptions-to-fetch-dlq
+      QueueName:
+        Fn::Sub: "${App}-${Stage}-apple-subscriptions-to-fetch-dlq"
       KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: Stage
-          Value: !Ref Stage
+          Value:
+            Ref: Stage
         - Key: Stack
-          Value: !Ref Stack
+          Value:
+            Ref: Stack
         - Key: App
-          Value: !Ref App
-
-  GoogleTokenRefreshFailureAlarm:
-    Type: AWS::CloudWatch::Alarm
+          Value:
+            Ref: App
+  GoogleSubscriptionsQueue:
+    Type: AWS::SQS::Queue
     Properties:
-      ActionsEnabled:
-        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      QueueName:
+        Fn::Sub: "${App}-${Stage}-google-subscriptions-to-fetch"
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt: GoogleSubscriptionsQueueDlq.Arn
+        maxReceiveCount: 8
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  GoogleSubscriptionsQueueDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName:
+        Fn::Sub: "${App}-${Stage}-google-subscriptions-to-fetch-dlq"
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  ApiRoute53:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId:
+        Ref: HostedZoneId
+      RecordSets:
+        - Name:
+            Ref: ApiDomainName
+          Type: A
+          AliasTarget:
+            HostedZoneId: Z2FDTNDATAQYW2
+            DNSName:
+              Fn::GetAtt:
+                - ApiDomainName
+                - DistributionDomainName
+  acquisitionsLambdaExceptionsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProd
+    DependsOn:
+      - SoftOptInAcquisitionsLambda
+    Properties:
       AlarmActions:
-        - Ref: AlarmTopic
-      OKActions:
-        - Ref: AlarmTopic
-      AlarmName: !Sub mobile-purchases-${Stage}-google-oauth-token-refresh-failure
-      AlarmDescription: !Sub Trigger the GoogleOAuth lambda manually to refresh the token
+        - Fn::Sub: arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+      AlarmName:
+        Fn::Sub: "${App}-soft-opt-in-acquisitions-${Stage} threw an unhandled exception
+          and failed to set soft opt-ins for a user"
+      AlarmDescription: 'An error occurred in the SoftOptInAcquisitionsLambda and
+        failed to set soft opt-ins for a user
+
+        '
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
         - Name: FunctionName
-          Value: !Ref GoogleOAuthLambda
+          Value:
+            Ref: SoftOptInAcquisitionsLambda
       EvaluationPeriods: 1
       MetricName: Errors
       Namespace: AWS/Lambda
-      Period: 60
+      Period: 3600
       Statistic: Sum
       Threshold: 1
       TreatMissingData: notBreaching
-
-  GooglePlaySubsStatus5xxErrors:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled:
-        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
-      AlarmActions:
-        - Ref: AlarmTopic
-      OKActions:
-        - Ref: AlarmTopic
-      AlarmName: !Sub mobile-purchases-${Stage}-play-subscription-status-check-errors
-      AlarmDescription: |
-        More than 20% of attempts to check Play subscription status resulted in a 5XX error.
-        Runbook: https://docs.google.com/document/d/1OwNDf_xSK3hhq1K0DP_4Uq7vIBFgfvlkd4zfiRZDczw/edit#heading=h.cnuchxbdu0tl
-      Metrics:
-        - Id: e1
-          Label: Percentage of requests which result in a 5XX error
-          Expression: "100*(m1/m2)"
-        - Id: m1
-          Label: Number of 5XX responses
-          MetricStat:
-            Metric:
-              MetricName: 5XXError
-              Namespace: AWS/ApiGateway
-              Dimensions:
-                - Name: ApiName
-                  Value: !Sub ${App}-${Stage}
-                - Name: Method
-                  Value: GET
-                - Name: Resource
-                  Value: /google/subscription/{subscriptionId}/status
-                - Name: Stage
-                  Value: !Ref Stage
-            Period: 600
-            Stat: Sum
-          ReturnData: false
-        - Id: m2
-          Label: Total number of requests
-          MetricStat:
-            Metric:
-              MetricName: Count
-              Namespace: AWS/ApiGateway
-              Dimensions:
-                - Name: ApiName
-                  Value: !Sub ${App}-${Stage}
-                - Name: Method
-                  Value: GET
-                - Name: Resource
-                  Value: /google/subscription/{subscriptionId}/status
-                - Name: Stage
-                  Value: !Ref Stage
-            Period: 600
-            Stat: Sum
-          ReturnData: false
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Threshold: 20
-
-  UpdateGoogleSubscriptionsLambda:
+  AcquisitionsDLQProcessorLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub ${App}-google-update-subscriptions-${Stage}
       Code:
-        S3Bucket: !Ref DeployBucket
-        S3Key: !Sub ${Stack}/${Stage}/${App}-google-update-subscriptions/google-update-subscriptions.zip
-      Environment:
-        Variables:
-          App: !Sub ${App}
-          Stack: !Sub ${Stack}
-          Stage: !Sub ${Stage}
-          HistoricalQueueUrl: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-google-historical-subscriptions
-      Description: Consomes subscription data updates from google playstore from sqs and stores them in dynamo
-      Handler: google-update-subscriptions.handler
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-soft-opt-in-acquisitions-dlq-processor/soft-opt-in-acquisitions-dlq-processor.zip"
+      Description: Process DLQ messages
+      FunctionName:
+        Fn::Sub: "${App}-soft-opt-in-acquisitions-dlq-processor-${Stage}"
+      Handler: soft-opt-in-acquisitions-dlq-processor.handler
       MemorySize: 512
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
-      Timeout: 25
+      Role:
+        Fn::GetAtt:
+          - AcquisitionsDLQProcessorLambdaRole
+          - Arn
       Runtime: nodejs14.x
-
-  UpdateGoogleSubscriptionsEventSource:
-    Type: AWS::Lambda::EventSourceMapping
-    Properties:
-      FunctionName: !Ref UpdateGoogleSubscriptionsLambda
-      Enabled: true
-      EventSourceArn: !GetAtt GoogleSubscriptionsQueue.Arn
-      BatchSize: 1
-
-  AppleSubsStatus5xxErrors:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled:
-        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
-      AlarmActions:
-        - Ref: AlarmTopic
-      OKActions:
-        - Ref: AlarmTopic
-      AlarmName: !Sub mobile-purchases-${Stage}-apple-subscription-status-check-errors
-      AlarmDescription: |
-        More than 10% of attempts to check Apple subscription status resulted in a 5XX error.
-      Metrics:
-        - Id: e1
-          Label: Percentage of requests which result in a 5XX error
-          Expression: "100*(m1/m2)"
-        - Id: m1
-          Label: Number of 5XX responses
-          MetricStat:
-            Metric:
-              MetricName: 5XXError
-              Namespace: AWS/ApiGateway
-              Dimensions:
-                - Name: ApiName
-                  Value: !Sub ${App}-${Stage}
-                - Name: Method
-                  Value: POST
-                - Name: Resource
-                  Value: /apple/subscription/status
-                - Name: Stage
-                  Value: !Ref Stage
-            Period: 600
-            Stat: Sum
-          ReturnData: false
-        - Id: m2
-          Label: Total number of requests
-          MetricStat:
-            Metric:
-              MetricName: Count
-              Namespace: AWS/ApiGateway
-              Dimensions:
-                - Name: ApiName
-                  Value: !Sub ${App}-${Stage}
-                - Name: Method
-                  Value: POST
-                - Name: Resource
-                  Value: /apple/subscription/status
-                - Name: Stage
-                  Value: !Ref Stage
-            Period: 600
-            Stat: Sum
-          ReturnData: false
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Threshold: 10
-
-  ApplePubsub5xxErrors:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled:
-        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
-      AlarmActions:
-        - Ref: AlarmTopic
-      OKActions:
-        - Ref: AlarmTopic
-      AlarmName: !Sub mobile-purchases-${Stage}-apple-pubsub-check-errors
-      AlarmDescription: A HTTP request to the pubsub endpoint resulted in a 5XX error.
-      Dimensions:
-        - Name: ApiName
-          Value: !Sub ${App}-${Stage}
-        - Name: Method
-          Value: POST
-        - Name: Resource
-          Value: /apple/pubsub
-        - Name: Stage
-          Value: !Ref Stage
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      MetricName: 5XXError
-      Namespace: AWS/ApiGateway
-      Period: 300
-      Statistic: Sum
-      Threshold: 2
-      TreatMissingData: notBreaching
-
-  UserSubscriptionsLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: user-subscriptions.handler
-      Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-user-subscriptions/user-subscriptions.zip
-      FunctionName: !Sub ${App}-user-subscriptions-${Stage}
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Timeout: 60
       Environment:
         Variables:
-          Stage: !Ref Stage
-          Stack: !Ref Stack
-          App: !Ref App
-      Description: Retrieves subscription details for a given user
-      MemorySize: 128
-      Timeout: 29
-      Events:
-        DirectAccess:
-          Type: Api
-          Properties:
-            Path: "/user/subscriptions/me"
-            Method: GET
-            RestApiId: !Ref MobilePuchasesApi
-        InternalAccess:
-          Type: Api
-          Properties:
-            Path: "/user/subscriptions/{userId}"
-            Method: GET
-            RestApiId: !Ref MobilePuchasesApi
+          App:
+            Fn::Sub: "${App}"
+          Stack:
+            Fn::Sub: "${Stack}"
+          Stage:
+            Fn::Sub: "${Stage}"
+          DLQUrl:
+            Ref: AcquisitionsDeadLetterQueue
       Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
   UpdateAppleSubscriptionsLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub ${App}-apple-update-subscriptions-${Stage}
+      FunctionName:
+        Fn::Sub: "${App}-apple-update-subscriptions-${Stage}"
       Code:
-        S3Bucket: !Ref DeployBucket
-        S3Key: !Sub ${Stack}/${Stage}/${App}-apple-update-subscriptions/apple-update-subscriptions.zip
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-apple-update-subscriptions/apple-update-subscriptions.zip"
       Environment:
         Variables:
-          App: !Sub ${App}
-          Stack: !Sub ${Stack}
-          Stage: !Sub ${Stage}
-          HistoricalQueueUrl: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-apple-historical-subscriptions
-      Description: Consumes subscription data updates from app store from sqs and stores them in dynamo
+          App:
+            Fn::Sub: "${App}"
+          Stack:
+            Fn::Sub: "${Stack}"
+          Stage:
+            Fn::Sub: "${Stage}"
+          HistoricalQueueUrl:
+            Fn::Sub: https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-apple-historical-subscriptions
+      Description: Consumes subscription data updates from app store from sqs and
+        stores them in dynamo
       Handler: apple-update-subscriptions.handler
       MemorySize: 512
-      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
       Timeout: 25
       Runtime: nodejs14.x
-
+  GooglePubSubLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-google-pubsub/google-pubsub.zip"
+      Description: Records play store events
+      FunctionName:
+        Fn::Sub: "${App}-googlepubsub-${Stage}"
+      Handler: google-pubsub.handler
+      MemorySize: 128
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 29
+      Environment:
+        Variables:
+          Stage:
+            Ref: Stage
+          Stack:
+            Ref: Stack
+          App:
+            Ref: App
+          Secret:
+            Ref: GooglePubSubSecret
+          QueueUrl:
+            Ref: GoogleSubscriptionsQueue
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  ApiMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName:
+        Ref: ApiDomainName
+      RestApiId:
+        Ref: MobilePuchasesApi
+      Stage:
+        Ref: Stage
+  GoogleLinkUserToSubLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-google-link-user-subscription/google-link-user-subscription.zip"
+      Description: Links users to subscriptions
+      FunctionName:
+        Fn::Sub: "${App}-google-link-user-subscription-${Stage}"
+      Handler: google-link-user-subscription.handler
+      MemorySize: 128
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 29
+      Environment:
+        Variables:
+          Stage:
+            Ref: Stage
+          Stack:
+            Ref: Stack
+          App:
+            Ref: App
+          QueueUrl:
+            Ref: GoogleSubscriptionsQueue
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  GooglePlaySubStatusLambdaPostApiPermissionStage:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: GooglePlaySubStatusLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/GET/google/subscription/*/status
+          - __ApiId__:
+              Ref: MobilePuchasesApi
+            __Stage__: "*"
+  DeleteUserSubscriptionLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
+      Policies:
+        - PolicyName: DeleteUserSubscriptionLambdaRolePolicy0
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - cloudwatch:putMetricData
+                Resource: "*"
+        - PolicyName: DeleteUserSubscriptionLambdaRolePolicy1
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:DescribeStream
+                  - dynamodb:ListStreams
+                Resource:
+                  - Fn::ImportValue:
+                      Fn::Sub: "${App}-${Stage}-subscriptions-stream-arn"
+        - PolicyName: DeleteUserSubscriptionLambdaRolePolicy2
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:Query
+                  - dynamodb:DeleteItem
+                Resource:
+                  - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
+                  - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
+        - PolicyName: DeleteUserSubscriptionLambdaRolePolicy3
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource:
+                  Fn::Sub:
+                    - arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole
+                    - SoftOptInConsentSetterStage:
+                        Fn::FindInMap:
+                          - StageVariables
+                          - Ref: Stage
+                          - SoftOptInConsentSetterStage
+        - PolicyName: DeleteUserSubscriptionLambdaRolePolicy4
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource:
+                  Fn::Sub: arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole
+        - PolicyName: DeleteUserSubscriptionLambdaRolePolicy5
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParametersByPath
+                Resource:
+                  Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  GoogleOAuthLambdaSchedulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: GoogleOAuthLambda
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - GoogleOAuthLambdaSchedule
+          - Arn
+  AcquisitionsDLQProcessorLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: AcquisitionsDLQProcessorLambdaRolePolicy0
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource:
+                  Fn::Sub:
+                    - arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole
+                    - SoftOptInConsentSetterStage:
+                        Fn::FindInMap:
+                          - StageVariables
+                          - Ref: Stage
+                          - SoftOptInConsentSetterStage
+        - PolicyName: AcquisitionsDLQProcessorLambdaRolePolicy1
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource:
+                  Fn::Sub: arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole
+        - PolicyName: AcquisitionsDLQProcessorLambdaRolePolicy2
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                Resource:
+                  - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                  - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
+        - PolicyName: AcquisitionsDLQProcessorLambdaRolePolicy3
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParametersByPath
+                Resource:
+                  Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+        - PolicyName: AcquisitionsDLQProcessorLambdaRolePolicy4
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - cloudwatch:putMetricData
+                Resource: "*"
+        - PolicyName: AcquisitionsDLQProcessorLambdaRolePolicy5
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ReceiveMessage
+                Resource: "*"
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  AppleRevalidateReceiptsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-apple-revalidate-receipts/apple-revalidate-receipts.zip"
+      Description: Finds recently expired subscriptions
+      FunctionName:
+        Fn::Sub: "${App}-apple-revalidate-receipts-${Stage}"
+      Handler: apple-revalidate-receipts.handler
+      MemorySize: 2048
+      Role:
+        Fn::GetAtt: AppleRevalidateSubscriptionRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 180
+      Environment:
+        Variables:
+          App:
+            Fn::Sub: "${App}"
+          Stack:
+            Fn::Sub: "${Stack}"
+          Stage:
+            Fn::Sub: "${Stage}"
+          SqsUrl:
+            Ref: AppleSubscriptionsQueue
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  GooglePubSubLambdaPostApiPermissionStage:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: GooglePubSubLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/google/pubsub
+          - __ApiId__:
+              Ref: MobilePuchasesApi
+            __Stage__: "*"
+  ApplePubSubLambdaPostApiPermissionStage:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: ApplePubSubLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/apple/pubsub
+          - __ApiId__:
+              Ref: MobilePuchasesApi
+            __Stage__: "*"
+  SoftOptInAcquisitionsLambdaSchedule:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::ImportValue:
+          Fn::Sub: "${App}-${Stage}-user-subscriptions-stream-arn"
+      FunctionName:
+        Ref: SoftOptInAcquisitionsLambda
+      StartingPosition: LATEST
+  AppleLinkUserToSubLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-apple-link-user-subscription/apple-link-user-subscription.zip"
+      Description: Links users to subscriptions
+      FunctionName:
+        Fn::Sub: "${App}-apple-link-user-subscription-${Stage}"
+      Handler: apple-link-user-subscription.handler
+      MemorySize: 128
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 29
+      Environment:
+        Variables:
+          Stage:
+            Ref: Stage
+          Stack:
+            Ref: Stack
+          App:
+            Ref: App
+          QueueUrl:
+            Ref: AppleSubscriptionsQueue
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  MobilePuchasesApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId:
+        Ref: MobilePuchasesApiDeployment6f928b2600
+      RestApiId:
+        Ref: MobilePuchasesApi
+      StageName:
+        Ref: Stage
+      MethodSettings:
+        - HttpMethod: "*"
+          MetricsEnabled: true
+          ResourcePath: "/*"
+          LoggingLevel: 'OFF'
+  AppMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName:
+        Ref: AppDomainName
+      RestApiId:
+        Ref: MobilePuchasesApi
+      Stage:
+        Ref: Stage
+  UserSubscriptionsLambdaDirectAccessPermissionStage:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: UserSubscriptionsLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/GET/user/subscriptions/me
+          - __ApiId__:
+              Ref: MobilePuchasesApi
+            __Stage__: "*"
+  AcquisitionsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName:
+        Fn::Sub: "${App}-soft-opt-in-acquisitions-DLQ-${Stage}"
+  AppleSubStatusLambdaPostApiPermissionStage:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: AppleSubStatusLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/apple/subscription/status
+          - __ApiId__:
+              Ref: MobilePuchasesApi
+            __Stage__: "*"
+  GoogleLinkUserToSubLambdaPostApiPermissionStage:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: GoogleLinkUserToSubLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/google/linkToSubscriptions
+          - __ApiId__:
+              Ref: MobilePuchasesApi
+            __Stage__: "*"
+  SoftOptInAcquisitionsLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
+      Policies:
+        - PolicyName: SoftOptInAcquisitionsLambdaRolePolicy0
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource:
+                  Fn::Sub:
+                    - arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole
+                    - SoftOptInConsentSetterStage:
+                        Fn::FindInMap:
+                          - StageVariables
+                          - Ref: Stage
+                          - SoftOptInConsentSetterStage
+        - PolicyName: SoftOptInAcquisitionsLambdaRolePolicy1
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource:
+                  Fn::Sub: arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole
+        - PolicyName: SoftOptInAcquisitionsLambdaRolePolicy2
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                Resource:
+                  - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                  - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
+        - PolicyName: SoftOptInAcquisitionsLambdaRolePolicy3
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParametersByPath
+                Resource:
+                  Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+        - PolicyName: SoftOptInAcquisitionsLambdaRolePolicy4
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - cloudwatch:putMetricData
+                Resource: "*"
+        - PolicyName: SoftOptInAcquisitionsLambdaRolePolicy5
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:DescribeStream
+                  - dynamodb:ListStreams
+                Resource:
+                  - Fn::ImportValue:
+                      Fn::Sub: "${App}-${Stage}-user-subscriptions-stream-arn"
+        - PolicyName: SoftOptInAcquisitionsLambdaRolePolicy6
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ReceiveMessage
+                Resource: "*"
+        - PolicyName: SoftOptInAcquisitionsLambdaRolePolicy7
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource:
+                  Fn::GetAtt: AcquisitionsDeadLetterQueue.Arn
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  AppDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      CertificateArn:
+        Ref: AppCertArn
+      DomainName:
+        Ref: AppDNS
+  UserSubscriptionsLambdaInternalAccessPermissionStage:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: UserSubscriptionsLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/GET/user/subscriptions/*
+          - __ApiId__:
+              Ref: MobilePuchasesApi
+            __Stage__: "*"
+  AcquisitionsDLQProcessorLambdaScheduledRun:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Runs AcquisitionsDLQProcessorLambda
+      ScheduleExpression:
+        Fn::FindInMap:
+          - StageVariables
+          - Ref: Stage
+          - Schedule
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - AcquisitionsDLQProcessorLambda
+              - Arn
+          Id: AcquisitionsDLQProcessorLambdaScheduledRunLambdaTarget
+  DeleteUserSubscriptionLambdaSchedule:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::ImportValue:
+          Fn::Sub: "${App}-${Stage}-subscriptions-stream-arn"
+      FunctionName:
+        Ref: DeleteUserSubscriptionLambda
+      StartingPosition: LATEST
+  GoogleOAuthLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-google-oauth/${App}-google-oauth.jar"
+      Description: Fetches access tokens for the Google Play Developer API
+      FunctionName:
+        Fn::Sub: "${App}-googleoauth-${Stage}"
+      Handler: com.gu.mobilepurchases.googleoauth.lambda.GoogleOAuth::handler
+      MemorySize: 512
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
+      Runtime: java8
+      Timeout: 45
+      Environment:
+        Variables:
+          Stage:
+            Ref: Stage
+          Stack:
+            Ref: Stack
+          App:
+            Ref: App
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  LogGroupUserPurchases:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        Fn::Sub: "/aws/lambda/${App}-iosuserpurchases-${Stage}"
+      RetentionInDays: 7
+  AppleLinkUserToSubLambdaPostApiPermissionStage:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: AppleLinkUserToSubLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/apple/linkToSubscriptions
+          - __ApiId__:
+              Ref: MobilePuchasesApi
+            __Stage__: "*"
+  ApplePubSubLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-apple-pubsub/apple-pubsub.zip"
+      Description: Records play store events
+      FunctionName:
+        Fn::Sub: "${App}-applepubsub-${Stage}"
+      Handler: apple-pubsub.handler
+      MemorySize: 128
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 29
+      Environment:
+        Variables:
+          Stage:
+            Ref: Stage
+          Stack:
+            Ref: Stack
+          App:
+            Ref: App
+          Secret:
+            Ref: ApplePubSubSecret
+          QueueUrl:
+            Ref: AppleSubscriptionsQueue
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  GooglePlaySubStatusLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-google-subscription-status/google-subscription-status.zip"
+      Description: Checks the status of a Play Store subscription using the Google
+        Play Developer API
+      FunctionName:
+        Fn::Sub: "${App}-google-subscription-status-${Stage}"
+      Handler: google-subscription-status.handler
+      MemorySize: 128
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 29
+      Environment:
+        Variables:
+          Stage:
+            Ref: Stage
+          Stack:
+            Ref: Stack
+          App:
+            Ref: App
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  UpdateGoogleSubscriptionsEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName:
+        Ref: UpdateGoogleSubscriptionsLambda
+      Enabled: true
+      EventSourceArn:
+        Fn::GetAtt: GoogleSubscriptionsQueue.Arn
+      BatchSize: 1
+  MobilePuchasesApiDeployment6f928b2600:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: 'RestApi deployment id: 6f928b2600b3ba39ac48861fef8f2653a0f177fe'
+      RestApiId:
+        Ref: MobilePuchasesApi
+      StageName: Stage
   AppleSubscriptionsEventSource:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      FunctionName: !Ref UpdateAppleSubscriptionsLambda
+      FunctionName:
+        Ref: UpdateAppleSubscriptionsLambda
       Enabled: true
-      EventSourceArn: !GetAtt AppleSubscriptionsQueue.Arn
+      EventSourceArn:
+        Fn::GetAtt: AppleSubscriptionsQueue.Arn
       BatchSize: 1
-
-  AppleSubscriptionDlqDepthAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled:
-        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
-      AlarmDescription: "Ensure that the apple subscription dead letter queue is empty"
-      Namespace: "AWS/SQS"
-      MetricName: ApproximateNumberOfMessagesVisible
-      Dimensions:
-        - Name: QueueName
-          Value: !GetAtt "AppleSubscriptionsQueueDlq.QueueName"
-      Period: 60
-      Statistic: Sum
-      EvaluationPeriods: 1
-      ComparisonOperator: GreaterThanThreshold
-      Threshold: 0
-      AlarmActions:
-        - Ref: AlarmTopic
-      OKActions:
-        - Ref: AlarmTopic
-      TreatMissingData: notBreaching
-
-  GoogleSubscriptionDlqDepthAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      ActionsEnabled:
-        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
-      AlarmDescription: "Ensure that the google subscription dead letter queue is empty"
-      Namespace: "AWS/SQS"
-      MetricName: ApproximateNumberOfMessagesVisible
-      Dimensions:
-        - Name: QueueName
-          Value: !GetAtt "GoogleSubscriptionsQueueDlq.QueueName"
-      Period: 60
-      Statistic: Sum
-      EvaluationPeriods: 1
-      ComparisonOperator: GreaterThanThreshold
-      Threshold: 0
-      AlarmActions:
-        - Ref: AlarmTopic
-      OKActions:
-        - Ref: AlarmTopic
-      TreatMissingData: notBreaching
-
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -958,7 +1582,7 @@ Resources:
               Service:
                 - lambda.amazonaws.com
             Action: sts:AssumeRole
-      Path: /
+      Path: "/"
       Policies:
         - PolicyName: logs
           PolicyDocument:
@@ -975,286 +1599,176 @@ Resources:
             Statement:
               Effect: Allow
               Action:
-                - "dynamodb:Scan"
+                - dynamodb:Scan
               Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/index/ios-endTimestamp-revalidation-index
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/index/ios-endTimestamp-revalidation-index
+                - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
         - PolicyName: sqs
           PolicyDocument:
             Statement:
               Effect: Allow
               Action:
-                - "sqs:SendMessage"
+                - sqs:SendMessage
               Resource:
-                - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-subscriptions-to-fetch
-
-  DeleteUserSubscriptionLambda:
-    Type: AWS::Serverless::Function
+                - Fn::Sub: arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-subscriptions-to-fetch
+  AcquisitionsDLQProcessorLambdaScheduledRunPermission:
+    Type: AWS::Lambda::Permission
     Properties:
-      Handler: delete-user-subscription.handler
-      Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-delete-user-subscription/delete-user-subscription.zip
-      FunctionName: !Sub ${App}-delete-user-subscription-${Stage}
-      Environment:
-        Variables:
-          App: !Sub ${App}
-          Stack: !Sub ${Stack}
-          Stage: !Sub ${Stage}
-      Description: Delete the link to user IDs when the subscription has reached its end of life
-      MemorySize: 512
-      Timeout: 60
-      Events:
-        Schedule:
-          Type: DynamoDB
-          Properties:
-            Stream:
-              Fn::ImportValue:
-                !Sub ${App}-${Stage}-subscriptions-stream-arn
-            StartingPosition: LATEST
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - logs:CreateLogGroup
-                - logs:CreateLogStream
-                - logs:PutLogEvents
-                - cloudwatch:putMetricData
-              Resource: "*"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "dynamodb:GetRecords"
-                - "dynamodb:GetShardIterator"
-                - "dynamodb:DescribeStream"
-                - "dynamodb:ListStreams"
-              Resource:
-                - Fn::ImportValue:
-                    !Sub ${App}-${Stage}-subscriptions-stream-arn
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "dynamodb:Query"
-                - "dynamodb:DeleteItem"
-              Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
-        - Statement:
-            - Effect: Allow
-              Action:
-                - sts:AssumeRole
-              Resource:
-                !Sub
-                - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
-                - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
-        - Statement:
-            - Effect: Allow
-              Action:
-                - sts:AssumeRole
-              Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - ssm:GetParametersByPath
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
-
-  AppleRevalidateReceiptsLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: apple-revalidate-receipts.handler
-      Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-apple-revalidate-receipts/apple-revalidate-receipts.zip
-      FunctionName: !Sub ${App}-apple-revalidate-receipts-${Stage}
-      Role: !GetAtt AppleRevalidateSubscriptionRole.Arn
-      Environment:
-        Variables:
-          App: !Sub ${App}
-          Stack: !Sub ${Stack}
-          Stage: !Sub ${Stage}
-          SqsUrl: !Ref AppleSubscriptionsQueue
-      Description: Finds recently expired subscriptions
-      MemorySize: 2048
-      Timeout: 180
-      Events:
-        Schedule:
-          Type: Schedule
-          Properties:
-            Schedule: rate(6 hours)
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-
-  AcquisitionsDeadLetterQueue:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: AcquisitionsDLQProcessorLambda
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - AcquisitionsDLQProcessorLambdaScheduledRun
+          - Arn
+  AppleSubscriptionsQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${App}-soft-opt-in-acquisitions-DLQ-${Stage}
-
-  SoftOptInAcquisitionsLambda:
-    Type: AWS::Serverless::Function
+      QueueName:
+        Fn::Sub: "${App}-${Stage}-apple-subscriptions-to-fetch"
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt: AppleSubscriptionsQueueDlq.Arn
+        maxReceiveCount: 8
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  DeleteUserSubscriptionLambda:
+    Type: AWS::Lambda::Function
     Properties:
-      Handler: soft-opt-in-acquisitions.handler
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-delete-user-subscription/delete-user-subscription.zip"
+      Description: Delete the link to user IDs when the subscription has reached its
+        end of life
+      FunctionName:
+        Fn::Sub: "${App}-delete-user-subscription-${Stage}"
+      Handler: delete-user-subscription.handler
+      MemorySize: 512
+      Role:
+        Fn::GetAtt:
+          - DeleteUserSubscriptionLambdaRole
+          - Arn
       Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-soft-opt-in-acquisitions/soft-opt-in-acquisitions.zip
-      FunctionName: !Sub ${App}-soft-opt-in-acquisitions-${Stage}
+      Timeout: 60
       Environment:
         Variables:
-          App: !Sub ${App}
-          Stack: !Sub ${Stack}
-          Stage: !Sub ${Stage}
-          DLQUrl: !Ref AcquisitionsDeadLetterQueue
-      Description: asdf
-      MemorySize: 512
-      Timeout: 60
-      Events:
-        Schedule:
-          Type: DynamoDB
-          Properties:
-            Stream:
-              Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
-            StartingPosition: LATEST
+          App:
+            Fn::Sub: "${App}"
+          Stack:
+            Fn::Sub: "${Stack}"
+          Stage:
+            Fn::Sub: "${Stage}"
       Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - sts:AssumeRole
-              Resource:
-                !Sub
-                - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
-                - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
-        - Statement:
-            - Effect: Allow
-              Action:
-                - sts:AssumeRole
-              Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "dynamodb:Query"
-                - "dynamodb:GetItem"
-              Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
-        - Statement:
-            - Effect: Allow
-              Action:
-                - ssm:GetParametersByPath
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
-        - Statement:
-            - Effect: Allow
-              Action:
-                - logs:CreateLogGroup
-                - logs:CreateLogStream
-                - logs:PutLogEvents
-                - cloudwatch:putMetricData
-              Resource: "*"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "dynamodb:GetRecords"
-                - "dynamodb:GetShardIterator"
-                - "dynamodb:DescribeStream"
-                - "dynamodb:ListStreams"
-              Resource:
-                - Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
-        - Statement:
-            - Effect: Allow
-              Action:
-                - sqs:DeleteMessage
-                - sqs:GetQueueAttributes
-                - sqs:ReceiveMessage
-              Resource: "*"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - sqs:SendMessage
-              Resource: !GetAtt AcquisitionsDeadLetterQueue.Arn
-
-  AcquisitionsDLQProcessorLambda:
-    Type: AWS::Serverless::Function
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  LogGroupValidateReceipts:
+    Type: AWS::Logs::LogGroup
     Properties:
-      Handler: soft-opt-in-acquisitions-dlq-processor.handler
-      Runtime: nodejs14.x
-      CodeUri:
-        Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-soft-opt-in-acquisitions-dlq-processor/soft-opt-in-acquisitions-dlq-processor.zip
-      FunctionName: !Sub ${App}-soft-opt-in-acquisitions-dlq-processor-${Stage}
-      Environment:
-        Variables:
-          App: !Sub ${App}
-          Stack: !Sub ${Stack}
-          Stage: !Sub ${Stage}
-          DLQUrl: !Ref AcquisitionsDeadLetterQueue
-      Description: Process DLQ messages
-      MemorySize: 512
-      Timeout: 60
-      Tags:
-        Stage: !Ref Stage
-        Stack: !Ref Stack
-        App: !Ref App
-      Events:
-        ScheduledRun:
-          Type: Schedule
-          Properties:
-            Schedule: !FindInMap [ StageVariables, !Ref Stage, Schedule]
-            Description: Runs AcquisitionsDLQProcessorLambda
-            Enabled: True
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - sts:AssumeRole
-              Resource:
-                !Sub
-                - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
-                - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
-        - Statement:
-            - Effect: Allow
-              Action:
-                - sts:AssumeRole
-              Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "dynamodb:Query"
-                - "dynamodb:GetItem"
-              Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
-        - Statement:
-            - Effect: Allow
-              Action:
-                - ssm:GetParametersByPath
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
-        - Statement:
-            - Effect: Allow
-              Action:
-                - logs:CreateLogGroup
-                - logs:CreateLogStream
-                - logs:PutLogEvents
-                - cloudwatch:putMetricData
-              Resource: "*"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - sqs:DeleteMessage
-                - sqs:GetQueueAttributes
-                - sqs:ReceiveMessage
-              Resource: "*"
-
+      LogGroupName:
+        Fn::Sub: "/aws/lambda/${App}-iosvalidatereceipts-${Stage}"
+      RetentionInDays: 7
+  GooglePlaySubsStatus5xxErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled:
+        Fn::FindInMap:
+          - StageVariables
+          - Ref: Stage
+          - AlarmActionsEnabled
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      AlarmName:
+        Fn::Sub: mobile-purchases-${Stage}-play-subscription-status-check-errors
+      AlarmDescription: |
+        More than 20% of attempts to check Play subscription status resulted in a 5XX error.
+        Runbook: https://docs.google.com/document/d/1OwNDf_xSK3hhq1K0DP_4Uq7vIBFgfvlkd4zfiRZDczw/edit#heading=h.cnuchxbdu0tl
+      Metrics:
+        - Id: e1
+          Label: Percentage of requests which result in a 5XX error
+          Expression: 100*(m1/m2)
+        - Id: m1
+          Label: Number of 5XX responses
+          MetricStat:
+            Metric:
+              MetricName: 5XXError
+              Namespace: AWS/ApiGateway
+              Dimensions:
+                - Name: ApiName
+                  Value:
+                    Fn::Sub: "${App}-${Stage}"
+                - Name: Method
+                  Value: GET
+                - Name: Resource
+                  Value: "/google/subscription/{subscriptionId}/status"
+                - Name: Stage
+                  Value:
+                    Ref: Stage
+            Period: 600
+            Stat: Sum
+          ReturnData: false
+        - Id: m2
+          Label: Total number of requests
+          MetricStat:
+            Metric:
+              MetricName: Count
+              Namespace: AWS/ApiGateway
+              Dimensions:
+                - Name: ApiName
+                  Value:
+                    Fn::Sub: "${App}-${Stage}"
+                - Name: Method
+                  Value: GET
+                - Name: Resource
+                  Value: "/google/subscription/{subscriptionId}/status"
+                - Name: Stage
+                  Value:
+                    Ref: Stage
+            Period: 600
+            Stat: Sum
+          ReturnData: false
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Threshold: 20
+  ApiDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      CertificateArn:
+        Ref: ApiCertArn
+      DomainName:
+        Fn::Sub: "${App}.${HostedZoneName}"
+  AppleRevalidateReceiptsLambdaSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(6 hours)
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - AppleRevalidateReceiptsLambda
+              - Arn
+          Id: AppleRevalidateReceiptsLambdaScheduleLambdaTarget
   failedSettingCancellationSoftOptIns:
     Condition: IsProd
     Type: AWS::CloudWatch::Alarm
@@ -1262,14 +1776,19 @@ Resources:
       - DeleteUserSubscriptionLambda
     Properties:
       AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
-      AlarmName: !Sub ${App}-delete-user-subscription-${Stage} failed to set soft opt-ins for a user
-      AlarmDescription: >
-        An error occurred in the DeleteUserSubscriptionLambda and failed to set soft opt-ins for a user
+        - Fn::Sub: arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+      AlarmName:
+        Fn::Sub: "${App}-delete-user-subscription-${Stage} failed to set soft opt-ins
+          for a user"
+      AlarmDescription: 'An error occurred in the DeleteUserSubscriptionLambda and
+        failed to set soft opt-ins for a user
+
+        '
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
         - Name: Stage
-          Value: !Sub ${Stage}
+          Value:
+            Fn::Sub: "${Stage}"
       EvaluationPeriods: 1
       MetricName: failed_to_send_cancellation_message
       Namespace: AWS/Lambda
@@ -1277,49 +1796,114 @@ Resources:
       Statistic: Sum
       Threshold: 1
       TreatMissingData: notBreaching
-
-  acquisitionsLambdaExceptionsAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Condition: IsProd
-    DependsOn:
-      - SoftOptInAcquisitionsLambda
+  UserSubscriptionsLambda:
+    Type: AWS::Lambda::Function
     Properties:
-      AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
-      AlarmName: !Sub ${App}-soft-opt-in-acquisitions-${Stage} threw an unhandled exception and failed to set soft opt-ins for a user
-      AlarmDescription: >
-        An error occurred in the SoftOptInAcquisitionsLambda and failed to set soft opt-ins for a user
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref SoftOptInAcquisitionsLambda
-      EvaluationPeriods: 1
-      MetricName: Errors
-      Namespace: AWS/Lambda
-      Period: 3600
-      Statistic: Sum
-      Threshold: 1
-      TreatMissingData: notBreaching
-
-  acquisitionsDlqProcessorExceptionsAlarm:
+      Code:
+        S3Bucket:
+          Ref: DeployBucket
+        S3Key:
+          Fn::Sub: "${Stack}/${Stage}/${App}-user-subscriptions/user-subscriptions.zip"
+      Description: Retrieves subscription details for a given user
+      FunctionName:
+        Fn::Sub: "${App}-user-subscriptions-${Stage}"
+      Handler: user-subscriptions.handler
+      MemorySize: 128
+      Role:
+        Fn::GetAtt: MobilePurchasesLambdasRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 29
+      Environment:
+        Variables:
+          Stage:
+            Ref: Stage
+          Stack:
+            Ref: Stack
+          App:
+            Ref: App
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+        - Key: Stage
+          Value:
+            Ref: Stage
+        - Key: Stack
+          Value:
+            Ref: Stack
+        - Key: App
+          Value:
+            Ref: App
+  AppleSubsStatus5xxErrors:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsProd
-    DependsOn:
-      - AcquisitionsDLQProcessorLambda
     Properties:
+      ActionsEnabled:
+        Fn::FindInMap:
+          - StageVariables
+          - Ref: Stage
+          - AlarmActionsEnabled
       AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
-      AlarmName: !Sub ${App}-soft-opt-ins-acquisitions-dlq-processor-${Stage} threw an unhandled exception
-      AlarmDescription: >
-        An error occurred in the AcquisitionsDLQProcessorLambda
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      AlarmName:
+        Fn::Sub: mobile-purchases-${Stage}-apple-subscription-status-check-errors
+      AlarmDescription: 'More than 10% of attempts to check Apple subscription status
+        resulted in a 5XX error.
+
+        '
+      Metrics:
+        - Id: e1
+          Label: Percentage of requests which result in a 5XX error
+          Expression: 100*(m1/m2)
+        - Id: m1
+          Label: Number of 5XX responses
+          MetricStat:
+            Metric:
+              MetricName: 5XXError
+              Namespace: AWS/ApiGateway
+              Dimensions:
+                - Name: ApiName
+                  Value:
+                    Fn::Sub: "${App}-${Stage}"
+                - Name: Method
+                  Value: POST
+                - Name: Resource
+                  Value: "/apple/subscription/status"
+                - Name: Stage
+                  Value:
+                    Ref: Stage
+            Period: 600
+            Stat: Sum
+          ReturnData: false
+        - Id: m2
+          Label: Total number of requests
+          MetricStat:
+            Metric:
+              MetricName: Count
+              Namespace: AWS/ApiGateway
+              Dimensions:
+                - Name: ApiName
+                  Value:
+                    Fn::Sub: "${App}-${Stage}"
+                - Name: Method
+                  Value: POST
+                - Name: Resource
+                  Value: "/apple/subscription/status"
+                - Name: Stage
+                  Value:
+                    Ref: Stage
+            Period: 600
+            Stat: Sum
+          ReturnData: false
       ComparisonOperator: GreaterThanOrEqualToThreshold
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref AcquisitionsDLQProcessorLambda
       EvaluationPeriods: 1
-      MetricName: Errors
-      Namespace: AWS/Lambda
-      Period: 3600
-      Statistic: Sum
-      Threshold: 1
-      TreatMissingData: notBreaching
+      Threshold: 10
+Conditions:
+  IsCode:
+    Fn::Equals:
+      - Ref: Stage
+      - CODE
+  IsProd:
+    Fn::Equals:
+      - Ref: Stage
+      - PROD
