@@ -50,8 +50,8 @@ jobs:
           configPath: riff-raff.yaml
           contentDirectories: |
             mobile-purchases-cloudformation:
-              - cdk/cdk.out/MobilePurchasesFeast-CODE.template.json
-              - cdk/cdk.out/MobilePurchasesFeast-PROD.template.json
+              - cdk/cdk.out/MobilePurchases-CODE.template.json
+              - cdk/cdk.out/MobilePurchases-PROD.template.json
             mobile-purchases-dynamo-cloudformation:
               - dynamo.cloudformation.yaml
             mobile-purchases-exports-cloudformation:
