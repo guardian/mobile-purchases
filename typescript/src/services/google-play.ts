@@ -47,7 +47,9 @@ export interface GoogleResponseBody {
     expiryTimeMillis: string,
     userCancellationTimeMillis: string,
     autoRenewing: boolean,
-    paymentState: 0 | 1 | 2 | 3
+    paymentState: 0 | 1 | 2 | 3,
+    promotionType: number,
+    promotionCode: string
 }
 
 export async function fetchGoogleSubscription(subscriptionId: string, purchaseToken: string, packageName: string): Promise<GoogleResponseBody | null> {

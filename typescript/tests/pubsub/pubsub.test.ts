@@ -23,7 +23,7 @@ describe("The google pubsub", () => {
 
         const mockSqsFunction: Mock<Promise<any>, [string, {purchaseToken: string}]> = jest.fn((queurl, event) => Promise.resolve({}));
 
-        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
+        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true, promotionType: 1, promotionCode: "100"}));
 
         const receivedEvent = {
             "version":"1.0",
@@ -89,8 +89,8 @@ describe("The google pubsub", () => {
             },
             null,
             1582319167,
-            null,
-            null,
+            "100",
+            "VANITY_CODE",
             undefined,
             undefined,
             undefined

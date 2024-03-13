@@ -23,7 +23,9 @@ interface SubscriptionNotification {
 }
 
 interface MetaData {
-    freeTrial: boolean
+    freeTrial: boolean,
+    promotionType: number | null,
+    promotionCode: string | null
 }
 
 export function parsePayload(body: Option<string>): Error | DeveloperNotification {
@@ -62,8 +64,11 @@ async function fetchMetadata(notification: DeveloperNotification): Promise<MetaD
             notification.subscriptionNotification.purchaseToken,
             notification.packageName
         );
+
         return {
-            freeTrial : subscription?.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL
+            freeTrial : subscription?.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL,
+            promotionType : subscription?.promotionType ?? null,
+            promotionCode : subscription?.promotionCode ?? null
         }
     } catch (exception) {
         // here we really don't want to stop the processing of that event if we can't fetch metadata,
@@ -90,6 +95,16 @@ export function toDynamoEvent(notification: DeveloperNotification, metaData?: Me
         console.warn(`Unknown package name ${notification.packageName}`)
     }
 
+    // See: https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptions#SubscriptionPurchase
+    let promotionType
+    if (metaData?.promotionType === 0) {
+        promotionType = "ONE_TIME_CODE"
+    } else if (metaData?.promotionType === 1) {
+        promotionType = "VANITY_CODE"
+    } else {
+        promotionType = null
+    }
+
     return new SubscriptionEvent(
         notification.subscriptionNotification.purchaseToken,
         eventTimestamp + "|" + eventTypeString,
@@ -102,8 +117,8 @@ export function toDynamoEvent(notification: DeveloperNotification, metaData?: Me
         notification,
         null,
         dateToSecondTimestamp(thirtyMonths(eventTime)),
-        null,      // string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-        null,      // string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        metaData?.promotionCode ?? null, // `promotionCode` (only present when the `promotionType` is a "VANITY_CODE") is taken as the `promotional_offer_id`
+        promotionType ?? null, // `promotionType` is taken as the `promotional_offer_name` 
         undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
         undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
         undefined  // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
