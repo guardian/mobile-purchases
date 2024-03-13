@@ -96,3 +96,5 @@ jobs:
               - tsc-target/soft-opt-in-acquisitions.zip
             mobile-purchases-user-subscriptions:
               - tsc-target/user-subscriptions.zip
+            mobile-purchases-feast-apple-pubsub:
+              - tsc-target/feast-apple-pubsub.zip
