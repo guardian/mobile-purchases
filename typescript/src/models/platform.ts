@@ -5,5 +5,6 @@ export enum Platform {
     IosEdition = "ios-edition",
     AndroidEdition = "android-edition",
     IosPuzzles = "ios-puzzles",
-    AndroidPuzzles = "android-puzzles"
+    AndroidPuzzles = "android-puzzles",
+    IosFeast = "ios-feast",
 }
