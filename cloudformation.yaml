@@ -616,6 +616,7 @@ Resources:
           Stage: !Ref Stage
           Stack: !Ref Stack
           App: !Ref App
+          QueueUrl: !Ref FeastAppleSubscriptionsQueue
       Description: Records app store events for Feast app
       MemorySize: 128
       Timeout: 29
