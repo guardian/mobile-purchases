@@ -1,7 +1,7 @@
 import { StatusUpdateNotification } from "../../../src/pubsub/apple";
 import Mock = jest.Mock;
 import { APIGatewayProxyEvent } from "aws-lambda";
-import { processEvent } from "../../../src/feast/pubsub/pubsub";
+import { buildHandler } from "../../../src/feast/pubsub/pubsub";
 import { HTTPResponses } from "../../../src/models/apiGatewayHttp";
 
 describe("The Feast Apple pubsub", () => {
@@ -80,7 +80,9 @@ describe("The Feast Apple pubsub", () => {
 
         const expectedSubscriptionReferenceInSqs = {receipt: "TEST"};
 
-        return processEvent(mockSqsFunction)(input).then(result => {
+        const handler = buildHandler(mockSqsFunction)
+
+        return handler(input).then(result => {
             expect(result).toStrictEqual(HTTPResponses.OK);
             expect(mockSqsFunction.mock.calls.length).toEqual(1);
             expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(expectedSubscriptionReferenceInSqs);

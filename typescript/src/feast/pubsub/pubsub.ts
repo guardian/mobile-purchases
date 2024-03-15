@@ -9,10 +9,11 @@ import { HTTPResponses } from "../../models/apiGatewayHttp";
 
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
     console.log(`[34ef7aa3] ${JSON.stringify(request)}`)
-    return processEvent()(request)
+    const handler = buildHandler()
+    return handler(request)
 }
 
-export function processEvent(
+export function buildHandler(
     sendMessageToSqs: (queueUrl: string, message: AppleSubscriptionReference) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs
 ): (request: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult> { 
     return async (request: APIGatewayProxyEvent) => {
