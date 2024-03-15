@@ -10,12 +10,12 @@ templates:
       prefixStack: false
 
 deployments:
-  mobile-purchases-feast-cloudformation:
-    type: cloud-formation
-    parameters:
-      templateStagePaths:
-        CODE: MobilePurchasesFeast-CODE.template.json
-        PROD: MobilePurchasesFeast-PROD.template.json
+  # mobile-purchases-feast-cloudformation:
+  #   type: cloud-formation
+  #   parameters:
+  #     templateStagePaths:
+  #       CODE: MobilePurchasesFeast-CODE.template.json
+  #       PROD: MobilePurchasesFeast-PROD.template.json
 
   mobile-purchases-cloudformation:
     type: cloud-formation
