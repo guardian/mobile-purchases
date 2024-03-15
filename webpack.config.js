@@ -20,6 +20,7 @@ const getEntries = (env) => {
     "export-subscription-events-table": "./typescript/src/export/exportEvents.ts",
     "export-historical-data": "./typescript/src/export/exportHistoricalData.ts",
     "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
+    "feast-apple-pubsub": "./typescript/src/feast/pubsub/pubsub.ts"
   };
   return env.production ? entries : {
     ...entries,

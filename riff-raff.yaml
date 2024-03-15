@@ -32,6 +32,12 @@ deployments:
       prependStackToCloudFormationStackName: false
     dependencies: [mobile-purchases-cloudformation]
 
+  mobile-purchases-feast-apple-pubsub:
+    template: lambda
+    parameters:
+      functionNames: [mobile-purchases-feastapplepubsub-]
+      fileName: feast-apple-pubsub.zip
+
   mobile-purchases-google-pubsub:
     template: lambda
     parameters:
