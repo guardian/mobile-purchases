@@ -615,7 +615,7 @@ Resources:
           Stage: !Ref Stage
           Stack: !Ref Stack
           App: !Ref App
-      Description: Records play store events
+      Description: Records app store events for Feast app
       MemorySize: 128
       Timeout: 29
       Events:
