@@ -3,6 +3,7 @@ import Mock = jest.Mock;
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { buildHandler } from "../../../src/feast/pubsub/pubsub";
 import { HTTPResponses } from "../../../src/models/apiGatewayHttp";
+import { AppleSubscriptionReference } from "../../../src/models/subscriptionReference";
 
 const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
     const body: StatusUpdateNotification = {
@@ -73,11 +74,13 @@ const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
     };
 };
 
-describe("The Feast Apple pubsub", () => {
-    test("Should return HTTP 200 and publish the event to SQS", () => {
-        process.env['QueueUrl'] = "";
+beforeEach(() => {
+    process.env['QueueUrl'] = "";
+});
 
-        const mockSqsFunction: Mock<Promise<any>, [string, {receipt: string}]> = jest.fn((queueurl, event) => Promise.resolve({}));
+describe("The Feast Apple pubsub", () => {
+    it("Should return HTTP 200 and publish the event to SQS", () => {
+        const mockSqsFunction: Mock<Promise<any>, [string, AppleSubscriptionReference]> = jest.fn((queueurl, event) => Promise.resolve({}));
         const input = buildApiGatewayEvent();
         const expectedSubscriptionReferenceInSqs = {receipt: "TEST"};
 
