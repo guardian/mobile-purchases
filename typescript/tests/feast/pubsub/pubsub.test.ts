@@ -32,7 +32,7 @@ describe("The Feast Apple pubsub", () => {
                     is_trial_period: "true",
                     item_id: "TEST",
                     original_transaction_id: "TEST",
-                    product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+                    product_id: "some.product.id",
                     quantity: "1",
                     transaction_id: "TEST",
                     unique_identifier: "TEST",
