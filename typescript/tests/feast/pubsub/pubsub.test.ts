@@ -1,4 +1,4 @@
-import { StatusUpdateNotification } from "../../../src/pubsub/apple";
+import { StatusUpdateNotification } from "../../../src/pubsub/apple-common";
 import Mock = jest.Mock;
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { buildHandler } from "../../../src/feast/pubsub/pubsub";

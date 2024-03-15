@@ -1,5 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { parsePayload, toSqsSubReference } from "../../pubsub/apple";
+import { toSqsSubReference } from "../../pubsub/apple";
+import { parsePayload } from "../../pubsub/apple-common";
 import { AppleSubscriptionReference } from "../../models/subscriptionReference";
 import Sqs from 'aws-sdk/clients/sqs';
 import { sendToSqs } from "../../utils/aws";
