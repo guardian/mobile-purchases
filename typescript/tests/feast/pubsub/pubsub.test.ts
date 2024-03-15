@@ -80,7 +80,8 @@ describe("The Feast Apple pubsub", () => {
 
         const expectedSubscriptionReferenceInSqs = {receipt: "TEST"};
 
-        const handler = buildHandler(mockSqsFunction)
+        const noOpLogger = (request: APIGatewayProxyEvent): void => {};
+        const handler = buildHandler(mockSqsFunction, noOpLogger);
 
         return handler(input).then(result => {
             expect(result).toStrictEqual(HTTPResponses.OK);

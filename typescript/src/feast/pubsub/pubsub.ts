@@ -8,16 +8,15 @@ import { AWSError } from "aws-sdk";
 import { PromiseResult } from "aws-sdk/lib/request";
 import { HTTPResponses } from "../../models/apiGatewayHttp";
 
-export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
-    console.log(`[34ef7aa3] ${JSON.stringify(request)}`)
-    const handler = buildHandler()
-    return handler(request)
-}
+const defaultLogRequest = (request: APIGatewayProxyEvent): void =>
+    console.log(`[34ef7aa3] ${JSON.stringify(request)}`);
 
 export function buildHandler(
-    sendMessageToSqs: (queueUrl: string, message: AppleSubscriptionReference) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs
+    sendMessageToSqs: (queueUrl: string, message: AppleSubscriptionReference) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
+    logRequest: (request: APIGatewayProxyEvent) => void = defaultLogRequest
 ): (request: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult> { 
     return async (request: APIGatewayProxyEvent) => {
+        logRequest(request);
 
         const statusUpdateNotification =
             parsePayload(request.body)
@@ -41,3 +40,5 @@ export function buildHandler(
         }
     }
 }
+
+export const handler = buildHandler();
