@@ -1,4 +1,4 @@
-import { StatusUpdateNotification } from "../../../src/pubsub/apple-common";
+import { StatusUpdateNotification, parsePayload } from "../../../src/pubsub/apple-common";
 import Mock = jest.Mock;
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { buildHandler } from "../../../src/feast/pubsub/pubsub";
@@ -85,12 +85,27 @@ describe("The Feast Apple pubsub", () => {
         const expectedSubscriptionReferenceInSqs = {receipt: "TEST"};
 
         const noOpLogger = (request: APIGatewayProxyEvent): void => {};
-        const handler = buildHandler(mockSqsFunction, noOpLogger);
+        const noOpStoreEventInDynamo = (event: StatusUpdateNotification): Promise<void> => Promise.resolve();
+        const handler = buildHandler(mockSqsFunction, noOpStoreEventInDynamo, noOpLogger);
 
         return handler(input).then(result => {
             expect(result).toStrictEqual(HTTPResponses.OK);
             expect(mockSqsFunction.mock.calls.length).toEqual(1);
             expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(expectedSubscriptionReferenceInSqs);
         });
+    });
+
+    it("invokes the method to add the event to the Dynamo table", async () => {
+        const input = buildApiGatewayEvent();
+        const sendMessageToSqs: Mock<Promise<any>, [string, AppleSubscriptionReference]> = jest.fn((queueurl, event) => Promise.resolve({}));
+        const noOpLogger = (request: APIGatewayProxyEvent): void => {};
+        const storeEventInDynamoMock = jest.fn(() => Promise.resolve());
+        const handler = buildHandler(sendMessageToSqs, storeEventInDynamoMock, noOpLogger);
+
+        const result = await handler(input);
+
+        expect(result).toStrictEqual(HTTPResponses.OK);
+        expect(storeEventInDynamoMock).toHaveBeenCalledTimes(1);
+        expect(storeEventInDynamoMock).toHaveBeenCalledWith(parsePayload(input.body));
     });
 });
