@@ -79,7 +79,7 @@ beforeEach(() => {
 });
 
 describe("The Feast Apple pubsub", () => {
-    it("Should return HTTP 200 and publish the event to SQS", () => {
+    it("Should return HTTP 200 and publish the event to SQS", async () => {
         const mockSqsFunction: Mock<Promise<any>, [string, AppleSubscriptionReference]> = jest.fn((queueurl, event) => Promise.resolve({}));
         const input = buildApiGatewayEvent();
         const expectedSubscriptionReferenceInSqs = {receipt: "TEST"};
@@ -88,11 +88,11 @@ describe("The Feast Apple pubsub", () => {
         const noOpStoreEventInDynamo = (event: StatusUpdateNotification): Promise<void> => Promise.resolve();
         const handler = buildHandler(mockSqsFunction, noOpStoreEventInDynamo, noOpLogger);
 
-        return handler(input).then(result => {
-            expect(result).toStrictEqual(HTTPResponses.OK);
-            expect(mockSqsFunction.mock.calls.length).toEqual(1);
-            expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(expectedSubscriptionReferenceInSqs);
-        });
+        const result = await handler(input);
+
+        expect(result).toStrictEqual(HTTPResponses.OK);
+        expect(mockSqsFunction.mock.calls.length).toEqual(1);
+        expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(expectedSubscriptionReferenceInSqs);
     });
 
     it("invokes the method to add the event to the Dynamo table", async () => {
