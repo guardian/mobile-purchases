@@ -12,9 +12,9 @@ const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
         web_order_line_item_id: "TEST",
         auto_renew_adam_id: "TEST",
         expiration_intent: "TEST",
-        auto_renew_product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+        auto_renew_product_id: "uk.co.guardian.Feast.yearly",
         auto_renew_status: "true",
-        bid: "uk.co.guardian.iphone2",
+        bid: "uk.co.guardian.Feast",
         bvrs: "TEST",
         environment: "Sandbox",
         notification_type: "INITIAL_BUY",
@@ -42,10 +42,10 @@ const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
             }],
             pending_renewal_info: [
                 {
-                    auto_renew_product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+                    auto_renew_product_id: "uk.co.guardian.Feast.yearly",
                     auto_renew_status: "1",
                     original_transaction_id: "TEST",
-                    product_id: "uk.co.guardian.gla.12months.2018Dec.withFreeTrial",
+                    product_id: "uk.co.guardian.Feast.yearly",
                     price_consent_status: '',
                     price_increase_status: '',
                 }
