@@ -87,10 +87,10 @@ describe('parsePayload', () => {
 
         const result = parsePayload(JSON.stringify(payload));
 
-        expect(result).not.toBeInstanceOf(Error);
-        // I wish the above assertion would narrow the type, but sadly it doesn't!
         if (!(result instanceof Error)) {
             expect(result.unified_receipt.latest_receipt_info[0].app_account_token).toBe(app_account_token);
+        } else {
+            fail("Expected result to not be an error");
         }
     })
 })
