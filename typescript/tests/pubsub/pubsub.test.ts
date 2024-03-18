@@ -5,10 +5,13 @@ import {
     toSqsSubReference as toGoogleSqsEvent
 } from "../../src/pubsub/google";
 import {
-    parsePayload as parseApplePayload, StatusUpdateNotification,
     toDynamoEvent as applePayloadToDynamo,
     toSqsSubReference as toAppleSqsEvent
 } from "../../src/pubsub/apple";
+import {
+    StatusUpdateNotification,
+    parsePayload as parseApplePayload
+} from "../../src/pubsub/apple-common";
 import {HTTPResponses} from "../../src/models/apiGatewayHttp";
 import {SubscriptionEvent} from "../../src/models/subscriptionEvent";
 import Mock = jest.Mock;
