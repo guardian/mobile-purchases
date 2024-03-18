@@ -6,7 +6,7 @@ templates:
     type: aws-lambda
     dependencies: [mobile-purchases-cloudformation, mobile-purchases-exports-cloudformation]
     parameters:
-      bucket: mobile-dist
+      bucketSsmLookup: true
       prefixStack: false
 
 deployments:
