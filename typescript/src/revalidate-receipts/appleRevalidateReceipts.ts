@@ -87,5 +87,5 @@ export async function handler(event: ScheduleEvent) {
             console.warn(`No receipt found for ${subscription.subscriptionId}`);
         }
     }
-    console.log(`Sent ${sentCount} subscriptions to be re-validated.`)
+    console.log(`Sent ${sentCount} non-Feast subscriptions to be re-validated.`)
 }
