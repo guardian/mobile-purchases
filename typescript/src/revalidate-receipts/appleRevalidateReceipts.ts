@@ -59,7 +59,7 @@ export async function handler(event: ScheduleEvent) {
     const queryScan = dynamoMapper.scan(
         EndTimeStampFilterSubscription,
         {
-            indexName: 'ios-endTimestamp-revalidation-index-with-platform',
+            indexName: 'ios-endTimestamp-revalidation-index',
             filter: filter
         });
 
