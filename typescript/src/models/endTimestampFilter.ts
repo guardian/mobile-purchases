@@ -17,20 +17,20 @@ export class Subscription {
     autoRenewing: Boolean;
 
     @attribute()
-    productId: string;
+    platform: string;
 
     constructor(
         subscriptionId: string,
         endTimestamp: string,
         autoRenewStatus: Boolean,
-        productId: string,
+        platform: string,
         receipt?: string,
     ) {
         this.subscriptionId = subscriptionId;
         this.endTimestamp = endTimestamp;
         this.receipt = receipt;
         this.autoRenewing = autoRenewStatus;
-        this.productId = productId;
+        this.platform = platform;
 
     }
 
