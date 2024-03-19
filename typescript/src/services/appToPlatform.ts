@@ -3,7 +3,8 @@ import {Platform} from "../models/platform";
 const bundleToPlatform: {[bundle: string]: Platform} = {
     "uk.co.guardian.iphone2": Platform.Ios,
     "uk.co.guardian.gce": Platform.IosEdition,
-    "uk.co.guardian.puzzles": Platform.IosPuzzles
+    "uk.co.guardian.puzzles": Platform.IosPuzzles,
+    "uk.co.guardian.Feast": Platform.IosFeast
 };
 
 export function fromAppleBundle(bundle?: string): Platform | undefined {

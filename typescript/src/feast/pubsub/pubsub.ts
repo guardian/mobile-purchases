@@ -1,23 +1,28 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { toSqsSubReference } from "../../pubsub/apple";
-import { parsePayload } from "../../pubsub/apple-common";
+import { toDynamoEvent, toSqsSubReference } from "../../pubsub/apple";
+import { StatusUpdateNotification, parsePayload } from "../../pubsub/apple-common";
 import { AppleSubscriptionReference } from "../../models/subscriptionReference";
 import Sqs from 'aws-sdk/clients/sqs';
-import { sendToSqs } from "../../utils/aws";
+import { dynamoMapper, sendToSqs } from "../../utils/aws";
 import { AWSError } from "aws-sdk";
 import { PromiseResult } from "aws-sdk/lib/request";
 import { HTTPResponses } from "../../models/apiGatewayHttp";
 
-export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
-    console.log(`[34ef7aa3] ${JSON.stringify(request)}`)
-    const handler = buildHandler()
-    return handler(request)
+const defaultLogRequest = (request: APIGatewayProxyEvent): void =>
+    console.log(`[34ef7aa3] ${JSON.stringify(request)}`);
+
+const defaultStoreEventInDynamo = (event: StatusUpdateNotification): Promise<void> => {
+    const item = toDynamoEvent(event);
+    return dynamoMapper.put({ item }).then(_ => undefined);
 }
 
 export function buildHandler(
-    sendMessageToSqs: (queueUrl: string, message: AppleSubscriptionReference) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs
+    sendMessageToSqs: (queueUrl: string, message: AppleSubscriptionReference) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
+    storeEventInDynamo: (event: StatusUpdateNotification) => Promise<void> = defaultStoreEventInDynamo,
+    logRequest: (request: APIGatewayProxyEvent) => void = defaultLogRequest
 ): (request: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult> { 
     return async (request: APIGatewayProxyEvent) => {
+        logRequest(request);
 
         const statusUpdateNotification =
             parsePayload(request.body)
@@ -32,7 +37,10 @@ export function buildHandler(
             const queueUrl = process.env.QueueUrl;
             if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
 
-            await sendMessageToSqs(queueUrl, appleSubscriptionReference)
+            await Promise.all([
+                sendMessageToSqs(queueUrl, appleSubscriptionReference),
+                storeEventInDynamo(statusUpdateNotification),
+            ])
 
             return HTTPResponses.OK
         } catch (e) {
@@ -41,3 +49,5 @@ export function buildHandler(
         }
     }
 }
+
+export const handler = buildHandler();
