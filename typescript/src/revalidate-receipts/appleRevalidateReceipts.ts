@@ -7,6 +7,7 @@ import {
     equals, greaterThan, lessThan,
 } from '@aws/dynamodb-expressions';
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
+import { Platform } from "../models/platform";
 
 function endTimestampForQuery(event: ScheduleEvent): Date {
     if (event.endTimestampFilter) {
@@ -52,6 +53,13 @@ export async function handler(event: ScheduleEvent) {
             {
                 ...greaterThan(startTimestamp),
                 subject: 'endTimestamp'
+            },
+            {
+                type: 'Not',
+                condition: {
+                    ...equals(Platform.IosFeast),
+                    subject: 'platform',
+                }
             }
         ]
     };
