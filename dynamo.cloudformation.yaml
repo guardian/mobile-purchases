@@ -93,6 +93,7 @@ Resources:
           Projection:
             NonKeyAttributes:
               - autoRenewing
+              - platform
               - receipt
             ProjectionType: INCLUDE
       Tags:
