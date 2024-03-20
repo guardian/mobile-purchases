@@ -95,6 +95,18 @@ Resources:
               - autoRenewing
               - receipt
             ProjectionType: INCLUDE
+        - IndexName: ios-endTimestamp-revalidation-index-with-platform
+          KeySchema:
+            - AttributeName: subscriptionId
+              KeyType: HASH
+            - AttributeName: endTimestamp
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - autoRenewing
+              - platform
+              - receipt
+            ProjectionType: INCLUDE
       Tags:
         - Key: Stage
           Value: !Ref Stage
