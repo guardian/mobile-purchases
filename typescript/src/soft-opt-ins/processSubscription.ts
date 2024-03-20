@@ -72,6 +72,8 @@ async function sendSoftOptIns(identityId: string, subscriptionId: string, platfo
         subscriptionId: subscriptionId
     };
 
+    console.log("Attempting to send soft opt-in message to queue", message);
+
     await sendToSqsSoftOptIns(
         Stage === "PROD"
             ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
