@@ -16,11 +16,21 @@ export class Subscription {
     @attribute()
     autoRenewing: Boolean;
 
-    constructor(subscriptionId: string, endTimestamp: string, autoRenewStatus: Boolean, receipt?: string) {
+    @attribute()
+    platform: string;
+
+    constructor(
+        subscriptionId: string,
+        endTimestamp: string,
+        autoRenewStatus: Boolean,
+        platform: string,
+        receipt?: string,
+    ) {
         this.subscriptionId = subscriptionId;
         this.endTimestamp = endTimestamp;
         this.receipt = receipt;
-        this.autoRenewing = autoRenewStatus
+        this.autoRenewing = autoRenewStatus;
+        this.platform = platform;
 
     }
 
@@ -33,8 +43,7 @@ export class Subscription {
 export class EndTimeStampFilterSubscription extends Subscription {
 
     constructor() {
-        super("", "" , false);
+        super("", "" , false, "");
     }
 
 }
-
