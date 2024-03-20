@@ -1,10 +1,11 @@
-import {dynamoMapper, sendToSqs, sendToSqsComms, sendToSqsSoftOptIns, SoftOptInEvent} from "../utils/aws";
+import {dynamoMapper, sendToSqs, sendToSqsComms, sendToSqsSoftOptIns, SoftOptInEvent, SoftOptInEventProductName} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import {getIdentityApiKey, getIdentityUrl, getMembershipAccountId} from "../utils/guIdentityApi";
 import {plusDays} from "../utils/dates";
+import { Platform } from "../models/platform";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -52,11 +53,22 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
     }
 }
 
-async function sendSoftOptIns(identityId: string, subscriptionId: string, queueNamePrefix: string) {
+const mapPlatformToSoftOptInProductName = (platform: string | undefined): SoftOptInEventProductName => {
+    switch (platform) {
+        case Platform.IosFeast:
+            return "FeastInAppPurchase";
+        default:
+            return "InAppPurchase";
+    }
+};
+
+async function sendSoftOptIns(identityId: string, subscriptionId: string, platform: string | undefined, queueNamePrefix: string) {
+    const productName = mapPlatformToSoftOptInProductName(platform);
+
     const message: SoftOptInEvent = {
         identityId: identityId,
         eventType: "Acquisition",
-        productName: "InAppPurchase",
+        productName,
         subscriptionId: subscriptionId
     };
 
@@ -90,7 +102,7 @@ export async function processAcquisition(subscriptionRecord: ReadSubscription, i
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
     try {
-        await sendSoftOptIns(identityId, subscriptionId, queueNamePrefix);
+        await sendSoftOptIns(identityId, subscriptionId, subscriptionRecord.platform, queueNamePrefix);
     } catch (e) {
         handleError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
     }
