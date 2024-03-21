@@ -84,17 +84,6 @@ Resources:
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
       GlobalSecondaryIndexes:
-        - IndexName: ios-endTimestamp-revalidation-index
-          KeySchema:
-            - AttributeName: subscriptionId
-              KeyType: HASH
-            - AttributeName: endTimestamp
-              KeyType: RANGE
-          Projection:
-            NonKeyAttributes:
-              - autoRenewing
-              - receipt
-            ProjectionType: INCLUDE
         - IndexName: ios-endTimestamp-revalidation-index-with-platform
           KeySchema:
             - AttributeName: subscriptionId

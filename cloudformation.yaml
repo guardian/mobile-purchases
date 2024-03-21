@@ -1105,7 +1105,6 @@ Resources:
               Action:
                 - "dynamodb:Scan"
               Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/index/ios-endTimestamp-revalidation-index
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/index/ios-endTimestamp-revalidation-index-with-platform
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
         - PolicyName: sqs
