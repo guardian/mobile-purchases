@@ -15,14 +15,14 @@ describe("The Feast (Apple) subscription updater", () => {
         const result =
             await handler(event)
 
+        // The receipts `"TEST_RECEIPT_1"` & `"TEST_RECEIPT_2"` together reference the subscriptions with IDs
+        // `"sub-1"`, `"sub-2"` & `"sub-3"`. Importantly, `"sub-4"` is referenced by the receipt `"TEST_RECEIPT_3"`,
+        // which is not present in the event payload and therefore not looked up and persisted to the Dynamo table.
         expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(3)
 
         const storedSubscriptionIds =
             mockStoreSubscriptionInDynamo.mock.calls.map(call => call[0].subscriptionId)
 
-        // The receipts `"TEST_RECEIPT_1"` & `"TEST_RECEIPT_2"` together reference the subscriptions with IDs
-        // `"sub-1"`, `"sub-2"` & `"sub-3"`. Importantly, `"sub-4"` is referenced by the receipt `"TEST_RECEIPT_3"`,
-        // which is not present in the event payload and therefore not looked up and persisted to the Dynamo table.
         expect(storedSubscriptionIds).toEqual(["sub-1", "sub-2", "sub-3"])
     });
 });

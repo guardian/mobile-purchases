@@ -80,14 +80,14 @@ const receiptEndpoint = (Stage === "PROD") ? prodReceiptEndpoint : sandboxReceip
 
 function passwordForApp(app: App): Promise<string> {
     switch (app) {
-        case App.Live:
-            return getConfigValue<string>("apple.password")
         case App.Feast:
             return getConfigValue<string>("feast.apple.password")
+        default:
+            return getConfigValue<string>("apple.password")
     }
 }
 
-function callValidateReceipt(receipt: string, forceSandbox: boolean = false, app: App = App.Live): Promise<IHttpClientResponse> {
+function callValidateReceipt(receipt: string, app: App = App.Live, forceSandbox: boolean = false): Promise<IHttpClientResponse> {
     const endpoint = forceSandbox ? sandboxReceiptEndpoint : receiptEndpoint;
     return passwordForApp(app)
         .then(password => {
@@ -226,7 +226,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
 async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerResponse, receipt: string, options: ValidationOptions): Promise<AppleValidationServerResponse> {
     if (parsedResponse.status === 21007 && options.sandboxRetry) {
         console.log("Got status code 21007, retrying in Sandbox");
-        return callValidateReceipt(receipt, true)
+        return callValidateReceipt(receipt, App.Live, true)
             .then(response => response.readBody())
             .then(body => JSON.parse(body))
             .then(body => body as AppleValidationServerResponse);
@@ -236,7 +236,7 @@ async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerRe
 }
 
 export function validateReceipt(receipt: string, options: ValidationOptions, app: App = App.Live): Promise<AppleValidationResponse[]> {
-    return callValidateReceipt(receipt, false, app)
+    return callValidateReceipt(receipt, app)
         .then(response => response.readBody())
         .then(body => JSON.parse(body))
         .then(body => body as AppleValidationServerResponse)
