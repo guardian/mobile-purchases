@@ -81,6 +81,19 @@ async function sendSoftOptIns(identityId: string, subscriptionId: string, platfo
     console.log(`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`)
 }
 
+const buildBrazeEmailMessage = (emailAddress: string, identityId: string) => {
+    const brazeMessage = {
+        To: {
+            Address: emailAddress,
+            ContactAttributes: {SubscriberAttributes: {}}
+        },
+        DataExtensionName: "SV_PA_SOINotification",
+        IdentityUserId: identityId
+    };
+
+    return brazeMessage;
+};
+
 // returns true if message successfully processed
 export async function processAcquisition(subscriptionRecord: ReadSubscription, identityId: string): Promise<boolean> {
     const subscriptionId = subscriptionRecord.subscriptionId;
@@ -111,14 +124,7 @@ export async function processAcquisition(subscriptionRecord: ReadSubscription, i
         const identityApiKey = await getIdentityApiKey();
 
         const emailAddress = await getUserEmailAddress(identityId, identityApiKey);
-        const brazeMessage = {
-            To: {
-                Address: emailAddress,
-                ContactAttributes: {SubscriberAttributes: {}}
-            },
-            DataExtensionName: "SV_PA_SOINotification",
-            IdentityUserId: identityId
-        };
+        const brazeMessage = buildBrazeEmailMessage(emailAddress, identityId);
 
         try {
             await sendToSqsComms(`${queueNamePrefix}/braze-emails-${Stage}`, brazeMessage);
