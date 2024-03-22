@@ -3,8 +3,7 @@ import { SQSEvent } from "aws-lambda";
 import { buildHandler, withAppAccountToken } from "../../../src/feast/update-subs/updatesubs";
 import { Subscription } from "../../../src/models/subscription";
 import { AppleSubscriptionReference } from "../../../src/models/subscriptionReference";
-import { validateReceipt } from "../../../src/services/appleValidateReceipts";
-import { App } from "../../../src/models/app";
+import { UserSubscription } from "../../../src/models/userSubscription";
 
 describe("The Feast (Apple) subscription updater", () => {
     it("Should fetch the subscription(s) associated with the reference from Apple and persist them to Dynamo", async () => {
@@ -12,7 +11,12 @@ describe("The Feast (Apple) subscription updater", () => {
             buildSqsEvent(["TEST_RECEIPT_1", "TEST_RECEIPT_2"])
 
         const handler =
-            buildHandler(stubFetchSubscriptionsFromApple, mockStoreSubscriptionInDynamo)
+            buildHandler(
+                stubFetchSubscriptionsFromApple,
+                mockStoreSubscriptionInDynamo,
+                stubExchangeExternalIdForIdentityId,
+                mockStoreUserSubscriptionInDynamo
+            )
 
         const result =
             await handler(event)
@@ -27,6 +31,46 @@ describe("The Feast (Apple) subscription updater", () => {
 
         expect(storedSubscriptionIds).toEqual(["sub-1", "sub-2", "sub-3"])
     });
+
+    it("Should lookup the identity ID associated with the subscription and persist the relationship to Dynamo", async () => {
+        const event =
+            buildSqsEvent(["TEST_RECEIPT_1", "TEST_RECEIPT_2"])
+
+        const handler =
+            buildHandler(
+                stubFetchSubscriptionsFromApple,
+                mockStoreSubscriptionInDynamo,
+                stubExchangeExternalIdForIdentityId,
+                mockStoreUserSubscriptionInDynamo
+            )
+        
+        const result =
+            await handler(event)
+        
+        expect(mockStoreUserSubscriptionInDynamo.mock.calls.length).toEqual(3)
+
+        const storedUserSubscriptions =
+            mockStoreUserSubscriptionInDynamo.mock.calls.map(call => {
+                return {
+                    userId: call[0].userId,
+                    subscriptionId: call[0].subscriptionId
+                }
+            })
+        
+        const expectedUserSubscriptions =
+            [
+                { subscriptionId: "sub-1", userId: "identity-id-1" },
+                { subscriptionId: "sub-2", userId: "identity-id-2" },
+                { subscriptionId: "sub-3", userId: "identity-id-2" },
+            ]
+        
+        expect(storedUserSubscriptions).toEqual(expectedUserSubscriptions)
+    });
+});
+
+beforeEach(() => {
+    mockStoreSubscriptionInDynamo.mockClear()
+    mockStoreUserSubscriptionInDynamo.mockClear()
 });
 
 const buildSqsEvent = (receipts: string[]): SQSEvent => {
@@ -53,19 +97,31 @@ const buildSqsEvent = (receipts: string[]): SQSEvent => {
     }
 }
 
-const mockStoreSubscriptionInDynamo =
-    jest.fn((subscription: Subscription) => Promise.resolve());
-
-const stubFetchSubscriptionsFromApple =
-    (reference: AppleSubscriptionReference) => Promise.resolve(subscriptions.filter(s => s.receipt == reference.receipt));
-
 const subscription =
-    (id: string, product: string, receipt: string) =>
-        new Subscription(id, "", "", "", false, product, "ios-feast", false, "6M", null, receipt, null)
+    (id: string, receipt: string, appAccountToken: string, identityId: string) => {
+        return {
+            subscription: withAppAccountToken(new Subscription(id, "", "", "", false, "", "ios-feast", false, "6M", null, receipt, null), appAccountToken),
+            identityId: identityId
+        }
+    }
 
 const subscriptions = [
-    withAppAccountToken(subscription("sub-1", "prod-1", "TEST_RECEIPT_1"), "app-account-token-1"),
-    withAppAccountToken(subscription("sub-2", "prod-1", "TEST_RECEIPT_2"), "app-account-token-2"),
-    withAppAccountToken(subscription("sub-3", "prod-2", "TEST_RECEIPT_2"), "app-account-token-3"),
-    withAppAccountToken(subscription("sub-4", "prod-1", "TEST_RECEIPT_3"), "app-account-token-4"),
+    subscription("sub-1", "TEST_RECEIPT_1", "app-account-token-1", "identity-id-1"),
+    subscription("sub-2", "TEST_RECEIPT_2", "app-account-token-2", "identity-id-2"),
+    subscription("sub-3", "TEST_RECEIPT_2", "app-account-token-2", "identity-id-2"),
+    subscription("sub-4", "TEST_RECEIPT_3", "app-account-token-3", "identity-id-3"),
 ]
+
+const stubFetchSubscriptionsFromApple =
+    (reference: AppleSubscriptionReference) => 
+        Promise.resolve(subscriptions.filter(s => s.subscription.receipt == reference.receipt).map(s => s.subscription))
+
+const stubExchangeExternalIdForIdentityId = 
+    (externalId: string) =>
+        Promise.resolve(subscriptions.find(s => s.subscription.appAccountToken == externalId)?.identityId!)
+
+const mockStoreSubscriptionInDynamo =
+    jest.fn((subscription: Subscription) => Promise.resolve())
+
+const mockStoreUserSubscriptionInDynamo =
+    jest.fn((userSubscription: UserSubscription) => Promise.resolve())

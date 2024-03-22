@@ -6,6 +6,7 @@ import { Subscription } from "../../models/subscription";
 import { dynamoMapper } from "../../utils/aws";
 import { App } from "../../models/app"
 import { ProcessingError } from "../../models/processingError";
+import { UserSubscription } from "../../models/userSubscription";
 
 type AppAccountToken = {
     appAccountToken: string
@@ -40,9 +41,21 @@ const defaultStoreSubscriptionInDynamo =
         return dynamoMapper.put({item: subscription}).then(_ => {})
     }
 
+const defaultExchangeExternalIdForIdentityId =
+    (externalId: string): Promise<string> => {
+        return Promise.resolve(externalId)
+    }
+
+const defaultStoreUserSubscriptionInDynamo =
+    (userSubscription: UserSubscription): Promise<void> => {
+        return dynamoMapper.put({ item: userSubscription }).then(_ => {})
+    }
+
 export function buildHandler(
     fetchSubscriptionsFromApple: (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]> = defaultFetchSubscriptionsFromApple,
-    storeSubscriptionInDynamo: (subscription: Subscription) => Promise<void> = defaultStoreSubscriptionInDynamo
+    storeSubscriptionInDynamo: (subscription: Subscription) => Promise<void> = defaultStoreSubscriptionInDynamo,
+    exchangeExternalIdForIdentityId: (externalId: string) => Promise<string> = defaultExchangeExternalIdForIdentityId,
+    storeUserSubscriptionInDynamo: (userSubscription: UserSubscription) => Promise<void> = defaultStoreUserSubscriptionInDynamo,
 ): (event: SQSEvent) => Promise<string> {
     return async (event: SQSEvent) => {
         const work =
@@ -54,6 +67,18 @@ export function buildHandler(
                     await fetchSubscriptionsFromApple(reference)
 
                 await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
+
+                const userSubscriptions =
+                    await Promise.all(subscriptions.map(async s => {
+                        const identityId =
+                            await exchangeExternalIdForIdentityId(s.appAccountToken)
+                        const now =
+                            new Date().toISOString()
+
+                        return new UserSubscription(identityId, s.subscriptionId, now)
+                    }))
+                
+                await Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
             })
 
         return Promise.all(work).then(_ => "OK")
