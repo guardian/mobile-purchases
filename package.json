@@ -41,6 +41,6 @@
     "node-fetch": "2.6.7",
     "source-map-support": "^0.5.21",
     "typed-rest-client": "^1.8.9",
-    "@googleapis/androidpublisher": "12.1.0"
+    "@googleapis/androidpublisher": "13.0.0"
   }
 }
