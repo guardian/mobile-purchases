@@ -5,6 +5,18 @@ import { toAppleSubscription } from "../../update-subs/apple";
 import { Subscription } from "../../models/subscription";
 import { dynamoMapper } from "../../utils/aws";
 import { App } from "../../models/app"
+import { ProcessingError } from "../../models/processingError";
+
+type AppAccountToken = {
+    appAccountToken: string
+}
+
+type HasAppAccountToken<A> = AppAccountToken & A
+
+export const withAppAccountToken =
+    <A extends Object>(a: A, appAccountToken: string): HasAppAccountToken<A> => {
+        return Object.assign(a, { appAccountToken: appAccountToken })
+    }
 
 const decodeSubscriptionReference =
     (record: SQSRecord): AppleSubscriptionReference => {
@@ -12,8 +24,15 @@ const decodeSubscriptionReference =
     }
 
 const defaultFetchSubscriptionsFromApple =
-    (reference: AppleSubscriptionReference): Promise<Subscription[]> => {
-        return validateReceipt(reference.receipt, {sandboxRetry: false}, App.Feast).then(subs => subs.map(toAppleSubscription))
+    async (reference: AppleSubscriptionReference): Promise<HasAppAccountToken<Subscription>[]> => {
+        const responses = await validateReceipt(reference.receipt, { sandboxRetry: false }, App.Feast);
+        return responses.map(response => {
+            if (response.latestReceiptInfo.appAccountToken) {
+                return withAppAccountToken(toAppleSubscription(response), response.latestReceiptInfo.appAccountToken) 
+            } else {
+                throw new ProcessingError(`Subscription with receipt '${response.latestReceipt}' did not have an 'appAccountToken'`, false)
+            }
+        })
     }
 
 const defaultStoreSubscriptionInDynamo =
@@ -22,7 +41,7 @@ const defaultStoreSubscriptionInDynamo =
     }
 
 export function buildHandler(
-    fetchSubscriptionsFromApple: (reference: AppleSubscriptionReference) => Promise<Subscription[]> = defaultFetchSubscriptionsFromApple,
+    fetchSubscriptionsFromApple: (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]> = defaultFetchSubscriptionsFromApple,
     storeSubscriptionInDynamo: (subscription: Subscription) => Promise<void> = defaultStoreSubscriptionInDynamo
 ): (event: SQSEvent) => Promise<string> {
     return async (event: SQSEvent) => {

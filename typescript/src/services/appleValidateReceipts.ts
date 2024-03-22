@@ -30,7 +30,8 @@ export interface AppleValidatedReceiptServerInfo {
     original_transaction_id: string
     product_id: string,
     is_trial_period: string,
-    is_in_intro_offer_period: string
+    is_in_intro_offer_period: string,
+    app_account_token?: string
 }
 
 export interface ValidationOptions {
@@ -64,6 +65,7 @@ export interface AppleValidatedReceiptInfo {
     originalPurchaseDate: Date,
     originalTransactionId: string
     productId: string,
+    appAccountToken?: string
 }
 
 // this is a sanitised and more sensible version of what the response should be
@@ -217,6 +219,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
                 productId: receiptInfo.product_id,
                 trialPeriod: receiptInfo.is_trial_period === "true",
                 inIntroOfferPeriod: receiptInfo.is_in_intro_offer_period === "true",
+                appAccountToken: receiptInfo.app_account_token
             },
             originalResponse: response
         };

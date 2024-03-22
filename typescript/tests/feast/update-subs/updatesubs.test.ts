@@ -1,8 +1,10 @@
 
 import { SQSEvent } from "aws-lambda";
-import { buildHandler } from "../../../src/feast/update-subs/updatesubs";
+import { buildHandler, withAppAccountToken } from "../../../src/feast/update-subs/updatesubs";
 import { Subscription } from "../../../src/models/subscription";
 import { AppleSubscriptionReference } from "../../../src/models/subscriptionReference";
+import { validateReceipt } from "../../../src/services/appleValidateReceipts";
+import { App } from "../../../src/models/app";
 
 describe("The Feast (Apple) subscription updater", () => {
     it("Should fetch the subscription(s) associated with the reference from Apple and persist them to Dynamo", async () => {
@@ -62,8 +64,8 @@ const subscription =
         new Subscription(id, "", "", "", false, product, "ios-feast", false, "6M", null, receipt, null)
 
 const subscriptions = [
-    subscription( "sub-1", "prod-1", "TEST_RECEIPT_1"),
-    subscription( "sub-2", "prod-1", "TEST_RECEIPT_2"),
-    subscription( "sub-3", "prod-2", "TEST_RECEIPT_2"),
-    subscription( "sub-4", "prod-1", "TEST_RECEIPT_3")
+    withAppAccountToken(subscription("sub-1", "prod-1", "TEST_RECEIPT_1"), "app-account-token-1"),
+    withAppAccountToken(subscription("sub-2", "prod-1", "TEST_RECEIPT_2"), "app-account-token-2"),
+    withAppAccountToken(subscription("sub-3", "prod-2", "TEST_RECEIPT_2"), "app-account-token-3"),
+    withAppAccountToken(subscription("sub-4", "prod-1", "TEST_RECEIPT_3"), "app-account-token-4"),
 ]
