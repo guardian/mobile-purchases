@@ -136,10 +136,11 @@ export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): 
     }).promise()
 }
 
+export type SoftOptInEventProductName = "InAppPurchase" | "FeastInAppPurchase";
 export interface SoftOptInEvent {
     identityId: string;
     eventType: "Acquisition" | "Cancellation" | "Switch";
-    productName: "InAppPurchase";
+    productName: SoftOptInEventProductName
     subscriptionId: string;
 }
 

@@ -44,7 +44,11 @@ Parameters:
     NoEcho: true
   ApplePubSubSecret:
     Type: String
-    Description: The secret used by google's pubsub
+    Description: The secret used by apple's pubsub
+    NoEcho: true
+  FeastApplePubSubSecret:
+    Type: String
+    Description: The secret used by apple's pubsub for the feast app
     NoEcho: true
   AlarmTopic:
     Type: String
@@ -617,6 +621,7 @@ Resources:
           Stack: !Ref Stack
           App: !Ref App
           QueueUrl: !Ref FeastAppleSubscriptionsQueue
+          Secret: !Ref FeastApplePubSubSecret
       Description: Records app store events for Feast app
       MemorySize: 128
       Timeout: 29
@@ -1100,7 +1105,7 @@ Resources:
               Action:
                 - "dynamodb:Scan"
               Resource:
-                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/index/ios-endTimestamp-revalidation-index
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/index/ios-endTimestamp-revalidation-index-with-platform
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
         - PolicyName: sqs
           PolicyDocument:
