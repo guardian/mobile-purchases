@@ -25,7 +25,8 @@ export const PRODUCT_BILLING_PERIOD: {[productId: string]: string} = {
     "uk.co.guardian.subscription.8": "P1M",
     "uk.co.guardian.subscription.9": "P6M",
     "uk.co.guardian.Feast.yearly": "P1Y",
+    // "guardain" is an unfortunate typo that exists upstream and must be mirrored here
     "uk.co.guardain.Feast.yearly.discounted": "P1Y",
     "uk.co.guardian.Feast.monthly": "P1M",
-    "uk.co.guardain.Feast.monthly.discounted": "P1M",
+    "uk.co.guardian.Feast.monthly.discounted": "P1M",
 };
