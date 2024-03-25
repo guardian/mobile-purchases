@@ -25,7 +25,7 @@ const decodeSubscriptionReference =
         return JSON.parse(record.body) as AppleSubscriptionReference;
     }
 
-const defaultFetchSubscriptionsFromApple =
+export const defaultFetchSubscriptionsFromApple =
     async (reference: AppleSubscriptionReference): Promise<HasAppAccountToken<Subscription>[]> => {
         const responses = await validateReceipt(reference.receipt, { sandboxRetry: false }, App.Feast);
         return responses.map(response => {
@@ -44,6 +44,7 @@ const defaultStoreSubscriptionInDynamo =
 
 const defaultStoreUserSubscriptionInDynamo =
     (userSubscription: UserSubscription): Promise<void> => {
+        console.log(`Persisting user-subscription: ${userSubscription.userId}-${userSubscription.subscriptionId}`)
         return dynamoMapper.put({ item: userSubscription }).then(_ => {})
     }
 
@@ -64,6 +65,8 @@ export function buildHandler(
 
                 await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
 
+                console.log(`Persisted subscriptions: ${subscriptions}`)
+
                 const userSubscriptions =
                     await Promise.all(subscriptions.map(async s => {
                         const identityId =
@@ -73,8 +76,10 @@ export function buildHandler(
 
                         return new UserSubscription(identityId, s.subscriptionId, now)
                     }))
+
+                console.log(`User-subscriptions to persist: ${userSubscriptions}`)
                 
-                await Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
+                return await Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
             })
 
         return Promise.all(work).then(_ => "OK")

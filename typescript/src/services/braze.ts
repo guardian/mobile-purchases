@@ -19,14 +19,13 @@ export async function getIdentityIdFromBraze(externalId: string): Promise<string
 
     const url = "https://rest.fra-01.braze.eu/users/export/ids"
 
-    console.log(`url ${url}`);
-
     return fetch(url, params)
         .then(async (response) => {
             if (response.ok) {
                 const json = await response.json();
                 const identityId = json?.users?.[0]?.custom_attributes?.identity_id
                 if (identityId) {
+                    console.log(`Looked up identity id: '${identityId}' from external id: '${externalId}'`)
                     return identityId
                 }
                 throw new Error(`Unable to exchange the Braze ID '${externalId}' for an Identity ID`)
