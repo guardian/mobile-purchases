@@ -44,7 +44,6 @@ const defaultStoreSubscriptionInDynamo =
 
 const defaultStoreUserSubscriptionInDynamo =
     (userSubscription: UserSubscription): Promise<void> => {
-        console.log(`Persisting user-subscription: ${userSubscription.userId}-${userSubscription.subscriptionId}`)
         return dynamoMapper.put({ item: userSubscription }).then(_ => {})
     }
 
@@ -65,8 +64,6 @@ export function buildHandler(
 
                 await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
 
-                console.log(`Persisted subscriptions: ${subscriptions}`)
-
                 const userSubscriptions =
                     await Promise.all(subscriptions.map(async s => {
                         const identityId =
@@ -77,8 +74,6 @@ export function buildHandler(
                         return new UserSubscription(identityId, s.subscriptionId, now)
                     }))
 
-                console.log(`User-subscriptions to persist: ${userSubscriptions}`)
-                
                 return await Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
             })
 
