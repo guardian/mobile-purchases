@@ -4,6 +4,7 @@ import { buildHandler, withAppAccountToken } from "../../../src/feast/update-sub
 import { Subscription } from "../../../src/models/subscription";
 import { AppleSubscriptionReference } from "../../../src/models/subscriptionReference";
 import { UserSubscription } from "../../../src/models/userSubscription";
+import { getIdentityIdFromBraze } from "../../../src/services/braze";
 
 describe("The Feast (Apple) subscription updater", () => {
     it("Should fetch the subscription(s) associated with the reference from Apple and persist them to Dynamo", async () => {
@@ -125,3 +126,4 @@ const mockStoreSubscriptionInDynamo =
 
 const mockStoreUserSubscriptionInDynamo =
     jest.fn((userSubscription: UserSubscription) => Promise.resolve())
+

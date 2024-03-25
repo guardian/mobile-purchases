@@ -7,6 +7,7 @@ import { dynamoMapper } from "../../utils/aws";
 import { App } from "../../models/app"
 import { ProcessingError } from "../../models/processingError";
 import { UserSubscription } from "../../models/userSubscription";
+import { getIdentityIdFromBraze } from "../../services/braze";
 
 type AppAccountToken = {
     appAccountToken: string
@@ -41,11 +42,6 @@ const defaultStoreSubscriptionInDynamo =
         return dynamoMapper.put({item: subscription}).then(_ => {})
     }
 
-const defaultExchangeExternalIdForIdentityId =
-    (externalId: string): Promise<string> => {
-        return Promise.resolve(externalId)
-    }
-
 const defaultStoreUserSubscriptionInDynamo =
     (userSubscription: UserSubscription): Promise<void> => {
         return dynamoMapper.put({ item: userSubscription }).then(_ => {})
@@ -54,7 +50,7 @@ const defaultStoreUserSubscriptionInDynamo =
 export function buildHandler(
     fetchSubscriptionsFromApple: (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]> = defaultFetchSubscriptionsFromApple,
     storeSubscriptionInDynamo: (subscription: Subscription) => Promise<void> = defaultStoreSubscriptionInDynamo,
-    exchangeExternalIdForIdentityId: (externalId: string) => Promise<string> = defaultExchangeExternalIdForIdentityId,
+    exchangeExternalIdForIdentityId: (externalId: string) => Promise<string> = getIdentityIdFromBraze,
     storeUserSubscriptionInDynamo: (userSubscription: UserSubscription) => Promise<void> = defaultStoreUserSubscriptionInDynamo,
 ): (event: SQSEvent) => Promise<string> {
     return async (event: SQSEvent) => {
