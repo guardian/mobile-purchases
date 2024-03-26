@@ -67,6 +67,7 @@ const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
         isBase64Encoded: false,
         path: '',
         pathParameters: {},
+        queryStringParameters: {secret: "test_secret"},
         multiValueQueryStringParameters: {},
         // @ts-ignore
         requestContext: null,
@@ -76,6 +77,7 @@ const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
 
 beforeEach(() => {
     process.env['QueueUrl'] = "";
+    process.env['Secret'] = "test_secret";
 });
 
 describe("The Feast Apple pubsub", () => {
