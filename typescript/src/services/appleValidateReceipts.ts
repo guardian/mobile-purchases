@@ -6,6 +6,7 @@ import {Option} from "../utils/option";
 import {restClient} from "../utils/restClient";
 import {IHttpClientResponse} from "typed-rest-client/Interfaces";
 import {GracefulProcessingError} from "../models/GracefulProcessingError";
+import {App} from "../models/app"
 
 export interface PendingRenewalInfo {
     auto_renew_product_id?: string,
@@ -77,9 +78,18 @@ const sandboxReceiptEndpoint = "https://sandbox.itunes.apple.com/verifyReceipt";
 const prodReceiptEndpoint = "https://buy.itunes.apple.com/verifyReceipt";
 const receiptEndpoint = (Stage === "PROD") ? prodReceiptEndpoint : sandboxReceiptEndpoint;
 
-function callValidateReceipt(receipt: string, forceSandbox: boolean = false): Promise<IHttpClientResponse> {
+function passwordForApp(app: App): Promise<string> {
+    switch (app) {
+        case App.Feast:
+            return getConfigValue<string>("feast.apple.password")
+        default:
+            return getConfigValue<string>("apple.password")
+    }
+}
+
+function callValidateReceipt(receipt: string, app: App = App.Live, forceSandbox: boolean = false): Promise<IHttpClientResponse> {
     const endpoint = forceSandbox ? sandboxReceiptEndpoint : receiptEndpoint;
-    return getConfigValue<string>("apple.password")
+    return passwordForApp(app)
         .then(password => {
             const body = JSON.stringify({
                 "receipt-data": receipt,
@@ -216,7 +226,7 @@ export function toSensiblePayloadFormat(response: AppleValidationServerResponse,
 async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerResponse, receipt: string, options: ValidationOptions): Promise<AppleValidationServerResponse> {
     if (parsedResponse.status === 21007 && options.sandboxRetry) {
         console.log("Got status code 21007, retrying in Sandbox");
-        return callValidateReceipt(receipt, true)
+        return callValidateReceipt(receipt, App.Live, true)
             .then(response => response.readBody())
             .then(body => JSON.parse(body))
             .then(body => body as AppleValidationServerResponse);
@@ -225,8 +235,8 @@ async function retryInSandboxIfNecessary(parsedResponse: AppleValidationServerRe
     }
 }
 
-export function validateReceipt(receipt: string, options: ValidationOptions): Promise<AppleValidationResponse[]> {
-    return callValidateReceipt(receipt)
+export function validateReceipt(receipt: string, options: ValidationOptions, app: App = App.Live): Promise<AppleValidationResponse[]> {
+    return callValidateReceipt(receipt, app)
         .then(response => response.readBody())
         .then(body => JSON.parse(body))
         .then(body => body as AppleValidationServerResponse)

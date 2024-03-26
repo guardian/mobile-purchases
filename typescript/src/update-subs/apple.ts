@@ -8,7 +8,7 @@ import {AppleValidationResponse, validateReceipt} from "../services/appleValidat
 import {fromAppleBundle} from "../services/appToPlatform";
 import {PRODUCT_BILLING_PERIOD} from "../services/productBillingPeriod";
 
-function toAppleSubscription(response: AppleValidationResponse): Subscription {
+export function toAppleSubscription(response: AppleValidationResponse): Subscription {
     const latestReceiptInfo = response.latestReceiptInfo;
 
     let autoRenewStatus: boolean = false;
