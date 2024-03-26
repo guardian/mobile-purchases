@@ -27,9 +27,9 @@ export async function getIdentityIdFromBraze(externalId: string): Promise<string
                 if (identityId) {
                     return identityId
                 }
-                throw new Error(`Unable to exchange the Braze ID '${externalId}' for an Identity ID`)
+                throw new Error(`Response from Braze for Braze ID '${externalId}' did not contain an identity_id`)
             } else {
-                throw new Error("Unable to fetch user from Braze")
+                throw new Error("Received a non-ok response from Braze attempting to fetch user")
             }
         })
 }
