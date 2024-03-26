@@ -97,6 +97,20 @@ describe("The Feast Apple pubsub", () => {
         expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(expectedSubscriptionReferenceInSqs);
     });
 
+    it("Should return HTTP 401 if secret is invalid", async () => {
+        const mockSqsFunction: Mock<Promise<any>, [string, AppleSubscriptionReference]> = jest.fn((queueurl, event) => Promise.resolve({}));
+        const input = buildApiGatewayEvent();
+        input.queryStringParameters = {};
+
+        const noOpLogger = (request: APIGatewayProxyEvent): void => {};
+        const noOpStoreEventInDynamo = (event: StatusUpdateNotification): Promise<void> => Promise.resolve();
+        const handler = buildHandler(mockSqsFunction, noOpStoreEventInDynamo, noOpLogger);
+
+        const result = await handler(input);
+
+        expect(result).toStrictEqual(HTTPResponses.UNAUTHORISED);
+    });
+
     it("invokes the method to add the event to the Dynamo table", async () => {
         const input = buildApiGatewayEvent();
         const sendMessageToSqs: Mock<Promise<any>, [string, AppleSubscriptionReference]> = jest.fn((queueurl, event) => Promise.resolve({}));
