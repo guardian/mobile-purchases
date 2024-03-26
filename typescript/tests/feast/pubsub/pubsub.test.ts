@@ -67,6 +67,7 @@ const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
         isBase64Encoded: false,
         path: '',
         pathParameters: {},
+        queryStringParameters: {secret: "test_secret"},
         multiValueQueryStringParameters: {},
         // @ts-ignore
         requestContext: null,
@@ -76,6 +77,7 @@ const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
 
 beforeEach(() => {
     process.env['QueueUrl'] = "";
+    process.env['Secret'] = "test_secret";
 });
 
 describe("The Feast Apple pubsub", () => {
@@ -93,6 +95,20 @@ describe("The Feast Apple pubsub", () => {
         expect(result).toStrictEqual(HTTPResponses.OK);
         expect(mockSqsFunction.mock.calls.length).toEqual(1);
         expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(expectedSubscriptionReferenceInSqs);
+    });
+
+    it("Should return HTTP 401 if secret is invalid", async () => {
+        const mockSqsFunction: Mock<Promise<any>, [string, AppleSubscriptionReference]> = jest.fn((queueurl, event) => Promise.resolve({}));
+        const input = buildApiGatewayEvent();
+        input.queryStringParameters = {};
+
+        const noOpLogger = (request: APIGatewayProxyEvent): void => {};
+        const noOpStoreEventInDynamo = (event: StatusUpdateNotification): Promise<void> => Promise.resolve();
+        const handler = buildHandler(mockSqsFunction, noOpStoreEventInDynamo, noOpLogger);
+
+        const result = await handler(input);
+
+        expect(result).toStrictEqual(HTTPResponses.UNAUTHORISED);
     });
 
     it("invokes the method to add the event to the Dynamo table", async () => {

@@ -20,32 +20,43 @@ export function buildHandler(
     sendMessageToSqs: (queueUrl: string, message: AppleSubscriptionReference) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
     storeEventInDynamo: (event: StatusUpdateNotification) => Promise<void> = defaultStoreEventInDynamo,
     logRequest: (request: APIGatewayProxyEvent) => void = defaultLogRequest
-): (request: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult> { 
+): (request: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult> {
     return async (request: APIGatewayProxyEvent) => {
-        logRequest(request);
+        const secret = process.env.Secret;
 
-        const statusUpdateNotification =
-            parsePayload(request.body)
-        if (statusUpdateNotification instanceof Error) {
-            return HTTPResponses.INVALID_REQUEST
+        if (secret === undefined) {
+            console.error("PubSub secret in env is 'undefined'");
+            return HTTPResponses.INTERNAL_ERROR
         }
 
-        const appleSubscriptionReference = 
-            toSqsSubReference(statusUpdateNotification)
-        
-        try {
-            const queueUrl = process.env.QueueUrl;
-            if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+        if (request.queryStringParameters?.secret === secret) {
+            logRequest(request);
 
-            await Promise.all([
-                sendMessageToSqs(queueUrl, appleSubscriptionReference),
-                storeEventInDynamo(statusUpdateNotification),
-            ])
+            const statusUpdateNotification =
+                parsePayload(request.body)
+            if (statusUpdateNotification instanceof Error) {
+                return HTTPResponses.INVALID_REQUEST
+            }
 
-            return HTTPResponses.OK
-        } catch (e) {
-            console.error("Internal server error", e);
-            return HTTPResponses.INTERNAL_ERROR
+            const appleSubscriptionReference =
+                toSqsSubReference(statusUpdateNotification)
+
+            try {
+                const queueUrl = process.env.QueueUrl;
+                if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+
+                await Promise.all([
+                    sendMessageToSqs(queueUrl, appleSubscriptionReference),
+                    storeEventInDynamo(statusUpdateNotification),
+                ])
+
+                return HTTPResponses.OK
+            } catch (e) {
+                console.error("Internal server error", e);
+                return HTTPResponses.INTERNAL_ERROR
+            }
+        } else {
+            return HTTPResponses.UNAUTHORISED
         }
     }
 }
