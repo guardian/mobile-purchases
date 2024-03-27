@@ -69,10 +69,8 @@ const processRecord = async (
 
     const userSubscriptions =
         await Promise.all(subscriptions.map(async s => {
-            const identityId =
-                await exchangeExternalIdForIdentityId(s.appAccountToken)
-            const now =
-                new Date().toISOString()
+            const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
+            const now = new Date().toISOString()
 
             return new UserSubscription(identityId, s.subscriptionId, now)
         }))
