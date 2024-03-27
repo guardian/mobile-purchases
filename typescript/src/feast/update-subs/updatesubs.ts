@@ -86,9 +86,7 @@ const processRecordWithErrorHandling = async (
     storeUserSubscriptionInDynamo: StoreUserSubInDynamo,
     record: SQSRecord
 ) => {
-    console.log("In processRecordWithErrorHandling")
     try {
-        console.log("In processRecordWithErrorHandling")
         return await processRecord(
             fetchSubscriptionsFromApple,
             storeSubscriptionInDynamo,
@@ -97,7 +95,6 @@ const processRecordWithErrorHandling = async (
             record
         );
     } catch (error) {
-        console.log("ATTEMPTING TO HANDLE ERROR")
         if (error instanceof GracefulProcessingError) {
             console.warn("Error processing the subscription update is being handled gracefully", error);
             return;
