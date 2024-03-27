@@ -8,6 +8,7 @@ import { App } from "../../models/app"
 import { ProcessingError } from "../../models/processingError";
 import { UserSubscription } from "../../models/userSubscription";
 import { getIdentityIdFromBraze } from "../../services/braze";
+import { GracefulProcessingError } from "../../models/GracefulProcessingError";
 
 type AppAccountToken = {
     appAccountToken: string
@@ -47,37 +48,81 @@ const defaultStoreUserSubscriptionInDynamo =
         return dynamoMapper.put({ item: userSubscription }).then(_ => {})
     }
 
+type FetchSubsFromApple = (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]>;
+type StoreSubInDynamo = (subscription: Subscription) => Promise<void>;
+type ExchangeExternalIdForIdentityId = (externalId: string) => Promise<string>;
+type StoreUserSubInDynamo = (userSubscription: UserSubscription) => Promise<void>;
+
+const processRecord = async (
+    fetchSubscriptionsFromApple: FetchSubsFromApple,
+    storeSubscriptionInDynamo: StoreSubInDynamo,
+    exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId,
+    storeUserSubscriptionInDynamo: StoreUserSubInDynamo,
+    record: SQSRecord
+) => {
+    const reference =
+        decodeSubscriptionReference(record)
+
+    const subscriptions =
+        await fetchSubscriptionsFromApple(reference)
+
+    await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
+
+    const userSubscriptions =
+        await Promise.all(subscriptions.map(async s => {
+            const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
+            const now = new Date().toISOString()
+
+            return new UserSubscription(identityId, s.subscriptionId, now)
+        }))
+
+    return Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
+}
+
+const processRecordWithErrorHandling = async (
+    fetchSubscriptionsFromApple: FetchSubsFromApple,
+    storeSubscriptionInDynamo: StoreSubInDynamo,
+    exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId,
+    storeUserSubscriptionInDynamo: StoreUserSubInDynamo,
+    record: SQSRecord
+) => {
+    try {
+        return await processRecord(
+            fetchSubscriptionsFromApple,
+            storeSubscriptionInDynamo,
+            exchangeExternalIdForIdentityId,
+            storeUserSubscriptionInDynamo,
+            record
+        );
+    } catch (error) {
+        if (error instanceof GracefulProcessingError) {
+            console.warn("Error processing the subscription update is being handled gracefully", error);
+            return;
+        } else {
+           console.error("Unexpected error, will throw to retry: ", error);
+           throw error;
+        }
+    }   
+}
+
 export function buildHandler(
-    fetchSubscriptionsFromApple: (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]> = defaultFetchSubscriptionsFromApple,
-    storeSubscriptionInDynamo: (subscription: Subscription) => Promise<void> = defaultStoreSubscriptionInDynamo,
-    exchangeExternalIdForIdentityId: (externalId: string) => Promise<string> = getIdentityIdFromBraze,
-    storeUserSubscriptionInDynamo: (userSubscription: UserSubscription) => Promise<void> = defaultStoreUserSubscriptionInDynamo,
+    fetchSubscriptionsFromApple: FetchSubsFromApple = defaultFetchSubscriptionsFromApple,
+    storeSubscriptionInDynamo: StoreSubInDynamo = defaultStoreSubscriptionInDynamo,
+    exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId = getIdentityIdFromBraze,
+    storeUserSubscriptionInDynamo: StoreUserSubInDynamo = defaultStoreUserSubscriptionInDynamo,
 ): (event: SQSEvent) => Promise<string> {
-    return async (event: SQSEvent) => {
-        const work =
-            event.Records.map(async record => {
-                const reference =
-                    decodeSubscriptionReference(record)
+    return (event: SQSEvent) => {
+        const promises = event.Records.map((record) => {
+            return processRecordWithErrorHandling(
+                fetchSubscriptionsFromApple,
+                storeSubscriptionInDynamo,
+                exchangeExternalIdForIdentityId,
+                storeUserSubscriptionInDynamo,
+                record,
+            )
+        })
 
-                const subscriptions =
-                    await fetchSubscriptionsFromApple(reference)
-
-                await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
-
-                const userSubscriptions =
-                    await Promise.all(subscriptions.map(async s => {
-                        const identityId =
-                            await exchangeExternalIdForIdentityId(s.appAccountToken)
-                        const now =
-                            new Date().toISOString()
-
-                        return new UserSubscription(identityId, s.subscriptionId, now)
-                    }))
-
-                return await Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
-            })
-
-        return Promise.all(work).then(_ => "OK")
+        return Promise.all(promises).then(_ => "OK")
     }
 }
 
