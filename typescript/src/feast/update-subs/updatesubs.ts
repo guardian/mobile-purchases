@@ -47,37 +47,52 @@ const defaultStoreUserSubscriptionInDynamo =
         return dynamoMapper.put({ item: userSubscription }).then(_ => {})
     }
 
+const processRecord = async (
+    fetchSubscriptionsFromApple: (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]>,
+    storeSubscriptionInDynamo: (subscription: Subscription) => Promise<void>,
+    exchangeExternalIdForIdentityId: (externalId: string) => Promise<string>,
+    storeUserSubscriptionInDynamo: (userSubscription: UserSubscription) => Promise<void>,
+    record: SQSRecord
+) => {
+    const reference =
+        decodeSubscriptionReference(record)
+
+    const subscriptions =
+        await fetchSubscriptionsFromApple(reference)
+
+    await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
+
+    const userSubscriptions =
+        await Promise.all(subscriptions.map(async s => {
+            const identityId =
+                await exchangeExternalIdForIdentityId(s.appAccountToken)
+            const now =
+                new Date().toISOString()
+
+            return new UserSubscription(identityId, s.subscriptionId, now)
+        }))
+
+    return Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
+}
+
 export function buildHandler(
     fetchSubscriptionsFromApple: (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]> = defaultFetchSubscriptionsFromApple,
     storeSubscriptionInDynamo: (subscription: Subscription) => Promise<void> = defaultStoreSubscriptionInDynamo,
     exchangeExternalIdForIdentityId: (externalId: string) => Promise<string> = getIdentityIdFromBraze,
     storeUserSubscriptionInDynamo: (userSubscription: UserSubscription) => Promise<void> = defaultStoreUserSubscriptionInDynamo,
 ): (event: SQSEvent) => Promise<string> {
-    return async (event: SQSEvent) => {
-        const work =
-            event.Records.map(async record => {
-                const reference =
-                    decodeSubscriptionReference(record)
+    return (event: SQSEvent) => {
+        const promises = event.Records.map((record) => {
+            return processRecord(
+                fetchSubscriptionsFromApple,
+                storeSubscriptionInDynamo,
+                exchangeExternalIdForIdentityId,
+                storeUserSubscriptionInDynamo,
+                record,
+            )
+        })
 
-                const subscriptions =
-                    await fetchSubscriptionsFromApple(reference)
-
-                await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
-
-                const userSubscriptions =
-                    await Promise.all(subscriptions.map(async s => {
-                        const identityId =
-                            await exchangeExternalIdForIdentityId(s.appAccountToken)
-                        const now =
-                            new Date().toISOString()
-
-                        return new UserSubscription(identityId, s.subscriptionId, now)
-                    }))
-
-                return await Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
-            })
-
-        return Promise.all(work).then(_ => "OK")
+        return Promise.all(promises).then(_ => "OK")
     }
 }
 
