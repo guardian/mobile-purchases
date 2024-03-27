@@ -30,6 +30,22 @@ interface ScheduleEvent {
     startTimestampFilter?: string
 }
 
+const queueUrlForPlatform =
+    (platform: string): string => {
+        const LiveAppSqsUrl = process.env.LiveAppSqsUrl;
+        if (LiveAppSqsUrl === undefined) throw new Error("No LiveAppSqsUrl env parameter provided");
+
+        const FeastAppSqsUrl = process.env.FeastAppSqsUrl;
+        if (FeastAppSqsUrl === undefined) throw new Error("No FeastAppSqsUrl env parameter provided");
+
+        switch (platform) {
+            case Platform.IosFeast:
+                return FeastAppSqsUrl;
+            default:
+                return LiveAppSqsUrl;
+        }
+    }
+
 export async function handler(event: ScheduleEvent) {
     const startTimestamp = startTimestampForQuery(event).toISOString();
     const endTimestamp = endTimestampForQuery(event).toISOString();
@@ -53,13 +69,6 @@ export async function handler(event: ScheduleEvent) {
             {
                 ...greaterThan(startTimestamp),
                 subject: 'endTimestamp'
-            },
-            {
-                type: 'Not',
-                condition: {
-                    ...equals(Platform.IosFeast),
-                    subject: 'platform',
-                }
             }
         ]
     };
@@ -71,16 +80,14 @@ export async function handler(event: ScheduleEvent) {
             filter: filter
         });
 
-    const SqsUrl = process.env.SqsUrl;
-    if (SqsUrl === undefined) throw new Error("No SqsUrl env parameter provided");
-
     let sentCount = 0;
     for await (const subscription of queryScan) {
         const receipt: string | undefined = subscription.receipt;
         if (receipt) {
             const subscriptionReference: AppleSubscriptionReference = {receipt: receipt};
             const delayInSeconds = Math.min(Math.floor(sentCount / 10), 900);
-            await sendToSqs(SqsUrl, subscriptionReference, delayInSeconds);
+            const sqsUrl = queueUrlForPlatform(subscription.platform);
+            await sendToSqs(sqsUrl, subscriptionReference, delayInSeconds);
             sentCount++;
             console.log(`Sent subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`)
         } else {

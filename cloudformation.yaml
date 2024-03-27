@@ -1142,6 +1142,7 @@ Resources:
                 - "sqs:SendMessage"
               Resource:
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-subscriptions-to-fetch
+                - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-feast-apple-subscriptions-to-fetch
 
   DeleteUserSubscriptionLambda:
     Type: AWS::Serverless::Function
@@ -1233,7 +1234,8 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
-          SqsUrl: !Ref AppleSubscriptionsQueue
+          LiveAppSqsUrl: !Ref AppleSubscriptionsQueue
+          FeastAppSqsUrl: !Ref FeastAppleSubscriptionsQueue
       Description: Finds recently expired subscriptions
       MemorySize: 2048
       Timeout: 180
