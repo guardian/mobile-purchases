@@ -5,6 +5,7 @@ import { Subscription } from "../../../src/models/subscription";
 import { AppleSubscriptionReference } from "../../../src/models/subscriptionReference";
 import { UserSubscription } from "../../../src/models/userSubscription";
 import { getIdentityIdFromBraze } from "../../../src/services/braze";
+import { GracefulProcessingError } from "../../../src/models/GracefulProcessingError";
 
 describe("The Feast (Apple) subscription updater", () => {
     it("Should fetch the subscription(s) associated with the reference from Apple and persist them to Dynamo", async () => {
@@ -67,6 +68,23 @@ describe("The Feast (Apple) subscription updater", () => {
         
         expect(storedUserSubscriptions).toEqual(expectedUserSubscriptions)
     });
+
+    it("Does not throw an error if the receipt lookup with Apple fails with error code 21007", async () => {
+        const event = buildSqsEvent(["LOOKUP_FAIL_RECEIPT"]);
+        const fetchSubFromAppleFailure = (reference: AppleSubscriptionReference) => {
+            throw new GracefulProcessingError(`Got status 21007 and we're in PROD`);
+        }
+        const handler =
+            buildHandler(
+                fetchSubFromAppleFailure,
+                mockStoreSubscriptionInDynamo,
+                stubExchangeExternalIdForIdentityId,
+                mockStoreUserSubscriptionInDynamo
+            );
+        expect.assertions(1);
+
+        await expect(handler(event)).resolves.toBe("OK");
+    })
 });
 
 beforeEach(() => {
@@ -126,4 +144,3 @@ const mockStoreSubscriptionInDynamo =
 
 const mockStoreUserSubscriptionInDynamo =
     jest.fn((userSubscription: UserSubscription) => Promise.resolve())
-

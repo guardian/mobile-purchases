@@ -8,6 +8,7 @@ import { App } from "../../models/app"
 import { ProcessingError } from "../../models/processingError";
 import { UserSubscription } from "../../models/userSubscription";
 import { getIdentityIdFromBraze } from "../../services/braze";
+import { GracefulProcessingError } from "../../models/GracefulProcessingError";
 
 type AppAccountToken = {
     appAccountToken: string
@@ -78,6 +79,35 @@ const processRecord = async (
     return Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
 }
 
+const processRecordWithErrorHandling = async (
+    fetchSubscriptionsFromApple: FetchSubsFromApple,
+    storeSubscriptionInDynamo: StoreSubInDynamo,
+    exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId,
+    storeUserSubscriptionInDynamo: StoreUserSubInDynamo,
+    record: SQSRecord
+) => {
+    console.log("In processRecordWithErrorHandling")
+    try {
+        console.log("In processRecordWithErrorHandling")
+        return await processRecord(
+            fetchSubscriptionsFromApple,
+            storeSubscriptionInDynamo,
+            exchangeExternalIdForIdentityId,
+            storeUserSubscriptionInDynamo,
+            record
+        );
+    } catch (error) {
+        console.log("ATTEMPTING TO HANDLE ERROR")
+        if (error instanceof GracefulProcessingError) {
+            console.warn("Error processing the subscription update is being handled gracefully", error);
+            return;
+        } else {
+           console.error("Unexpected error, will throw to retry: ", error);
+           throw error;
+        }
+    }   
+}
+
 export function buildHandler(
     fetchSubscriptionsFromApple: FetchSubsFromApple = defaultFetchSubscriptionsFromApple,
     storeSubscriptionInDynamo: StoreSubInDynamo = defaultStoreSubscriptionInDynamo,
@@ -86,7 +116,7 @@ export function buildHandler(
 ): (event: SQSEvent) => Promise<string> {
     return (event: SQSEvent) => {
         const promises = event.Records.map((record) => {
-            return processRecord(
+            return processRecordWithErrorHandling(
                 fetchSubscriptionsFromApple,
                 storeSubscriptionInDynamo,
                 exchangeExternalIdForIdentityId,
