@@ -130,7 +130,9 @@ export async function processAcquisition(subscriptionRecord: ReadSubscription, i
         handleError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
     }
 
-    if (subscriptionRecord && isPostAcquisition(subscriptionRecord.startTimestamp)) {
+    const isFeast = subscriptionRecord.platform === Platform.IosFeast;
+
+    if (subscriptionRecord && (isPostAcquisition(subscriptionRecord.startTimestamp) || isFeast)) {
         const identityApiKey = await getIdentityApiKey();
 
         const emailAddress = await getUserEmailAddress(identityId, identityApiKey);
