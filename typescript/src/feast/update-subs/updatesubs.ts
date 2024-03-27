@@ -47,11 +47,16 @@ const defaultStoreUserSubscriptionInDynamo =
         return dynamoMapper.put({ item: userSubscription }).then(_ => {})
     }
 
+type FetchSubsFromApple = (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]>;
+type StoreSubInDynamo = (subscription: Subscription) => Promise<void>;
+type ExchangeExternalIdForIdentityId = (externalId: string) => Promise<string>;
+type StoreUserSubInDynamo = (userSubscription: UserSubscription) => Promise<void>;
+
 const processRecord = async (
-    fetchSubscriptionsFromApple: (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]>,
-    storeSubscriptionInDynamo: (subscription: Subscription) => Promise<void>,
-    exchangeExternalIdForIdentityId: (externalId: string) => Promise<string>,
-    storeUserSubscriptionInDynamo: (userSubscription: UserSubscription) => Promise<void>,
+    fetchSubscriptionsFromApple: FetchSubsFromApple,
+    storeSubscriptionInDynamo: StoreSubInDynamo,
+    exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId,
+    storeUserSubscriptionInDynamo: StoreUserSubInDynamo,
     record: SQSRecord
 ) => {
     const reference =
@@ -76,10 +81,10 @@ const processRecord = async (
 }
 
 export function buildHandler(
-    fetchSubscriptionsFromApple: (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]> = defaultFetchSubscriptionsFromApple,
-    storeSubscriptionInDynamo: (subscription: Subscription) => Promise<void> = defaultStoreSubscriptionInDynamo,
-    exchangeExternalIdForIdentityId: (externalId: string) => Promise<string> = getIdentityIdFromBraze,
-    storeUserSubscriptionInDynamo: (userSubscription: UserSubscription) => Promise<void> = defaultStoreUserSubscriptionInDynamo,
+    fetchSubscriptionsFromApple: FetchSubsFromApple = defaultFetchSubscriptionsFromApple,
+    storeSubscriptionInDynamo: StoreSubInDynamo = defaultStoreSubscriptionInDynamo,
+    exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId = getIdentityIdFromBraze,
+    storeUserSubscriptionInDynamo: StoreUserSubInDynamo = defaultStoreUserSubscriptionInDynamo,
 ): (event: SQSEvent) => Promise<string> {
     return (event: SQSEvent) => {
         const promises = event.Records.map((record) => {
