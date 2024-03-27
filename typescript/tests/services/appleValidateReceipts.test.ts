@@ -25,6 +25,7 @@ describe("The apple validation service", () => {
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
                 bundleId: "uk.co.guardian.iphone2",
+                appAccountToken: undefined,
                 autoRenewStatus: false,
                 trialPeriod: false,
                 inIntroOfferPeriod: false,
@@ -60,6 +61,7 @@ describe("The apple validation service", () => {
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
                 bundleId: "uk.co.guardian.iphone2",
+                appAccountToken: undefined,
                 autoRenewStatus: false,
                 trialPeriod: false,
                 inIntroOfferPeriod: true,
@@ -97,6 +99,7 @@ describe("The apple validation service", () => {
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
                 bundleId: "uk.co.guardian.iphone2",
+                appAccountToken: undefined,
                 autoRenewStatus: false,
                 trialPeriod: false,
                 inIntroOfferPeriod: false,
@@ -133,6 +136,7 @@ describe("The apple validation service", () => {
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
                 bundleId: "uk.co.guardian.iphone2",
+                appAccountToken: undefined,
                 autoRenewStatus: false,
                 trialPeriod: false,
                 inIntroOfferPeriod: false,
@@ -191,6 +195,7 @@ describe("The apple validation service", () => {
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
                 bundleId: "uk.co.guardian.iphone2",
+                appAccountToken: undefined,
                 autoRenewStatus: false,
                 trialPeriod: false,
                 inIntroOfferPeriod: false,
@@ -206,6 +211,7 @@ describe("The apple validation service", () => {
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
                 bundleId: "uk.co.guardian.iphone2",
+                appAccountToken: undefined,
                 autoRenewStatus: false,
                 trialPeriod: false,
                 inIntroOfferPeriod: false,
@@ -253,6 +259,7 @@ describe("The apple validation service", () => {
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
                 bundleId: "uk.co.guardian.iphone2",
+                appAccountToken: undefined,
                 autoRenewStatus: false,
                 trialPeriod: false,
                 inIntroOfferPeriod: false,
@@ -323,6 +330,7 @@ describe("The apple validation service", () => {
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
                 bundleId: "uk.co.guardian.iphone2",
+                appAccountToken: undefined,
                 autoRenewStatus: false,
                 trialPeriod: false,
                 inIntroOfferPeriod: false,
@@ -338,6 +346,7 @@ describe("The apple validation service", () => {
             latestReceipt: "cmVjZWlwdA==",
             latestReceiptInfo: {
                 bundleId: "uk.co.guardian.iphone2",
+                appAccountToken: undefined,
                 autoRenewStatus: true,
                 trialPeriod: false,
                 inIntroOfferPeriod: false,
