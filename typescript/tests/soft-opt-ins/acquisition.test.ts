@@ -166,46 +166,66 @@ describe('handler', () => {
         expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSendMessageParams);
     });
 
-    // it('processes Feast acquisitions correctly', async () => {
-    //     const subscriptionId = '11111';
-    //     const identityId = '22222';
-    //     const event: DynamoDBStreamEvent = {
-    //         Records: [
-    //             {
-    //                 eventName: 'INSERT',
-    //                 dynamodb: {
-    //                     NewImage: {
-    //                         subscriptionId: { S: subscriptionId },
-    //                         userId: { S: identityId },
-    //                     },
-    //                 },
-    //             },
-    //         ]
-    //     };
-    //     // get the mock instances
-    //     const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
-    //     const mockSQS = new (require('aws-sdk/clients/sqs'))();
-    //     const sub = new ReadSubscription();
-    //     sub.subscriptionId = subscriptionId;
-    //     sub.startTimestamp = "2023-03-14 07:24:38 UTC";
-    //     sub.endTimestamp = "2023-03-14 07:24:38 UTC";
-    //     sub.platform = Platform.IosFeast;
-    //     setMockGet(() => sub);
+    it('processes Feast acquisitions correctly', async () => {
+        const subscriptionId = '11111';
+        const identityId = '22222';
+        fetch.mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                "status": "ok",
+                "user": {
+                    "primaryEmailAddress": "97823f89@gmail.com",
+                    "id": identityId,
+                    "publicFields": {
+                        "displayName": "user"
+                    },
+                    "dates": {
+                        "accountCreatedDate": "2019-08-20T14:53:04Z"
+                    },
+                    "consents": [],
+                    "hasPassword": true
+                }
+            }),
+        });
+        const event: DynamoDBStreamEvent = {
+            Records: [
+                {
+                    eventName: 'INSERT',
+                    dynamodb: {
+                        NewImage: {
+                            subscriptionId: { S: subscriptionId },
+                            userId: { S: identityId },
+                        },
+                    },
+                },
+            ]
+        };
+        // get the mock instances
+        const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
+        const mockSQS = new (require('aws-sdk/clients/sqs'))();
+        const sub = new ReadSubscription();
+        sub.subscriptionId = subscriptionId;
+        sub.startTimestamp = "2023-03-14 07:24:38 UTC";
+        sub.endTimestamp = "2023-03-14 07:24:38 UTC";
+        sub.platform = Platform.IosFeast;
+        setMockGet(() => sub);
 
-    //     await handler(event);
+        await handler(event);
 
-    //     expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
-    //     let expectedQuery = new ReadSubscription();
-    //     expectedQuery.setSubscriptionId(subscriptionId)
-    //     expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
+        expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
+        let expectedQuery = new ReadSubscription();
+        expectedQuery.setSubscriptionId(subscriptionId)
+        expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 
-    //     expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
-    //     const expectedSendMessageParams1 = {
-    //         QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV`,
-    //         MessageBody: JSON.stringify({ identityId, eventType: 'Acquisition', productName: "FeastInAppPurchase", subscriptionId }),
-    //     };
-    //     expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSendMessageParams1);
-    // });
+        // We expect mockSQS to have been called twice - once for the soft opt in setter and once for the email queue
+        expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
+        const expectedSendMessageParams1 = {
+            QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV`,
+            MessageBody: JSON.stringify({ identityId, eventType: 'Acquisition', productName: "FeastInAppPurchase", subscriptionId }),
+        };
+        expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSendMessageParams1);
+        // TODO: verify that the email queue was called with the correct payload
+    });
 
     it('should process a post acquisition sign-in correctly', async () => {
         fetch.mockResolvedValue({
