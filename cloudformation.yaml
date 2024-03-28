@@ -1267,7 +1267,7 @@ Resources:
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
           DLQUrl: !Ref AcquisitionsDeadLetterQueue
-      Description: asdf
+      Description: Trigger setting soft-opt-in consents and sending emails based on Dynamo events
       MemorySize: 512
       Timeout: 60
       Events:
