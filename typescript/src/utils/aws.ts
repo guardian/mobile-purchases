@@ -8,6 +8,7 @@ import CloudWatch from 'aws-sdk/clients/cloudwatch';
 import {PromiseResult} from "aws-sdk/lib/request";
 import SSM = require("aws-sdk/clients/ssm");
 import STS from "aws-sdk/clients/sts";
+import AWS from "aws-sdk";
 import {getMembershipAccountId} from "./guIdentityApi";
 
 const credentialProvider = new CredentialProviderChain([

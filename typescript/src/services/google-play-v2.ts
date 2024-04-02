@@ -160,7 +160,8 @@ function parseNullableDate(date: string | null): Date | null {
     return date === null ? null : new Date(date)
 }
 
-async function initialiseAndroidPublisherClient() {
+
+export async function initialiseAndroidPublisherClient() {
     const accessToken =
         await getAccessToken(getParams(Stage))
 
