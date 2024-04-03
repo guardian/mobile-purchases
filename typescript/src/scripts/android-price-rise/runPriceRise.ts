@@ -16,19 +16,6 @@ import fs from 'fs';
 
 const packageName = 'com.guardian';
 
-// This is our internal definition of regions, which we map to google's region codes
-const ALL_REGIONS = ['AU', 'CA', 'EU', 'UK', 'US', 'NZ', 'ROW'];
-export type PriceRegion = (typeof ALL_REGIONS)[number];
-
-export type PriceRise = {
-    [productId: string]: {
-        [region in PriceRegion]: {
-            price: number;
-            currency: string;
-        };
-    };
-}
-
 const filePath = process.env.FILE_PATH;
 if (!filePath) {
     console.log('Missing FILE_PATH');

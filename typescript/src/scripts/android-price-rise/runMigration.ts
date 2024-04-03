@@ -16,19 +16,6 @@ import fs from 'fs';
 
 const packageName = 'com.guardian';
 
-// This is our internal definition of regions, which we map to google's region codes
-const ALL_REGIONS = ['AU', 'CA', 'EU', 'UK', 'US', 'NZ', 'ROW'];
-export type PriceRegion = (typeof ALL_REGIONS)[number];
-
-export type PriceRise = {
-    [productId: string]: {
-        [region in PriceRegion]: {
-            price: number;
-            currency: string;
-        };
-    };
-}
-
 const filePath = process.env.FILE_PATH;
 if (!filePath) {
     console.log('Missing FILE_PATH');
@@ -36,8 +23,8 @@ if (!filePath) {
 }
 
 const DRY_RUN = process.argv.includes('--dry-run');
-let writeStream = fs.createWriteStream('price-rise-dry-run.csv');
-writeStream.write('productId,region,regionCode,currency,price\n');
+let writeStream = fs.createWriteStream('price-rise-migration-output.csv');
+writeStream.write('productId,region,regionCode\n');
 if (DRY_RUN) {
     console.log('*****DRY RUN*****');
 }
@@ -46,14 +33,6 @@ if (DRY_RUN) {
 const priceRiseData = parsePriceRiseCsv(filePath);
 console.log(priceRiseData);
 
-const buildPrice = (currency: string, price: number): androidpublisher_v3.Schema$Money => {
-    const [units, nanos] = price.toFixed(2).split('.');
-    return {
-        currencyCode: currency,
-        units: units,
-        nanos: parseInt(`${nanos}0000000`),
-    };
-}
 
 initialiseAndroidPublisherClient().then(client => {
     Object.entries(priceRiseData).map(([productId, regionalPrices]) => {

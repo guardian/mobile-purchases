@@ -1,5 +1,14 @@
-import {PriceRegion, PriceRise} from './runPriceRise';
 import fs from 'fs';
+import {PriceRegion} from "./regionCodeMappings";
+
+export type PriceRise = {
+    [productId: string]: {
+        [region in PriceRegion]: {
+            price: number;
+            currency: string;
+        };
+    };
+}
 
 export const parsePriceRiseCsv = (filePath: string): PriceRise => {
     const data = fs.readFileSync(filePath, 'utf8');
