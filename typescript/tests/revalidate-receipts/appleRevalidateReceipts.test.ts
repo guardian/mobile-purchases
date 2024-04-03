@@ -1,11 +1,7 @@
 import { Subscription } from '../../src/models/endTimestampFilter';
 import { buildHandler } from '../../src/revalidate-receipts/appleRevalidateReceipts';
 import { Platform } from '../../src/models/platform';
-
-beforeAll(() => {
-    process.env.LiveAppSqsUrl = 'LiveAppSqsUrl';
-    process.env.FeastAppSqsUrl = 'FeastAppSqsUrl';
-})
+import { withEnv } from '../helpers/withEnv';
 
 describe('appleRevalidateReceipts', () => {
     it('pushes events to the correct SQS queue', async () => {
@@ -16,7 +12,9 @@ describe('appleRevalidateReceipts', () => {
         // @ts-ignore: I just need something which we can iterate over
         const handler = buildHandler(getSubscriptions, sendToQueue);
 
-        await handler({});
+        await withEnv({ LiveAppSqsUrl: 'LiveAppSqsUrl', FeastAppSqsUrl: 'FeastAppSqsUrl' }, async () => {
+            await handler({});
+        });
 
         expect(sendToQueue).toHaveBeenCalledTimes(2);
         expect(sendToQueue).toHaveBeenCalledWith('FeastAppSqsUrl', { receipt: feastSub.receipt }, 0);
