@@ -9,10 +9,10 @@
  */
 
 import {parsePriceRiseCsv} from "./parsePriceRiseCsv";
-import {initialiseAndroidPublisherClient} from "../../services/google-play-v2";
 import {androidpublisher_v3} from "@googleapis/androidpublisher";
 import {regionCodeMappings} from "./regionCodeMappings";
 import fs from 'fs';
+import {getClient} from "./googleClient";
 
 const packageName = 'com.guardian';
 
@@ -31,7 +31,6 @@ if (DRY_RUN) {
 
 // Load new prices for each region/product_id from sheet
 const priceRiseData = parsePriceRiseCsv(filePath);
-console.log(priceRiseData);
 
 const buildPrice = (currency: string, price: number): androidpublisher_v3.Schema$Money => {
     const [units, nanos] = price.toFixed(2).split('.');
@@ -42,8 +41,7 @@ const buildPrice = (currency: string, price: number): androidpublisher_v3.Schema
     };
 }
 
-initialiseAndroidPublisherClient().then(client => {
-
+getClient().then(client => {
     Object.entries(priceRiseData).map(([productId, regionalPrices]) => {
         console.log(`Updating productId ${productId} in regions: ${Object.keys(regionalPrices).join(', ')}`);
 
@@ -52,7 +50,7 @@ initialiseAndroidPublisherClient().then(client => {
         // client.monetization.subscriptions.get({ packageName, productId }).then((resp) => {
         //     const bp = resp.data.basePlans ? resp.data.basePlans[0] : undefined;
         //     if (bp) {
-        //         console.log(bp.regionalConfigs);
+        //         console.log(bp);
         //     }
         // }).catch(err => {
         //     console.log(err)
@@ -80,7 +78,10 @@ initialiseAndroidPublisherClient().then(client => {
                     "regionsVersion.version": '2022/02',
                     updateMask: 'basePlans',
                     requestBody: {
+                        productId,
+                        packageName,
                         basePlans: [{
+                            basePlanId: 'monthly',
                             regionalConfigs,
                         }]
                     }
@@ -90,7 +91,6 @@ initialiseAndroidPublisherClient().then(client => {
                 })
                 .catch(err => {
                     console.log(err);
-                    // console.log(err.response.data.error.errors);
                 });
         }
     });
