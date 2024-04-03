@@ -41,13 +41,15 @@ const buildPrice = (currency: string, price: number): androidpublisher_v3.Schema
     };
 }
 
+/**
+ * Fetch existing basePlan from google API.
+ * This is because we have to send the entire basePlan object in the PATCH request later
+ */
 const getCurrentBasePlan = (
     client: androidpublisher_v3.Androidpublisher,
     productId: string,
     packageName: string,
 ): Promise<androidpublisher_v3.Schema$BasePlan> =>
-    // Fetch existing regional prices from billing api
-    // https://developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions/get?apix_params=%7B%22packageName%22%3A%22com.guardian%22%2C%22productId%22%3A%22dev_testing_only_5%22%7D
     client.monetization.subscriptions
         .get({ packageName, productId })
         .then((resp) => {
@@ -64,33 +66,8 @@ const getCurrentBasePlan = (
 type GuardianRegionPriceMap = Record<GuardianPriceRegion, PriceAndCurrency>;
 type GoogleRegionPriceMap = Record<string, PriceAndCurrency>;
 
-const updatePrices = (
-    basePlan: androidpublisher_v3.Schema$BasePlan,
-    regionalPriceMap: GoogleRegionPriceMap,
-    productId: string,
-): androidpublisher_v3.Schema$BasePlan => {
-    const updatedRegionalConfigs = basePlan.regionalConfigs?.map((regionalConfig) => {
-        if (regionalConfig.regionCode && regionalPriceMap[regionalConfig.regionCode]) {
-            // Update the price
-            const priceDetails = regionalPriceMap[regionalConfig.regionCode];
-            writeStream.write(`${productId},${regionalConfig.regionCode},${priceDetails.currency},${priceDetails.price}\n`);
-            return {
-                ...regionalConfig,
-                price: buildPrice(priceDetails.currency, priceDetails.price),
-            };
-        } else {
-            // Don't change it
-            return regionalConfig;
-        }
-    });
-    return {
-        ...basePlan,
-        regionalConfigs: updatedRegionalConfigs,
-    };
-}
-
-// Transform guardian regions to google regions
-const buildRegionCodeMappings = (guardianRegionalPrices: GuardianRegionPriceMap): GoogleRegionPriceMap => {
+// Transforms guardian regions to google regions
+const buildGoogleRegionPriceMap = (guardianRegionalPrices: GuardianRegionPriceMap): GoogleRegionPriceMap => {
     const regionMappings: Record<string, {price: number; currency: string}> = {};
     Object.entries(guardianRegionalPrices).flatMap(([region, priceDetails]) => {
         const regionCodes = regionCodeMappings[region];
@@ -101,21 +78,44 @@ const buildRegionCodeMappings = (guardianRegionalPrices: GuardianRegionPriceMap)
     return regionMappings;
 }
 
-getClient().then(client =>
-    Promise.all(Object.entries(priceRiseData).map(([productId, regionalPrices]) => {
-        console.log(`Updating productId ${productId} in regions: ${Object.keys(regionalPrices).join(', ')}`);
+// Returns a new BasePlan with updated prices
+const updatePrices = (
+    basePlan: androidpublisher_v3.Schema$BasePlan,
+    googleRegionPriceMap: GoogleRegionPriceMap,
+    productId: string,
+): androidpublisher_v3.Schema$BasePlan => {
+    const updatedRegionalConfigs = basePlan.regionalConfigs?.map((regionalConfig) => {
+        if (regionalConfig.regionCode && googleRegionPriceMap[regionalConfig.regionCode]) {
+            // Update the price
+            const priceDetails = googleRegionPriceMap[regionalConfig.regionCode];
+            writeStream.write(`${productId},${regionalConfig.regionCode},${priceDetails.currency},${priceDetails.price}\n`);
+            return {
+                ...regionalConfig,
+                price: buildPrice(priceDetails.currency, priceDetails.price),
+            };
+        } else {
+            // No mapping for this product_id/region, don't change it
+            return regionalConfig;
+        }
+    });
+    return {
+        ...basePlan,
+        regionalConfigs: updatedRegionalConfigs,
+    };
+}
+
+getClient().then(client => Promise.all(
+    // For each product_id in priceRiseData, update the prices in each region
+    Object.entries(priceRiseData).map(([productId, guardianRegionPriceMap]) => {
+        console.log(`Updating productId ${productId} in regions: ${Object.keys(guardianRegionPriceMap).join(', ')}`);
 
         return getCurrentBasePlan(client, productId, packageName)
             .then((currentBasePlan) => {
-                const googleRegionMappings = buildRegionCodeMappings(regionalPrices);
-                return updatePrices(currentBasePlan, googleRegionMappings, productId);
+                const googleRegionPriceMap = buildGoogleRegionPriceMap(guardianRegionPriceMap);
+                return updatePrices(currentBasePlan, googleRegionPriceMap, productId);
             })
             .then((updatedBasePlan: androidpublisher_v3.Schema$BasePlan) => {
-                // console.log('updated bp:', updatedBasePlan.regionalConfigs?.find(rc => rc.regionCode === 'GB'));
-                // console.log('updated bp:', updatedBasePlan);
-
                 if (!DRY_RUN) {
-                    // Update price of each product_id/region - https://developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions/patch
                     client.monetization.subscriptions
                         .patch({
                             productId,
@@ -136,8 +136,8 @@ getClient().then(client =>
                         });
                 }
             });
-    }))
-)
+    })
+))
     .catch(err => {
         console.log(err);
     })
