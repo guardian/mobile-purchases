@@ -1,6 +1,10 @@
 import fs from 'fs';
 import {GuardianPriceRegion} from "./regionCodeMappings";
 
+/**
+ * See `./testPriceRise.csv` for an example of the expected format.
+ */
+
 export type PriceAndCurrency = {
     price: number;
     currency: string;
