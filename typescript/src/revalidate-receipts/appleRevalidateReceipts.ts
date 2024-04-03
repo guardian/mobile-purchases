@@ -103,7 +103,7 @@ export function buildHandler(
                 const sqsUrl = queueUrlForPlatform(subscription.platform);
                 await sendSubscriptionReferenceToQueue(sqsUrl, subscriptionReference, delayInSeconds);
                 sendCounts[countKey]++;
-                console.log(`Sent subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`)
+                console.log(`Sent ${subscription.platform} subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`)
             } else {
                 console.warn(`No receipt found for ${subscription.subscriptionId}`);
             }
