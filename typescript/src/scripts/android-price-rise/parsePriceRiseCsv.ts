@@ -1,12 +1,13 @@
 import fs from 'fs';
-import {PriceRegion} from "./regionCodeMappings";
+import {GuardianPriceRegion} from "./regionCodeMappings";
 
+export type PriceAndCurrency = {
+    price: number;
+    currency: string;
+};
 export type PriceRise = {
     [productId: string]: {
-        [region in PriceRegion]: {
-            price: number;
-            currency: string;
-        };
+        [region in GuardianPriceRegion]: PriceAndCurrency;
     };
 }
 
@@ -19,7 +20,7 @@ export const parsePriceRiseCsv = (filePath: string): PriceRise => {
 
     lines.forEach((line) => {
         const [productId, regionRaw, currency, priceRaw] = line.split(',');
-        const region = regionRaw as PriceRegion;
+        const region = regionRaw as GuardianPriceRegion;
         const price = parseFloat(priceRaw);
 
         if (!priceRiseData[productId]) {

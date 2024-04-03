@@ -1,6 +1,6 @@
 // This is our internal definition of regions, which we map to google's region codes
 const ALL_REGIONS = ['AU', 'CA', 'EU', 'UK', 'US', 'NZ', 'ROW'];
-export type PriceRegion = (typeof ALL_REGIONS)[number];
+export type GuardianPriceRegion = (typeof ALL_REGIONS)[number];
 
 // Maps our regions to google's region codes
 export const regionCodeMappings: Record<string,string[]> = {
