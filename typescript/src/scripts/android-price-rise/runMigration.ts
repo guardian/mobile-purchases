@@ -1,9 +1,9 @@
 /**
- * Script for changing the prices of android products.
+ * Script for migrating all android subscribers who are currently on legacy prices to the latest prices.
  * Takes as input a CSV with product_id, region, currency, new price. See testPriceRise.csv for an example.
  *
  * Usage:
- * FILE_PATH=/path/to/price-rise.csv yarn run-price-rise [--dry-run]
+ * FILE_PATH=/path/to/price-rise.csv yarn run-price-rise-migration [--dry-run]
  *
  * Outputs to a CSV with a row per product_id + region.
  */
@@ -36,7 +36,7 @@ if (!filePath) {
 }
 
 const DRY_RUN = process.argv.includes('--dry-run');
-let writeStream = fs.createWriteStream('price-rise-output.csv');
+let writeStream = fs.createWriteStream('price-rise-dry-run.csv');
 writeStream.write('productId,region,regionCode,currency,price\n');
 if (DRY_RUN) {
     console.log('*****DRY RUN*****');
@@ -56,54 +56,35 @@ const buildPrice = (currency: string, price: number): androidpublisher_v3.Schema
 }
 
 initialiseAndroidPublisherClient().then(client => {
-
     Object.entries(priceRiseData).map(([productId, regionalPrices]) => {
-        console.log(`Updating productId ${productId} in regions: ${Object.keys(regionalPrices).join(', ')}`);
+        console.log(`Migrating productId ${productId} in regions: ${Object.keys(regionalPrices).join(', ')}`);
 
-        // Fetch existing regional prices from billing api
-        // https://developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions/get?apix_params=%7B%22packageName%22%3A%22com.guardian%22%2C%22productId%22%3A%22dev_testing_only_5%22%7D
-        // client.monetization.subscriptions.get({ packageName, productId }).then((resp) => {
-        //     const bp = resp.data.basePlans ? resp.data.basePlans[0] : undefined;
-        //     if (bp) {
-        //         console.log(bp.regionalConfigs);
-        //     }
-        // }).catch(err => {
-        //     console.log(err)
-        // });
-
-        // Update price of each product_id/region - https://developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions/patch
-        const regionalConfigs: androidpublisher_v3.Schema$RegionalBasePlanConfig[] =
-            Object.entries(regionalPrices).flatMap(([region, priceDetails]) => {
+        const regionalPriceMigrations: androidpublisher_v3.Schema$RegionalPriceMigrationConfig[] =
+            Object.entries(regionalPrices).flatMap(([region]) => {
                 const regionCodes = regionCodeMappings[region];
                 return regionCodes.map(regionCode => {
-                    writeStream.write(`${productId},${region},${regionCode},${priceDetails.currency},${priceDetails.price}\n`);
+                    writeStream.write(`${productId},${region},${regionCode}\n`);
                     return {
-                        price: buildPrice(priceDetails.currency, priceDetails.price),
+                        priceIncreaseType: 'PRICE_INCREASE_TYPE_OPT_OUT',
                         regionCode,
-                        newSubscriberAvailability: true,
                     }
                 });
             });
 
         if (!DRY_RUN) {
-            client.monetization.subscriptions
-                .patch({
+            client.monetization.subscriptions.basePlans
+                .migratePrices({
                     productId,
                     packageName,
-                    "regionsVersion.version": '2022/02',
-                    updateMask: 'basePlans',
                     requestBody: {
-                        basePlans: [{
-                            regionalConfigs,
-                        }]
-                    }
+                        regionalPriceMigrations,
+                    },
                 })
                 .then((response) => {
                     console.log(response);
                 })
                 .catch(err => {
                     console.log(err);
-                    // console.log(err.response.data.error.errors);
                 });
         }
     });
