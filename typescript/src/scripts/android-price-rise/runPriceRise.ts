@@ -24,7 +24,7 @@ if (!filePath) {
 
 const DRY_RUN = process.argv.includes('--dry-run');
 let writeStream = fs.createWriteStream('price-rise-output.csv');
-writeStream.write('productId,region,regionCode,currency,price\n');
+writeStream.write('productId,regionCode,currency,price\n');
 if (DRY_RUN) {
     console.log('*****DRY RUN*****');
 }
@@ -54,7 +54,7 @@ const getCurrentBasePlan = (
             const bp = resp.data.basePlans ? resp.data.basePlans[0] : undefined;
             if (bp) {
                 // console.log(bp);
-                // console.log('GB bp:', bp.regionalConfigs?.find(rc => rc.regionCode === 'GB'));
+                // console.log('US bp:', bp.regionalConfigs?.find(rc => rc.regionCode === 'US'));
                 return bp;
             } else {
                 return Promise.reject('No base plan found');
@@ -66,12 +66,14 @@ type GoogleRegionPriceMap = Record<string, PriceAndCurrency>;
 
 const updatePrices = (
     basePlan: androidpublisher_v3.Schema$BasePlan,
-    regionalPriceMap: GoogleRegionPriceMap
+    regionalPriceMap: GoogleRegionPriceMap,
+    productId: string,
 ): androidpublisher_v3.Schema$BasePlan => {
     const updatedRegionalConfigs = basePlan.regionalConfigs?.map((regionalConfig) => {
         if (regionalConfig.regionCode && regionalPriceMap[regionalConfig.regionCode]) {
             // Update the price
             const priceDetails = regionalPriceMap[regionalConfig.regionCode];
+            writeStream.write(`${productId},${regionalConfig.regionCode},${priceDetails.currency},${priceDetails.price}\n`);
             return {
                 ...regionalConfig,
                 price: buildPrice(priceDetails.currency, priceDetails.price),
@@ -99,14 +101,14 @@ const buildRegionCodeMappings = (guardianRegionalPrices: GuardianRegionPriceMap)
     return regionMappings;
 }
 
-getClient().then(client => {
-    Object.entries(priceRiseData).map(([productId, regionalPrices]) => {
+getClient().then(client =>
+    Promise.all(Object.entries(priceRiseData).map(([productId, regionalPrices]) => {
         console.log(`Updating productId ${productId} in regions: ${Object.keys(regionalPrices).join(', ')}`);
 
-        getCurrentBasePlan(client, productId, packageName)
+        return getCurrentBasePlan(client, productId, packageName)
             .then((currentBasePlan) => {
                 const googleRegionMappings = buildRegionCodeMappings(regionalPrices);
-                return updatePrices(currentBasePlan, googleRegionMappings);
+                return updatePrices(currentBasePlan, googleRegionMappings, productId);
             })
             .then((updatedBasePlan: androidpublisher_v3.Schema$BasePlan) => {
                 // console.log('updated bp:', updatedBasePlan.regionalConfigs?.find(rc => rc.regionCode === 'GB'));
@@ -134,7 +136,11 @@ getClient().then(client => {
                         });
                 }
             });
+    }))
+)
+    .catch(err => {
+        console.log(err);
+    })
+    .finally(() => {
+        writeStream.close();
     });
-}).finally(() => {
-    writeStream.close();
-});
