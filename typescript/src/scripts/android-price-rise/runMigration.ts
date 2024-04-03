@@ -9,10 +9,10 @@
  */
 
 import {parsePriceRiseCsv} from "./parsePriceRiseCsv";
-import {initialiseAndroidPublisherClient} from "../../services/google-play-v2";
 import {androidpublisher_v3} from "@googleapis/androidpublisher";
 import {regionCodeMappings} from "./regionCodeMappings";
 import fs from 'fs';
+import {getClient} from "./googleClient";
 
 const packageName = 'com.guardian';
 
@@ -34,7 +34,7 @@ const priceRiseData = parsePriceRiseCsv(filePath);
 console.log(priceRiseData);
 
 
-initialiseAndroidPublisherClient().then(client => {
+getClient().then(client => Promise.all(
     Object.entries(priceRiseData).map(([productId, regionalPrices]) => {
         console.log(`Migrating productId ${productId} in regions: ${Object.keys(regionalPrices).join(', ')}`);
 
@@ -51,7 +51,7 @@ initialiseAndroidPublisherClient().then(client => {
             });
 
         if (!DRY_RUN) {
-            client.monetization.subscriptions.basePlans
+            return client.monetization.subscriptions.basePlans
                 .migratePrices({
                     productId,
                     packageName,
@@ -60,13 +60,15 @@ initialiseAndroidPublisherClient().then(client => {
                     },
                 })
                 .then((response) => {
-                    console.log(response);
+                    console.log(`Migration successful for ${productId}`);
                 })
-                .catch(err => {
-                    console.log(err);
-                });
         }
+    })
+))
+    .catch(err => {
+        console.log('Error:');
+        console.log(err);
+    })
+    .finally(() => {
+        writeStream.close();
     });
-}).finally(() => {
-    writeStream.close();
-});

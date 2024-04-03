@@ -116,7 +116,7 @@ getClient().then(client => Promise.all(
             })
             .then((updatedBasePlan: androidpublisher_v3.Schema$BasePlan) => {
                 if (!DRY_RUN) {
-                    client.monetization.subscriptions
+                    return client.monetization.subscriptions
                         .patch({
                             productId,
                             packageName,
@@ -129,16 +129,14 @@ getClient().then(client => Promise.all(
                             }
                         })
                         .then((response) => {
-                            console.log(response);
+                            console.log('Updated prices for', productId);
                         })
-                        .catch(err => {
-                            console.log(err);
-                        });
                 }
             });
     })
 ))
     .catch(err => {
+        console.log('Error:')
         console.log(err);
     })
     .finally(() => {
