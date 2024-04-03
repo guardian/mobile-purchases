@@ -93,21 +93,22 @@ export function buildHandler(
     sendSubscriptionReferenceToQueue: (queue: string, ref: SubscriptionReference, delayInSeconds: number) => Promise<void> = defaultSendSubscriptionReferenceToQueue
 ): (event: ScheduleEvent) => Promise<void> {
     return async (event: ScheduleEvent) => {
-        let sentCount = 0;
+        const sendCounts = { "feast": 0, "non-feast": 0 };
         for await (const subscription of subscriptions(event)) {
             const receipt: string | undefined = subscription.receipt;
             if (receipt) {
                 const subscriptionReference: AppleSubscriptionReference = {receipt: receipt};
-                const delayInSeconds = Math.min(Math.floor(sentCount / 10), 900);
+                const countKey = subscription.platform == Platform.IosFeast ? "feast" : "non-feast";
+                const delayInSeconds = Math.min(Math.floor(sendCounts[countKey] / 10), 900);
                 const sqsUrl = queueUrlForPlatform(subscription.platform);
                 await sendSubscriptionReferenceToQueue(sqsUrl, subscriptionReference, delayInSeconds);
-                sentCount++;
+                sendCounts[countKey]++;
                 console.log(`Sent subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`)
             } else {
                 console.warn(`No receipt found for ${subscription.subscriptionId}`);
             }
         }
-        console.log(`Sent ${sentCount} non-Feast subscriptions to be re-validated.`)
+        console.log(`Sent ${sendCounts['non-feast']} non-Feast subscriptions and ${sendCounts['feast']} Feast subscriptions to be re-validated.`)
     }
 }
 
