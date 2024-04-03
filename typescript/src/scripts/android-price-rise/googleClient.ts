@@ -1,16 +1,10 @@
 import {androidpublisher, androidpublisher_v3, auth} from '@googleapis/androidpublisher';
 import SSM = require("aws-sdk/clients/ssm");
-import { GoogleAuth} from 'google-auth-library';
-
+import { GoogleAuth } from 'google-auth-library';
 
 export const ssm: SSM  = new SSM({
     region: 'eu-west-1'
 });
-
-interface ServiceAccountJson {
-    client_email: string;
-    private_key: string;
-}
 
 const getConfigValue = (): Promise<string> => {
     return ssm
@@ -27,10 +21,10 @@ const getConfigValue = (): Promise<string> => {
 export const getClient = async (): Promise<androidpublisher_v3.Androidpublisher> => {
         return getConfigValue()
         .then(raw => {
-            return JSON.parse(raw) as ServiceAccountJson;
+            return JSON.parse(raw);
 
         })
-        .then(async (serviceAccountJson: ServiceAccountJson) => {
+        .then(async (serviceAccountJson) => {
             const jsonClient = new GoogleAuth({
                 credentials: serviceAccountJson,
                 scopes: ['https://www.googleapis.com/auth/androidpublisher']
