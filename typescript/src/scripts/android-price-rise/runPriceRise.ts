@@ -29,7 +29,6 @@ if (DRY_RUN) {
     console.log('*****DRY RUN*****');
 }
 
-// Load new prices for each region/product_id from sheet
 const priceRiseData = parsePriceRiseCsv(filePath);
 
 const buildPrice = (currency: string, price: number): androidpublisher_v3.Schema$Money => {

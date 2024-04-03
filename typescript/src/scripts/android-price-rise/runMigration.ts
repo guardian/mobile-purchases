@@ -29,40 +29,64 @@ if (DRY_RUN) {
     console.log('*****DRY RUN*****');
 }
 
-// Load new prices for each region/product_id from sheet
 const priceRiseData = parsePriceRiseCsv(filePath);
-console.log(priceRiseData);
 
+const getCurrentBasePlan = (
+    client: androidpublisher_v3.Androidpublisher,
+    productId: string,
+    packageName: string,
+): Promise<androidpublisher_v3.Schema$BasePlan> =>
+    client.monetization.subscriptions
+        .get({ packageName, productId })
+        .then((resp) => {
+            const bp = resp.data.basePlans ? resp.data.basePlans[0] : undefined;
+            if (bp) {
+                return bp;
+            } else {
+                return Promise.reject('No base plan found');
+            }
+        });
 
 getClient().then(client => Promise.all(
     Object.entries(priceRiseData).map(([productId, regionalPrices]) => {
         console.log(`Migrating productId ${productId} in regions: ${Object.keys(regionalPrices).join(', ')}`);
 
-        const regionalPriceMigrations: androidpublisher_v3.Schema$RegionalPriceMigrationConfig[] =
-            Object.entries(regionalPrices).flatMap(([region]) => {
-                const regionCodes = regionCodeMappings[region];
-                return regionCodes.map(regionCode => {
-                    writeStream.write(`${productId},${region},${regionCode}\n`);
-                    return {
-                        priceIncreaseType: 'PRICE_INCREASE_TYPE_OPT_OUT',
-                        regionCode,
-                    }
-                });
-            });
+        return getCurrentBasePlan(client, productId, packageName)
+            .then((basePlan) => {
+                const regionalPriceMigrations: androidpublisher_v3.Schema$RegionalPriceMigrationConfig[] =
+                    Object.entries(regionalPrices).flatMap(([region]) => {
+                        const regionCodes = regionCodeMappings[region];
+                        return regionCodes.map(regionCode => {
+                            writeStream.write(`${productId},${region},${regionCode}\n`);
+                            return {
+                                priceIncreaseType: 'PRICE_INCREASE_TYPE_OPT_OUT',
+                                regionCode,
+                                oldestAllowedPriceVersionTime: new Date().toISOString(),
+                            }
+                        });
+                    });
 
-        if (!DRY_RUN) {
-            return client.monetization.subscriptions.basePlans
-                .migratePrices({
-                    productId,
-                    packageName,
-                    requestBody: {
-                        regionalPriceMigrations,
-                    },
-                })
-                .then((response) => {
-                    console.log(`Migration successful for ${productId}`);
-                })
-        }
+                if (!DRY_RUN) {
+                    if (basePlan.basePlanId) {
+                        return client.monetization.subscriptions.basePlans
+                            .migratePrices({
+                                productId,
+                                packageName,
+                                basePlanId: basePlan.basePlanId,
+                                requestBody: {
+                                    basePlanId: basePlan.basePlanId,
+                                    packageName,
+                                    productId,
+                                    regionsVersion: { version: '2022/02' },
+                                    regionalPriceMigrations,
+                                },
+                            })
+                            .then((response) => {
+                                console.log(`Migration successful for ${productId}`);
+                            })
+                    }
+                }
+            });
     })
 ))
     .catch(err => {
