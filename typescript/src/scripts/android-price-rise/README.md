@@ -15,6 +15,8 @@ It works as follows:
 
 The script outputs a CSV file listing every product_id/region that was updated.
 
+Use the `--dry-run` parameter to check the changes before running the script for real.
+
 ### `runMigration.ts`
 This script uses the [migratePrices endpoint](https://developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions.basePlans/migratePrices) to migrate existing users to the new prices.
 
