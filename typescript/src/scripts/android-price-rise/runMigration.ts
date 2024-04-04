@@ -8,9 +8,8 @@
  * Outputs to a CSV with a row per product_id + region.
  */
 
-import {parsePriceRiseCsv} from "./parsePriceRiseCsv";
+import {buildGoogleRegionPriceMap, parsePriceRiseCsv} from "./parsePriceRiseCsv";
 import {androidpublisher_v3} from "@googleapis/androidpublisher";
-import {regionCodeMappings} from "./regionCodeMappings";
 import fs from 'fs';
 import {getClient} from "./googleClient";
 
@@ -24,7 +23,7 @@ if (!filePath) {
 
 const DRY_RUN = process.argv.includes('--dry-run');
 let writeStream = fs.createWriteStream('price-rise-migration-output.csv');
-writeStream.write('productId,region,regionCode\n');
+writeStream.write('productId,regionCode\n');
 if (DRY_RUN) {
     console.log('*****DRY RUN*****');
 }
@@ -48,45 +47,49 @@ const getCurrentBasePlan = (
         });
 
 getClient().then(client => Promise.all(
-    Object.entries(priceRiseData).map(([productId, regionalPrices]) => {
-        console.log(`Migrating productId ${productId} in regions: ${Object.keys(regionalPrices).join(', ')}`);
+    Object.entries(priceRiseData).map(([productId, guardianRegionPriceMap]) => {
+        console.log(`Migrating productId ${productId} in regions: ${Object.keys(guardianRegionPriceMap).join(', ')}`);
 
-        return getCurrentBasePlan(client, productId, packageName)
-            .then((basePlan) => {
-                const regionalPriceMigrations: androidpublisher_v3.Schema$RegionalPriceMigrationConfig[] =
-                    Object.entries(regionalPrices).flatMap(([region]) => {
-                        const regionCodes = regionCodeMappings[region];
-                        return regionCodes.map(regionCode => {
-                            writeStream.write(`${productId},${region},${regionCode}\n`);
-                            return {
-                                priceIncreaseType: 'PRICE_INCREASE_TYPE_OPT_OUT',
-                                regionCode,
-                                oldestAllowedPriceVersionTime: new Date().toISOString(),
-                            }
-                        });
+        const googleRegionPriceMap = buildGoogleRegionPriceMap(guardianRegionPriceMap)
+
+        // Get the base plan for this product_id
+        return getCurrentBasePlan(client, productId, packageName).then((basePlan) => {
+            const regionalPriceMigrations: androidpublisher_v3.Schema$RegionalPriceMigrationConfig[] = [];
+
+            basePlan.regionalConfigs?.forEach((regionalConfig) => {
+                if (regionalConfig.regionCode && googleRegionPriceMap[regionalConfig.regionCode]) {
+                    // We have changed the price for this region, migrate it
+                    writeStream.write(`${productId},${regionalConfig.regionCode}\n`);
+
+                    regionalPriceMigrations.push({
+                        priceIncreaseType: 'PRICE_INCREASE_TYPE_OPT_OUT',
+                        regionCode: regionalConfig.regionCode,
+                        oldestAllowedPriceVersionTime: new Date().toISOString(),
                     });
-
-                if (!DRY_RUN) {
-                    if (basePlan.basePlanId) {
-                        return client.monetization.subscriptions.basePlans
-                            .migratePrices({
-                                productId,
-                                packageName,
-                                basePlanId: basePlan.basePlanId,
-                                requestBody: {
-                                    basePlanId: basePlan.basePlanId,
-                                    packageName,
-                                    productId,
-                                    regionsVersion: { version: '2022/02' },
-                                    regionalPriceMigrations,
-                                },
-                            })
-                            .then((response) => {
-                                console.log(`Migration successful for ${productId}`);
-                            })
-                    }
                 }
             });
+
+            if (!DRY_RUN) {
+                if (basePlan.basePlanId) {
+                    return client.monetization.subscriptions.basePlans
+                        .migratePrices({
+                            productId,
+                            packageName,
+                            basePlanId: basePlan.basePlanId,
+                            requestBody: {
+                                basePlanId: basePlan.basePlanId,
+                                packageName,
+                                productId,
+                                regionsVersion: { version: '2022/02' },
+                                regionalPriceMigrations,
+                            },
+                        })
+                        .then((response) => {
+                            console.log(`Migration successful for ${productId}`);
+                        })
+                }
+            }
+        });
     })
 ))
     .catch(err => {

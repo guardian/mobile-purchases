@@ -8,9 +8,8 @@
  * Outputs to a CSV with a row per product_id + region.
  */
 
-import {parsePriceRiseCsv, PriceAndCurrency} from "./parsePriceRiseCsv";
+import {buildGoogleRegionPriceMap, GoogleRegionPriceMap, parsePriceRiseCsv} from "./parsePriceRiseCsv";
 import {androidpublisher_v3} from "@googleapis/androidpublisher";
-import {GuardianPriceRegion, regionCodeMappings} from "./regionCodeMappings";
 import fs from 'fs';
 import {getClient} from "./googleClient";
 
@@ -62,21 +61,6 @@ const getCurrentBasePlan = (
             }
         });
 
-type GuardianRegionPriceMap = Record<GuardianPriceRegion, PriceAndCurrency>;
-type GoogleRegionPriceMap = Record<string, PriceAndCurrency>;
-
-// Transforms guardian regions to google regions
-const buildGoogleRegionPriceMap = (guardianRegionalPrices: GuardianRegionPriceMap): GoogleRegionPriceMap => {
-    const regionMappings: Record<string, {price: number; currency: string}> = {};
-    Object.entries(guardianRegionalPrices).flatMap(([region, priceDetails]) => {
-        const regionCodes = regionCodeMappings[region];
-        regionCodes.forEach(rc => {
-            regionMappings[rc] = priceDetails;
-        })
-    });
-    return regionMappings;
-}
-
 // Returns a new BasePlan with updated prices
 const updatePrices = (
     basePlan: androidpublisher_v3.Schema$BasePlan,
@@ -87,10 +71,14 @@ const updatePrices = (
         if (regionalConfig.regionCode && googleRegionPriceMap[regionalConfig.regionCode]) {
             // Update the price
             const priceDetails = googleRegionPriceMap[regionalConfig.regionCode];
-            writeStream.write(`${productId},${regionalConfig.regionCode},${priceDetails.currency},${priceDetails.price}\n`);
+            if (regionalConfig.price?.currencyCode !== priceDetails.currency) {
+                console.log(`Currency mismatch for ${productId} in ${regionalConfig.regionCode}: ${regionalConfig.price?.currencyCode} -> ${priceDetails.currency}`);
+            }
+            const currency = regionalConfig.price?.currencyCode ?? priceDetails.currency;
+            writeStream.write(`${productId},${regionalConfig.regionCode},${currency},${priceDetails.price}\n`);
             return {
                 ...regionalConfig,
-                price: buildPrice(priceDetails.currency, priceDetails.price),
+                price: buildPrice(currency, priceDetails.price),
             };
         } else {
             // No mapping for this product_id/region, don't change it
