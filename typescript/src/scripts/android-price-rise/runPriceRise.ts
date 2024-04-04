@@ -8,7 +8,7 @@
  * Outputs to a CSV with a row per product_id + region.
  */
 
-import {buildGoogleRegionPriceMap, GoogleRegionPriceMap, parsePriceRiseCsv} from "./parsePriceRiseCsv";
+import {RegionPriceMap, parsePriceRiseCsv} from "./parsePriceRiseCsv";
 import {androidpublisher_v3} from "@googleapis/androidpublisher";
 import fs from 'fs';
 import {getClient} from "./googleClient";
@@ -64,7 +64,7 @@ const getCurrentBasePlan = (
 // Returns a new BasePlan with updated prices
 const updatePrices = (
     basePlan: androidpublisher_v3.Schema$BasePlan,
-    googleRegionPriceMap: GoogleRegionPriceMap,
+    googleRegionPriceMap: RegionPriceMap,
     productId: string,
 ): androidpublisher_v3.Schema$BasePlan => {
     const updatedRegionalConfigs = basePlan.regionalConfigs?.map((regionalConfig) => {
@@ -93,13 +93,12 @@ const updatePrices = (
 
 getClient().then(client => Promise.all(
     // For each product_id in priceRiseData, update the prices in each region
-    Object.entries(priceRiseData).map(([productId, guardianRegionPriceMap]) => {
-        console.log(`Updating productId ${productId} in regions: ${Object.keys(guardianRegionPriceMap).join(', ')}`);
+    Object.entries(priceRiseData).map(([productId, regionPriceMap]) => {
+        console.log(`Updating productId ${productId} in ${Object.keys(regionPriceMap).length} regions`);
 
         return getCurrentBasePlan(client, productId, packageName)
             .then((currentBasePlan) => {
-                const googleRegionPriceMap = buildGoogleRegionPriceMap(guardianRegionPriceMap);
-                return updatePrices(currentBasePlan, googleRegionPriceMap, productId);
+                return updatePrices(currentBasePlan, regionPriceMap, productId);
             })
             .then((updatedBasePlan: androidpublisher_v3.Schema$BasePlan) => {
                 if (!DRY_RUN) {

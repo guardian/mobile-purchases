@@ -10,8 +10,7 @@ This script uses the [PATCH endpoint](https://developers.google.com/android-publ
 It works as follows:
 
 1. It reads in a CSV file with the new prices for each product_id/region (see testPriceRise.csv for an example).
-2. It maps Guardian regions to Google regions (see `regionCodeMappings.ts`).
-3. For each product_id, it fetches the existing Rate Plan from the Google API. It then sends a modified version of this Rate Plan to the PATCH endpoint, based on the prices from the CSV.
+2. For each product_id, it fetches the existing Rate Plan from the Google API. It then sends a modified version of this Rate Plan to the PATCH endpoint, based on the prices from the CSV.
 
 The script outputs a CSV file listing every product_id/region that was updated.
 

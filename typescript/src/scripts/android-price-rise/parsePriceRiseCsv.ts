@@ -1,5 +1,4 @@
 import fs from 'fs';
-import {GuardianPriceRegion, regionCodeMappings} from "./regionCodeMappings";
 
 /**
  * See `./testPriceRise.csv` for an example of the expected format.
@@ -9,25 +8,11 @@ export type PriceAndCurrency = {
     price: number;
     currency: string;
 };
+
+export type RegionPriceMap = Record<string, PriceAndCurrency>;
+
 export type PriceRise = {
-    [productId: string]: {
-        [region in GuardianPriceRegion]: PriceAndCurrency;
-    };
-}
-
-export type GuardianRegionPriceMap = Record<GuardianPriceRegion, PriceAndCurrency>;
-export type GoogleRegionPriceMap = Record<string, PriceAndCurrency>;
-
-// Transforms guardian regions to google regions
-export const buildGoogleRegionPriceMap = (guardianRegionalPrices: GuardianRegionPriceMap): GoogleRegionPriceMap => {
-    const regionMappings: Record<string, {price: number; currency: string}> = {};
-    Object.entries(guardianRegionalPrices).flatMap(([region, priceDetails]) => {
-        const regionCodes = regionCodeMappings[region];
-        regionCodes.forEach(rc => {
-            regionMappings[rc] = priceDetails;
-        })
-    });
-    return regionMappings;
+    [productId: string]: RegionPriceMap;
 }
 
 export const parsePriceRiseCsv = (filePath: string): PriceRise => {
@@ -38,8 +23,7 @@ export const parsePriceRiseCsv = (filePath: string): PriceRise => {
     const priceRiseData: PriceRise = {};
 
     lines.forEach((line) => {
-        const [productId, regionRaw, currency, priceRaw] = line.split(',');
-        const region = regionRaw as GuardianPriceRegion;
+        const [productId, region, currency, priceRaw] = line.split(',');;
         const price = parseFloat(priceRaw);
 
         if (!priceRiseData[productId]) {

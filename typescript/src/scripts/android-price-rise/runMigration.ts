@@ -8,7 +8,7 @@
  * Outputs to a CSV with a row per product_id + region.
  */
 
-import {buildGoogleRegionPriceMap, parsePriceRiseCsv} from "./parsePriceRiseCsv";
+import {parsePriceRiseCsv} from "./parsePriceRiseCsv";
 import {androidpublisher_v3} from "@googleapis/androidpublisher";
 import fs from 'fs';
 import {getClient} from "./googleClient";
@@ -47,17 +47,15 @@ const getCurrentBasePlan = (
         });
 
 getClient().then(client => Promise.all(
-    Object.entries(priceRiseData).map(([productId, guardianRegionPriceMap]) => {
-        console.log(`Migrating productId ${productId} in regions: ${Object.keys(guardianRegionPriceMap).join(', ')}`);
-
-        const googleRegionPriceMap = buildGoogleRegionPriceMap(guardianRegionPriceMap)
+    Object.entries(priceRiseData).map(([productId, regionPriceMap]) => {
+        console.log(`Migrating productId ${productId} in ${Object.keys(regionPriceMap).length} regions`);
 
         // Get the base plan for this product_id
         return getCurrentBasePlan(client, productId, packageName).then((basePlan) => {
             const regionalPriceMigrations: androidpublisher_v3.Schema$RegionalPriceMigrationConfig[] = [];
 
             basePlan.regionalConfigs?.forEach((regionalConfig) => {
-                if (regionalConfig.regionCode && googleRegionPriceMap[regionalConfig.regionCode]) {
+                if (regionalConfig.regionCode && regionPriceMap[regionalConfig.regionCode]) {
                     // We have changed the price for this region, migrate it
                     writeStream.write(`${productId},${regionalConfig.regionCode}\n`);
 
