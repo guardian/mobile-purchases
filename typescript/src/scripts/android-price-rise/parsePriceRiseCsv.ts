@@ -23,7 +23,10 @@ export const parsePriceRiseCsv = (filePath: string): PriceRise => {
     const priceRiseData: PriceRise = {};
 
     lines.forEach((line) => {
-        const [productId, region, currency, priceRaw] = line.split(',');;
+        if (line.trim() === '') {
+            return;
+        }
+        const [productId, region, currency, priceRaw] = line.split(',');
         const price = parseFloat(priceRaw);
 
         if (!priceRiseData[productId]) {
