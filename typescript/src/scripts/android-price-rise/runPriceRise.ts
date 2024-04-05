@@ -23,7 +23,7 @@ if (!filePath) {
 
 const DRY_RUN = process.argv.includes('--dry-run');
 let writeStream = fs.createWriteStream('price-rise-output.csv');
-writeStream.write('productId,regionCode,currency,price\n');
+writeStream.write('productId,regionCode,currency,oldPrice,newPrice,pcIncrease\n');
 if (DRY_RUN) {
     console.log('*****DRY RUN*****');
 }
@@ -53,8 +53,6 @@ const getCurrentBasePlan = (
         .then((resp) => {
             const bp = resp.data.basePlans ? resp.data.basePlans[0] : undefined;
             if (bp) {
-                // console.log(bp);
-                // console.log('US bp:', bp.regionalConfigs?.find(rc => rc.regionCode === 'US'));
                 return bp;
             } else {
                 return Promise.reject('No base plan found');
@@ -75,7 +73,9 @@ const updatePrices = (
                 console.log(`Currency mismatch for ${productId} in ${regionalConfig.regionCode}: ${regionalConfig.price?.currencyCode} -> ${priceDetails.currency}`);
             }
             const currency = regionalConfig.price?.currencyCode ?? priceDetails.currency;
-            writeStream.write(`${productId},${regionalConfig.regionCode},${currency},${priceDetails.price}\n`);
+            const currentPrice = `${regionalConfig.price?.units}.${regionalConfig.price?.nanos?.toString().slice(0,2) ?? '00'}`;
+            const pcIncrease = (priceDetails.price - parseFloat(currentPrice))/parseFloat(currentPrice);
+            writeStream.write(`${productId},${regionalConfig.regionCode},${currency},${currentPrice},${priceDetails.price},${pcIncrease}\n`);
             return {
                 ...regionalConfig,
                 price: buildPrice(currency, priceDetails.price),
