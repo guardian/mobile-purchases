@@ -73,7 +73,7 @@ const updatePrices = (
                 console.log(`Currency mismatch for ${productId} in ${regionalConfig.regionCode}: ${regionalConfig.price?.currencyCode} -> ${priceDetails.currency}`);
             }
             const currency = regionalConfig.price?.currencyCode ?? priceDetails.currency;
-            const currentPrice = `${regionalConfig.price?.units}.${regionalConfig.price?.nanos?.toString().slice(0,2) ?? '00'}`;
+            const currentPrice = `${regionalConfig.price?.units ?? 0}.${regionalConfig.price?.nanos?.toString().slice(0,2) ?? '00'}`;
             const pcIncrease = (priceDetails.price - parseFloat(currentPrice))/parseFloat(currentPrice);
             writeStream.write(`${productId},${regionalConfig.regionCode},${currency},${currentPrice},${priceDetails.price},${pcIncrease}\n`);
             return {
