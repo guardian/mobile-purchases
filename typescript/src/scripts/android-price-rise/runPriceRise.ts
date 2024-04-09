@@ -51,6 +51,9 @@ const getCurrentBasePlan = (
     client.monetization.subscriptions
         .get({ packageName, productId })
         .then((resp) => {
+            if ((resp.data.basePlans?.length ?? 0) > 1) {
+                console.log(`Base plan for ${productId} has ${resp.data.basePlans?.length} base plans`);
+            }
             const bp = resp.data.basePlans ? resp.data.basePlans[0] : undefined;
             if (bp) {
                 return bp;
