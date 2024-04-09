@@ -12,6 +12,7 @@ import {RegionPriceMap, parsePriceRiseCsv} from "./parsePriceRiseCsv";
 import {androidpublisher_v3} from "@googleapis/androidpublisher";
 import fs from 'fs';
 import {getClient} from "./googleClient";
+import {regionsThatAllowOptOut} from "./getRegionsThatAllowOptOut";
 
 const packageName = 'com.guardian';
 
@@ -69,7 +70,11 @@ const updatePrices = (
     productId: string,
 ): androidpublisher_v3.Schema$BasePlan => {
     const updatedRegionalConfigs = basePlan.regionalConfigs?.map((regionalConfig) => {
-        if (regionalConfig.regionCode && googleRegionPriceMap[regionalConfig.regionCode]) {
+        if (
+            regionalConfig.regionCode &&
+            googleRegionPriceMap[regionalConfig.regionCode] &&
+            regionsThatAllowOptOut.has(regionalConfig.regionCode)
+        ) {
             // Update the price
             const priceDetails = googleRegionPriceMap[regionalConfig.regionCode];
             if (regionalConfig.price?.currencyCode !== priceDetails.currency) {
