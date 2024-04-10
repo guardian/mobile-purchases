@@ -12,6 +12,7 @@ import {parsePriceRiseCsv} from "./parsePriceRiseCsv";
 import {androidpublisher_v3} from "@googleapis/androidpublisher";
 import fs from 'fs';
 import {getClient} from "./googleClient";
+import {regionsThatAllowOptOut} from "./getRegionsThatAllowOptOut";
 
 const packageName = 'com.guardian';
 
@@ -55,7 +56,11 @@ getClient().then(client => Promise.all(
             const regionalPriceMigrations: androidpublisher_v3.Schema$RegionalPriceMigrationConfig[] = [];
 
             basePlan.regionalConfigs?.forEach((regionalConfig) => {
-                if (regionalConfig.regionCode && regionPriceMap[regionalConfig.regionCode]) {
+                if (
+                    regionalConfig.regionCode &&
+                    regionPriceMap[regionalConfig.regionCode] &&
+                    regionsThatAllowOptOut.has(regionalConfig.regionCode)
+                ) {
                     // We have changed the price for this region, migrate it
                     writeStream.write(`${productId},${regionalConfig.regionCode}\n`);
 
