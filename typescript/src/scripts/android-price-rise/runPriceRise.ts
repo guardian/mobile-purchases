@@ -72,9 +72,12 @@ const updatePrices = (
     const updatedRegionalConfigs = basePlan.regionalConfigs?.map((regionalConfig) => {
         if (
             regionalConfig.regionCode &&
-            googleRegionPriceMap[regionalConfig.regionCode] &&
-            regionsThatAllowOptOut.has(regionalConfig.regionCode)
+            googleRegionPriceMap[regionalConfig.regionCode]
         ) {
+            if (!regionsThatAllowOptOut.has(regionalConfig.regionCode)) {
+                console.log(`Skipping region that doesn't allow opt-outs: ${regionalConfig.regionCode}`);
+                return regionalConfig;
+            }
             // Update the price
             const priceDetails = googleRegionPriceMap[regionalConfig.regionCode];
             if (regionalConfig.price?.currencyCode !== priceDetails.currency) {
