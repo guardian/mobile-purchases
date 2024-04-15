@@ -122,7 +122,12 @@ export function buildHandler(
             )
         })
 
-        return Promise.all(promises).then(_ => "OK")
+        return Promise.all(promises)
+            .then(promises => {
+                console.log(`Successfully processed ${promises.length} record(s)`);
+                return promises;
+            })
+            .then(_ => "OK")
     }
 }
 
