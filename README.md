@@ -5,6 +5,13 @@ _IOS receipt validation and purchase persistence_
  - The scala part of the project is considered "legacy". It's only kept for very old iOS devices and should be decommissioned once there's only a tiny amount of [traffic reaching the service](https://eu-west-1.console.aws.amazon.com/cloudwatch/home?region=eu-west-1#dashboards:name=MobilePurchases;start=P7D).
  - The Typescript part of the project contains the more modern approach to validating and storing mobile purchases.
  
+## Local Setup
+### Node
+Make sure that you are using the right Node version, we recommend [`fnm`](https://github.com/Schniz/fnm) as the Node version manager.
+1. Install `yarn`: `npm install -g yarn`
+2. Run `yarn` to install dependencies
+3. Run local tests: `yarn test`
+
 ## Architecture
 
 This service is a set of cloud functions (AWS lambdas), triggered either by an API Gateway or by SQS queues. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services. 
