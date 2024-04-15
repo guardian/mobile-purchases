@@ -17,7 +17,7 @@ describe('appleRevalidateReceipts', () => {
         });
 
         expect(sendToQueue).toHaveBeenCalledTimes(2);
-        expect(sendToQueue).toHaveBeenCalledWith('FeastAppSqsUrl', { receipt: feastSub.receipt }, 0);
-        expect(sendToQueue).toHaveBeenCalledWith('LiveAppSqsUrl', { receipt: liveAppSub.receipt }, 0);
+        expect(sendToQueue).toHaveBeenCalledWith('FeastAppSqsUrl', { receipt: feastSub.receipt, isRevalidation: true }, 0);
+        expect(sendToQueue).toHaveBeenCalledWith('LiveAppSqsUrl', { receipt: liveAppSub.receipt, isRevalidation: true }, 0);
     });
 });
