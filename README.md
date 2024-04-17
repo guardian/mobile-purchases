@@ -18,6 +18,8 @@ This service is a set of cloud functions (AWS lambdas), triggered either by an A
 
 ![Mobile Purchases Architecture](mobile-purchases-architecture.png)
 
+[Diagram source](https://docs.google.com/drawings/d/1C3-YcIdq4OZBbl5zouHKzJLWgRBtR89yCO9CHCGGkAQ/edit)
+
 ### Data
 There are three dynamo DB tables:
  - Events (`mobile-purchases-<stage>-subscription-events-v2`): This table records all events as they are received by Google and Apple.
