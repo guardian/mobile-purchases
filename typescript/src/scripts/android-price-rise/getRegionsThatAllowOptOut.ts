@@ -1,3 +1,4 @@
+// We typically exclude regions that do not allow opt-out migrations. See https://support.google.com/googleplay/android-developer/answer/13542779?sjid=11571781313046417020-EU
 export const regionsThatAllowOptOut = new Set([
     'AL',
     'DZ',

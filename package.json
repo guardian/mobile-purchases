@@ -8,8 +8,7 @@
     "build:dev": "webpack",
     "test": "jest",
     "test-lambda": "yarn build:dev && node ./tsc-target/test-launcher.js",
-    "android-price-rise": "AWS_PROFILE=mobile ts-node ./typescript/src/scripts/android-price-rise/runPriceRise.ts",
-    "android-price-rise-migration": "AWS_PROFILE=mobile ts-node ./typescript/src/scripts/android-price-rise/runMigration.ts"
+    "android-price-rise": "AWS_PROFILE=mobile ts-node ./typescript/src/scripts/android-price-rise/runPriceRise.ts"
   },
   "repository": {
     "type": "git",
