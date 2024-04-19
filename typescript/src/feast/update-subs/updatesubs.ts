@@ -13,8 +13,10 @@ import { GracefulProcessingError } from "../../models/GracefulProcessingError";
 type AppAccountToken = {
     appAccountToken: string
 }
-
 type HasAppAccountToken<A> = AppAccountToken & A
+
+type MaybeAppAccountToken = Partial<AppAccountToken>
+export type MaybeHasAppAccountToken<A> = MaybeAppAccountToken & A
 
 export const withAppAccountToken =
     <A extends Object>(a: A, appAccountToken: string): HasAppAccountToken<A> => {
@@ -27,13 +29,14 @@ const decodeSubscriptionReference =
     }
 
 export const defaultFetchSubscriptionsFromApple =
-    async (reference: AppleSubscriptionReference): Promise<HasAppAccountToken<Subscription>[]> => {
+    async (reference: AppleSubscriptionReference): Promise<MaybeHasAppAccountToken<Subscription>[]> => {
         const responses = await validateReceipt(reference.receipt, { sandboxRetry: false }, App.Feast);
         return responses.map(response => {
+            const subscription = toAppleSubscription(response);
             if (response.latestReceiptInfo.appAccountToken) {
-                return withAppAccountToken(toAppleSubscription(response), response.latestReceiptInfo.appAccountToken) 
+                return withAppAccountToken(subscription, response.latestReceiptInfo.appAccountToken)
             } else {
-                throw new ProcessingError(`Subscription with receipt '${response.latestReceipt}' did not have an 'appAccountToken'`, false)
+                return subscription;
             }
         })
     }
@@ -48,7 +51,7 @@ const defaultStoreUserSubscriptionInDynamo =
         return dynamoMapper.put({ item: userSubscription }).then(_ => {})
     }
 
-type FetchSubsFromApple = (reference: AppleSubscriptionReference) => Promise<HasAppAccountToken<Subscription>[]>;
+type FetchSubsFromApple = (reference: AppleSubscriptionReference) => Promise<MaybeHasAppAccountToken<Subscription>[]>;
 type StoreSubInDynamo = (subscription: Subscription) => Promise<void>;
 type ExchangeExternalIdForIdentityId = (externalId: string) => Promise<string>;
 type StoreUserSubInDynamo = (userSubscription: UserSubscription) => Promise<void>;
@@ -70,6 +73,10 @@ const processRecord = async (
 
     const userSubscriptions =
         await Promise.all(subscriptions.map(async s => {
+            if (!s.appAccountToken) {
+                throw new ProcessingError(`Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`, false)
+            }
+
             const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
             const now = new Date().toISOString()
 
@@ -102,7 +109,7 @@ const processRecordWithErrorHandling = async (
            console.error("Unexpected error, will throw to retry: ", error);
            throw error;
         }
-    }   
+    }
 }
 
 export function buildHandler(
