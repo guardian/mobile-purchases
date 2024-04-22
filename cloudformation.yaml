@@ -393,7 +393,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: google-pubsub.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs20.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-google-pubsub/google-pubsub.zip
