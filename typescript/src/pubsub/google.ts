@@ -70,6 +70,12 @@ async function fetchMetadata(notification: DeveloperNotification): Promise<MetaD
         // as storing the event in the dynamo DB, and posting to the SQS queue are higher priority.
         // So even if something goes horribly wrong, we'll cary on the processing
         console.error(`Unable to fetch the subscription associated with the event`, exception);
+
+        // Log the notification 5% of the time for debugging - I don't want this to be too noisy
+        if (Math.random() < 0.05) {
+            console.error("Notification was: ", notification);
+        }
+
         return undefined;
     }
 }
