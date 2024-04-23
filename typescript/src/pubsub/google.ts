@@ -7,20 +7,28 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
 import {fromGooglePackageName} from "../services/appToPlatform";
 import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE} from "../services/google-play";
+import { z } from "zod";
 
-interface DeveloperNotification {
-    version: string,
-    packageName: string,
-    eventTimeMillis: string,
-    subscriptionNotification: SubscriptionNotification
-}
+const SubscriptionNotificationSchema = z.object({
+    version: z.string(),
+    notificationType: z.number(),
+    purchaseToken: z.string(),
+    subscriptionId: z.string()
+});
+type SubscriptionNotification = z.infer<typeof SubscriptionNotificationSchema>;
 
-interface SubscriptionNotification {
-    version: string,
-    notificationType: number,
-    purchaseToken: string,
-    subscriptionId: string
-}
+const DeveloperNotificationSchema = z.object({
+    version: z.string(),
+    packageName: z.string(),
+    eventTimeMillis: z.string(),
+    subscriptionNotification: z.object({
+        version: z.string(),
+        notificationType: z.number(),
+        purchaseToken: z.string(),
+        subscriptionId: z.string()
+    })
+});
+type DeveloperNotification = z.infer<typeof DeveloperNotificationSchema>;
 
 interface MetaData {
     freeTrial: boolean
