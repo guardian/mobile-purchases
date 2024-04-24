@@ -1,6 +1,6 @@
 
 import { SQSEvent } from "aws-lambda";
-import { MaybeHasAppAccountToken, buildHandler, withAppAccountToken } from "../../../src/feast/update-subs/updatesubs";
+import { SubscriptionMaybeWithAppAccountToken, buildHandler, withAppAccountToken } from "../../../src/feast/update-subs/updatesubs";
 import { Subscription } from "../../../src/models/subscription";
 import { AppleSubscriptionReference } from "../../../src/models/subscriptionReference";
 import { UserSubscription } from "../../../src/models/userSubscription";
@@ -143,7 +143,7 @@ const subscription =
         receipt: string,
         appAccountToken?: string,
         identityId?: string
-    ): { subscription: MaybeHasAppAccountToken<Subscription>, identityId?: string } => {
+    ): { subscription: SubscriptionMaybeWithAppAccountToken, identityId?: string } => {
         const subscription = new Subscription(id, "", "", "", false, "", "ios-feast", false, "6M", null, receipt, null);
         return {
             subscription: appAccountToken ? withAppAccountToken(subscription, appAccountToken): subscription,

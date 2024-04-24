@@ -10,18 +10,13 @@ import { UserSubscription } from "../../models/userSubscription";
 import { getIdentityIdFromBraze } from "../../services/braze";
 import { GracefulProcessingError } from "../../models/GracefulProcessingError";
 
-type AppAccountToken = {
-    appAccountToken: string
-}
-type HasAppAccountToken<A> = AppAccountToken & A
-
-type MaybeAppAccountToken = Partial<AppAccountToken>
-export type MaybeHasAppAccountToken<A> = MaybeAppAccountToken & A
+export type SubscriptionMaybeWithAppAccountToken = Subscription & {
+    appAccountToken?: string
+};
 
 export const withAppAccountToken =
-    <A extends Object>(a: A, appAccountToken: string): HasAppAccountToken<A> => {
-        return Object.assign(a, { appAccountToken: appAccountToken })
-    }
+    (subscription: Subscription, appAccountToken: string): SubscriptionMaybeWithAppAccountToken =>
+        Object.assign(subscription, { appAccountToken: appAccountToken });
 
 const decodeSubscriptionReference =
     (record: SQSRecord): AppleSubscriptionReference => {
@@ -29,7 +24,7 @@ const decodeSubscriptionReference =
     }
 
 export const defaultFetchSubscriptionsFromApple =
-    async (reference: AppleSubscriptionReference): Promise<MaybeHasAppAccountToken<Subscription>[]> => {
+    async (reference: AppleSubscriptionReference): Promise<SubscriptionMaybeWithAppAccountToken[]> => {
         const responses = await validateReceipt(reference.receipt, { sandboxRetry: false }, App.Feast);
         return responses.map(response => {
             const subscription = toAppleSubscription(response);
@@ -51,7 +46,7 @@ const defaultStoreUserSubscriptionInDynamo =
         return dynamoMapper.put({ item: userSubscription }).then(_ => {})
     }
 
-type FetchSubsFromApple = (reference: AppleSubscriptionReference) => Promise<MaybeHasAppAccountToken<Subscription>[]>;
+type FetchSubsFromApple = (reference: AppleSubscriptionReference) => Promise<SubscriptionMaybeWithAppAccountToken[]>;
 type StoreSubInDynamo = (subscription: Subscription) => Promise<void>;
 type ExchangeExternalIdForIdentityId = (externalId: string) => Promise<string>;
 type StoreUserSubInDynamo = (userSubscription: UserSubscription) => Promise<void>;
