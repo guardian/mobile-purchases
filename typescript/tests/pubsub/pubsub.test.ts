@@ -117,7 +117,18 @@ describe("The google pubsub", () => {
         const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(event => Promise.resolve(event));
         const mockSqsFunction: Mock<Promise<any>, [string, {purchaseToken: string}]> = jest.fn((queurl, event) => Promise.resolve({}));
         const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
-        const badPayload = { foo: "bar" };
+        const receivedEvent = { "foo": "bar" };
+        const encodedEvent = Buffer.from(JSON.stringify(receivedEvent)).toString('base64');
+        const badPayload = {
+            message: {
+                data: encodedEvent,
+                messageId: '123',
+                message_id: '123',
+                publishTime: '2019-05-24T15:06:47.701Z',
+                publish_time: '2019-05-24T15:06:47.701Z'
+            },
+            subscription: 'projects/guardian.co.uk:maximal-ceiling-820/subscriptions/mobile-pubsub-code'
+        };
         const input: APIGatewayProxyEvent = {
             queryStringParameters: { secret: "MYSECRET" },
             body: JSON.stringify(badPayload),
