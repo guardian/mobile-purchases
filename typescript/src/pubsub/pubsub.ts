@@ -25,7 +25,7 @@ function storeInDynamoImpl(event: SubscriptionEvent): Promise<SubscriptionEvent>
 
 export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
     request: APIGatewayProxyEvent,
-    parsePayload: (body: Option<string>) => Payload | Error,
+    parsePayload: (body: Option<string>) => Payload | undefined | Error,
     toDynamoEvent: (payload: Payload, metaData?: MetaData) => SubscriptionEvent,
     toSqsEvent: (payload: Payload) => SqsEvent,
     fetchMetadata: (payload: Payload) => Promise<MetaData | undefined>,
@@ -40,7 +40,9 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
         }
         if (request.queryStringParameters?.secret === secret) {
             const notification = parsePayload(request.body);
-            if (notification instanceof Error) {
+            if(!notification) {
+                return HTTPResponses.OK;
+            } else if (notification instanceof Error) {
                 return HTTPResponses.INVALID_REQUEST
             }
             
@@ -65,6 +67,3 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
         }
     });
 }
-
-
-

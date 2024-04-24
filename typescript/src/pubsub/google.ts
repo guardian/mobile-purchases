@@ -9,37 +9,65 @@ import {fromGooglePackageName} from "../services/appToPlatform";
 import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE} from "../services/google-play";
 import { z } from "zod";
 
-const SubscriptionNotificationSchema = z.object({
-    version: z.string(),
-    notificationType: z.number(),
-    purchaseToken: z.string(),
-    subscriptionId: z.string()
-});
-
-const DeveloperNotificationSchema = z.object({
+const DeveloperNotificationBaseSchema = z.object({
     version: z.string(),
     packageName: z.string(),
     eventTimeMillis: z.string(),
-    subscriptionNotification: SubscriptionNotificationSchema,
-}).refine(
+});
+
+const SubscriptionNotificationSchema = DeveloperNotificationBaseSchema.extend({
+    subscriptionNotification: z.object({
+        version: z.string(),
+        notificationType: z.number(),
+        purchaseToken: z.string(),
+        subscriptionId: z.string()
+    }),
+})
+type SubscriptionNotification = z.infer<typeof SubscriptionNotificationSchema>;
+
+const VoidedPurchaseNotificationSchema = DeveloperNotificationBaseSchema.extend({
+    voidedPurchaseNotification: z.object({
+        purchaseToken: z.string(),
+        orderId: z.string(),
+        productType: z.number(),
+        refundType: z.number(),
+    }),
+})
+type VoidedPurchaseNotification = z.infer<typeof VoidedPurchaseNotificationSchema>;
+
+// Zod doesn't seem to support both extending a base schema with a refinement
+// and extending so I need to apply the refinement here.
+const DeveloperNotificationSchema = z.union([
+    SubscriptionNotificationSchema,
+    VoidedPurchaseNotificationSchema,
+]).refine(
     (data) => optionalMsToDate(data.eventTimeMillis) !== null,
     (data) => ({ message: `Unable to parse the eventTimeMillis field ${data.eventTimeMillis}` }),
 );
-
 type DeveloperNotification = z.infer<typeof DeveloperNotificationSchema>;
 
 interface MetaData {
     freeTrial: boolean
 }
 
-export function parsePayload(body: Option<string>): Error | DeveloperNotification {
+function isSubscriptionNotification(notification: DeveloperNotification): notification is SubscriptionNotification {
+  return (notification as SubscriptionNotification).subscriptionNotification !== undefined;
+}
+
+export function parsePayload(body: Option<string>): Error | SubscriptionNotification | undefined {
     try {
         const rawNotification = Buffer.from(JSON.parse(body ?? "").message.data, 'base64');
         const parseResult = DeveloperNotificationSchema.safeParse(JSON.parse(rawNotification.toString()));
         if (!parseResult.success) {
             return new Error(`HTTP Payload body parse error: ${parseResult.error}`);
         }
-        return parseResult.data;
+
+        const data = parseResult.data;
+        if (isSubscriptionNotification(data)) {
+            return data;
+        }
+
+        return undefined;
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
         return e as Error;
@@ -60,7 +88,7 @@ const GOOGLE_SUBS_EVENT_TYPE: {[_: number]: string} = {
     13: "SUBSCRIPTION_EXPIRED"
 };
 
-async function fetchMetadata(notification: DeveloperNotification): Promise<MetaData | undefined> {
+async function fetchMetadata(notification: SubscriptionNotification): Promise<MetaData | undefined> {
     try {
         const subscription = await fetchGoogleSubscription(
             notification.subscriptionNotification.subscriptionId,
@@ -85,7 +113,7 @@ async function fetchMetadata(notification: DeveloperNotification): Promise<MetaD
     }
 }
 
-export function toDynamoEvent(notification: DeveloperNotification, metaData?: MetaData): SubscriptionEvent {
+export function toDynamoEvent(notification: SubscriptionNotification, metaData?: MetaData): SubscriptionEvent {
     const eventTime = optionalMsToDate(notification.eventTimeMillis);
     if (!eventTime) {
         // this is tested while parsing the payload in order to return HTTP 400 early.
@@ -121,7 +149,7 @@ export function toDynamoEvent(notification: DeveloperNotification, metaData?: Me
     );
 }
 
-export function toSqsSubReference(event: DeveloperNotification): GoogleSubscriptionReference {
+export function toSqsSubReference(event: SubscriptionNotification): GoogleSubscriptionReference {
     return {
         packageName: event.packageName,
         purchaseToken: event.subscriptionNotification.purchaseToken,

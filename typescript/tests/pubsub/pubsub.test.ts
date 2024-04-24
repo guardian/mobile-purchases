@@ -156,6 +156,63 @@ describe("The google pubsub", () => {
 
         expect(result).toEqual(HTTPResponses.INVALID_REQUEST)
     })
+
+    it("returns a 200 response but does not do anything with a voided purchase notification", async () => {
+        process.env['Secret'] = "MYSECRET";
+        process.env['QueueUrl'] = "";
+        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(event => Promise.resolve(event));
+        const mockSqsFunction: Mock<Promise<any>, [string, {purchaseToken: string}]> = jest.fn((queurl, event) => Promise.resolve({}));
+        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
+        const receivedEvent = {
+            "version":"1.0",
+            "packageName":"com.guardian.debug",
+            "eventTimeMillis":"1503349566168",
+            "voidedPurchaseNotification":
+                {
+                    "purchaseToken": "PURCHASE_TOKEN",
+                    "orderId": "GS.0000-0000-0000",
+                    "productType": 1,
+                    "refundType": 1
+                }
+        };
+        const encodedEvent = Buffer.from(JSON.stringify(receivedEvent)).toString('base64');
+        const body = {
+            message: {
+                data: encodedEvent,
+                messageId: '123',
+                message_id: '123',
+                publishTime: '2019-05-24T15:06:47.701Z',
+                publish_time: '2019-05-24T15:06:47.701Z'
+            },
+            subscription: 'projects/guardian.co.uk:maximal-ceiling-820/subscriptions/mobile-pubsub-code'
+        };
+        const input: APIGatewayProxyEvent = {
+            queryStringParameters: {secret: "MYSECRET"},
+            body: JSON.stringify(body),
+            headers: {},
+            multiValueHeaders: {},
+            httpMethod: "POST",
+            isBase64Encoded: false,
+            path: '',
+            pathParameters: {},
+            multiValueQueryStringParameters: {},
+            // @ts-ignore
+            requestContext: null,
+            resource: '',
+        };
+
+        const result = await parseStoreAndSend(
+            input,
+            parseGooglePayload,
+            googlePayloadToDynamo,
+            toGoogleSqsEvent,
+            mockFetchMetadataFunction,
+            mockStoreFunction,
+            mockSqsFunction
+        );
+
+        expect(result).toEqual(HTTPResponses.OK);
+    })
 });
 
 describe("The apple pubsub", () => {
