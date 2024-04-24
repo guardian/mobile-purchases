@@ -8,6 +8,7 @@ import {Option} from "../utils/option";
 import {fromGooglePackageName} from "../services/appToPlatform";
 import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE} from "../services/google-play";
 import { z } from "zod";
+import { Ignorable } from './ignorable';
 
 const DeveloperNotificationBaseSchema = z.object({
     version: z.string(),
@@ -54,7 +55,7 @@ function isSubscriptionNotification(notification: DeveloperNotification): notifi
   return (notification as SubscriptionNotification).subscriptionNotification !== undefined;
 }
 
-export function parsePayload(body: Option<string>): Error | SubscriptionNotification | undefined {
+export function parsePayload(body: Option<string>): Error | SubscriptionNotification | Ignorable {
     try {
         const rawNotification = Buffer.from(JSON.parse(body ?? "").message.data, 'base64');
         const parseResult = DeveloperNotificationSchema.safeParse(JSON.parse(rawNotification.toString()));
@@ -67,7 +68,7 @@ export function parsePayload(body: Option<string>): Error | SubscriptionNotifica
             return data;
         }
 
-        return undefined;
+        return new Ignorable(`Notification is not a subscription notification. Notification was: ${JSON.stringify(data)}`)
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
         return e as Error;
