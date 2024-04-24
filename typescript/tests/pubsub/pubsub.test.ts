@@ -67,7 +67,6 @@ describe("The google pubsub", () => {
             // @ts-ignore
             requestContext: null,
             resource: '',
-
         };
 
         const expectedSubscriptionEventInDynamo: SubscriptionEvent = new SubscriptionEvent(
@@ -111,6 +110,41 @@ describe("The google pubsub", () => {
             expect(mockFetchMetadataFunction.mock.calls[0][0]).toStrictEqual(receivedEvent);
         });
     });
+
+    it("returns a 400 response if the payload parsing fails", async () => {
+        process.env['Secret'] = "MYSECRET";
+        process.env['QueueUrl'] = "";
+        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(event => Promise.resolve(event));
+        const mockSqsFunction: Mock<Promise<any>, [string, {purchaseToken: string}]> = jest.fn((queurl, event) => Promise.resolve({}));
+        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
+        const badPayload = { foo: "bar" };
+        const input: APIGatewayProxyEvent = {
+            queryStringParameters: { secret: "MYSECRET" },
+            body: JSON.stringify(badPayload),
+            headers: {},
+            multiValueHeaders: {},
+            httpMethod: "POST",
+            isBase64Encoded: false,
+            path: '',
+            pathParameters: {},
+            multiValueQueryStringParameters: {},
+            // @ts-ignore
+            requestContext: null,
+            resource: '',
+        };
+
+        const result = await parseStoreAndSend(
+            input,
+            parseGooglePayload,
+            googlePayloadToDynamo,
+            toGoogleSqsEvent,
+            mockFetchMetadataFunction,
+            mockStoreFunction,
+            mockSqsFunction
+        );
+
+        expect(result).toEqual(HTTPResponses.INVALID_REQUEST)
+    })
 });
 
 describe("The apple pubsub", () => {

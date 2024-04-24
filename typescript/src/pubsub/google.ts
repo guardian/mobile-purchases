@@ -15,19 +15,17 @@ const SubscriptionNotificationSchema = z.object({
     purchaseToken: z.string(),
     subscriptionId: z.string()
 });
-type SubscriptionNotification = z.infer<typeof SubscriptionNotificationSchema>;
 
 const DeveloperNotificationSchema = z.object({
     version: z.string(),
     packageName: z.string(),
     eventTimeMillis: z.string(),
-    subscriptionNotification: z.object({
-        version: z.string(),
-        notificationType: z.number(),
-        purchaseToken: z.string(),
-        subscriptionId: z.string()
-    })
-});
+    subscriptionNotification: SubscriptionNotificationSchema,
+}).refine(
+    (data) => optionalMsToDate(data.eventTimeMillis) !== null,
+    (data) => ({ message: `Unable to parse the eventTimeMillis field ${data.eventTimeMillis}` }),
+);
+
 type DeveloperNotification = z.infer<typeof DeveloperNotificationSchema>;
 
 interface MetaData {
@@ -37,12 +35,11 @@ interface MetaData {
 export function parsePayload(body: Option<string>): Error | DeveloperNotification {
     try {
         const rawNotification = Buffer.from(JSON.parse(body ?? "").message.data, 'base64');
-        const parsedNotification = JSON.parse(rawNotification.toString()) as DeveloperNotification;
-        const eventDate = optionalMsToDate(parsedNotification.eventTimeMillis);
-        if (eventDate === null) {
-            return new Error(`Unable to parse the eventTimeMillis field ${parsedNotification.eventTimeMillis}`)
+        const parseResult = DeveloperNotificationSchema.safeParse(JSON.parse(rawNotification.toString()));
+        if (!parseResult.success) {
+            return new Error(`HTTP Payload body parse error: ${parseResult.error}`);
         }
-        return parsedNotification;
+        return parseResult.data;
     } catch (e) {
         console.log("Error during the parsing of the HTTP Payload body: " + e);
         return e as Error;
