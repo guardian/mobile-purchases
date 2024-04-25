@@ -60,6 +60,7 @@ export function parsePayload(body: Option<string>): Error | SubscriptionNotifica
         const rawNotification = Buffer.from(JSON.parse(body ?? "").message.data, 'base64');
         const parseResult = DeveloperNotificationSchema.safeParse(JSON.parse(rawNotification.toString()));
         if (!parseResult.success) {
+            console.log("HTTP Payload body parse error: ", parseResult.error)
             return new Error(`HTTP Payload body parse error: ${parseResult.error}`);
         }
 
