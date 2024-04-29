@@ -898,7 +898,7 @@ Resources:
       OKActions:
         - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-apple-pubsub-check-errors
-      AlarmDescription: A HTTP request to the pubsub endpoint resulted in a 5XX error.
+      AlarmDescription: A HTTP request to the iOS pubsub endpoint resulted in a 5XX error.
       Dimensions:
         - Name: ApiName
           Value: !Sub ${App}-${Stage}
@@ -927,7 +927,7 @@ Resources:
       OKActions:
         - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-feast-apple-pubsub-check-errors
-      AlarmDescription: A HTTP request to the pubsub endpoint resulted in a 5XX error.
+      AlarmDescription: A HTTP request to the iOS Feast pubsub endpoint resulted in a 5XX error.
       Dimensions:
         - Name: ApiName
           Value: !Sub ${App}-${Stage}
@@ -935,6 +935,35 @@ Resources:
           Value: POST
         - Name: Resource
           Value: /feast/apple/pubsub
+        - Name: Stage
+          Value: !Ref Stage
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Period: 300
+      Statistic: Sum
+      Threshold: 2
+      TreatMissingData: notBreaching
+
+  GooglePubsub5xxErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled:
+        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      AlarmName: !Sub mobile-purchases-${Stage}-google-pubsub-check-errors
+      AlarmDescription: A HTTP request to the Google pubsub endpoint resulted in a 5XX error.
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub ${App}-${Stage}
+        - Name: Method
+          Value: POST
+        - Name: Resource
+          Value: /google/pubsub
         - Name: Stage
           Value: !Ref Stage
       ComparisonOperator: GreaterThanOrEqualToThreshold
