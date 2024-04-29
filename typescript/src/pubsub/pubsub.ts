@@ -7,6 +7,7 @@ import {PromiseResult} from "aws-sdk/lib/request";
 import {sqs, dynamoMapper, sendToSqs} from "../utils/aws";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
+import { Ignorable } from './ignorable';
 
 export const ONE_YEAR_IN_SECONDS = 31557600;
 
@@ -25,7 +26,7 @@ function storeInDynamoImpl(event: SubscriptionEvent): Promise<SubscriptionEvent>
 
 export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
     request: APIGatewayProxyEvent,
-    parsePayload: (body: Option<string>) => Payload | Error,
+    parsePayload: (body: Option<string>) => Payload | Ignorable | Error,
     toDynamoEvent: (payload: Payload, metaData?: MetaData) => SubscriptionEvent,
     toSqsEvent: (payload: Payload) => SqsEvent,
     fetchMetadata: (payload: Payload) => Promise<MetaData | undefined>,
@@ -41,7 +42,11 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
         if (request.queryStringParameters?.secret === secret) {
             const notification = parsePayload(request.body);
             if (notification instanceof Error) {
+                console.log("Parsing the payload failed: ", notification.message);
                 return HTTPResponses.INVALID_REQUEST
+            } else if (notification instanceof Ignorable) {
+                console.log("Ignoring event: ", notification.message);
+                return HTTPResponses.OK;
             }
             
             const queueUrl = process.env.QueueUrl;
@@ -65,6 +70,3 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
         }
     });
 }
-
-
-
