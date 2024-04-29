@@ -1,7 +1,7 @@
 import { StatusUpdateNotification, parsePayload } from "../../../src/pubsub/apple-common";
 import Mock = jest.Mock;
 import { APIGatewayProxyEvent } from "aws-lambda";
-import { buildHandler } from "../../../src/feast/pubsub/pubsub";
+import { buildHandler } from "../../../src/feast/pubsub/apple";
 import { HTTPResponses } from "../../../src/models/apiGatewayHttp";
 import { AppleSubscriptionReference } from "../../../src/models/subscriptionReference";
 

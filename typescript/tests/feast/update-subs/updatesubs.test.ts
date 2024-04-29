@@ -1,6 +1,6 @@
 
 import { SQSEvent } from "aws-lambda";
-import { SubscriptionMaybeWithAppAccountToken, buildHandler, withAppAccountToken } from "../../../src/feast/update-subs/updatesubs";
+import { SubscriptionMaybeWithAppAccountToken, buildHandler, withAppAccountToken } from "../../../src/feast/update-subs/apple";
 import { Subscription } from "../../../src/models/subscription";
 import { AppleSubscriptionReference } from "../../../src/models/subscriptionReference";
 import { UserSubscription } from "../../../src/models/userSubscription";
