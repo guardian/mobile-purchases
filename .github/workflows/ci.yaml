@@ -100,3 +100,5 @@ jobs:
               - tsc-target/feast-apple-pubsub.zip
             mobile-purchases-feast-apple-update-subscriptions:
               - tsc-target/feast-apple-update-subscriptions.zip
+            mobile-purchases-feast-apple-revalidation-update-subscriptions:
+              - tsc-target/feast-apple-revalidation-update-subscriptions.zip

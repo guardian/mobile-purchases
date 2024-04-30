@@ -22,6 +22,7 @@ const getEntries = (env) => {
     "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
     "feast-apple-pubsub": "./typescript/src/feast/pubsub/pubsub.ts",
     "feast-apple-update-subscriptions": "./typescript/src/feast/update-subs/updatesubs.ts",
+    "feast-apple-revalidation-update-subscriptions": "./typescript/src/feast/update-subs/updatesubsRevalidation.ts",
   };
   return env.production ? entries : {
     ...entries,
