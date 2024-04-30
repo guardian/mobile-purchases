@@ -1207,6 +1207,25 @@ Resources:
         - Ref: AlarmTopic
       TreatMissingData: notBreaching
 
+  FeastAppleRevalidationUpdateSubscriptionsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${App}-feast-apple-revalidation-update-subscriptions-${Stage}
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-feast-apple-revalidation-update-subscriptions/feast-apple-revalidation-update-subscriptions.zip
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: Consumes Feast revalidation subscription data updates from app store from sqs and stores and updates subscriptions dynamo
+      Handler: feast-apple-revalidation-update-subscriptions.handler
+      MemorySize: 512
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Timeout: 25
+      Runtime: nodejs20.x
+
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
     Properties:
