@@ -53,7 +53,7 @@ deployments:
   mobile-purchases-feast-apple-revalidation-update-subscriptions:
     template: lambda
     parameters:
-      functionNames: [mobile-purchases-feast-apple-revalidation-update-subscriptions-]
+      functionNames: [mobile-purchases-feast-apple-reval-update-subscriptions-]
       fileName: feast-apple-revalidation-update-subscriptions.zip
 
   mobile-purchases-google-pubsub:
