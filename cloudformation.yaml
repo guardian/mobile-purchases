@@ -253,7 +253,7 @@ Resources:
               produces: [application/json]
               responses:
                 "200":
-                  "description": "200 response"
+                  "description": "Successfully handled link request from iOS Live App"
           "/google/linkToSubscriptions":
             post:
               x-amazon-apigateway-integration:
@@ -264,7 +264,7 @@ Resources:
               produces: [application/json]
               responses:
                 "200":
-                  "description": "200 response"
+                  "description": "Successfully handled link request from Android Live App"
           "/user/subscriptions/me":
             get:
               x-amazon-apigateway-integration:
