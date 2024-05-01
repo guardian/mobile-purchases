@@ -944,7 +944,7 @@ Resources:
       OKActions:
         - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-apple-pubsub-check-errors
-      AlarmDescription: A HTTP request to the iOS pubsub endpoint resulted in a 5XX error.
+      AlarmDescription: Two HTTP requests to the iOS pubsub endpoint resulted in 5XX errors.
       Dimensions:
         - Name: ApiName
           Value: !Sub ${App}-${Stage}
@@ -973,7 +973,7 @@ Resources:
       OKActions:
         - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-feast-apple-pubsub-check-errors
-      AlarmDescription: A HTTP request to the iOS Feast pubsub endpoint resulted in a 5XX error.
+      AlarmDescription: Two HTTP requests to the iOS Feast pubsub endpoint resulted in 5XX errors.
       Dimensions:
         - Name: ApiName
           Value: !Sub ${App}-${Stage}
@@ -1002,7 +1002,7 @@ Resources:
       OKActions:
         - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-google-pubsub-check-errors
-      AlarmDescription: A HTTP request to the Google pubsub endpoint resulted in a 5XX error.
+      AlarmDescription: Two HTTP requests to the Google pubsub endpoint resulted in 5XX errors.
       Dimensions:
         - Name: ApiName
           Value: !Sub ${App}-${Stage}
@@ -1031,7 +1031,7 @@ Resources:
       OKActions:
         - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-feast-google-pubsub-check-errors
-      AlarmDescription: A HTTP request to the Feast Google pubsub endpoint resulted in a 5XX error.
+      AlarmDescription: Two HTTP requests to the Feast Google pubsub endpoint resulted in 5XX errors.
       Dimensions:
         - Name: ApiName
           Value: !Sub ${App}-${Stage}
