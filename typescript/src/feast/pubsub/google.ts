@@ -1,4 +1,4 @@
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import type {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 
 export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
     // placeholder for new lambda
