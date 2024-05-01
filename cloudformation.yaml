@@ -209,7 +209,7 @@ Resources:
               produces: [application/json]
               responses:
                 "200":
-                  "description": "200 response"
+                  "description": "Successfully processed a Live App purchase receipt from Google Play Store"
           "/google/subscription/{subscriptionId}/status":
             get:
               x-amazon-apigateway-integration:
@@ -242,7 +242,7 @@ Resources:
               produces: [application/json]
               responses:
                 "200":
-                  "description": "200 response"
+                  "description": "Successfully processed a Live App purchase receipt from the Apple App Store"
           "/apple/linkToSubscriptions":
             post:
               x-amazon-apigateway-integration:
@@ -308,7 +308,7 @@ Resources:
               produces: [application/json]
               responses:
                 "200":
-                  "description": "200 response"
+                  "description": "Successfully processed a Feast App purchase receipt from the Apple App Store"
           "/feast/google/pubsub":
             post:
               x-amazon-apigateway-integration:
@@ -319,7 +319,7 @@ Resources:
               produces: [application/json]
               responses:
                 "200":
-                  "description": "200 response"
+                  "description": "Successfully processed a Feast App purchase receipt from the Google Play Store"
           "/healthcheck":
             get:
               responses:
