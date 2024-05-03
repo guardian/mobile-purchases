@@ -134,7 +134,7 @@ describe("handler", () => {
         expect(result).toEqual({ recordCount: 1, rowCount: 1 })
     })
 
-    it('puts Feast deletions on the SOI SQS queue the product name FeastInAppPurchase', async () => {
+    it('puts Feast deletions on the SOI SQS queue with the product name FeastInAppPurchase', async () => {
         // get the mock instances
         const mockSQS = new (require('aws-sdk/clients/sqs'))();
 
