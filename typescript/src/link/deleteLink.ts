@@ -4,6 +4,7 @@ import {dynamoMapper, putMetric, sendToSqsSoftOptIns} from "../utils/aws";
 import {ReadUserSubscription} from "../models/userSubscription";
 import {getMembershipAccountId} from "../utils/guIdentityApi";
 import {Region, Stage} from "../utils/appIdentity";
+import { mapPlatformToSoftOptInProductName } from '../utils/softOptIns';
 
 async function handleSoftOptInsError(message: string) {
     console.error(message);
@@ -34,7 +35,7 @@ async function deleteUserSubscription(userLinks: ReadUserSubscription[]): Promis
 
 let softOptInSuccessCount = 0;
 
-async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscriptionId: string) {
+async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscriptionId: string, platform: string | undefined) {
     const membershipAccountId = await getMembershipAccountId();
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
@@ -43,7 +44,7 @@ async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscription
     await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
         identityId: user.userId,
         eventType: "Cancellation",
-        productName: "InAppPurchase",
+        productName: mapPlatformToSoftOptInProductName(platform),
         subscriptionId: subscriptionId
     });
     console.log(`sent soft opt-in message for identityId ${user.userId}`);
@@ -59,14 +60,16 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
             dynamoEvent.dynamodb?.OldImage?.subscriptionId
     });
 
-    const subscriptionIds = ttlEvents
-        // @ts-ignore
-        .map(event => event.dynamodb.OldImage.subscriptionId.S ?? "");
+    const subscriptions = ttlEvents
+        .map(event => event.dynamodb?.OldImage);
 
     let records = 0;
     let rows = 0;
 
-    for (const subscriptionId of subscriptionIds) {
+    for (const subscription of subscriptions) {
+        // We're guaranteed to have a truthy subscription ID here as we filtered
+        // out Dynamo record events without it above.
+        const subscriptionId = subscription?.subscriptionId?.S!;
         const userLinksIterator = await getUserLinks(subscriptionId);
 
         const userSubscriptions: ReadUserSubscription[] = [];
@@ -80,7 +83,8 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
             rows += await deleteUserSubscription(userSubscriptions);
 
             try {
-                await disableSoftOptIns(userSubscriptions, subscriptionId);
+                const platform = subscription?.platform?.S
+                await disableSoftOptIns(userSubscriptions, subscriptionId, platform);
             } catch (e) {
                 handleSoftOptInsError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
             }
