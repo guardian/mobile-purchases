@@ -9,7 +9,6 @@ import {PromiseResult} from "aws-sdk/lib/request";
 import SSM = require("aws-sdk/clients/ssm");
 import STS from "aws-sdk/clients/sts";
 import {getMembershipAccountId} from "./guIdentityApi";
-import { Platform } from "../models/platform";
 import { SoftOptInEventProductName } from "./softOptIns";
 
 const credentialProvider = new CredentialProviderChain([
