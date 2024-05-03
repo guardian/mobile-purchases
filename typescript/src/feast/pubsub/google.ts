@@ -1,7 +1,23 @@
 import type {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import { HTTPResponses } from "../../models/apiGatewayHttp";
 
-export async function handler(request: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>  {
-    // placeholder for new lambda
-    console.log(`${JSON.stringify(request)}`)
-    return { statusCode: 200, body: JSON.stringify(request) }
+export function buildHandler(): (request: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult> {
+    return async (request: APIGatewayProxyEvent) => {
+        const secret = process.env.Secret;
+
+        if (secret === undefined) {
+            console.error("PubSub secret in env is 'undefined'");
+            return HTTPResponses.INTERNAL_ERROR
+        }
+
+        if (request.queryStringParameters?.secret === secret) {
+            // placeholder for new lambda
+            console.log(`${JSON.stringify(request)}`)
+            return HTTPResponses.OK;
+        } else {
+            return HTTPResponses.UNAUTHORISED;
+        }
+    }
 }
+
+export const handler = buildHandler();
