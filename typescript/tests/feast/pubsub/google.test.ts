@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { buildHandler } from "../../../src/feast/pubsub/google";
 import { HTTPResponses } from "../../../src/models/apiGatewayHttp";
 
-const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
+const buildApiGatewayEvent = (secret: string): APIGatewayProxyEvent => {
     const receivedEvent = {
         "version":"1.0",
         "packageName":"uk.co.guardian.feast.test",
@@ -37,7 +37,7 @@ const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
         isBase64Encoded: false,
         path: '',
         pathParameters: {},
-        queryStringParameters: {secret: "test_secret"},
+        queryStringParameters: {secret: secret},
         multiValueQueryStringParameters: {},
         // @ts-ignore
         requestContext: null,
@@ -51,8 +51,9 @@ beforeEach(() => {
 });
 
 describe("The Feast Google pubsub", () => {
-    it("Should return HTTP 200", async () => {
-        const input = buildApiGatewayEvent();
+    it("Should return HTTP 200 if secret is correct and input is valid", async () => {
+        const correct_secret = 'test_secret';
+        const input = buildApiGatewayEvent(correct_secret);
 
         const handler = buildHandler();
 
@@ -61,9 +62,9 @@ describe("The Feast Google pubsub", () => {
         expect(result).toStrictEqual(HTTPResponses.OK);
     });
 
-    it("Should return HTTP 401 if secret is invalid", async () => {
-        const input = buildApiGatewayEvent();
-        input.queryStringParameters = {};
+    it("Should return HTTP 401 if secret is incorrect", async () => {
+        const incorrect_secret = 'incorrect_secret';
+        const input = buildApiGatewayEvent(incorrect_secret);
 
         const handler = buildHandler();
 
