@@ -40,8 +40,10 @@ export function buildHandler(
                 // Hardcode metaData instead of trying to fetch it from Google
                 // to test a fake subscription in CODE
                 //const metaData = await fetchMetadata(notification);
+                console.log(notification);
                 const metaData = { freeTrial: true };
                 const dynamoEvent = toDynamoEvent(notification, metaData);
+                console.log(dynamoEvent);
                 await storeEventInDynamo(dynamoEvent);
             } catch (e) {
                 console.error("Internal server error", e);
