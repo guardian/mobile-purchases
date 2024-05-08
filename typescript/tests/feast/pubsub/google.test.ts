@@ -1,11 +1,13 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { buildHandler } from "../../../src/feast/pubsub/google";
 import { HTTPResponses } from "../../../src/models/apiGatewayHttp";
+import { SubscriptionEvent } from "../../../src/models/subscriptionEvent";
+import Mock = jest.Mock;
 
 const buildApiGatewayEvent = (secret: string): APIGatewayProxyEvent => {
     const receivedEvent = {
         "version":"1.0",
-        "packageName":"uk.co.guardian.feast.test",
+        "packageName":"uk.co.guardian.feast",
         "eventTimeMillis":"1503349566168",
         "subscriptionNotification":
             {
@@ -52,10 +54,12 @@ beforeEach(() => {
 
 describe("The Feast Google pubsub", () => {
     it("Should return HTTP 200 if secret is correct and input is valid", async () => {
-        const correct_secret = 'test_secret';
-        const input = buildApiGatewayEvent(correct_secret);
+        const correctSecret = 'test_secret';
+        const input = buildApiGatewayEvent(correctSecret);
 
-        const handler = buildHandler();
+        const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => Promise.resolve();
+        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
+        const handler = buildHandler(noOpStoreEventInDynamo, mockFetchMetadataFunction);
 
         const result = await handler(input);
 
@@ -63,13 +67,58 @@ describe("The Feast Google pubsub", () => {
     });
 
     it("Should return HTTP 401 if secret is incorrect", async () => {
-        const incorrect_secret = 'incorrect_secret';
-        const input = buildApiGatewayEvent(incorrect_secret);
+        const incorrectSecret = 'incorrect_secret';
+        const input = buildApiGatewayEvent(incorrectSecret);
 
-        const handler = buildHandler();
+        const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => Promise.resolve();
+        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
+        const handler = buildHandler(noOpStoreEventInDynamo, mockFetchMetadataFunction);
 
         const result = await handler(input);
 
         expect(result).toStrictEqual(HTTPResponses.UNAUTHORISED);
+    });
+
+    it("invokes the method to add the event to the Dynamo table", async () => {
+        const correctSecret = 'test_secret';
+        const input = buildApiGatewayEvent(correctSecret);
+
+        const storeEventInDynamoMock = jest.fn(() => Promise.resolve());
+        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
+        const handler = buildHandler(storeEventInDynamoMock, mockFetchMetadataFunction);
+
+        const result = await handler(input);
+        const expectedSubscriptionEventInDynamo: SubscriptionEvent = new SubscriptionEvent(
+            "PURCHASE_TOKEN",
+            "2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED",
+            "2017-08-21",
+            "2017-08-21T21:06:06.168Z",
+            "SUBSCRIPTION_PURCHASED",
+            "android",
+            "uk.co.guardian.feast",
+            true,
+            {
+                eventTimeMillis: "1503349566168",
+                packageName: "uk.co.guardian.feast",
+                subscriptionNotification: {
+                    notificationType: 4,
+                    purchaseToken: "PURCHASE_TOKEN",
+                    subscriptionId: "uk.co.guardian.feast.access.test",
+                    version: "1.0"
+                },
+                version: "1.0"
+            },
+            null,
+            1582319167,
+            null,
+            null,
+            undefined,
+            undefined,
+            undefined
+        );
+
+        expect(result).toStrictEqual(HTTPResponses.OK);
+        expect(storeEventInDynamoMock).toHaveBeenCalledTimes(1);
+        expect(storeEventInDynamoMock).toHaveBeenCalledWith(expectedSubscriptionEventInDynamo);
     });
 });
