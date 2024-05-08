@@ -15,7 +15,8 @@ const packageToPlatform: {[packageName: string]: Platform} = {
     "com.guardian": Platform.Android,
     "com.guardian.debug": Platform.Android,
     "com.guardian.editions": Platform.AndroidEdition,
-    "uk.co.guardian.puzzles": Platform.AndroidPuzzles
+    "uk.co.guardian.puzzles": Platform.AndroidPuzzles,
+    "uk.co.guardian.feast": Platform.AndroidFeast
 };
 
 export function fromGooglePackageName(packageName: string): Platform | undefined {
