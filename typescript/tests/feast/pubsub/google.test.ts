@@ -94,7 +94,7 @@ describe("The Feast Google pubsub", () => {
             "2017-08-21",
             "2017-08-21T21:06:06.168Z",
             "SUBSCRIPTION_PURCHASED",
-            "android",
+            "android-feast",
             "uk.co.guardian.feast",
             true,
             {
