@@ -36,7 +36,11 @@ export function buildHandler(
             }
 
             try {
-                const metaData = await fetchMetadata(notification);
+                // Temporary change
+                // Hardcode metaData instead of trying to fetch it from Google
+                // to test a fake subscription in CODE
+                //const metaData = await fetchMetadata(notification);
+                const metaData = { freeTrial: true };
                 const dynamoEvent = toDynamoEvent(notification, metaData);
                 await storeEventInDynamo(dynamoEvent);
             } catch (e) {
