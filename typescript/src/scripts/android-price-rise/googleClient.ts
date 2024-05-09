@@ -6,10 +6,10 @@ export const ssm: SSM  = new SSM({
     region: 'eu-west-1'
 });
 
-const getConfigValue = (): Promise<string> => {
+const getConfigValue = (path: string): Promise<string> => {
     return ssm
         .getParameter({
-            Name: '/mobile-purchase/android-subscription/google.serviceAccountJson2',
+            Name: path,
             WithDecryption: true,
         })
         .promise()
@@ -18,8 +18,8 @@ const getConfigValue = (): Promise<string> => {
         })
 }
 
-export const getClient = async (): Promise<androidpublisher_v3.Androidpublisher> => {
-        return getConfigValue()
+export const getClient = async (path: string): Promise<androidpublisher_v3.Androidpublisher> => {
+        return getConfigValue(path)
         .then(raw => {
             return JSON.parse(raw);
 

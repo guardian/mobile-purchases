@@ -102,7 +102,7 @@ const updatePrices = (
     };
 }
 
-getClient().then(client => Promise.all(
+getClient('/mobile-purchase/android-subscription/google.serviceAccountJson2').then(client => Promise.all(
     // For each product_id in priceRiseData, update the prices in each region
     Object.entries(priceRiseData).map(([productId, regionPriceMap]) => {
         console.log(`Updating productId ${productId} in ${Object.keys(regionPriceMap).length} regions`);
