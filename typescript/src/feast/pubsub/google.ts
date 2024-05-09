@@ -10,7 +10,7 @@ import { dynamoMapper } from "../../utils/aws";
 import { SubscriptionEvent } from "../../models/subscriptionEvent";
 
 const defaultStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => {
-    return dynamoMapper.put({ event }).then(_ => undefined);
+    return dynamoMapper.put({ item: event }).then(_ => undefined);
 }
 
 export function buildHandler(
