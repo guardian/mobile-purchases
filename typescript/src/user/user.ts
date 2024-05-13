@@ -29,6 +29,7 @@ async function getUserSubscriptionIds(userId: string): Promise<string[]> {
     const subs: string[] = [];
 
     const subscriptionResults = dynamoMapper.query(ReadUserSubscription, {userId: userId});
+    console.log({ subscriptionResults })
 
     for await (const sub of subscriptionResults) {
         subs.push(sub.subscriptionId)
@@ -87,6 +88,7 @@ export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGat
     try {
         const apiKeys = await apiKeysConfig();
         const authToken = getAuthToken(httpRequest.headers);
+        console.log({ authToken, apiKeys })
 
         let userId: string;
 
