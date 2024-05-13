@@ -7,6 +7,7 @@ import {getUserId, getAuthToken, UserIdResolution} from "../utils/guIdentityApi"
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {plusDays} from "../utils/dates";
 import {getConfigValue} from "../utils/ssmConfig";
+import { mapPlatformToSoftOptInProductName } from '../utils/softOptIns';
 
 interface SubscriptionStatus {
     subscriptionId: string
@@ -17,6 +18,7 @@ interface SubscriptionStatus {
     gracePeriod: boolean
     autoRenewing: boolean
     productId: string
+    softOptInProductName: string
 }
 
 interface SubscriptionStatusResponse {
@@ -64,7 +66,8 @@ async function getSubscriptions(subscriptionIds: string[]) : Promise<Subscriptio
             valid: valid,
             gracePeriod: gracePeriod,
             autoRenewing: sub.autoRenewing,
-            productId: sub.productId
+            productId: sub.productId,
+            softOptInProductName: mapPlatformToSoftOptInProductName(sub.platform),
         }
     });
 
