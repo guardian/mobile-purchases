@@ -81,6 +81,13 @@ async function apiKeysConfig(): Promise<string[]> {
 }
 
 export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+    // Log the request 5% of the time for debugging - I don't want this to be too noisy
+    if (Math.random() < 0.05) {
+        const ua = httpRequest.headers["User-Agent"] || "UNKNOWN";
+        const path = httpRequest.path || "UNKNOWN";
+        console.log("User-agent: ", ua, ", Path: ", path);
+    }
+
     try {
         const apiKeys = await apiKeysConfig();
         const authToken = getAuthToken(httpRequest.headers);
