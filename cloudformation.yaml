@@ -792,6 +792,9 @@ Resources:
       Statistic: Sum
       Threshold: 1
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-google-oauth
 
   GooglePlaySubsStatus5xxErrors:
     Type: AWS::CloudWatch::Alarm
@@ -849,6 +852,9 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       EvaluationPeriods: 1
       Threshold: 20
+      Tags:
+        - Key: App
+          Value: mobile-purchases-google-subscription-status
 
   UpdateGoogleSubscriptionsLambda:
     Type: AWS::Lambda::Function
@@ -933,6 +939,9 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       EvaluationPeriods: 1
       Threshold: 10
+      Tags:
+        - Key: App
+          Value: mobile-purchases-apple-subscription-status
 
   ApplePubsub5xxErrors:
     Type: AWS::CloudWatch::Alarm
@@ -962,6 +971,9 @@ Resources:
       Statistic: Sum
       Threshold: 2
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-apple-pubsub
 
   FeastApplePubsub5xxErrors:
     Type: AWS::CloudWatch::Alarm
@@ -991,6 +1003,9 @@ Resources:
       Statistic: Sum
       Threshold: 2
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-feast-apple-pubsub
 
   GooglePubsub5xxErrors:
     Type: AWS::CloudWatch::Alarm
@@ -1020,6 +1035,9 @@ Resources:
       Statistic: Sum
       Threshold: 2
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-google-pubsub
 
   FeastGooglePubsub5xxErrors:
     Type: AWS::CloudWatch::Alarm
@@ -1049,6 +1067,9 @@ Resources:
       Statistic: Sum
       Threshold: 2
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-feast-google-pubsub
 
   UserSubscriptionsLambda:
     Type: AWS::Serverless::Function
@@ -1135,6 +1156,9 @@ Resources:
       OKActions:
         - Ref: AlarmTopic
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-apple-pubsub
 
   GoogleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -1157,6 +1181,9 @@ Resources:
       OKActions:
         - Ref: AlarmTopic
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-google-pubsub
 
   UpdateFeastAppleSubscriptionsLambda:
     Type: AWS::Lambda::Function
@@ -1206,6 +1233,9 @@ Resources:
       OKActions:
         - Ref: AlarmTopic
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-feast-apple-pubsub
 
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
@@ -1523,7 +1553,7 @@ Resources:
       - DeleteUserSubscriptionLambda
     Properties:
       AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+        - Ref: AlarmTopic
       AlarmName: !Sub ${App}-delete-user-subscription-${Stage} failed to set soft opt-ins for a user
       AlarmDescription: >
         An error occurred in the DeleteUserSubscriptionLambda and failed to set soft opt-ins for a user
@@ -1538,6 +1568,9 @@ Resources:
       Statistic: Sum
       Threshold: 1
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-delete-user-subscription
 
   acquisitionsLambdaExceptionsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -1546,7 +1579,7 @@ Resources:
       - SoftOptInAcquisitionsLambda
     Properties:
       AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+        - Ref: AlarmTopic
       AlarmName: !Sub ${App}-soft-opt-in-acquisitions-${Stage} threw an unhandled exception and failed to set soft opt-ins for a user
       AlarmDescription: >
         An error occurred in the SoftOptInAcquisitionsLambda and failed to set soft opt-ins for a user
@@ -1561,6 +1594,9 @@ Resources:
       Statistic: Sum
       Threshold: 1
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-soft-opt-in-acquisitions
 
   acquisitionsDlqProcessorExceptionsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -1569,7 +1605,7 @@ Resources:
       - AcquisitionsDLQProcessorLambda
     Properties:
       AlarmActions:
-        - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:retention-dev
+        - Ref: AlarmTopic
       AlarmName: !Sub ${App}-soft-opt-ins-acquisitions-dlq-processor-${Stage} threw an unhandled exception
       AlarmDescription: >
         An error occurred in the AcquisitionsDLQProcessorLambda
@@ -1584,3 +1620,6 @@ Resources:
       Statistic: Sum
       Threshold: 1
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-soft-opt-in-acquisitions-dlq-processor
