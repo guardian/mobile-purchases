@@ -62,7 +62,7 @@ Mappings:
   StageVariables:
     CODE:
       Schedule: 'rate(365 days)'
-      AlarmActionsEnabled: FALSE
+      AlarmActionsEnabled: TRUE
       SoftOptInConsentSetterStage: DEV
     PROD:
       Schedule: 'rate(30 minutes)'
@@ -1574,7 +1574,7 @@ Resources:
 
   acquisitionsLambdaExceptionsAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: IsProd
+#    Condition: IsProd
     DependsOn:
       - SoftOptInAcquisitionsLambda
     Properties:
@@ -1590,7 +1590,7 @@ Resources:
       EvaluationPeriods: 1
       MetricName: Errors
       Namespace: AWS/Lambda
-      Period: 3600
+      Period: 60
       Statistic: Sum
       Threshold: 1
       TreatMissingData: notBreaching
@@ -1623,3 +1623,23 @@ Resources:
       Tags:
         - Key: App
           Value: mobile-purchases-soft-opt-in-acquisitions-dlq-processor
+
+  MembershipCloudwatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !Sub arn:aws:iam::${MembershipAccountId}:root
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: cloudwatch-list-tags
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - cloudwatch:ListTagsForResource
+              Resource: "*"
