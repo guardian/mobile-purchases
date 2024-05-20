@@ -770,12 +770,12 @@ Resources:
         - Key: App
           Value: !Ref App
 
-  FeastAndriodSubscriptionsQueue:
+  FeastAndroidSubscriptionsQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${App}-${Stage}-feast-andriod-subscriptions-to-fetch
+      QueueName: !Sub ${App}-${Stage}-feast-android-subscriptions-to-fetch
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt FeastAndriodSubscriptionsQueueDlq.Arn
+        deadLetterTargetArn: !GetAtt FeastAndroidSubscriptionsQueueDlq.Arn
         maxReceiveCount: 8
       KmsMasterKeyId: alias/aws/sqs
       Tags:
@@ -786,10 +786,10 @@ Resources:
         - Key: App
           Value: !Ref App
 
-  FeastAndriodSubscriptionsQueueDlq:
+  FeastAndroidSubscriptionsQueueDlq:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${App}-${Stage}-feast-andriod-subscriptions-to-fetch-dlq
+      QueueName: !Sub ${App}-${Stage}-feast-android-subscriptions-to-fetch-dlq
       KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: Stage
@@ -1236,7 +1236,7 @@ Resources:
         - Ref: AlarmTopic
       TreatMissingData: notBreaching
 
-  FeastAndriodSubscriptionDlqDepthAlarm:
+  FeastAndroidSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       ActionsEnabled:
@@ -1246,7 +1246,7 @@ Resources:
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
-          Value: !GetAtt "FeastAndriodSubscriptionsQueueDlq.QueueName"
+          Value: !GetAtt "FeastAndroidSubscriptionsQueueDlq.QueueName"
       Period: 60
       Statistic: Sum
       EvaluationPeriods: 1
