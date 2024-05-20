@@ -62,7 +62,7 @@ Mappings:
   StageVariables:
     CODE:
       Schedule: 'rate(365 days)'
-      AlarmActionsEnabled: TRUE
+      AlarmActionsEnabled: FALSE
       SoftOptInConsentSetterStage: DEV
     PROD:
       Schedule: 'rate(30 minutes)'
@@ -1574,7 +1574,7 @@ Resources:
 
   acquisitionsLambdaExceptionsAlarm:
     Type: AWS::CloudWatch::Alarm
-#    Condition: IsProd
+    Condition: IsProd
     DependsOn:
       - SoftOptInAcquisitionsLambda
     Properties:
@@ -1590,7 +1590,7 @@ Resources:
       EvaluationPeriods: 1
       MetricName: Errors
       Namespace: AWS/Lambda
-      Period: 60
+      Period: 3600
       Statistic: Sum
       Threshold: 1
       TreatMissingData: notBreaching
