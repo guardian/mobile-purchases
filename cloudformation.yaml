@@ -1158,7 +1158,7 @@ Resources:
       TreatMissingData: notBreaching
       Tags:
         - Key: App
-          Value: mobile-purchases-apple-pubsub
+          Value: mobile-purchases-apple-update-subscriptions
 
   GoogleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -1183,7 +1183,7 @@ Resources:
       TreatMissingData: notBreaching
       Tags:
         - Key: App
-          Value: mobile-purchases-google-pubsub
+          Value: mobile-purchases-google-update-subscriptions
 
   UpdateFeastAppleSubscriptionsLambda:
     Type: AWS::Lambda::Function
@@ -1235,7 +1235,7 @@ Resources:
       TreatMissingData: notBreaching
       Tags:
         - Key: App
-          Value: mobile-purchases-feast-apple-pubsub
+          Value: mobile-purchases-feast-apple-update-subscriptions
 
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
