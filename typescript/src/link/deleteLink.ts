@@ -33,8 +33,6 @@ async function deleteUserSubscription(userLinks: ReadUserSubscription[]): Promis
     return count;
 }
 
-let softOptInSuccessCount = 0;
-
 async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscriptionId: string, platform: string | undefined) {
     const membershipAccountId = await getMembershipAccountId();
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
@@ -48,8 +46,6 @@ async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscription
         subscriptionId: subscriptionId
     });
     console.log(`sent soft opt-in message for identityId ${user.userId}`);
-
-    softOptInSuccessCount++;
 }
 
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {
@@ -65,6 +61,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
     let records = 0;
     let rows = 0;
+    let softOptInSuccessCount = 0;
 
     for (const subscription of subscriptions) {
         // We're guaranteed to have a truthy subscription ID here as we filtered
@@ -85,6 +82,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
             try {
                 const platform = subscription?.platform?.S
                 await disableSoftOptIns(userSubscriptions, subscriptionId, platform);
+                softOptInSuccessCount++;
             } catch (e) {
                 handleSoftOptInsError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
             }
