@@ -92,7 +92,6 @@ describe("handler", () => {
     });
 
     it('should process removed records, put messages on queue', async () => {
-
         // get the mock instances
         const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
         const mockSQS = new (require('aws-sdk/clients/sqs'))();
@@ -105,7 +104,7 @@ describe("handler", () => {
         });
 
         const event: DynamoDBStreamEvent = {
-            Records: [removeDynamoRecord]
+            Records: [buildRemovedDynamoRecord('1', 'ios')]
         }
 
         const result = await handler(event);
@@ -123,6 +122,45 @@ describe("handler", () => {
             eventType: "Cancellation",
             productName: "InAppPurchase",
             subscriptionId: "1"
+        };
+
+        const expectedQueueMessageParams1 = {
+            QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV',
+            MessageBody: JSON.stringify(expectedSoftOptInMessage1),
+        };
+
+        expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedQueueMessageParams1);
+
+        expect(result).toEqual({ recordCount: 1, rowCount: 1 })
+    })
+
+    it('puts Feast deletions on the SOI SQS queue with the product name FeastInAppPurchase', async () => {
+        // get the mock instances
+        const mockSQS = new (require('aws-sdk/clients/sqs'))();
+
+        const subscriptionId = '1';
+        const userId = '123';
+
+        setMockQuery(async function* (params: { keyCondition: any; indexName: any; }) {
+            yield {
+                subscriptionId,
+                userId,
+            };
+        });
+
+        const event: DynamoDBStreamEvent = {
+            Records: [buildRemovedDynamoRecord(subscriptionId, 'ios-feast')]
+        }
+
+        const result = await handler(event);
+
+        expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
+
+        const expectedSoftOptInMessage1 = {
+            identityId: userId,
+            eventType: "Cancellation",
+            productName: "FeastInAppPurchase",
+            subscriptionId,
         };
 
         const expectedQueueMessageParams1 = {
@@ -156,11 +194,14 @@ describe("handler", () => {
     })
 })
 
-const removeDynamoRecord: DynamoDBRecord = {
+const buildRemovedDynamoRecord = (subscriptionId: string, platform: string): DynamoDBRecord => ({
     dynamodb: {
         OldImage: {
             subscriptionId: {
-                S: "1",
+                S: subscriptionId,
+            },
+            platform: {
+                S: platform,
             },
         }
     },
@@ -169,7 +210,7 @@ const removeDynamoRecord: DynamoDBRecord = {
         type: "Service",
         principalId: "dynamodb.amazonaws.com"
     }
-};
+});
 
 const modifyDynamoRecord: DynamoDBRecord = {
     dynamodb: {

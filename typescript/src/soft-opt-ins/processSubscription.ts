@@ -1,4 +1,4 @@
-import {dynamoMapper, sendToSqs, sendToSqsComms, sendToSqsSoftOptIns, SoftOptInEvent, SoftOptInEventProductName} from "../utils/aws";
+import {sendToSqsComms, sendToSqsSoftOptIns, SoftOptInEvent} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
@@ -6,6 +6,7 @@ import { Response } from 'node-fetch';
 import {getIdentityApiKey, getIdentityUrl, getMembershipAccountId} from "../utils/guIdentityApi";
 import {plusDays} from "../utils/dates";
 import { Platform } from "../models/platform";
+import { mapPlatformToSoftOptInProductName } from "../utils/softOptIns";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
     const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -52,15 +53,6 @@ async function getUserEmailAddress(identityId: string, identityApiKey: string): 
         return await handleError(`error while retrieving user data for identityId: ${identityId}: ${error}`);
     }
 }
-
-const mapPlatformToSoftOptInProductName = (platform: string | undefined): SoftOptInEventProductName => {
-    switch (platform) {
-        case Platform.IosFeast:
-            return "FeastInAppPurchase";
-        default:
-            return "InAppPurchase";
-    }
-};
 
 async function sendSoftOptIns(identityId: string, subscriptionId: string, platform: string | undefined, queueNamePrefix: string) {
     const productName = mapPlatformToSoftOptInProductName(platform);

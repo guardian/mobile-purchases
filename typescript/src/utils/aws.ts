@@ -9,6 +9,7 @@ import {PromiseResult} from "aws-sdk/lib/request";
 import SSM = require("aws-sdk/clients/ssm");
 import STS from "aws-sdk/clients/sts";
 import {getMembershipAccountId} from "./guIdentityApi";
+import { SoftOptInEventProductName } from "./softOptIns";
 
 const credentialProvider = new CredentialProviderChain([
     function () { return new ECSCredentials(); },
@@ -136,14 +137,12 @@ export function sendToSqs(queueUrl: string, event: any, delaySeconds?: number): 
     }).promise()
 }
 
-export type SoftOptInEventProductName = "InAppPurchase" | "FeastInAppPurchase";
 export interface SoftOptInEvent {
     identityId: string;
     eventType: "Acquisition" | "Cancellation" | "Switch";
     productName: SoftOptInEventProductName
     subscriptionId: string;
 }
-
 export async function sendToSqsSoftOptIns(queueUrl: string, event: SoftOptInEvent, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
     const membershipSqs = await getSqsClientForSoftOptIns();
     return membershipSqs.sendMessage({
@@ -152,6 +151,7 @@ export async function sendToSqsSoftOptIns(queueUrl: string, event: SoftOptInEven
         DelaySeconds: delaySeconds
     }).promise();
 }
+
 export async function sendToSqsComms(queueUrl: string, event: any, delaySeconds?: number): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
     const membershipSqs = await getSqsClientForComms();
     return membershipSqs.sendMessage({
