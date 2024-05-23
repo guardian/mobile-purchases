@@ -770,6 +770,35 @@ Resources:
         - Key: App
           Value: !Ref App
 
+  FeastAndroidSubscriptionsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-feast-android-subscriptions-to-fetch
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt FeastAndroidSubscriptionsQueueDlq.Arn
+        maxReceiveCount: 8
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+
+  FeastAndroidSubscriptionsQueueDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-feast-android-subscriptions-to-fetch-dlq
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+
   GoogleTokenRefreshFailureAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -1236,6 +1265,28 @@ Resources:
       Tags:
         - Key: App
           Value: mobile-purchases-feast-apple-update-subscriptions
+
+  FeastAndroidSubscriptionDlqDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled:
+        !FindInMap [ StageVariables, !Ref Stage, AlarmActionsEnabled ]
+      AlarmDescription: "Ensure that the Feast Android subscription dead letter queue is empty"
+      Namespace: "AWS/SQS"
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt "FeastAndroidSubscriptionsQueueDlq.QueueName"
+      Period: 60
+      Statistic: Sum
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      TreatMissingData: notBreaching
 
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
