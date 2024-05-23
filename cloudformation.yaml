@@ -1241,7 +1241,7 @@ Resources:
     Properties:
       ActionsEnabled:
         !FindInMap [ StageVariables, !Ref Stage, AlarmActionsEnabled ]
-      AlarmDescription: "Ensure that the Feast Apple subscription dead letter queue is empty"
+      AlarmDescription: "Ensure that the Feast Android subscription dead letter queue is empty"
       Namespace: "AWS/SQS"
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
