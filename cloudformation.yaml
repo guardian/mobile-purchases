@@ -160,6 +160,7 @@ Resources:
                 - !GetAtt GoogleSubscriptionsQueue.Arn
                 - !GetAtt AppleSubscriptionsQueue.Arn
                 - !GetAtt FeastAppleSubscriptionsQueue.Arn
+                - !GetAtt FeastAndroidSubscriptionsQueue.Arn
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-historical-subscriptions
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-google-historical-subscriptions
         - PolicyName: Kms
@@ -1258,6 +1259,14 @@ Resources:
       FunctionName: !Ref UpdateFeastAppleSubscriptionsLambda
       Enabled: true
       EventSourceArn: !GetAtt FeastAppleSubscriptionsQueue.Arn
+      BatchSize: 1
+
+  FeastGoogleSubscriptionsEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !Ref UpdateGoogleAppleSubscriptionsLambda
+      Enabled: true
+      EventSourceArn: !GetAtt FeastAndroidSubscriptionsQueue.Arn
       BatchSize: 1
 
   FeastAppleSubscriptionDlqDepthAlarm:
