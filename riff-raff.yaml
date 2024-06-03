@@ -44,6 +44,12 @@ deployments:
       functionNames: [mobile-purchases-feast-apple-update-subscriptions-]
       fileName: feast-apple-update-subscriptions.zip
 
+  mobile-purchases-feast-google-update-subscriptions:
+    template: lambda
+    parameters:
+      functionNames: [ mobile-purchases-feast-google-update-subscriptions- ]
+      fileName: feast-google-update-subscriptions.zip
+
   mobile-purchases-feast-google-pubsub:
     template: lambda
     parameters:
