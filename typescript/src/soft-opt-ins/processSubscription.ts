@@ -122,7 +122,7 @@ export async function processAcquisition(subscriptionRecord: ReadSubscription, i
         handleError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
     }
 
-    const isFeast = (): boolean =>
+    const isFeast =
         subscriptionRecord.platform === Platform.IosFeast ||
         subscriptionRecord.platform === Platform.AndroidFeast;
 
