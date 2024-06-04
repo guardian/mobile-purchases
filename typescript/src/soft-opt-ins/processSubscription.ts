@@ -122,7 +122,9 @@ export async function processAcquisition(subscriptionRecord: ReadSubscription, i
         handleError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
     }
 
-    const isFeast = subscriptionRecord.platform === Platform.IosFeast;
+    const isFeast = (): boolean =>
+        subscriptionRecord.platform === Platform.IosFeast ||
+        subscriptionRecord.platform === Platform.AndroidFeast;
 
     if (subscriptionRecord && (isPostAcquisition(subscriptionRecord.startTimestamp) || isFeast)) {
         const identityApiKey = await getIdentityApiKey();
