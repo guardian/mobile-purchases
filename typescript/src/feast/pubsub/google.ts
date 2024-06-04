@@ -6,14 +6,20 @@ import { MetaData,
     parsePayload,
     toDynamoEvent } from "../../pubsub/google-common";
 import { Ignorable } from "../../pubsub/ignorable";
-import { dynamoMapper } from "../../utils/aws";
+import { GoogleSubscriptionReference } from "../../models/subscriptionReference";
+import Sqs from 'aws-sdk/clients/sqs';
+import { dynamoMapper, sendToSqs } from "../../utils/aws";
+import { AWSError } from "aws-sdk";
+import { PromiseResult } from "aws-sdk/lib/request";
 import { SubscriptionEvent } from "../../models/subscriptionEvent";
+import { toSqsSubReference } from "../../pubsub/google-common";
 
 const defaultStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => {
     return dynamoMapper.put({ item: event }).then(_ => undefined);
 }
 
 export function buildHandler(
+    sendMessageToSqs: (queueUrl: string, message: GoogleSubscriptionReference) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
     storeEventInDynamo: (event: SubscriptionEvent) => Promise<void> = defaultStoreEventInDynamo,
     fetchMetadata: (notification: SubscriptionNotification) => Promise<MetaData | undefined> = defaultFetchMetadata
 ): (request: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult> {
@@ -36,6 +42,7 @@ export function buildHandler(
             }
 
             try {
+                const andriodSubscriptionReference = toSqsSubReference(SubscriptionEvent)
                 const metaData = await fetchMetadata(notification);
                 const dynamoEvent = toDynamoEvent(notification, metaData);
                 await storeEventInDynamo(dynamoEvent);
