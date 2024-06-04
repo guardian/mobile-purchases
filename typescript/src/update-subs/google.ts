@@ -9,7 +9,7 @@ import {fromGooglePackageName} from "../services/appToPlatform";
 import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE} from "../services/google-play";
 import {PRODUCT_BILLING_PERIOD} from "../services/productBillingPeriod";
 
-async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> {
+export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> {
 
     const sub = JSON.parse(record.body) as GoogleSubscriptionReference;
 
