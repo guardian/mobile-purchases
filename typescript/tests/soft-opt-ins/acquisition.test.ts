@@ -293,12 +293,11 @@ describe('handler', () => {
 
         // We expect mockSQS to have been called twice - once for the soft opt in setter and once for the email queue
         expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
-        // TODO: fix this when correct SOIs are sent
-        // const expectedSOIParams = {
-        //     QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV`,
-        //     MessageBody: JSON.stringify({ identityId, eventType: 'Acquisition', productName: "FeastInAppPurchase", subscriptionId }),
-        // };
-        // expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSOIParams);
+        const expectedSOIParams = {
+            QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV`,
+            MessageBody: JSON.stringify({ identityId, eventType: 'Acquisition', productName: "FeastInAppPurchase", subscriptionId }),
+        };
+        expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSOIParams);
         const expectedEmailParams = {
             QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/braze-emails-CODE`,
             MessageBody: JSON.stringify({
