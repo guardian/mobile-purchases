@@ -159,7 +159,7 @@ describe('handler', () => {
         expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
 
         const expectedSendMessageParams = {
-            QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV`,
+            QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
             MessageBody: JSON.stringify({identityId: '67890', eventType: 'Acquisition', productName: "InAppPurchase", subscriptionId: "12345"}),
         };
 
@@ -221,7 +221,7 @@ describe('handler', () => {
         // We expect mockSQS to have been called twice - once for the soft opt in setter and once for the email queue
         expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
         const expectedSOIParams = {
-            QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV`,
+            QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
             MessageBody: JSON.stringify({ identityId, eventType: 'Acquisition', productName: "FeastInAppPurchase", subscriptionId }),
         };
         expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSOIParams);
@@ -294,7 +294,7 @@ describe('handler', () => {
         // We expect mockSQS to have been called twice - once for the soft opt in setter and once for the email queue
         expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
         const expectedSOIParams = {
-            QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV`,
+            QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
             MessageBody: JSON.stringify({ identityId, eventType: 'Acquisition', productName: "FeastInAppPurchase", subscriptionId }),
         };
         expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSOIParams);
@@ -370,7 +370,7 @@ describe('handler', () => {
         expect(fetch).toHaveBeenCalledTimes(1);
 
         const expectedSendMessageParams1 = {
-            QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV`,
+            QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
             MessageBody: JSON.stringify({identityId: '67890', eventType: 'Acquisition', productName: "InAppPurchase", subscriptionId: "12345"}),
         };
 

@@ -39,7 +39,7 @@ async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscription
 
     const user = userLinks[0];
 
-    await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-DEV`, {
+    await sendToSqsSoftOptIns(Stage === "PROD" ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD` : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-CODE`, {
         identityId: user.userId,
         eventType: "Cancellation",
         productName: mapPlatformToSoftOptInProductName(platform),
