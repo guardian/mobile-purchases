@@ -637,6 +637,7 @@ Resources:
           Stack: !Ref Stack
           App: !Ref App
           Secret: !Ref FeastGooglePubSubSecret
+          QueueUrl: !Ref FeastAndroidSubscriptionsQueue
       Description: Records Google play store events for Feast app
       MemorySize: 128
       Timeout: 29
