@@ -3,6 +3,7 @@ import { buildHandler } from "../../../src/feast/pubsub/google";
 import { HTTPResponses } from "../../../src/models/apiGatewayHttp";
 import { SubscriptionEvent } from "../../../src/models/subscriptionEvent";
 import Mock = jest.Mock;
+import { GoogleSubscriptionReference } from "../../../src/models/subscriptionReference";
 
 const buildApiGatewayEvent = (secret: string): APIGatewayProxyEvent => {
     const receivedEvent = {
@@ -58,8 +59,9 @@ describe("The Feast Google pubsub", () => {
         const input = buildApiGatewayEvent(correctSecret);
 
         const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => Promise.resolve();
+        const mockSqsFunction: Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn((queueurl, event) => Promise.resolve({}));
         const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
-        const handler = buildHandler(noOpStoreEventInDynamo, mockFetchMetadataFunction);
+        const handler = buildHandler(mockSqsFunction, noOpStoreEventInDynamo, mockFetchMetadataFunction);
 
         const result = await handler(input);
 
@@ -71,8 +73,9 @@ describe("The Feast Google pubsub", () => {
         const input = buildApiGatewayEvent(incorrectSecret);
 
         const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => Promise.resolve();
+        const mockSqsFunction: Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn((queueurl, event) => Promise.resolve({}));
         const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
-        const handler = buildHandler(noOpStoreEventInDynamo, mockFetchMetadataFunction);
+        const handler = buildHandler(mockSqsFunction, noOpStoreEventInDynamo, mockFetchMetadataFunction);
 
         const result = await handler(input);
 
@@ -83,9 +86,10 @@ describe("The Feast Google pubsub", () => {
         const correctSecret = 'test_secret';
         const input = buildApiGatewayEvent(correctSecret);
 
+        const mockSqsFunction: Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn((queueurl, event) => Promise.resolve({}));
         const storeEventInDynamoMock = jest.fn(() => Promise.resolve());
         const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
-        const handler = buildHandler(storeEventInDynamoMock, mockFetchMetadataFunction);
+        const handler = buildHandler(mockSqsFunction, storeEventInDynamoMock, mockFetchMetadataFunction);
 
         const result = await handler(input);
         const expectedSubscriptionEventInDynamo: SubscriptionEvent = new SubscriptionEvent(
@@ -120,5 +124,26 @@ describe("The Feast Google pubsub", () => {
         expect(result).toStrictEqual(HTTPResponses.OK);
         expect(storeEventInDynamoMock).toHaveBeenCalledTimes(1);
         expect(storeEventInDynamoMock).toHaveBeenCalledWith(expectedSubscriptionEventInDynamo);
+    });
+
+    it("Should publish data to SQS queue", async () => {
+        const correctSecret = 'test_secret';
+        const input = buildApiGatewayEvent(correctSecret);
+        const expectedSubscriptionReferenceInSqs = {
+            packageName: "uk.co.guardian.feast",
+            purchaseToken: "PURCHASE_TOKEN",
+            subscriptionId: "uk.co.guardian.feast.access.test"
+        };
+
+        const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => Promise.resolve();
+        const mockSqsFunction: Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn((queueurl, event) => Promise.resolve({}));
+        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn(event => Promise.resolve({freeTrial: true}));
+        const handler = buildHandler(mockSqsFunction, noOpStoreEventInDynamo, mockFetchMetadataFunction);
+
+        const result = await handler(input);
+
+        expect(result).toStrictEqual(HTTPResponses.OK);
+        expect(mockSqsFunction.mock.calls.length).toEqual(1);
+        expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(expectedSubscriptionReferenceInSqs);
     });
 });

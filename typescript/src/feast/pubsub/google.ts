@@ -42,10 +42,19 @@ export function buildHandler(
             }
 
             try {
-                const andriodSubscriptionReference = toSqsSubReference(SubscriptionEvent)
+                const androidSubscriptionReference = toSqsSubReference(notification)
+                const queueUrl = process.env.QueueUrl;
+                if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+
                 const metaData = await fetchMetadata(notification);
                 const dynamoEvent = toDynamoEvent(notification, metaData);
-                await storeEventInDynamo(dynamoEvent);
+                
+                await Promise.all([
+                    sendMessageToSqs(queueUrl, androidSubscriptionReference),
+                    storeEventInDynamo(dynamoEvent)
+                ])
+                    
+                ;
             } catch (e) {
                 console.error("Internal server error", e);
                 return HTTPResponses.INTERNAL_ERROR
