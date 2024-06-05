@@ -76,6 +76,7 @@ async function sendSoftOptIns(identityId: string, subscriptionId: string, platfo
 const buildBrazeEmailMessage = (emailAddress: string, identityId: string, platform: string | undefined) => {
     switch (platform) {
         case Platform.IosFeast:
+        case Platform.AndroidFeast:
             return {
                 To: {
                     Address: emailAddress,
@@ -122,9 +123,8 @@ export async function processAcquisition(subscriptionRecord: ReadSubscription, i
         handleError(`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`)
     }
 
-    const isFeast =
-        subscriptionRecord.platform === Platform.IosFeast ||
-        subscriptionRecord.platform === Platform.AndroidFeast;
+    const isFeast = subscriptionRecord.platform === Platform.IosFeast
+        || subscriptionRecord.platform === Platform.AndroidFeast;
 
     if (subscriptionRecord && (isPostAcquisition(subscriptionRecord.startTimestamp) || isFeast)) {
         const identityApiKey = await getIdentityApiKey();
