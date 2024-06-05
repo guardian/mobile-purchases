@@ -125,7 +125,7 @@ describe("handler", () => {
         };
 
         const expectedQueueMessageParams1 = {
-            QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV',
+            QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE',
             MessageBody: JSON.stringify(expectedSoftOptInMessage1),
         };
 
@@ -164,7 +164,7 @@ describe("handler", () => {
         };
 
         const expectedQueueMessageParams1 = {
-            QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-DEV',
+            QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE',
             MessageBody: JSON.stringify(expectedSoftOptInMessage1),
         };
 
