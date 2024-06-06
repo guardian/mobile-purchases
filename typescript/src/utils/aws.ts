@@ -40,7 +40,7 @@ async function getSqsClientForSoftOptIns(): Promise<Sqs> {
         const membershipAccountId = await getMembershipAccountId();
         const sts = new STS();
 
-        const softOptInConsentSetterStage = Stage === "PROD" ? "PROD" : "DEV";
+        const softOptInConsentSetterStage = Stage === "PROD" ? "PROD" : "CODE";
 
         const assumeRoleResult = await sts.assumeRole({
             RoleArn: `arn:aws:iam::${membershipAccountId}:role/membership-${softOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole`,

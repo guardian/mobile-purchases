@@ -63,7 +63,7 @@ Mappings:
     CODE:
       Schedule: 'rate(365 days)'
       AlarmActionsEnabled: FALSE
-      SoftOptInConsentSetterStage: DEV
+      SoftOptInConsentSetterStage: CODE
     PROD:
       Schedule: 'rate(30 minutes)'
       AlarmActionsEnabled: TRUE
