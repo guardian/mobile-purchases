@@ -1,8 +1,11 @@
 import { buildHandler } from "../../../src/feast/update-subs/google";
 import { Subscription } from "../../../src/models/subscription";
-import { GoogleResponseBody } from "../../../src/services/google-play";
-import { plusDays } from "../../../src/utils/dates";
+import { dateToSecondTimestamp, plusDays, thirtyMonths } from "../../../src/utils/dates";
 import { buildSqsEvent } from "./test-helpers";
+
+// Without this, the test error with: ENOENT: no such file or directory, open 'node:url'
+// I'm not sure why.
+jest.mock("../../../src/services/google-play-v2", () => jest.fn());
 
 describe("The Feast Android subscription updater", () => {
     it("Should fetch the subscription associated with the reference from Google and persist to Dynamo", async () => {
@@ -14,38 +17,44 @@ describe("The Feast Android subscription updater", () => {
             purchaseToken,
             subscriptionId,
         }]);
-        const subscriptionFromGoogle: GoogleResponseBody = {
+        const startTime = plusDays(new Date(), -1);
+        const expiryTime = plusDays(new Date(), 30);
+        const googleSubscription = {
+            startTime,
+            expiryTime,
+            userCancellationTime: null,
             autoRenewing: true,
-            expiryTimeMillis: plusDays(new Date(), 30).getTime().toString(),
-            paymentState: 1,
-            startTimeMillis: plusDays(new Date(), -1).getTime().toString(),
-            userCancellationTimeMillis: "",
+            productId: subscriptionId,
+            billingPeriodDuration: "P1M",
+            freeTrial: false,
+            testPurchase: false
         };
         const subscription = new Subscription(
             purchaseToken,
-            plusDays(new Date(), -1).toISOString(), // start date
-            plusDays(new Date(), 30).toISOString(), // expiry date
+            startTime.toISOString(), // start date
+            expiryTime.toISOString(), // expiry date
             undefined, // cancellation date
             true, // auto renewing
             subscriptionId,
             "android-feast",
             false, // free trial
-            "monthly",
-            subscriptionFromGoogle,
+            "P1M",
+            googleSubscription,
             undefined, // receipt
             null, // apple payload
-            undefined, // ttl
+            dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)) // ttl
         );
-        const stubFetchSubscriptionsFromGoogle = () => Promise.resolve([subscription]);
+        const mockFetchSubscriptionsFromGoogle = jest.fn(() => Promise.resolve(googleSubscription));
         const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) => Promise.resolve(subscription))
         const handler = buildHandler(
-            stubFetchSubscriptionsFromGoogle,
+            mockFetchSubscriptionsFromGoogle,
             mockStoreSubscriptionInDynamo,
         );
 
         const result = await handler(event);
 
         expect(result).toEqual("OK");
+        expect(mockFetchSubscriptionsFromGoogle).toHaveBeenCalledWith(purchaseToken, packageName);
         expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1);
         expect(mockStoreSubscriptionInDynamo).toHaveBeenCalledWith(subscription);
     });
