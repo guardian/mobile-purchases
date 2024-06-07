@@ -20,7 +20,9 @@ export type GoogleSubscription = {
     // Whether the subscription is currently benefitting from a free trial
     freeTrial: boolean
     // Whether the subscription was taken out as a test purchase
-    testPurchase: boolean
+    testPurchase: boolean,
+    // The raw response from Google
+    rawResponse: unknown,
 }
 
 // Given a `purchaseToken` and `packageName`, attempts to build a `GoogleSubscription` by:
@@ -119,7 +121,8 @@ export async function fetchGoogleSubscriptionV2(
             productId,
             billingPeriodDuration,
             freeTrial: isFreeTrial(offerId, latestOrderId),
-            testPurchase
+            testPurchase,
+            rawResponse: purchase.data,
         }
     } catch (error: any) {
         if (error?.status == 400 || error?.status == 404 || error?.status == 410) {

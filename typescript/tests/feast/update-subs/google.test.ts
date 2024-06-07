@@ -27,7 +27,8 @@ describe("The Feast Android subscription updater", () => {
             productId: subscriptionId,
             billingPeriodDuration: "P1M",
             freeTrial: false,
-            testPurchase: false
+            testPurchase: false,
+            rawResponse: "test-raw-response",
         };
         const subscription = new Subscription(
             purchaseToken,
