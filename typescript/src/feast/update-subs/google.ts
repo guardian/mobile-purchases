@@ -42,6 +42,8 @@ export const buildHandler = (
             const subscription = googleSubscriptionToSubscription(subRef.purchaseToken, subRef.packageName, subscriptionFromGoogle);
             await putSubscription(subscription);
 
+            console.log("Obfuscated external account ID:", subscriptionFromGoogle.obfuscatedExternalAccountId)
+
             console.log(`Processed subscription: ${subscription.subscriptionId}`);
 
             return "OK"

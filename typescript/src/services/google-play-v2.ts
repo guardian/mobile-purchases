@@ -21,6 +21,8 @@ export type GoogleSubscription = {
     freeTrial: boolean
     // Whether the subscription was taken out as a test purchase
     testPurchase: boolean,
+    // Obfuscated external account ID
+    obfuscatedExternalAccountId?: string,
     // The raw response from Google
     rawResponse: unknown,
 }
@@ -113,6 +115,8 @@ export async function fetchGoogleSubscriptionV2(
             throw Error("An order ID is expected to be associated with the purchase, but was not present")
         }
 
+        const obfuscatedExternalAccountId = purchase.data.externalAccountIdentifiers?.obfuscatedExternalAccountId ?? undefined;
+
         return {
             startTime: parseNullableDate(startTime),
             expiryTime: new Date(expiryTime),
@@ -122,6 +126,7 @@ export async function fetchGoogleSubscriptionV2(
             billingPeriodDuration,
             freeTrial: isFreeTrial(offerId, latestOrderId),
             testPurchase,
+            obfuscatedExternalAccountId,
             rawResponse: purchase.data,
         }
     } catch (error: any) {
