@@ -48,9 +48,11 @@ describe("The Feast Android subscription updater", () => {
         );
         const mockFetchSubscriptionsFromGoogle = jest.fn(() => Promise.resolve(googleSubscription));
         const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) => Promise.resolve(subscription))
+        const mockExchangeUuid = jest.fn((uuid: string) => Promise.resolve('123456'))
         const handler = buildHandler(
             mockFetchSubscriptionsFromGoogle,
             mockStoreSubscriptionInDynamo,
+            mockExchangeUuid,
         );
 
         const result = await handler(event);
@@ -59,5 +61,6 @@ describe("The Feast Android subscription updater", () => {
         expect(mockFetchSubscriptionsFromGoogle).toHaveBeenCalledWith(purchaseToken, packageName);
         expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1);
         expect(mockStoreSubscriptionInDynamo).toHaveBeenCalledWith(subscription);
+        expect(mockExchangeUuid).toHaveBeenCalledWith(googleSubscription.obfuscatedExternalAccountId);
     });
 });

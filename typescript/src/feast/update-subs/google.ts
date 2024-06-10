@@ -7,6 +7,7 @@ import { GoogleSubscription, fetchGoogleSubscriptionV2 } from "../../services/go
 import { GoogleSubscriptionReference } from "../../models/subscriptionReference";
 import { fromGooglePackageName } from "../../services/appToPlatform";
 import { dateToSecondTimestamp, thirtyMonths } from "../../utils/dates";
+import { getIdentityIdFromBraze } from "../../services/braze";
 
 const googleSubscriptionToSubscription = (
     purchaseToken: string,
@@ -33,6 +34,7 @@ const googleSubscriptionToSubscription = (
 export const buildHandler = (
     fetchSubscriptionDetails: (purchaseToken: string, packageName: string) => Promise<GoogleSubscription>,
     putSubscription: (subscription: Subscription) => Promise<Subscription>,
+    exchangeExternalIdForIdentityId: (externalId: string) => Promise<string>,
 ) => (async (event: SQSEvent) => {
     const promises = event.Records.map(async (sqsRecord: SQSRecord) => {
         try {
@@ -41,6 +43,13 @@ export const buildHandler = (
             const subscriptionFromGoogle = await fetchSubscriptionDetails(subRef.purchaseToken, subRef.packageName);
             const subscription = googleSubscriptionToSubscription(subRef.purchaseToken, subRef.packageName, subscriptionFromGoogle);
             await putSubscription(subscription);
+
+            if (subscriptionFromGoogle.obfuscatedExternalAccountId) {
+                await exchangeExternalIdForIdentityId(subscriptionFromGoogle.obfuscatedExternalAccountId);
+                console.log("Successfully exchanged UUID for identity ID");
+            } else {
+                throw new ProcessingError(`Failed to exchange UUID for subscription ${subscription.subscriptionId}`, true);
+            }
 
             console.log(`Processed subscription: ${subscription.subscriptionId}`);
 
@@ -75,4 +84,5 @@ export const buildHandler = (
 export const handler = buildHandler(
     fetchGoogleSubscriptionV2,
     putSubscription,
+    getIdentityIdFromBraze,
 );
