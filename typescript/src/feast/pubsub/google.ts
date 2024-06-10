@@ -4,9 +4,14 @@ import { MetaData,
     SubscriptionNotification,
     fetchMetadata as defaultFetchMetadata,
     parsePayload,
-    toDynamoEvent } from "../../pubsub/google-common";
+    toDynamoEvent,
+    toSqsSubReference } from "../../pubsub/google-common";
 import { Ignorable } from "../../pubsub/ignorable";
-import { dynamoMapper } from "../../utils/aws";
+import { GoogleSubscriptionReference } from "../../models/subscriptionReference";
+import Sqs from 'aws-sdk/clients/sqs';
+import { dynamoMapper, sendToSqs } from "../../utils/aws";
+import { AWSError } from "aws-sdk";
+import { PromiseResult } from "aws-sdk/lib/request";
 import { SubscriptionEvent } from "../../models/subscriptionEvent";
 
 const defaultStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => {
@@ -14,6 +19,7 @@ const defaultStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => {
 }
 
 export function buildHandler(
+    sendMessageToSqs: (queueUrl: string, message: GoogleSubscriptionReference) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
     storeEventInDynamo: (event: SubscriptionEvent) => Promise<void> = defaultStoreEventInDynamo,
     fetchMetadata: (notification: SubscriptionNotification) => Promise<MetaData | undefined> = defaultFetchMetadata
 ): (request: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult> {
@@ -36,9 +42,19 @@ export function buildHandler(
             }
 
             try {
+                const androidSubscriptionReference = toSqsSubReference(notification)
+                const queueUrl = process.env.QueueUrl;
+                if (queueUrl === undefined) throw new Error("No QueueUrl env parameter provided");
+
                 const metaData = await fetchMetadata(notification);
                 const dynamoEvent = toDynamoEvent(notification, metaData);
-                await storeEventInDynamo(dynamoEvent);
+                
+                await Promise.all([
+                    sendMessageToSqs(queueUrl, androidSubscriptionReference),
+                    storeEventInDynamo(dynamoEvent)
+                ])
+                    
+                ;
             } catch (e) {
                 console.error("Internal server error", e);
                 return HTTPResponses.INTERNAL_ERROR
