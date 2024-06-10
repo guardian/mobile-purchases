@@ -4,11 +4,11 @@ import {dynamoMapper, sendToSqs} from "../utils/aws";
 import {ProcessingError} from "../models/processingError";
 import {GracefulProcessingError} from "../models/GracefulProcessingError";
 
-function putSubscription(subscription: Subscription): Promise<Subscription> {
+export function putSubscription(subscription: Subscription): Promise<Subscription> {
     return dynamoMapper.put({item: subscription}).then(result => result.item)
 }
 
-async function queueHistoricalSubscription(subscription: Subscription): Promise<void> {
+export async function queueHistoricalSubscription(subscription: Subscription): Promise<void> {
     const queueUrl = process.env.HistoricalQueueUrl;
     if (queueUrl === undefined) throw new Error("No HistoricalQueueUrl env parameter provided");
 

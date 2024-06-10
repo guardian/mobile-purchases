@@ -1,16 +1,15 @@
-
-import { SQSEvent } from "aws-lambda";
 import { SubscriptionMaybeWithAppAccountToken, buildHandler, withAppAccountToken } from "../../../src/feast/update-subs/apple";
 import { Subscription } from "../../../src/models/subscription";
 import { AppleSubscriptionReference } from "../../../src/models/subscriptionReference";
 import { UserSubscription } from "../../../src/models/userSubscription";
 import { GracefulProcessingError } from "../../../src/models/GracefulProcessingError";
 import { ProcessingError } from "../../../src/models/processingError";
+import { buildSqsEvent } from "./test-helpers";
 
 describe("The Feast (Apple) subscription updater", () => {
     it("Should fetch the subscription(s) associated with the reference from Apple and persist them to Dynamo", async () => {
         const event =
-            buildSqsEvent(["TEST_RECEIPT_1", "TEST_RECEIPT_2"])
+            buildSqsEvent([{ receipt: "TEST_RECEIPT_1" }, { receipt: "TEST_RECEIPT_2" }])
 
         const handler =
             buildHandler(
@@ -36,7 +35,7 @@ describe("The Feast (Apple) subscription updater", () => {
 
     it("Should lookup the identity ID associated with the subscription and persist the relationship to Dynamo", async () => {
         const event =
-            buildSqsEvent(["TEST_RECEIPT_1", "TEST_RECEIPT_2"])
+            buildSqsEvent([{ receipt: "TEST_RECEIPT_1" }, { receipt: "TEST_RECEIPT_2" }])
 
         const handler =
             buildHandler(
@@ -70,7 +69,7 @@ describe("The Feast (Apple) subscription updater", () => {
     });
 
     it("Does not throw an error if the receipt lookup with Apple fails with error code 21007", async () => {
-        const event = buildSqsEvent(["LOOKUP_FAIL_RECEIPT"]);
+        const event = buildSqsEvent([{ receipt: "LOOKUP_FAIL_RECEIPT" }])
         const fetchSubFromAppleFailure = (reference: AppleSubscriptionReference) => {
             throw new GracefulProcessingError(`Got status 21007 and we're in PROD`);
         }
@@ -88,8 +87,7 @@ describe("The Feast (Apple) subscription updater", () => {
 
     it("Throws an error if the receipt has no app account token, but still writes the subscription", async () => {
         expect.assertions(2);
-        const event =
-            buildSqsEvent(["TEST_RECEIPT_MISSING_AAT"])
+        const event = buildSqsEvent([{ receipt: "TEST_RECEIPT_MISSING_AAT" }])
         const handler =
             buildHandler(
                 stubFetchSubscriptionsFromApple,
@@ -112,30 +110,6 @@ beforeEach(() => {
     mockStoreSubscriptionInDynamo.mockClear()
     mockStoreUserSubscriptionInDynamo.mockClear()
 });
-
-const buildSqsEvent = (receipts: string[]): SQSEvent => {
-    const records = receipts.map(receipt =>
-    ({
-        messageId: "",
-        receiptHandle: "",
-        body: JSON.stringify({ receipt: receipt }),
-        attributes: {
-            ApproximateReceiveCount: "",
-            SentTimestamp: "",
-            SenderId: "",
-            ApproximateFirstReceiveTimestamp: "",
-        },
-        messageAttributes: {},
-        md5OfBody: "",
-        eventSource: "",
-        eventSourceARN: "",
-        awsRegion: "",
-    }))
-
-    return {
-        Records: records
-    }
-}
 
 const subscription =
     (
