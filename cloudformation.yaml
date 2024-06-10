@@ -160,7 +160,7 @@ Resources:
                 - !GetAtt GoogleSubscriptionsQueue.Arn
                 - !GetAtt AppleSubscriptionsQueue.Arn
                 - !GetAtt FeastAppleSubscriptionsQueue.Arn
-                - !GetAtt FeastAndroidSubscriptionsQueue.Arn
+                - !GetAtt FeastGoogleSubscriptionsQueue.Arn
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-historical-subscriptions
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-google-historical-subscriptions
         - PolicyName: Kms
@@ -637,7 +637,7 @@ Resources:
           Stack: !Ref Stack
           App: !Ref App
           Secret: !Ref FeastGooglePubSubSecret
-          QueueUrl: !Ref FeastAndroidSubscriptionsQueue
+          QueueUrl: !Ref FeastGoogleSubscriptionsQueue
       Description: Records Google play store events for Feast app
       MemorySize: 128
       Timeout: 29
@@ -772,26 +772,26 @@ Resources:
         - Key: App
           Value: !Ref App
 
-  FeastAndroidSubscriptionsQueue:
+  FeastGoogleSubscriptionsQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${App}-${Stage}-feast-android-subscriptions-to-fetch
+      QueueName: !Sub ${App}-${Stage}-feast-google-subscriptions-to-fetch
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt FeastAndroidSubscriptionsQueueDlq.Arn
+        deadLetterTargetArn: !GetAtt FeastGoogleSubscriptionsQueueDlq.Arn
         maxReceiveCount: 8
       KmsMasterKeyId: alias/aws/sqs
       Tags:
-        - Key: Stage
+        - Key: Stag
           Value: !Ref Stage
         - Key: Stack
           Value: !Ref Stack
         - Key: App
           Value: !Ref App
 
-  FeastAndroidSubscriptionsQueueDlq:
+  FeastGoogleSubscriptionsQueueDlq:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${App}-${Stage}-feast-android-subscriptions-to-fetch-dlq
+      QueueName: !Sub ${App}-${Stage}-feast-google-subscriptions-to-fetch-dlq
       KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: Stage
@@ -1267,7 +1267,7 @@ Resources:
     Properties:
       FunctionName: !Ref UpdateFeastGoogleSubscriptionsLambda
       Enabled: true
-      EventSourceArn: !GetAtt FeastAndroidSubscriptionsQueue.Arn
+      EventSourceArn: !GetAtt FeastGoogleSubscriptionsQueue.Arn
       BatchSize: 1
 
   FeastAppleSubscriptionDlqDepthAlarm:
@@ -1295,7 +1295,7 @@ Resources:
         - Key: App
           Value: mobile-purchases-feast-apple-update-subscriptions
 
-  FeastAndroidSubscriptionDlqDepthAlarm:
+  FeastGoogleSubscriptionDlqDepthAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       ActionsEnabled:
@@ -1305,7 +1305,7 @@ Resources:
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
-          Value: !GetAtt "FeastAndroidSubscriptionsQueueDlq.QueueName"
+          Value: !GetAtt "FeastGoogleSubscriptionsQueueDlq.QueueName"
       Period: 60
       Statistic: Sum
       EvaluationPeriods: 1
