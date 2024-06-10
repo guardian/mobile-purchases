@@ -10,6 +10,10 @@ import {AppleSubscriptionReference, SubscriptionReference} from "../models/subsc
 import { Platform } from "../models/platform";
 import { ScanIterator } from "@aws/dynamodb-data-mapper";
 
+interface AppleSubscriptionReferenceWithRevalidateFlag extends AppleSubscriptionReference {
+    isRevalidation?: boolean
+}
+
 function endTimestampForQuery(event: ScheduleEvent): Date {
     if (event.endTimestampFilter) {
         return new Date(Date.parse(event.endTimestampFilter));
@@ -84,20 +88,20 @@ const defaultSubscriptions =
         }
 
 const defaultSendSubscriptionReferenceToQueue =
-    async (queue: string, ref: SubscriptionReference, delayInSeconds: number): Promise<void> => {
+    async (queue: string, ref: AppleSubscriptionReferenceWithRevalidateFlag, delayInSeconds: number): Promise<void> => {
         await sendToSqs(queue, ref, delayInSeconds)
     }
 
 export function buildHandler(
     subscriptions: (event: ScheduleEvent) => ScanIterator<EndTimeStampFilterSubscription> = defaultSubscriptions, 
-    sendSubscriptionReferenceToQueue: (queue: string, ref: SubscriptionReference, delayInSeconds: number) => Promise<void> = defaultSendSubscriptionReferenceToQueue
+    sendSubscriptionReferenceToQueue: (queue: string, ref: AppleSubscriptionReferenceWithRevalidateFlag, delayInSeconds: number) => Promise<void> = defaultSendSubscriptionReferenceToQueue
 ): (event: ScheduleEvent) => Promise<void> {
     return async (event: ScheduleEvent) => {
         const sendCounts = { "feast": 0, "non-feast": 0 };
         for await (const subscription of subscriptions(event)) {
             const receipt: string | undefined = subscription.receipt;
             if (receipt) {
-                const subscriptionReference: AppleSubscriptionReference = {receipt: receipt};
+                const subscriptionReference: AppleSubscriptionReferenceWithRevalidateFlag = {receipt: receipt, isRevalidation: true};
                 const countKey = subscription.platform == Platform.IosFeast ? "feast" : "non-feast";
                 const delayInSeconds = Math.min(Math.floor(sendCounts[countKey] / 10), 900);
                 const sqsUrl = queueUrlForPlatform(subscription.platform);
