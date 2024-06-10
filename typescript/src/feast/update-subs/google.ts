@@ -1,20 +1,48 @@
 import { SQSEvent, SQSRecord } from "aws-lambda";
-import { getGoogleSubResponse } from "../../update-subs/google";
 import { Subscription } from '../../models/subscription';
 import { ProcessingError } from "../../models/processingError";
 import { GracefulProcessingError } from "../../models/GracefulProcessingError";
 import { putSubscription } from "../../update-subs/updatesub";
+import { GoogleSubscription, fetchGoogleSubscriptionV2 } from "../../services/google-play-v2";
+import { GoogleSubscriptionReference } from "../../models/subscriptionReference";
+import { fromGooglePackageName } from "../../services/appToPlatform";
+import { dateToSecondTimestamp, thirtyMonths } from "../../utils/dates";
+
+const googleSubscriptionToSubscription = (
+    purchaseToken: string,
+    packageName: string,
+    googleSubscription: GoogleSubscription
+): Subscription => {
+    return new Subscription(
+        purchaseToken,
+        googleSubscription.startTime?.toISOString() ?? "",
+        googleSubscription.expiryTime.toISOString(),
+        googleSubscription.userCancellationTime?.toISOString(),
+        googleSubscription.autoRenewing,
+        googleSubscription.productId,
+        fromGooglePackageName(packageName),
+        googleSubscription.freeTrial,
+        googleSubscription.billingPeriodDuration,
+        googleSubscription,
+        undefined,
+        null,
+        dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)),
+    )
+};
 
 export const buildHandler = (
-    fetchSubscriptionDetails: (record: SQSRecord) => Promise<Subscription[]>,
+    fetchSubscriptionDetails: (purchaseToken: string, packageName: string) => Promise<GoogleSubscription>,
     putSubscription: (subscription: Subscription) => Promise<Subscription>,
-): (event: SQSEvent) => Promise<string> => (async (event: SQSEvent) => { 
+) => (async (event: SQSEvent) => {
     const promises = event.Records.map(async (sqsRecord: SQSRecord) => {
         try {
-            const subscriptions = await fetchSubscriptionDetails(sqsRecord); // Subscription[]
-            await Promise.all(subscriptions.map(sub => putSubscription(sub)));
+            // TODO: parse this using zod to get validation
+            const subRef = JSON.parse(sqsRecord.body) as GoogleSubscriptionReference;
+            const subscriptionFromGoogle = await fetchSubscriptionDetails(subRef.purchaseToken, subRef.packageName);
+            const subscription = googleSubscriptionToSubscription(subRef.purchaseToken, subRef.packageName, subscriptionFromGoogle);
+            await putSubscription(subscription);
 
-            console.log(`Processed ${subscriptions.length} subscriptions: ${subscriptions.map(s => s.subscriptionId)}`);
+            console.log(`Processed subscription: ${subscription.subscriptionId}`);
 
             return "OK"
         } catch (error) {
@@ -42,9 +70,9 @@ export const buildHandler = (
 
     return Promise.all(promises)
         .then(_  => "OK")
-})
+});
 
 export const handler = buildHandler(
-    getGoogleSubResponse,
+    fetchGoogleSubscriptionV2,
     putSubscription,
 );
