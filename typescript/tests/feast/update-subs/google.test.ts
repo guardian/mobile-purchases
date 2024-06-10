@@ -34,7 +34,7 @@ describe("The Feast Android subscription updater", () => {
             subscriptionFromGoogle,
             undefined, // receipt
             null, // apple payload
-            undefined,
+            undefined, // ttl
         );
         const stubFetchSubscriptionsFromGoogle = () => Promise.resolve([subscription]);
         const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) => Promise.resolve(subscription))
