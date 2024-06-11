@@ -781,7 +781,7 @@ Resources:
         maxReceiveCount: 8
       KmsMasterKeyId: alias/aws/sqs
       Tags:
-        - Key: Stag
+        - Key: Stage
           Value: !Ref Stage
         - Key: Stack
           Value: !Ref Stack
