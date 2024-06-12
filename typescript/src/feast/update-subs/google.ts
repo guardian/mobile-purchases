@@ -8,6 +8,8 @@ import { GoogleSubscriptionReference } from "../../models/subscriptionReference"
 import { fromGooglePackageName } from "../../services/appToPlatform";
 import { dateToSecondTimestamp, thirtyMonths } from "../../utils/dates";
 import { getIdentityIdFromBraze } from "../../services/braze";
+import { storeUserSubscriptionInDynamo } from "./common";
+import { UserSubscription } from "../../models/userSubscription";
 
 const googleSubscriptionToSubscription = (
     purchaseToken: string,
@@ -35,6 +37,7 @@ export const buildHandler = (
     fetchSubscriptionDetails: (purchaseToken: string, packageName: string) => Promise<GoogleSubscription>,
     putSubscription: (subscription: Subscription) => Promise<Subscription>,
     exchangeExternalIdForIdentityId: (externalId: string) => Promise<string>,
+    storeUserSubInDynamo: (userSub: UserSubscription) => Promise<void>,
 ) => (async (event: SQSEvent) => {
     const promises = event.Records.map(async (sqsRecord: SQSRecord) => {
         try {
@@ -44,12 +47,15 @@ export const buildHandler = (
             const subscription = googleSubscriptionToSubscription(subRef.purchaseToken, subRef.packageName, subscriptionFromGoogle);
             await putSubscription(subscription);
 
-            if (subscriptionFromGoogle.obfuscatedExternalAccountId) {
-                await exchangeExternalIdForIdentityId(subscriptionFromGoogle.obfuscatedExternalAccountId);
-                console.log("Successfully exchanged UUID for identity ID");
-            } else {
+            if (!subscriptionFromGoogle.obfuscatedExternalAccountId) {
                 throw new ProcessingError(`Failed to exchange UUID for subscription ${subscription.subscriptionId}`, true);
             }
+
+            const identityId = await exchangeExternalIdForIdentityId(subscriptionFromGoogle.obfuscatedExternalAccountId);
+            console.log("Successfully exchanged UUID for identity ID");
+
+            const userSubscription = new UserSubscription(identityId, subscription.subscriptionId, new Date().toISOString());
+            await storeUserSubInDynamo(userSubscription);
 
             console.log(`Processed subscription: ${subscription.subscriptionId}`);
 
@@ -85,4 +91,5 @@ export const handler = buildHandler(
     fetchGoogleSubscriptionV2,
     putSubscription,
     getIdentityIdFromBraze,
+    storeUserSubscriptionInDynamo,
 );

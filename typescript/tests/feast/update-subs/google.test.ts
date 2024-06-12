@@ -1,5 +1,6 @@
 import { buildHandler } from "../../../src/feast/update-subs/google";
 import { Subscription } from "../../../src/models/subscription";
+import type { UserSubscription } from "../../../src/models/userSubscription";
 import { dateToSecondTimestamp, plusDays, thirtyMonths } from "../../../src/utils/dates";
 import { buildSqsEvent } from "./test-helpers";
 
@@ -46,13 +47,16 @@ describe("The Feast Android subscription updater", () => {
             null, // apple payload
             dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)) // ttl
         );
+        const identityId = "123456";
         const mockFetchSubscriptionsFromGoogle = jest.fn(() => Promise.resolve(googleSubscription));
         const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) => Promise.resolve(subscription))
-        const mockExchangeUuid = jest.fn((uuid: string) => Promise.resolve('123456'))
+        const mockExchangeUuid = jest.fn((uuid: string) => Promise.resolve(identityId))
+        const mockStoreUserSubInDynamo = jest.fn((userSub: UserSubscription) => Promise.resolve(undefined))
         const handler = buildHandler(
             mockFetchSubscriptionsFromGoogle,
             mockStoreSubscriptionInDynamo,
             mockExchangeUuid,
+            mockStoreUserSubInDynamo
         );
 
         const result = await handler(event);
@@ -62,5 +66,9 @@ describe("The Feast Android subscription updater", () => {
         expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1);
         expect(mockStoreSubscriptionInDynamo).toHaveBeenCalledWith(subscription);
         expect(mockExchangeUuid).toHaveBeenCalledWith(googleSubscription.obfuscatedExternalAccountId);
+        expect(mockStoreUserSubInDynamo).toHaveBeenCalledWith(expect.objectContaining({
+            userId: identityId,
+            subscriptionId: purchaseToken,
+        }));
     });
 });

@@ -9,6 +9,7 @@ import { ProcessingError } from "../../models/processingError";
 import { UserSubscription } from "../../models/userSubscription";
 import { getIdentityIdFromBraze } from "../../services/braze";
 import { GracefulProcessingError } from "../../models/GracefulProcessingError";
+import { storeUserSubscriptionInDynamo as defaultStoreUserSubscriptionInDynamo } from "./common";
 
 export type SubscriptionMaybeWithAppAccountToken = Subscription & {
     appAccountToken?: string
@@ -39,11 +40,6 @@ export const defaultFetchSubscriptionsFromApple =
 const defaultStoreSubscriptionInDynamo =
     (subscription: Subscription): Promise<void> => {
         return dynamoMapper.put({item: subscription}).then(_ => {})
-    }
-
-const defaultStoreUserSubscriptionInDynamo =
-    (userSubscription: UserSubscription): Promise<void> => {
-        return dynamoMapper.put({ item: userSubscription }).then(_ => {})
     }
 
 type FetchSubsFromApple = (reference: AppleSubscriptionReference) => Promise<SubscriptionMaybeWithAppAccountToken[]>;
