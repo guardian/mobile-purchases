@@ -1316,6 +1316,9 @@ Resources:
       OKActions:
         - Ref: AlarmTopic
       TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-feast-google-update-subscriptions
 
   AppleRevalidateSubscriptionRole:
     Type: AWS::IAM::Role
