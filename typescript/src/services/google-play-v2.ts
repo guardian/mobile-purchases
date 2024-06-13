@@ -74,11 +74,10 @@ export async function fetchGoogleSubscriptionV2(
         const testPurchase =
             purchase.data?.testPurchase ? true : false
 
-        if (!product.productId) {
+        const productId = product.productId;
+        if (!productId) {
             throw Error("The product does not have an ID")
         }
-
-        const productId = mapAndroidProductId(product.productId, packageName, testPurchase)
 
         const basePlanId =
             product.offerDetails?.basePlanId
@@ -122,7 +121,8 @@ export async function fetchGoogleSubscriptionV2(
             expiryTime: new Date(expiryTime),
             userCancellationTime: parseNullableDate(userCancellationTime),
             autoRenewing,
-            productId,
+            // Map the product_id for test Feast purchases for easy identification downstream
+            productId: mapAndroidProductId(productId, packageName, testPurchase),
             billingPeriodDuration,
             freeTrial: isFreeTrial(offerId, latestOrderId),
             testPurchase,
