@@ -3,6 +3,7 @@ import S3 from 'aws-sdk/clients/s3'
 import {Stage} from "../utils/appIdentity";
 
 import {androidpublisher, auth} from '@googleapis/androidpublisher';
+import { mapAndroidProductId } from "../utils/mapAndroidProductId";
 
 export type GoogleSubscription = {
     // Time at which the subscription was granted. Not set for pending subscriptions (subscription was created but awaiting payment during signup)
@@ -73,12 +74,11 @@ export async function fetchGoogleSubscriptionV2(
         const testPurchase =
             purchase.data?.testPurchase ? true : false
 
-        const productId =
-            product.productId
-
-        if (!productId) {
+        if (!product.productId) {
             throw Error("The product does not have an ID")
         }
+
+        const productId = mapAndroidProductId(product.productId, packageName, testPurchase)
 
         const basePlanId =
             product.offerDetails?.basePlanId
