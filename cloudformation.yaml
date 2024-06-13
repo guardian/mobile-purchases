@@ -922,11 +922,9 @@ Resources:
         !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
       AlarmActions:
         - Ref: AlarmTopic
-      OKActions:
-        - Ref: AlarmTopic
       AlarmName: !Sub mobile-purchases-${Stage}-apple-subscription-status-check-errors
       AlarmDescription: |
-        More than 10% of attempts to check Apple subscription status resulted in a 5XX error.
+        More than 10% of attempts to check Apple subscription status resulted in a 5XX error over a 20min period.
       Metrics:
         - Id: e1
           Label: Percentage of requests which result in a 5XX error
@@ -946,7 +944,7 @@ Resources:
                   Value: /apple/subscription/status
                 - Name: Stage
                   Value: !Ref Stage
-            Period: 600
+            Period: 1200
             Stat: Sum
           ReturnData: false
         - Id: m2
@@ -964,7 +962,7 @@ Resources:
                   Value: /apple/subscription/status
                 - Name: Stage
                   Value: !Ref Stage
-            Period: 600
+            Period: 1200
             Stat: Sum
           ReturnData: false
       ComparisonOperator: GreaterThanOrEqualToThreshold
