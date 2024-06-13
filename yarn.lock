@@ -622,13 +622,13 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@okta/jwt-verifier@^3.2.0":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@okta/jwt-verifier/-/jwt-verifier-3.2.0.tgz#87ba0ae32db7a8a4dabb48bc163d430af49c3c68"
-  integrity sha512-OcQ3EyKybl6SBpUL1jnHyq6ga97sRE6PffOw5hC3QACRjB8Vu/Ic8+u8AzlaFMyUsunuTf3t58YSTvNeigW+Tg==
+"@okta/jwt-verifier@^3.2.2":
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/@okta/jwt-verifier/-/jwt-verifier-3.2.2.tgz#cc6ac8262ad4eac7f7cc259483490cee1635e28d"
+  integrity sha512-MVKqdwKXt2L0/LmgtL1xC+2yzRNDcuopEjAzV+uTuhjJKNQL3Yt1Bp5n8Qs90/pXe7Cen2seGKYQk/k5XOk5YQ==
   dependencies:
     jwks-rsa "^3.1.0"
-    njwt "^2.0.0"
+    njwt "^2.0.1"
 
 "@sinonjs/commons@^1.7.0":
   version "1.8.6"
@@ -3446,10 +3446,10 @@ nice-try@^1.0.4:
   resolved "https://registry.npmjs.org/nice-try/-/nice-try-1.0.5.tgz"
   integrity sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
 
-njwt@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.npmjs.org/njwt/-/njwt-2.0.0.tgz"
-  integrity sha512-1RcqirhCqThBEe4KO83pFg0wPBa1c9NiXNCrocD2EbZqb6ksWWDVnp/w/p0gsyUcVa05PhhaaPjs9rc/GLmdxQ==
+njwt@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/njwt/-/njwt-2.0.1.tgz#21a224c33ab1468f903210b1f45a20181adb6600"
+  integrity sha512-HwFeZsPJ1aOhIjMjqT9Qv7BOsQbkxjRVPPSdFXNOTEkfKpr9+O6OX+dSN6TxxIErSYSqrmlDR4H2zOGOpEbZLA==
   dependencies:
     "@types/node" "^15.0.1"
     ecdsa-sig-formatter "^1.0.5"
