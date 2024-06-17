@@ -905,7 +905,7 @@ Resources:
       MemorySize: 512
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Timeout: 25
-      Runtime: nodejs14.x
+      Runtime: nodejs20.x
 
   UpdateGoogleSubscriptionsEventSource:
     Type: AWS::Lambda::EventSourceMapping
@@ -1154,7 +1154,7 @@ Resources:
       MemorySize: 512
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Timeout: 25
-      Runtime: nodejs14.x
+      Runtime: nodejs20.x
 
   AppleSubscriptionsEventSource:
     Type: AWS::Lambda::EventSourceMapping
