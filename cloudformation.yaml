@@ -1104,7 +1104,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: user-subscriptions.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs20.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-user-subscriptions/user-subscriptions.zip
