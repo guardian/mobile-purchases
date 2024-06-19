@@ -1273,7 +1273,7 @@ Resources:
     Properties:
       ActionsEnabled:
         !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
-      AlarmDescription: "Ensure that the Feast Apple subscription dead letter queue is empty"
+      AlarmDescription: "The Feast Apple subscription dead letter queue is over the threshold"
       Namespace: "AWS/SQS"
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
@@ -1283,7 +1283,7 @@ Resources:
       Statistic: Sum
       EvaluationPeriods: 1
       ComparisonOperator: GreaterThanThreshold
-      Threshold: 0
+      Threshold: 10
       AlarmActions:
         - Ref: AlarmTopic
       OKActions:
