@@ -473,7 +473,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: google-link-user-subscription.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs20.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-google-link-user-subscription/google-link-user-subscription.zip
@@ -504,7 +504,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: apple-link-user-subscription.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs20.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-apple-link-user-subscription/apple-link-user-subscription.zip
