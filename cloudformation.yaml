@@ -535,7 +535,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: google-subscription-status.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs20.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-google-subscription-status/google-subscription-status.zip
@@ -565,7 +565,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: apple-subscription-status.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs20.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-apple-subscription-status/apple-subscription-status.zip
