@@ -266,17 +266,6 @@ Resources:
               responses:
                 "200":
                   "description": "Successfully handled link request from Android Live App"
-          "/user/subscriptions/me":
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UserSubscriptionsLambda.Arn}/invocations
-              consumes: [application/json]
-              produces: [application/json]
-              responses:
-                "200":
-                  "description": "200 response"
           "/user/subscriptions/{userId}":
             get:
               x-amazon-apigateway-integration:
@@ -1119,12 +1108,6 @@ Resources:
       MemorySize: 128
       Timeout: 29
       Events:
-        DirectAccess:
-          Type: Api
-          Properties:
-            Path: "/user/subscriptions/me"
-            Method: GET
-            RestApiId: !Ref MobilePuchasesApi
         InternalAccess:
           Type: Api
           Properties:
