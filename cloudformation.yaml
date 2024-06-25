@@ -584,7 +584,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: apple-fetch-offer-details.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-apple-fetch-offer-details/apple-fetch-offer-details.zip
