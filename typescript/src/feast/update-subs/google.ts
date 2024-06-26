@@ -48,7 +48,7 @@ export const buildHandler = (
             await putSubscription(subscription);
 
             if (!subscriptionFromGoogle.obfuscatedExternalAccountId) {
-                throw new ProcessingError(`Failed to exchange UUID for subscription ${subscription.subscriptionId}`, true);
+                throw new ProcessingError(`Subscription ${subscription.subscriptionId} does not contain an external account ID`, true);
             }
 
             const identityId = await exchangeExternalIdForIdentityId(subscriptionFromGoogle.obfuscatedExternalAccountId);
