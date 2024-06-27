@@ -33,6 +33,7 @@ function toSqsPayload(payload: AppleLinkPayload): SubscriptionCheckData[] {
     // part, due to the aforementioned lack of appAccountToken. So I think the
     // easiest solution for now is just not to enqueue Feast subs for lookup.
     if (payload.platform === Platform.IosFeast) {
+        console.log("Not enqueuing Feast subs for lookup");
         return [];
     }
 
