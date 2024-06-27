@@ -7,7 +7,7 @@ type AppleSubscription = {
 }
 
 export type AppleLinkPayload = {
-    platform: Platform.DailyEdition | Platform.Ios | Platform.IosPuzzles | Platform.IosEdition,
+    platform: Platform.DailyEdition | Platform.Ios | Platform.IosPuzzles | Platform.IosEdition | Platform.IosFeast,
     subscriptions: AppleSubscription[]
 }
 
