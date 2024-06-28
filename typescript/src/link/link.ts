@@ -15,6 +15,11 @@ export interface SubscriptionCheckData {
 }
 
 async function enqueueUnstoredPurchaseToken(subChecks: SubscriptionCheckData[]): Promise<number> {
+    // There's nothing to do if there are no subs to check - this will always be
+    // the case for Feast.
+    if (subChecks.length === 0) {
+        return 0;
+    }
 
     const dynamoResult = dynamoMapper.batchGet(subChecks.map(sub => new ReadSubscription().setSubscriptionId(sub.subscriptionId)));
 
