@@ -1477,6 +1477,7 @@ Resources:
             Stream:
               Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
             StartingPosition: LATEST
+            MaximumRetryAttempts: 10
       Tags:
         Stage: !Ref Stage
         Stack: !Ref Stack
