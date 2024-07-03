@@ -21,9 +21,12 @@ function deduplicate<T, U>(list: T[], selector: (item: T) => U): T[] {
 }
 
 export function parseAppleLinkPayload(request: APIGatewayProxyEvent): AppleLinkPayload {
-    const parsed = JSON.parse(request.body ?? "") as AppleLinkPayload;
+    const parsed = JSON.parse(request.body ?? "");
+
+    const subscriptions = Array.isArray(parsed.subscriptions) ? parsed.subscriptions : [parsed.subscriptions];
+
     return {
         ...parsed,
-        subscriptions: deduplicate(parsed.subscriptions, x => x.originalTransactionId)
-    }
+        subscriptions: deduplicate(subscriptions, x => x.originalTransactionId)
+    } as AppleLinkPayload;
 }
