@@ -55,12 +55,17 @@ Source architecture diagrams are [here](https://drive.google.com/drive/folders/1
 
 [Diagram source](https://docs.google.com/drawings/d/1C3-YcIdq4OZBbl5zouHKzJLWgRBtR89yCO9CHCGGkAQ/edit)
 
+### User & subscription related events
+
+Inserts into the user-subscriptions Dynamo table trigger the soft-opt-in-acquisitions lambda which in turn pushes onto SQS queues in the membership account to set SOI consents and send emails.
+
+Deletions from the subscriptions table (triggered by the TTL being reached) trigger the delete-user-subscription lambda. This severs the user-subscription record for this subscription and pushes onto a queue in the membership account to trigger a recalculation of SOI consents.
+
+![User and Subscription Events Architecture](docs/user-sub-events.png)
+
 ### Cloud Functions
 
- - Link: This is triggered by the Apps if a users is logged-in and has a subscription. The function will store that link in the UserSubscriptions table (after ensuring the user is logged in), and forward the subscription to the Update Subs function.
  - Subscription Status: This is triggered by an API call from the app to check if a Google purchase token or an Apple receipt is a proof to a valid subscription.
- - Update Subs: This function checks the status of a subscription and updates it in the Subscriptions table.
- - Subscription Status: This function checks the status of a subscription on behalf of the App.
  - Delete Link: This function deletes rows from the UserSubscriptions table if their corresponding subscription has been deleted. It relies on [dynamo streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html).
   
 ## Running TypeScript lambdas locally
