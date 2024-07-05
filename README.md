@@ -1,34 +1,42 @@
 # Mobile Purchases
-_IOS receipt validation and purchase persistence_
+
+_IOS and Android receipt validation and purchase persistence_
 
 ## Structure of the project
+
  - The scala part of the project is considered "legacy". It's only kept for very old iOS devices and should be decommissioned once there's only a tiny amount of [traffic reaching the service](https://eu-west-1.console.aws.amazon.com/cloudwatch/home?region=eu-west-1#dashboards:name=MobilePurchases;start=P7D).
  - The Typescript part of the project contains the more modern approach to validating and storing mobile purchases.
  
 ## Local Setup
+
 ### Node
-Make sure that you are using the right Node version, we recommend [`fnm`](https://github.com/Schniz/fnm) as the Node version manager.
+
+Make sure that you are using the Node version specified by the `.nvmrc` file. We recommend [`fnm`](https://github.com/Schniz/fnm) as the Node version manager.
+
 1. Install `yarn`: `npm install -g yarn`
 2. Run `yarn` to install dependencies
 3. Run local tests: `yarn test`
 
 ## Architecture
 
-This service is a set of cloud functions (AWS lambdas), triggered either by an API Gateway or by SQS queues. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services. 
+This service is a set of AWS lambdas, triggered by an API Gateway, SQS queues or Dynamo events. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services. 
 
 ![Mobile Purchases Architecture](mobile-purchases-architecture.png)
 
 [Diagram source](https://docs.google.com/drawings/d/1C3-YcIdq4OZBbl5zouHKzJLWgRBtR89yCO9CHCGGkAQ/edit)
 
 ### Data
-There are three dynamo DB tables:
- - Events (`mobile-purchases-<stage>-subscription-events-v2`): This table records all events as they are received by Google and Apple.
- - Subscriptions (`mobile-purchases-CODE-subscriptions`): This table records all the subscriptions held by our users. It contains information such as start date, expiration date, type of subscription and whether it will automatically renew at the end of its validity.
- - UserSubscriptions (`mobile-purchases-CODE-user-subscriptions`): This table records the link between a User (as defined by the Guardian), and a subscription.
 
-These three tables are exported daily to the datalake.
+There are three dynamo DB tables:
+
+ - **Events** (`mobile-purchases-<stage>-subscription-events-v2`): This table records events as they are received from Google and Apple.
+ - **Subscriptions** (`mobile-purchases-CODE-subscriptions`): This table records subscriptions held by our users. It contains information such as start date, expiration date, type of subscription and whether it will automatically renew at the end of its validity.
+ - **UserSubscriptions** (`mobile-purchases-CODE-user-subscriptions`): This table records the link between a User (as defined by the Guardian) and a subscription.
+
+These tables are exported daily to the datalake.
 
 ### Cloud Functions
+
  - Pubsub: This is triggered by Apple and Google when any event happen on a subscription, such as a subscription has been purchased, renewed, cancelled etc. The data received by this function is stored in the Event table and forwarded to the Update Subs function.
  - Link: This is triggered by the Apps if a users is logged-in and has a subscription. The function will store that link in the UserSubscriptions table (after ensuring the user is logged in), and forward the subscription to the Update Subs function.
  - Subscription Status: This is triggered by an API call from the app to check if a Google purchase token or an Apple receipt is a proof to a valid subscription.
@@ -36,7 +44,7 @@ These three tables are exported daily to the datalake.
  - Subscription Status: This function checks the status of a subscription on behalf of the App.
  - Delete Link: This function deletes rows from the UserSubscriptions table if their corresponding subscription has been deleted. It relies on [dynamo streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html).
   
-## Running typescript lambdas locally
+## Running TypeScript lambdas locally
 
 We're using [TypeScript](https://www.typescriptlang.org/) to develop this project and it's useful to be able to test these locally, without having to resubmit a build and deploy to the cloud. 
 
