@@ -49,6 +49,8 @@ The mobile apps link an In App Purchase with a Guardian user by calling the link
 
 In some cases the subscription is queued for processing by pushing to the subscriptions-to-fetch SQS queues.
 
+Source architecture diagrams are [here](https://drive.google.com/drive/folders/1D4Fe7kZMc99XBI4woPSmTQIG2ySGd9hl).
+
 [Diagram source](https://docs.google.com/drawings/d/1C3-YcIdq4OZBbl5zouHKzJLWgRBtR89yCO9CHCGGkAQ/edit)
 
 ### Cloud Functions
