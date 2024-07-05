@@ -31,13 +31,22 @@ These tables are exported daily to the datalake.
 
 This service is a set of AWS lambdas, triggered by an API Gateway, SQS queues or Dynamo events. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services. 
 
+### Pubsub
+
+Data enters the system via pubsub endpoints which are called by the Apple App Store and Google Play Store when subscription events happen (e.g. purchase, renewal, cancellation):
+
+![Pubsub Architecture](docs/pubsub.png)
+
+This pattern is repeated for the Apple and Google live apps, as well as Feast apps.
+
+In addition to writing to the subscriptions Dynamo table, the Feast lambdas also attempt to link to a user by reading a custom field from the receipt data which is exchanged with Braze for an Identity ID. This is then written to the user-subscriptions table. The live apps do not work this way and the user-subscriptions record is added by the link lambdas (see below).
+
 ![Mobile Purchases Architecture](mobile-purchases-architecture.png)
 
 [Diagram source](https://docs.google.com/drawings/d/1C3-YcIdq4OZBbl5zouHKzJLWgRBtR89yCO9CHCGGkAQ/edit)
 
 ### Cloud Functions
 
- - Pubsub: This is triggered by Apple and Google when any event happen on a subscription, such as a subscription has been purchased, renewed, cancelled etc. The data received by this function is stored in the Event table and forwarded to the Update Subs function.
  - Link: This is triggered by the Apps if a users is logged-in and has a subscription. The function will store that link in the UserSubscriptions table (after ensuring the user is logged in), and forward the subscription to the Update Subs function.
  - Subscription Status: This is triggered by an API call from the app to check if a Google purchase token or an Apple receipt is a proof to a valid subscription.
  - Update Subs: This function checks the status of a subscription and updates it in the Subscriptions table.
