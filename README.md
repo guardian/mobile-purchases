@@ -45,7 +45,7 @@ In addition to writing to the subscriptions Dynamo table, the Feast lambdas also
 
 The mobile apps link an In App Purchase with a Guardian user by calling the link endpoints. The user must be signed in for this to happen. For the live apps this is the only way users are linked to subscriptions. For Feast, this endpoint is _sometimes_ called as there are cases where the linking cannot happen using the receipt data (e.g. promo codes on iOS).
 
-![Mobile Purchases Architecture](mobile-purchases-architecture.png)
+![Link Architecture](docs/link.png)
 
 In some cases the subscription is queued for processing by pushing to the subscriptions-to-fetch SQS queues.
 
