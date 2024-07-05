@@ -30,4 +30,16 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
 
 ![User and Subscription Events Architecture](user-sub-events.png)
 
+## Subscription status endpoints
+
+The apps call endpoints to check the status of a subscription.
+
+TODO: add diagram.
+
+## Datalake export
+
+The subscriptions, subscription-events and user-subscriptions Dynamo tables are exported to the datalake. This is orchestrated by lambdas triggered on a cron schedule.
+
+TODO: add diagram.
+
 Source architecture diagrams are [here](https://drive.google.com/drive/folders/1D4Fe7kZMc99XBI4woPSmTQIG2ySGd9hl).
