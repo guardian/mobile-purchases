@@ -17,6 +17,16 @@ Make sure that you are using the Node version specified by the `.nvmrc` file. We
 2. Run `yarn` to install dependencies
 3. Run local tests: `yarn test`
 
+### Data
+
+There are three Dynamo DB tables:
+
+ - **Events** (`mobile-purchases-<stage>-subscription-events-v2`): This table records events as they are received from Google and Apple.
+ - **Subscriptions** (`mobile-purchases-CODE-subscriptions`): This table records subscriptions held by our users. It contains information such as start date, expiration date, type of subscription and whether it will automatically renew at the end of its validity.
+ - **UserSubscriptions** (`mobile-purchases-CODE-user-subscriptions`): This table records the link between a User (as defined by the Guardian) and a subscription.
+
+These tables are exported daily to the datalake.
+
 ## Architecture
 
 This service is a set of AWS lambdas, triggered by an API Gateway, SQS queues or Dynamo events. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services. 
@@ -24,16 +34,6 @@ This service is a set of AWS lambdas, triggered by an API Gateway, SQS queues or
 ![Mobile Purchases Architecture](mobile-purchases-architecture.png)
 
 [Diagram source](https://docs.google.com/drawings/d/1C3-YcIdq4OZBbl5zouHKzJLWgRBtR89yCO9CHCGGkAQ/edit)
-
-### Data
-
-There are three dynamo DB tables:
-
- - **Events** (`mobile-purchases-<stage>-subscription-events-v2`): This table records events as they are received from Google and Apple.
- - **Subscriptions** (`mobile-purchases-CODE-subscriptions`): This table records subscriptions held by our users. It contains information such as start date, expiration date, type of subscription and whether it will automatically renew at the end of its validity.
- - **UserSubscriptions** (`mobile-purchases-CODE-user-subscriptions`): This table records the link between a User (as defined by the Guardian) and a subscription.
-
-These tables are exported daily to the datalake.
 
 ### Cloud Functions
 
