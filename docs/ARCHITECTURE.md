@@ -22,8 +22,6 @@ The mobile apps link an In App Purchase with a Guardian user by calling the link
 
 In some cases the subscription is queued for processing by pushing to the subscriptions-to-fetch SQS queues.
 
-Source architecture diagrams are [here](https://drive.google.com/drive/folders/1D4Fe7kZMc99XBI4woPSmTQIG2ySGd9hl).
-
 ## User & subscription related events
 
 Inserts into the user-subscriptions Dynamo table trigger the soft-opt-in-acquisitions lambda which in turn pushes onto SQS queues in the membership account to set SOI consents and send emails.
@@ -31,3 +29,5 @@ Inserts into the user-subscriptions Dynamo table trigger the soft-opt-in-acquisi
 Deletions from the subscriptions table (triggered by the TTL being reached) trigger the delete-user-subscription lambda. This severs the user-subscription record for this subscription and pushes onto a queue in the membership account to trigger a recalculation of SOI consents.
 
 ![User and Subscription Events Architecture](user-sub-events.png)
+
+Source architecture diagrams are [here](https://drive.google.com/drive/folders/1D4Fe7kZMc99XBI4woPSmTQIG2ySGd9hl).
