@@ -17,17 +17,9 @@ Make sure that you are using the Node version specified by the `.nvmrc` file. We
 2. Run `yarn` to install dependencies
 3. Run local tests: `yarn test`
 
-## Architecture
-
-This service is a set of AWS lambdas, triggered by an API Gateway, SQS queues or Dynamo events. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services. 
-
-![Mobile Purchases Architecture](mobile-purchases-architecture.png)
-
-[Diagram source](https://docs.google.com/drawings/d/1C3-YcIdq4OZBbl5zouHKzJLWgRBtR89yCO9CHCGGkAQ/edit)
-
 ### Data
 
-There are three dynamo DB tables:
+There are three Dynamo DB tables:
 
  - **Events** (`mobile-purchases-<stage>-subscription-events-v2`): This table records events as they are received from Google and Apple.
  - **Subscriptions** (`mobile-purchases-CODE-subscriptions`): This table records subscriptions held by our users. It contains information such as start date, expiration date, type of subscription and whether it will automatically renew at the end of its validity.
@@ -35,14 +27,13 @@ There are three dynamo DB tables:
 
 These tables are exported daily to the datalake.
 
+### Architecture
+
+See [here](docs/ARCHITECTURE.md).
+
 ### Cloud Functions
 
- - Pubsub: This is triggered by Apple and Google when any event happen on a subscription, such as a subscription has been purchased, renewed, cancelled etc. The data received by this function is stored in the Event table and forwarded to the Update Subs function.
- - Link: This is triggered by the Apps if a users is logged-in and has a subscription. The function will store that link in the UserSubscriptions table (after ensuring the user is logged in), and forward the subscription to the Update Subs function.
  - Subscription Status: This is triggered by an API call from the app to check if a Google purchase token or an Apple receipt is a proof to a valid subscription.
- - Update Subs: This function checks the status of a subscription and updates it in the Subscriptions table.
- - Subscription Status: This function checks the status of a subscription on behalf of the App.
- - Delete Link: This function deletes rows from the UserSubscriptions table if their corresponding subscription has been deleted. It relies on [dynamo streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html).
   
 ## Running TypeScript lambdas locally
 
