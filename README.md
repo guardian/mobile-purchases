@@ -31,10 +31,6 @@ These tables are exported daily to the datalake.
 
 See [here](docs/ARCHITECTURE.md).
 
-### Cloud Functions
-
- - Subscription Status: This is triggered by an API call from the app to check if a Google purchase token or an Apple receipt is a proof to a valid subscription.
-  
 ## Running TypeScript lambdas locally
 
 We're using [TypeScript](https://www.typescriptlang.org/) to develop this project and it's useful to be able to test these locally, without having to resubmit a build and deploy to the cloud. 
