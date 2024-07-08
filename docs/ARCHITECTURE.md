@@ -14,6 +14,8 @@ In addition to writing to the subscriptions Dynamo table, the Feast lambdas also
 
 **Note:** Apple subscriptions are revalidated on a schedule by the apple-revalidate-receipts lambda. This lambda reads from the subscriptions Dynamo table and pushes items to the subscriptions-to-fetch SQS queues.
 
+**Note:** Tokens for the Play Store are refreshed on a schedule by the mobile-purchases-googleoauth lambda and accessed from an s3 bucket.
+
 ## Linking
 
 The mobile apps link an In App Purchase with a Guardian user by calling the link endpoints. The user must be signed in for this to happen. For the live apps this is the only way users are linked to subscriptions. For Feast, this endpoint is _sometimes_ called as there are cases where the linking cannot happen using the receipt data (e.g. promo codes on iOS).
@@ -34,7 +36,9 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
 
 The apps call endpoints to check the status of a subscription.
 
-TODO: add diagram.
+![Subscription Status Architecture](subscription-status.png)
+
+**Note:** Tokens for the Play Store are refreshed on a schedule by the mobile-purchases-googleoauth lambda and accessed from an s3 bucket.
 
 ## Datalake export
 
