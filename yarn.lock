@@ -4443,10 +4443,10 @@ type-fest@^0.8.1:
   resolved "https://registry.npmjs.org/type-fest/-/type-fest-0.8.1.tgz"
   integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
-typed-rest-client@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-2.0.1.tgz#addb8da5add04b1aec68a32b6cb9bc8e79d4ab4f"
-  integrity sha512-LSfgVu+jKUbkceVBGJ6bdIMzzpvjhw6A+aKsVnGa2S7bT82QCALh/RAtq/fdV3aLXxHqsChuClrQ93fXMrIckA==
+typed-rest-client@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-2.0.2.tgz#82d451b9a219bf8fa688b698b2581327be4b920d"
+  integrity sha512-rmAQM2gZw/PQpK5+5aSs+I6ZBv4PFC2BT1o+0ADS1SgSejA+14EmbI2Lt8uXwkX7oeOMkwFmg0pHKwe8D9IT5A==
   dependencies:
     des.js "^1.1.0"
     js-md4 "^0.3.2"
