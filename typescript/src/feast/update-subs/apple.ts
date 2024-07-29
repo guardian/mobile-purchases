@@ -62,19 +62,23 @@ const processRecord = async (
 
     await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
 
-    const userSubscriptions =
-        await Promise.all(subscriptions.map(async s => {
-            if (!s.appAccountToken) {
-                throw new ProcessingError(`Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`, false)
-            }
 
-            const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
-            const now = new Date().toISOString()
 
-            return new UserSubscription(identityId, s.subscriptionId, now)
-        }))
-
-    return Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
+            await Promise.all(subscriptions.map(async s => {
+                if (!s.appAccountToken) {
+                    console.log(`Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`);
+                    return {}
+                    }
+                else {
+                    const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
+                    const now = new Date().toISOString()
+                    const link =  new UserSubscription(identityId, s.subscriptionId, now) 
+                return storeUserSubscriptionInDynamo(link)
+            
+                }
+                }
+            ) 
+)
 }
 
 const processRecordWithErrorHandling = async (

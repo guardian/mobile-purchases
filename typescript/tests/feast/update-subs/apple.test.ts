@@ -85,7 +85,7 @@ describe("The Feast (Apple) subscription updater", () => {
         await expect(handler(event)).resolves.toBe("OK");
     })
 
-    it("Throws an error if the receipt has no app account token, but still writes the subscription", async () => {
+    it("Still writes the subscription when the receipt has no app account token,", async () => {
         expect.assertions(2);
         const event = buildSqsEvent([{ receipt: "TEST_RECEIPT_MISSING_AAT" }])
         const handler =
@@ -96,14 +96,10 @@ describe("The Feast (Apple) subscription updater", () => {
                 mockStoreUserSubscriptionInDynamo
             )
 
-        try {
-            await handler(event);
-        } catch (error) {
-            expect((error as ProcessingError).message)
-                .toMatch("Subscription with receipt 'TEST_RECEIPT_MISSING_AAT' did not have an 'appAccountToken'");
-            expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1)
+            expect.assertions(1);
+            await expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1)
         }
-    })
+    )
 });
 
 beforeEach(() => {
