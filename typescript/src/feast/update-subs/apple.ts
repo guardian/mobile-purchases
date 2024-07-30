@@ -61,14 +61,14 @@ const processRecord = async (
         await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
 
         await Promise.all(subscriptions.map(async s => {
-            if (!s.appAccountToken) {
-                console.log(`Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`);
-            }
-            else {
+            if (s.appAccountToken) {
                 const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
                 const now = new Date().toISOString()
                 const linked = new UserSubscription(identityId, s.subscriptionId, now)
                 storeUserSubscriptionInDynamo(linked)
+            }
+            else {
+                console.log(`Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`);
             }
         }
     ))
