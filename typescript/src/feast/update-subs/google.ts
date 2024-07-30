@@ -47,17 +47,18 @@ export const buildHandler = (
             const subscription = googleSubscriptionToSubscription(subRef.purchaseToken, subRef.packageName, subscriptionFromGoogle);
             await putSubscription(subscription);
 
-            if (!subscriptionFromGoogle.obfuscatedExternalAccountId) {
-                throw new ProcessingError(`Subscription ${subscription.subscriptionId} does not contain an external account ID`, true);
+            if (subscriptionFromGoogle.obfuscatedExternalAccountId) {
+                const identityId = await exchangeExternalIdForIdentityId(subscriptionFromGoogle.obfuscatedExternalAccountId);
+                console.log("Successfully exchanged UUID for identity ID");
+    
+                const userSubscription = new UserSubscription(identityId, subscription.subscriptionId, new Date().toISOString());
+                await storeUserSubInDynamo(userSubscription);
+    
+                console.log(`Processed subscription: ${subscription.subscriptionId}`); 
             }
-
-            const identityId = await exchangeExternalIdForIdentityId(subscriptionFromGoogle.obfuscatedExternalAccountId);
-            console.log("Successfully exchanged UUID for identity ID");
-
-            const userSubscription = new UserSubscription(identityId, subscription.subscriptionId, new Date().toISOString());
-            await storeUserSubInDynamo(userSubscription);
-
-            console.log(`Processed subscription: ${subscription.subscriptionId}`);
+            else {
+                console.log(`Subscription ${subscription.subscriptionId} does not contain an external account ID`)
+            }
 
             return "OK"
         } catch (error) {

@@ -86,7 +86,6 @@ describe("The Feast (Apple) subscription updater", () => {
     })
 
     it("Still writes the subscription when the receipt has no app account token,", async () => {
-        expect.assertions(2);
         const event = buildSqsEvent([{ receipt: "TEST_RECEIPT_MISSING_AAT" }])
         const handler =
             buildHandler(
@@ -96,9 +95,17 @@ describe("The Feast (Apple) subscription updater", () => {
                 mockStoreUserSubscriptionInDynamo
             )
 
-            expect.assertions(1);
-            await expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1)
-        }
+
+        await expect(handler(event)).resolves.toBe("OK");
+
+
+        const storedSubscriptionIds =
+            mockStoreSubscriptionInDynamo.mock.calls.map(call => call[0].subscriptionId)
+
+        await expect(mockStoreUserSubscriptionInDynamo.mock.calls.length).toEqual(0)
+        await expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1)
+        expect(storedSubscriptionIds).toEqual(["sub-5"])
+    }
     )
 });
 
@@ -116,7 +123,7 @@ const subscription =
     ): { subscription: SubscriptionMaybeWithAppAccountToken, identityId?: string } => {
         const subscription = new Subscription(id, "", "", "", false, "", "ios-feast", false, "6M", null, receipt, null);
         return {
-            subscription: appAccountToken ? withAppAccountToken(subscription, appAccountToken): subscription,
+            subscription: appAccountToken ? withAppAccountToken(subscription, appAccountToken) : subscription,
             identityId: identityId
         }
     }
@@ -144,8 +151,6 @@ const stubExchangeExternalIdForIdentityId =
         return Promise.reject(`Failed to exchange app account token ${externalId} for identity ID`)
     }
 
-const mockStoreSubscriptionInDynamo =
-    jest.fn((subscription: Subscription) => Promise.resolve())
+const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) => Promise.resolve())
 
-const mockStoreUserSubscriptionInDynamo =
-    jest.fn((userSubscription: UserSubscription) => Promise.resolve())
+const mockStoreUserSubscriptionInDynamo = jest.fn((userSubscription: UserSubscription) => Promise.resolve())

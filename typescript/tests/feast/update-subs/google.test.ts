@@ -71,4 +71,62 @@ describe("The Feast Android subscription updater", () => {
             subscriptionId: purchaseToken,
         }));
     });
+
+    it("Should still persist to Dynamo when no obfuscated id is available", async () => {
+        const packageName = "uk.co.guardian.feast";
+        const purchaseToken = "test-purchase-token";
+        const subscriptionId = "test-subscription-id";
+        const event = buildSqsEvent([{
+            packageName,
+            purchaseToken,
+            subscriptionId,
+        }]);
+        const startTime = plusDays(new Date(), -1);
+        const expiryTime = plusDays(new Date(), 30);
+        const googleSubscription = {
+            startTime,
+            expiryTime,
+            userCancellationTime: null,
+            autoRenewing: true,
+            productId: subscriptionId,
+            billingPeriodDuration: "P1M",
+            freeTrial: false,
+            testPurchase: false,
+            rawResponse: "test-raw-response",
+        };
+        const subscription = new Subscription(
+            purchaseToken,
+            startTime.toISOString(), // start date
+            expiryTime.toISOString(), // expiry date
+            undefined, // cancellation date
+            true, // auto renewing
+            subscriptionId,
+            "android-feast",
+            false, // free trial
+            "P1M",
+            googleSubscription,
+            undefined, // receipt
+            null, // apple payload
+            dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)) // ttl
+        );
+        const identityId = "123456";
+        const mockFetchSubscriptionsFromGoogle = jest.fn(() => Promise.resolve(googleSubscription));
+        const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) => Promise.resolve(subscription))
+        const mockExchangeUuid = jest.fn((uuid: string) => Promise.resolve(identityId))
+        const mockStoreUserSubInDynamo = jest.fn((userSub: UserSubscription) => Promise.resolve(undefined))
+        const handler = buildHandler(
+            mockFetchSubscriptionsFromGoogle,
+            mockStoreSubscriptionInDynamo,
+            mockExchangeUuid,
+            mockStoreUserSubInDynamo
+        );
+
+        const result = await handler(event);
+
+        expect(result).toEqual("OK");
+        expect(mockFetchSubscriptionsFromGoogle).toHaveBeenCalledWith(purchaseToken, packageName);
+        expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1);
+        expect(mockStoreSubscriptionInDynamo).toHaveBeenCalledWith(subscription);
+        expect(mockStoreUserSubInDynamo).toBeCalledTimes(0);
+    });
 });
