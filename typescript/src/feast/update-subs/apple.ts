@@ -65,7 +65,7 @@ const processRecord = async (
                 const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
                 const now = new Date().toISOString()
                 const linked = new UserSubscription(identityId, s.subscriptionId, now)
-                storeUserSubscriptionInDynamo(linked)
+                await storeUserSubscriptionInDynamo(linked)
             }
             else {
                 console.log(`Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`);

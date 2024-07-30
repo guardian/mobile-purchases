@@ -95,16 +95,16 @@ describe("The Feast (Apple) subscription updater", () => {
                 mockStoreUserSubscriptionInDynamo
             )
 
+        const result = await handler(event);
 
-        await expect(handler(event)).resolves.toBe("OK");
-
+        expect(result).toEqual("OK");
 
         const storedSubscriptionIds =
             mockStoreSubscriptionInDynamo.mock.calls.map(call => call[0].subscriptionId)
 
-        await expect(mockStoreUserSubscriptionInDynamo.mock.calls.length).toEqual(0)
-        await expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1)
         expect(storedSubscriptionIds).toEqual(["sub-5"])
+        expect(mockStoreUserSubscriptionInDynamo.mock.calls.length).toEqual(0)
+        expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1)
     }
     )
 });
