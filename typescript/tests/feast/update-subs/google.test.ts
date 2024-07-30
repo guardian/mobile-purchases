@@ -72,7 +72,7 @@ describe("The Feast Android subscription updater", () => {
         }));
     });
 
-    it("Should still persist to Dynamo when no obfuscated id is available", async () => {
+    it("Still persists to Dynamo when no obfuscated id is available", async () => {
         const packageName = "uk.co.guardian.feast";
         const purchaseToken = "test-purchase-token";
         const subscriptionId = "test-subscription-id";
