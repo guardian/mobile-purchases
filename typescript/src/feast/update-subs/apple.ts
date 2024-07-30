@@ -39,7 +39,7 @@ export const defaultFetchSubscriptionsFromApple =
 
 const defaultStoreSubscriptionInDynamo =
     (subscription: Subscription): Promise<void> => {
-        return dynamoMapper.put({item: subscription}).then(_ => {})
+        return dynamoMapper.put({ item: subscription }).then(_ => { })
     }
 
 type FetchSubsFromApple = (reference: AppleSubscriptionReference) => Promise<SubscriptionMaybeWithAppAccountToken[]>;
@@ -54,27 +54,24 @@ const processRecord = async (
     storeUserSubscriptionInDynamo: StoreUserSubInDynamo,
     record: SQSRecord
 ) => {
-    const reference =
-        decodeSubscriptionReference(record)
+        const reference = decodeSubscriptionReference(record)
 
-    const subscriptions =
-        await fetchSubscriptionsFromApple(reference)
+        const subscriptions = await fetchSubscriptionsFromApple(reference)
 
-    await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
+        await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
 
-    const userSubscriptions =
         await Promise.all(subscriptions.map(async s => {
-            if (!s.appAccountToken) {
-                throw new ProcessingError(`Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`, false)
+            if (s.appAccountToken) {
+                const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
+                const now = new Date().toISOString()
+                const linked = new UserSubscription(identityId, s.subscriptionId, now)
+                await storeUserSubscriptionInDynamo(linked)
             }
-
-            const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
-            const now = new Date().toISOString()
-
-            return new UserSubscription(identityId, s.subscriptionId, now)
-        }))
-
-    return Promise.all(userSubscriptions.map(storeUserSubscriptionInDynamo))
+            else {
+                console.log(`Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`);
+            }
+        }
+    ))
 }
 
 const processRecordWithErrorHandling = async (
@@ -97,8 +94,8 @@ const processRecordWithErrorHandling = async (
             console.warn("Error processing the subscription update is being handled gracefully", error);
             return;
         } else {
-           console.error("Unexpected error, will throw to retry: ", error);
-           throw error;
+            console.error("Unexpected error, will throw to retry: ", error);
+            throw error;
         }
     }
 }

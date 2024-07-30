@@ -85,8 +85,7 @@ describe("The Feast (Apple) subscription updater", () => {
         await expect(handler(event)).resolves.toBe("OK");
     })
 
-    it("Throws an error if the receipt has no app account token, but still writes the subscription", async () => {
-        expect.assertions(2);
+    it("Still writes the subscription when the receipt has no app account token,", async () => {
         const event = buildSqsEvent([{ receipt: "TEST_RECEIPT_MISSING_AAT" }])
         const handler =
             buildHandler(
@@ -96,14 +95,18 @@ describe("The Feast (Apple) subscription updater", () => {
                 mockStoreUserSubscriptionInDynamo
             )
 
-        try {
-            await handler(event);
-        } catch (error) {
-            expect((error as ProcessingError).message)
-                .toMatch("Subscription with receipt 'TEST_RECEIPT_MISSING_AAT' did not have an 'appAccountToken'");
-            expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1)
-        }
-    })
+        const result = await handler(event);
+
+        expect(result).toEqual("OK");
+
+        const storedSubscriptionIds =
+            mockStoreSubscriptionInDynamo.mock.calls.map(call => call[0].subscriptionId)
+
+        expect(storedSubscriptionIds).toEqual(["sub-5"])
+        expect(mockStoreUserSubscriptionInDynamo.mock.calls.length).toEqual(0)
+        expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1)
+    }
+    )
 });
 
 beforeEach(() => {
@@ -120,7 +123,7 @@ const subscription =
     ): { subscription: SubscriptionMaybeWithAppAccountToken, identityId?: string } => {
         const subscription = new Subscription(id, "", "", "", false, "", "ios-feast", false, "6M", null, receipt, null);
         return {
-            subscription: appAccountToken ? withAppAccountToken(subscription, appAccountToken): subscription,
+            subscription: appAccountToken ? withAppAccountToken(subscription, appAccountToken) : subscription,
             identityId: identityId
         }
     }
@@ -148,8 +151,6 @@ const stubExchangeExternalIdForIdentityId =
         return Promise.reject(`Failed to exchange app account token ${externalId} for identity ID`)
     }
 
-const mockStoreSubscriptionInDynamo =
-    jest.fn((subscription: Subscription) => Promise.resolve())
+const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) => Promise.resolve())
 
-const mockStoreUserSubscriptionInDynamo =
-    jest.fn((userSubscription: UserSubscription) => Promise.resolve())
+const mockStoreUserSubscriptionInDynamo = jest.fn((userSubscription: UserSubscription) => Promise.resolve())
