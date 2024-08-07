@@ -56,6 +56,12 @@ deployments:
       functionNames: [mobile-purchases-feastgooglepubsub-]
       fileName: feast-google-pubsub.zip
 
+  mobile-purchases-feast-google-process-subscriptions:
+    template: lambda
+    parameters:
+      functionNames: [mobile-purchases-feast-google-process-subs-]
+      filename: mobile-purchases-feast-google-process-subs.zip
+
   mobile-purchases-google-pubsub:
     template: lambda
     parameters:

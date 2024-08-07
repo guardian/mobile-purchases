@@ -12,21 +12,22 @@ export interface FeastSubscriptionsProps extends GuStackProps {
 }
 
 
-export class FeastAndroidProcessSubscriptions extends GuStack {
+export class FeastGoogleProcessSubscriptions extends GuStack {
     constructor(scope: App, id: string, props: FeastSubscriptionsProps) {
         super(scope, id, props);
 
-        const app = 'feast-android-process-subs';
+        const app = 'mobile-purchases-feast-google-process-subs';
         const nameWithStage = `${app}-${this.stage}`;
 
-        const feastAndroidSubscriptionsQueue = new Queue(this, `${nameWithStage}-sns-queue`, {
+        const feastGoogleProcessSubsQueue = new Queue(this, `${nameWithStage}-sns-queue`, {
             queueName: `${nameWithStage}-queue`,
             retentionPeriod: Duration.days(14),
         });
 
-        new GuSnsLambdaExperimental(this,`${ nameWithStage }-processing-lambda`,{
+        new GuSnsLambdaExperimental(this,`${ nameWithStage }-lambda`,{
             app: `${ nameWithStage }-lambda`,
-            existingSnsTopic: { externalTopicName: feastAndroidSubscriptionsQueue.queueName },
+            functionName: `${ nameWithStage }-lambda`,
+            existingSnsTopic: { externalTopicName: feastGoogleProcessSubsQueue.queueName },
             runtime: Runtime.NODEJS_20_X,
             monitoringConfiguration: { noMonitoring: true },
             handler: 'index.handler',
