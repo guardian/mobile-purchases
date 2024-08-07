@@ -16,7 +16,7 @@ export class FeastAndroidProcessSubscriptions extends GuStack {
     constructor(scope: App, id: string, props: FeastSubscriptionsProps) {
         super(scope, id, props);
 
-        const app = 'feast-android-subscriptions';
+        const app = 'feast-android-process-subs';
         const nameWithStage = `${app}-${this.stage}`;
 
         const feastAndroidSubscriptionsQueue = new Queue(this, `${nameWithStage}-sns-queue`, {
@@ -25,7 +25,7 @@ export class FeastAndroidProcessSubscriptions extends GuStack {
         });
 
         new GuSnsLambdaExperimental(this,`${ nameWithStage }-processing-lambda`,{
-            app: `${ nameWithStage }-processing-lambda`,
+            app: `${ nameWithStage }-lambda`,
             existingSnsTopic: { externalTopicName: feastAndroidSubscriptionsQueue.queueName },
             runtime: Runtime.NODEJS_20_X,
             monitoringConfiguration: { noMonitoring: true },

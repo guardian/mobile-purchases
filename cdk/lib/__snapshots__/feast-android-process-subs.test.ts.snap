@@ -10,10 +10,10 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
     "gu:cdk:version": "TEST",
   },
   "Outputs": {
-    "feastandroidsubscriptionsCODEprocessinglambdaTopicNameF6620CCF": {
+    "feastandroidprocesssubsCODEprocessinglambdaTopicName357693EC": {
       "Value": {
         "Fn::GetAtt": [
-          "feastandroidsubscriptionsCODEsnsqueue091D2DF5",
+          "feastandroidprocesssubsCODEsnsqueueD30D1499",
           "QueueName",
         ],
       },
@@ -27,21 +27,21 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
     },
   },
   "Resources": {
-    "feastandroidsubscriptionsCODEprocessinglambda6869F6E0": {
+    "feastandroidprocesssubsCODEprocessinglambdaA59E895B": {
       "DependsOn": [
-        "feastandroidsubscriptionsCODEprocessinglambdaServiceRoleDefaultPolicy76D24F23",
-        "feastandroidsubscriptionsCODEprocessinglambdaServiceRoleA7BC8CCE",
+        "feastandroidprocesssubsCODEprocessinglambdaServiceRoleDefaultPolicy804F6A7D",
+        "feastandroidprocesssubsCODEprocessinglambdaServiceRoleE69B0532",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DistributionBucketName",
           },
-          "S3Key": "mobile/CODE/feast-android-subscriptions-CODE-processing-lambda/feast-android-subscriptions.zip",
+          "S3Key": "mobile/CODE/feast-android-process-subs-CODE-lambda/feast-android-process-subs.zip",
         },
         "Environment": {
           "Variables": {
-            "APP": "feast-android-subscriptions-CODE-processing-lambda",
+            "APP": "feast-android-process-subs-CODE-lambda",
             "STACK": "mobile",
             "STAGE": "CODE",
           },
@@ -50,7 +50,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
-            "feastandroidsubscriptionsCODEprocessinglambdaServiceRoleA7BC8CCE",
+            "feastandroidprocesssubsCODEprocessinglambdaServiceRoleE69B0532",
             "Arn",
           ],
         },
@@ -58,7 +58,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
         "Tags": [
           {
             "Key": "App",
-            "Value": "feast-android-subscriptions-CODE-processing-lambda",
+            "Value": "feast-android-process-subs-CODE-lambda",
           },
           {
             "Key": "gu:cdk:version",
@@ -81,12 +81,12 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "feastandroidsubscriptionsCODEprocessinglambdaAllowInvokefeastsubscriptionsCODEfeastandroidsubscriptionsCODEprocessinglambdaSnsExistingIncomingEventsTopic6454898AE3510CC6": {
+    "feastandroidprocesssubsCODEprocessinglambdaAllowInvokefeastsubscriptionsCODEfeastandroidprocesssubsCODEprocessinglambdaSnsExistingIncomingEventsTopic7FA37995F906FF12": {
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "feastandroidsubscriptionsCODEprocessinglambda6869F6E0",
+            "feastandroidprocesssubsCODEprocessinglambdaA59E895B",
             "Arn",
           ],
         },
@@ -106,7 +106,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
               ":",
               {
                 "Fn::GetAtt": [
-                  "feastandroidsubscriptionsCODEsnsqueue091D2DF5",
+                  "feastandroidprocesssubsCODEsnsqueueD30D1499",
                   "QueueName",
                 ],
               },
@@ -116,60 +116,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
       },
       "Type": "AWS::Lambda::Permission",
     },
-    "feastandroidsubscriptionsCODEprocessinglambdaServiceRoleA7BC8CCE": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-        "Tags": [
-          {
-            "Key": "App",
-            "Value": "feast-android-subscriptions-CODE-processing-lambda",
-          },
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/mobile-purchases",
-          },
-          {
-            "Key": "Stack",
-            "Value": "mobile",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "feastandroidsubscriptionsCODEprocessinglambdaServiceRoleDefaultPolicy76D24F23": {
+    "feastandroidprocesssubsCODEprocessinglambdaServiceRoleDefaultPolicy804F6A7D": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -208,7 +155,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
                       {
                         "Ref": "DistributionBucketName",
                       },
-                      "/mobile/CODE/feast-android-subscriptions-CODE-processing-lambda/feast-android-subscriptions.zip",
+                      "/mobile/CODE/feast-android-process-subs-CODE-lambda/feast-android-process-subs.zip",
                     ],
                   ],
                 },
@@ -229,7 +176,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/CODE/mobile/feast-android-subscriptions-CODE-processing-lambda",
+                    ":parameter/CODE/mobile/feast-android-process-subs-CODE-lambda",
                   ],
                 ],
               },
@@ -252,7 +199,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/CODE/mobile/feast-android-subscriptions-CODE-processing-lambda/*",
+                    ":parameter/CODE/mobile/feast-android-process-subs-CODE-lambda/*",
                   ],
                 ],
               },
@@ -260,20 +207,73 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "feastandroidsubscriptionsCODEprocessinglambdaServiceRoleDefaultPolicy76D24F23",
+        "PolicyName": "feastandroidprocesssubsCODEprocessinglambdaServiceRoleDefaultPolicy804F6A7D",
         "Roles": [
           {
-            "Ref": "feastandroidsubscriptionsCODEprocessinglambdaServiceRoleA7BC8CCE",
+            "Ref": "feastandroidprocesssubsCODEprocessinglambdaServiceRoleE69B0532",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "feastandroidsubscriptionsCODEprocessinglambdafeastandroidsubscriptionsCODEprocessinglambdaSnsExistingIncomingEventsTopicF782AF8D": {
+    "feastandroidprocesssubsCODEprocessinglambdaServiceRoleE69B0532": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "feast-android-process-subs-CODE-lambda",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "feastandroidprocesssubsCODEprocessinglambdafeastandroidprocesssubsCODEprocessinglambdaSnsExistingIncomingEventsTopicC7C73133": {
       "Properties": {
         "Endpoint": {
           "Fn::GetAtt": [
-            "feastandroidsubscriptionsCODEprocessinglambda6869F6E0",
+            "feastandroidprocesssubsCODEprocessinglambdaA59E895B",
             "Arn",
           ],
         },
@@ -296,7 +296,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
               ":",
               {
                 "Fn::GetAtt": [
-                  "feastandroidsubscriptionsCODEsnsqueue091D2DF5",
+                  "feastandroidprocesssubsCODEsnsqueueD30D1499",
                   "QueueName",
                 ],
               },
@@ -306,11 +306,11 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
       },
       "Type": "AWS::SNS::Subscription",
     },
-    "feastandroidsubscriptionsCODEsnsqueue091D2DF5": {
+    "feastandroidprocesssubsCODEsnsqueueD30D1499": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "MessageRetentionPeriod": 1209600,
-        "QueueName": "feast-android-subscriptions-CODE-queue",
+        "QueueName": "feast-android-process-subs-CODE-queue",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -347,10 +347,10 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
     "gu:cdk:version": "TEST",
   },
   "Outputs": {
-    "feastandroidsubscriptionsPRODprocessinglambdaTopicName402EF3B6": {
+    "feastandroidprocesssubsPRODprocessinglambdaTopicName91452A43": {
       "Value": {
         "Fn::GetAtt": [
-          "feastandroidsubscriptionsPRODsnsqueue124AABC9",
+          "feastandroidprocesssubsPRODsnsqueue9DF14337",
           "QueueName",
         ],
       },
@@ -364,12 +364,12 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
     },
   },
   "Resources": {
-    "feastandroidsubscriptionsPRODprocessinglambdaAllowInvokefeastsubscriptionsPRODfeastandroidsubscriptionsPRODprocessinglambdaSnsExistingIncomingEventsTopic2790A7B8A76E9DC2": {
+    "feastandroidprocesssubsPRODprocessinglambdaAllowInvokefeastsubscriptionsPRODfeastandroidprocesssubsPRODprocessinglambdaSnsExistingIncomingEventsTopic7AF3D801B2933E40": {
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "feastandroidsubscriptionsPRODprocessinglambdaECA7EFF6",
+            "feastandroidprocesssubsPRODprocessinglambdaD6198782",
             "Arn",
           ],
         },
@@ -389,7 +389,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
               ":",
               {
                 "Fn::GetAtt": [
-                  "feastandroidsubscriptionsPRODsnsqueue124AABC9",
+                  "feastandroidprocesssubsPRODsnsqueue9DF14337",
                   "QueueName",
                 ],
               },
@@ -399,21 +399,21 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
       },
       "Type": "AWS::Lambda::Permission",
     },
-    "feastandroidsubscriptionsPRODprocessinglambdaECA7EFF6": {
+    "feastandroidprocesssubsPRODprocessinglambdaD6198782": {
       "DependsOn": [
-        "feastandroidsubscriptionsPRODprocessinglambdaServiceRoleDefaultPolicyEF1C7D63",
-        "feastandroidsubscriptionsPRODprocessinglambdaServiceRoleA91A13C2",
+        "feastandroidprocesssubsPRODprocessinglambdaServiceRoleDefaultPolicy819E0CA5",
+        "feastandroidprocesssubsPRODprocessinglambdaServiceRoleA71931F6",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DistributionBucketName",
           },
-          "S3Key": "mobile/PROD/feast-android-subscriptions-PROD-processing-lambda/feast-android-subscriptions.zip",
+          "S3Key": "mobile/PROD/feast-android-process-subs-PROD-lambda/feast-android-process-subs.zip",
         },
         "Environment": {
           "Variables": {
-            "APP": "feast-android-subscriptions-PROD-processing-lambda",
+            "APP": "feast-android-process-subs-PROD-lambda",
             "STACK": "mobile",
             "STAGE": "PROD",
           },
@@ -422,7 +422,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
-            "feastandroidsubscriptionsPRODprocessinglambdaServiceRoleA91A13C2",
+            "feastandroidprocesssubsPRODprocessinglambdaServiceRoleA71931F6",
             "Arn",
           ],
         },
@@ -430,7 +430,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
         "Tags": [
           {
             "Key": "App",
-            "Value": "feast-android-subscriptions-PROD-processing-lambda",
+            "Value": "feast-android-process-subs-PROD-lambda",
           },
           {
             "Key": "gu:cdk:version",
@@ -453,7 +453,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "feastandroidsubscriptionsPRODprocessinglambdaServiceRoleA91A13C2": {
+    "feastandroidprocesssubsPRODprocessinglambdaServiceRoleA71931F6": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -484,7 +484,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
         "Tags": [
           {
             "Key": "App",
-            "Value": "feast-android-subscriptions-PROD-processing-lambda",
+            "Value": "feast-android-process-subs-PROD-lambda",
           },
           {
             "Key": "gu:cdk:version",
@@ -506,7 +506,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "feastandroidsubscriptionsPRODprocessinglambdaServiceRoleDefaultPolicyEF1C7D63": {
+    "feastandroidprocesssubsPRODprocessinglambdaServiceRoleDefaultPolicy819E0CA5": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -545,7 +545,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
                       {
                         "Ref": "DistributionBucketName",
                       },
-                      "/mobile/PROD/feast-android-subscriptions-PROD-processing-lambda/feast-android-subscriptions.zip",
+                      "/mobile/PROD/feast-android-process-subs-PROD-lambda/feast-android-process-subs.zip",
                     ],
                   ],
                 },
@@ -566,7 +566,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/PROD/mobile/feast-android-subscriptions-PROD-processing-lambda",
+                    ":parameter/PROD/mobile/feast-android-process-subs-PROD-lambda",
                   ],
                 ],
               },
@@ -589,7 +589,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/PROD/mobile/feast-android-subscriptions-PROD-processing-lambda/*",
+                    ":parameter/PROD/mobile/feast-android-process-subs-PROD-lambda/*",
                   ],
                 ],
               },
@@ -597,20 +597,20 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "feastandroidsubscriptionsPRODprocessinglambdaServiceRoleDefaultPolicyEF1C7D63",
+        "PolicyName": "feastandroidprocesssubsPRODprocessinglambdaServiceRoleDefaultPolicy819E0CA5",
         "Roles": [
           {
-            "Ref": "feastandroidsubscriptionsPRODprocessinglambdaServiceRoleA91A13C2",
+            "Ref": "feastandroidprocesssubsPRODprocessinglambdaServiceRoleA71931F6",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "feastandroidsubscriptionsPRODprocessinglambdafeastandroidsubscriptionsPRODprocessinglambdaSnsExistingIncomingEventsTopicC41D5A2E": {
+    "feastandroidprocesssubsPRODprocessinglambdafeastandroidprocesssubsPRODprocessinglambdaSnsExistingIncomingEventsTopic11B40574": {
       "Properties": {
         "Endpoint": {
           "Fn::GetAtt": [
-            "feastandroidsubscriptionsPRODprocessinglambdaECA7EFF6",
+            "feastandroidprocesssubsPRODprocessinglambdaD6198782",
             "Arn",
           ],
         },
@@ -633,7 +633,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
               ":",
               {
                 "Fn::GetAtt": [
-                  "feastandroidsubscriptionsPRODsnsqueue124AABC9",
+                  "feastandroidprocesssubsPRODsnsqueue9DF14337",
                   "QueueName",
                 ],
               },
@@ -643,11 +643,11 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
       },
       "Type": "AWS::SNS::Subscription",
     },
-    "feastandroidsubscriptionsPRODsnsqueue124AABC9": {
+    "feastandroidprocesssubsPRODsnsqueue9DF14337": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "MessageRetentionPeriod": 1209600,
-        "QueueName": "feast-android-subscriptions-PROD-queue",
+        "QueueName": "feast-android-process-subs-PROD-queue",
         "Tags": [
           {
             "Key": "gu:cdk:version",
