@@ -47,14 +47,14 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
           },
         },
         "Handler": "index.handler",
-        "MemorySize": 1024,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "feastandroidsubscriptionsCODEprocessinglambdaServiceRoleA7BC8CCE",
             "Arn",
           ],
         },
-        "Runtime": "java21",
+        "Runtime": "nodejs20.x",
         "Tags": [
           {
             "Key": "App",
@@ -419,14 +419,14 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
           },
         },
         "Handler": "index.handler",
-        "MemorySize": 1024,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "feastandroidsubscriptionsPRODprocessinglambdaServiceRoleA91A13C2",
             "Arn",
           ],
         },
-        "Runtime": "java21",
+        "Runtime": "nodejs20.x",
         "Tags": [
           {
             "Key": "App",

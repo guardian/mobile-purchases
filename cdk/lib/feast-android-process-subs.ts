@@ -12,7 +12,7 @@ export interface FeastSubscriptionsProps extends GuStackProps {
 }
 
 
-export class FeastAndroidSubscriptions extends GuStack {
+export class FeastAndroidProcessSubscriptions extends GuStack {
     constructor(scope: App, id: string, props: FeastSubscriptionsProps) {
         super(scope, id, props);
 
@@ -27,7 +27,7 @@ export class FeastAndroidSubscriptions extends GuStack {
         new GuSnsLambdaExperimental(this,`${ nameWithStage }-processing-lambda`,{
             app: `${ nameWithStage }-processing-lambda`,
             existingSnsTopic: { externalTopicName: feastAndroidSubscriptionsQueue.queueName },
-            runtime: Runtime.JAVA_21,
+            runtime: Runtime.NODEJS_20_X,
             monitoringConfiguration: { noMonitoring: true },
             handler: 'index.handler',
             fileName: `${app}.zip`,
