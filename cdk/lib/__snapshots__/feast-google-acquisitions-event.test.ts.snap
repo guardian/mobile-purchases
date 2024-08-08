@@ -10,10 +10,10 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
     "gu:cdk:version": "TEST",
   },
   "Outputs": {
-    "mobilepurchasesfeastgoogleprocesssubsCODElambdaTopicName3B8382CC": {
+    "mobilepurchasesfeastgoogleacquisitionseventCODElambdaTopicName0F6D4B19": {
       "Value": {
         "Fn::GetAtt": [
-          "mobilepurchasesfeastgoogleprocesssubsCODEsnsqueue5470C729",
+          "mobilepurchasesfeastgoogleacquisitionseventCODEsnsqueueBBB527C9",
           "QueueName",
         ],
       },
@@ -27,31 +27,31 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
     },
   },
   "Resources": {
-    "mobilepurchasesfeastgoogleprocesssubsCODElambdaA1DA9075": {
+    "mobilepurchasesfeastgoogleacquisitionseventCODElambda69795858": {
       "DependsOn": [
-        "mobilepurchasesfeastgoogleprocesssubsCODElambdaServiceRoleDefaultPolicy6C37C6FB",
-        "mobilepurchasesfeastgoogleprocesssubsCODElambdaServiceRoleFA723C8D",
+        "mobilepurchasesfeastgoogleacquisitionseventCODElambdaServiceRoleDefaultPolicyFFF83761",
+        "mobilepurchasesfeastgoogleacquisitionseventCODElambdaServiceRoleD7BAC56E",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DistributionBucketName",
           },
-          "S3Key": "mobile/CODE/mobile-purchases-feast-google-process-subs-CODE-lambda/mobile-purchases-feast-google-process-subs.zip",
+          "S3Key": "mobile/CODE/mobile-purchases-feast-google-acquisitions-event-CODE-lambda/mobile-purchases-feast-google-acquisitions-event.zip",
         },
         "Environment": {
           "Variables": {
-            "APP": "mobile-purchases-feast-google-process-subs-CODE-lambda",
+            "APP": "mobile-purchases-feast-google-acquisitions-event-CODE-lambda",
             "STACK": "mobile",
             "STAGE": "CODE",
           },
         },
-        "FunctionName": "mobile-purchases-feast-google-process-subs-CODE-lambda",
+        "FunctionName": "mobile-purchases-feast-google-acquisitions-event-CODE-lambda",
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
-            "mobilepurchasesfeastgoogleprocesssubsCODElambdaServiceRoleFA723C8D",
+            "mobilepurchasesfeastgoogleacquisitionseventCODElambdaServiceRoleD7BAC56E",
             "Arn",
           ],
         },
@@ -59,7 +59,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
         "Tags": [
           {
             "Key": "App",
-            "Value": "mobile-purchases-feast-google-process-subs-CODE-lambda",
+            "Value": "mobile-purchases-feast-google-acquisitions-event-CODE-lambda",
           },
           {
             "Key": "gu:cdk:version",
@@ -82,12 +82,12 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "mobilepurchasesfeastgoogleprocesssubsCODElambdaAllowInvokefeastsubscriptionsCODEmobilepurchasesfeastgoogleprocesssubsCODElambdaSnsExistingIncomingEventsTopicD63F705E90C9ED09": {
+    "mobilepurchasesfeastgoogleacquisitionseventCODElambdaAllowInvokefeastsubscriptionsCODEmobilepurchasesfeastgoogleacquisitionseventCODElambdaSnsExistingIncomingEventsTopic1D66AF05676AD11C": {
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "mobilepurchasesfeastgoogleprocesssubsCODElambdaA1DA9075",
+            "mobilepurchasesfeastgoogleacquisitionseventCODElambda69795858",
             "Arn",
           ],
         },
@@ -107,7 +107,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
               ":",
               {
                 "Fn::GetAtt": [
-                  "mobilepurchasesfeastgoogleprocesssubsCODEsnsqueue5470C729",
+                  "mobilepurchasesfeastgoogleacquisitionseventCODEsnsqueueBBB527C9",
                   "QueueName",
                 ],
               },
@@ -117,7 +117,60 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
       },
       "Type": "AWS::Lambda::Permission",
     },
-    "mobilepurchasesfeastgoogleprocesssubsCODElambdaServiceRoleDefaultPolicy6C37C6FB": {
+    "mobilepurchasesfeastgoogleacquisitionseventCODElambdaServiceRoleD7BAC56E": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "mobile-purchases-feast-google-acquisitions-event-CODE-lambda",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "mobilepurchasesfeastgoogleacquisitionseventCODElambdaServiceRoleDefaultPolicyFFF83761": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -156,7 +209,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
                       {
                         "Ref": "DistributionBucketName",
                       },
-                      "/mobile/CODE/mobile-purchases-feast-google-process-subs-CODE-lambda/mobile-purchases-feast-google-process-subs.zip",
+                      "/mobile/CODE/mobile-purchases-feast-google-acquisitions-event-CODE-lambda/mobile-purchases-feast-google-acquisitions-event.zip",
                     ],
                   ],
                 },
@@ -177,7 +230,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/CODE/mobile/mobile-purchases-feast-google-process-subs-CODE-lambda",
+                    ":parameter/CODE/mobile/mobile-purchases-feast-google-acquisitions-event-CODE-lambda",
                   ],
                 ],
               },
@@ -200,7 +253,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/CODE/mobile/mobile-purchases-feast-google-process-subs-CODE-lambda/*",
+                    ":parameter/CODE/mobile/mobile-purchases-feast-google-acquisitions-event-CODE-lambda/*",
                   ],
                 ],
               },
@@ -208,73 +261,20 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "mobilepurchasesfeastgoogleprocesssubsCODElambdaServiceRoleDefaultPolicy6C37C6FB",
+        "PolicyName": "mobilepurchasesfeastgoogleacquisitionseventCODElambdaServiceRoleDefaultPolicyFFF83761",
         "Roles": [
           {
-            "Ref": "mobilepurchasesfeastgoogleprocesssubsCODElambdaServiceRoleFA723C8D",
+            "Ref": "mobilepurchasesfeastgoogleacquisitionseventCODElambdaServiceRoleD7BAC56E",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "mobilepurchasesfeastgoogleprocesssubsCODElambdaServiceRoleFA723C8D": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-        "Tags": [
-          {
-            "Key": "App",
-            "Value": "mobile-purchases-feast-google-process-subs-CODE-lambda",
-          },
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/mobile-purchases",
-          },
-          {
-            "Key": "Stack",
-            "Value": "mobile",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "mobilepurchasesfeastgoogleprocesssubsCODElambdamobilepurchasesfeastgoogleprocesssubsCODElambdaSnsExistingIncomingEventsTopic13F26053": {
+    "mobilepurchasesfeastgoogleacquisitionseventCODElambdamobilepurchasesfeastgoogleacquisitionseventCODElambdaSnsExistingIncomingEventsTopicCAFFCA90": {
       "Properties": {
         "Endpoint": {
           "Fn::GetAtt": [
-            "mobilepurchasesfeastgoogleprocesssubsCODElambdaA1DA9075",
+            "mobilepurchasesfeastgoogleacquisitionseventCODElambda69795858",
             "Arn",
           ],
         },
@@ -297,7 +297,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
               ":",
               {
                 "Fn::GetAtt": [
-                  "mobilepurchasesfeastgoogleprocesssubsCODEsnsqueue5470C729",
+                  "mobilepurchasesfeastgoogleacquisitionseventCODEsnsqueueBBB527C9",
                   "QueueName",
                 ],
               },
@@ -307,11 +307,11 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
       },
       "Type": "AWS::SNS::Subscription",
     },
-    "mobilepurchasesfeastgoogleprocesssubsCODEsnsqueue5470C729": {
+    "mobilepurchasesfeastgoogleacquisitionseventCODEsnsqueueBBB527C9": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "MessageRetentionPeriod": 1209600,
-        "QueueName": "mobile-purchases-feast-google-process-subs-CODE-queue",
+        "QueueName": "mobile-purchases-feast-google-acquisitions-event-CODE-queue",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -348,10 +348,10 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
     "gu:cdk:version": "TEST",
   },
   "Outputs": {
-    "mobilepurchasesfeastgoogleprocesssubsPRODlambdaTopicName06FD04C6": {
+    "mobilepurchasesfeastgoogleacquisitionseventPRODlambdaTopicName97E04C72": {
       "Value": {
         "Fn::GetAtt": [
-          "mobilepurchasesfeastgoogleprocesssubsPRODsnsqueue40111C71",
+          "mobilepurchasesfeastgoogleacquisitionseventPRODsnsqueueE303EB89",
           "QueueName",
         ],
       },
@@ -365,31 +365,31 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
     },
   },
   "Resources": {
-    "mobilepurchasesfeastgoogleprocesssubsPRODlambda6B998497": {
+    "mobilepurchasesfeastgoogleacquisitionseventPRODlambda2ED2BC21": {
       "DependsOn": [
-        "mobilepurchasesfeastgoogleprocesssubsPRODlambdaServiceRoleDefaultPolicy03AE322B",
-        "mobilepurchasesfeastgoogleprocesssubsPRODlambdaServiceRole8B2391E9",
+        "mobilepurchasesfeastgoogleacquisitionseventPRODlambdaServiceRoleDefaultPolicyC46AD51A",
+        "mobilepurchasesfeastgoogleacquisitionseventPRODlambdaServiceRole061E7553",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DistributionBucketName",
           },
-          "S3Key": "mobile/PROD/mobile-purchases-feast-google-process-subs-PROD-lambda/mobile-purchases-feast-google-process-subs.zip",
+          "S3Key": "mobile/PROD/mobile-purchases-feast-google-acquisitions-event-PROD-lambda/mobile-purchases-feast-google-acquisitions-event.zip",
         },
         "Environment": {
           "Variables": {
-            "APP": "mobile-purchases-feast-google-process-subs-PROD-lambda",
+            "APP": "mobile-purchases-feast-google-acquisitions-event-PROD-lambda",
             "STACK": "mobile",
             "STAGE": "PROD",
           },
         },
-        "FunctionName": "mobile-purchases-feast-google-process-subs-PROD-lambda",
+        "FunctionName": "mobile-purchases-feast-google-acquisitions-event-PROD-lambda",
         "Handler": "index.handler",
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
-            "mobilepurchasesfeastgoogleprocesssubsPRODlambdaServiceRole8B2391E9",
+            "mobilepurchasesfeastgoogleacquisitionseventPRODlambdaServiceRole061E7553",
             "Arn",
           ],
         },
@@ -397,7 +397,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
         "Tags": [
           {
             "Key": "App",
-            "Value": "mobile-purchases-feast-google-process-subs-PROD-lambda",
+            "Value": "mobile-purchases-feast-google-acquisitions-event-PROD-lambda",
           },
           {
             "Key": "gu:cdk:version",
@@ -420,12 +420,12 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
       },
       "Type": "AWS::Lambda::Function",
     },
-    "mobilepurchasesfeastgoogleprocesssubsPRODlambdaAllowInvokefeastsubscriptionsPRODmobilepurchasesfeastgoogleprocesssubsPRODlambdaSnsExistingIncomingEventsTopic5FDCAAB31664DE2C": {
+    "mobilepurchasesfeastgoogleacquisitionseventPRODlambdaAllowInvokefeastsubscriptionsPRODmobilepurchasesfeastgoogleacquisitionseventPRODlambdaSnsExistingIncomingEventsTopic121D7CF3E5157E80": {
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "mobilepurchasesfeastgoogleprocesssubsPRODlambda6B998497",
+            "mobilepurchasesfeastgoogleacquisitionseventPRODlambda2ED2BC21",
             "Arn",
           ],
         },
@@ -445,7 +445,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
               ":",
               {
                 "Fn::GetAtt": [
-                  "mobilepurchasesfeastgoogleprocesssubsPRODsnsqueue40111C71",
+                  "mobilepurchasesfeastgoogleacquisitionseventPRODsnsqueueE303EB89",
                   "QueueName",
                 ],
               },
@@ -455,7 +455,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
       },
       "Type": "AWS::Lambda::Permission",
     },
-    "mobilepurchasesfeastgoogleprocesssubsPRODlambdaServiceRole8B2391E9": {
+    "mobilepurchasesfeastgoogleacquisitionseventPRODlambdaServiceRole061E7553": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -486,7 +486,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
         "Tags": [
           {
             "Key": "App",
-            "Value": "mobile-purchases-feast-google-process-subs-PROD-lambda",
+            "Value": "mobile-purchases-feast-google-acquisitions-event-PROD-lambda",
           },
           {
             "Key": "gu:cdk:version",
@@ -508,7 +508,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
       },
       "Type": "AWS::IAM::Role",
     },
-    "mobilepurchasesfeastgoogleprocesssubsPRODlambdaServiceRoleDefaultPolicy03AE322B": {
+    "mobilepurchasesfeastgoogleacquisitionseventPRODlambdaServiceRoleDefaultPolicyC46AD51A": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
@@ -547,7 +547,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
                       {
                         "Ref": "DistributionBucketName",
                       },
-                      "/mobile/PROD/mobile-purchases-feast-google-process-subs-PROD-lambda/mobile-purchases-feast-google-process-subs.zip",
+                      "/mobile/PROD/mobile-purchases-feast-google-acquisitions-event-PROD-lambda/mobile-purchases-feast-google-acquisitions-event.zip",
                     ],
                   ],
                 },
@@ -568,7 +568,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/PROD/mobile/mobile-purchases-feast-google-process-subs-PROD-lambda",
+                    ":parameter/PROD/mobile/mobile-purchases-feast-google-acquisitions-event-PROD-lambda",
                   ],
                 ],
               },
@@ -591,7 +591,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/PROD/mobile/mobile-purchases-feast-google-process-subs-PROD-lambda/*",
+                    ":parameter/PROD/mobile/mobile-purchases-feast-google-acquisitions-event-PROD-lambda/*",
                   ],
                 ],
               },
@@ -599,20 +599,20 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "mobilepurchasesfeastgoogleprocesssubsPRODlambdaServiceRoleDefaultPolicy03AE322B",
+        "PolicyName": "mobilepurchasesfeastgoogleacquisitionseventPRODlambdaServiceRoleDefaultPolicyC46AD51A",
         "Roles": [
           {
-            "Ref": "mobilepurchasesfeastgoogleprocesssubsPRODlambdaServiceRole8B2391E9",
+            "Ref": "mobilepurchasesfeastgoogleacquisitionseventPRODlambdaServiceRole061E7553",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "mobilepurchasesfeastgoogleprocesssubsPRODlambdamobilepurchasesfeastgoogleprocesssubsPRODlambdaSnsExistingIncomingEventsTopic26530584": {
+    "mobilepurchasesfeastgoogleacquisitionseventPRODlambdamobilepurchasesfeastgoogleacquisitionseventPRODlambdaSnsExistingIncomingEventsTopic097DFF2E": {
       "Properties": {
         "Endpoint": {
           "Fn::GetAtt": [
-            "mobilepurchasesfeastgoogleprocesssubsPRODlambda6B998497",
+            "mobilepurchasesfeastgoogleacquisitionseventPRODlambda2ED2BC21",
             "Arn",
           ],
         },
@@ -635,7 +635,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
               ":",
               {
                 "Fn::GetAtt": [
-                  "mobilepurchasesfeastgoogleprocesssubsPRODsnsqueue40111C71",
+                  "mobilepurchasesfeastgoogleacquisitionseventPRODsnsqueueE303EB89",
                   "QueueName",
                 ],
               },
@@ -645,11 +645,11 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
       },
       "Type": "AWS::SNS::Subscription",
     },
-    "mobilepurchasesfeastgoogleprocesssubsPRODsnsqueue40111C71": {
+    "mobilepurchasesfeastgoogleacquisitionseventPRODsnsqueueE303EB89": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "MessageRetentionPeriod": 1209600,
-        "QueueName": "mobile-purchases-feast-google-process-subs-PROD-queue",
+        "QueueName": "mobile-purchases-feast-google-acquisitions-event-PROD-queue",
         "Tags": [
           {
             "Key": "gu:cdk:version",

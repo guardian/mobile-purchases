@@ -12,14 +12,14 @@ export interface FeastSubscriptionsProps extends GuStackProps {
 }
 
 
-export class FeastGoogleProcessSubscriptions extends GuStack {
+export class FeastGoogleAcquisitionsEvent extends GuStack {
     constructor(scope: App, id: string, props: FeastSubscriptionsProps) {
         super(scope, id, props);
 
-        const app = 'mobile-purchases-feast-google-process-subs';
+        const app = 'mobile-purchases-feast-google-acquisitions-event';
         const nameWithStage = `${app}-${this.stage}`;
 
-        const feastGoogleProcessSubsQueue = new Queue(this, `${nameWithStage}-sns-queue`, {
+        const feastGoogleAcquisitionsEvent = new Queue(this, `${nameWithStage}-sns-queue`, {
             queueName: `${nameWithStage}-queue`,
             retentionPeriod: Duration.days(14),
         });
@@ -27,11 +27,11 @@ export class FeastGoogleProcessSubscriptions extends GuStack {
         new GuSnsLambdaExperimental(this,`${ nameWithStage }-lambda`,{
             app: `${ nameWithStage }-lambda`,
             functionName: `${ nameWithStage }-lambda`,
-            existingSnsTopic: { externalTopicName: feastGoogleProcessSubsQueue.queueName },
+            existingSnsTopic: { externalTopicName: feastGoogleAcquisitionsEvent.queueName },
             runtime: Runtime.NODEJS_20_X,
             monitoringConfiguration: { noMonitoring: true },
             handler: 'index.handler',
-            fileName: `${app}.zip`,
+            fileName: `${ app }.zip`,
         });
 
         //permissions to read sns queue
