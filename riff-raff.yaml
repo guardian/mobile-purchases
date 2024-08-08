@@ -60,7 +60,7 @@ deployments:
     template: lambda
     parameters:
       functionNames: [mobile-purchases-feast-google-acquisitions-event-]
-      fileName: mobile-purchases-feast-google-acquisitions-event.zip
+      fileName: feast-google-acquisitions-event.zip
 
   mobile-purchases-google-pubsub:
     template: lambda

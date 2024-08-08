@@ -104,3 +104,5 @@ jobs:
               - tsc-target/feast-google-pubsub.zip
             mobile-purchases-feast-google-update-subscriptions:
               - tsc-target/feast-google-update-subscriptions.zip
+            mobile-purchases-feast-google-acquisitions-event:
+              - tsc-target/feast-google-acquisitions-event.zip

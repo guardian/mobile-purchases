@@ -24,6 +24,7 @@ const getEntries = (env) => {
     "feast-apple-update-subscriptions": "./typescript/src/feast/update-subs/apple.ts",
     "feast-google-pubsub": "./typescript/src/feast/pubsub/google.ts",
     "feast-google-update-subscriptions": "./typescript/src/feast/update-subs/google.ts",
+    "feast-google-acquisitions-event": "./typescript/src/feast/acquisitions-event/google.ts",
   };
   return env.production ? entries : {
     ...entries,

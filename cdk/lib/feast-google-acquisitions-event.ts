@@ -24,14 +24,14 @@ export class FeastGoogleAcquisitionsEvent extends GuStack {
             retentionPeriod: Duration.days(14),
         });
 
-        new GuSnsLambdaExperimental(this,`${ nameWithStage }-lambda`,{
-            app: `${ nameWithStage }-lambda`,
-            functionName: `${ nameWithStage }-lambda`,
+        new GuSnsLambdaExperimental(this,`${ nameWithStage }`,{
+            app: `${ nameWithStage }`,
+            functionName: `${ nameWithStage }`,
             existingSnsTopic: { externalTopicName: feastGoogleAcquisitionsEvent.queueName },
             runtime: Runtime.NODEJS_20_X,
             monitoringConfiguration: { noMonitoring: true },
-            handler: 'index.handler',
-            fileName: `${ app }.zip`,
+            handler: 'feast-google-acquisitions-event.handler',
+            fileName: `feast-google-acquisitions-event.zip`,
         });
 
         //permissions to read sns queue
