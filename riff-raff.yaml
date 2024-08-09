@@ -174,3 +174,10 @@ deployments:
     parameters:
       functionNames: [mobile-purchases-apple-revalidate-receipts-]
       fileName: apple-revalidate-receipts.zip
+
+  mobile-purchases-feast-google-acquisitions-event:
+    template: lambda
+    parameters:
+      functionNames: [ mobile-purchases-feast-google-acquisitions-event- ]
+      fileName: feast-google-acquisitions-event.zip
+
