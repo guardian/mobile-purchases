@@ -37,7 +37,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
           "S3Bucket": {
             "Ref": "DistributionBucketName",
           },
-          "S3Key": "mobile/CODE/mobile-purchases-feast-google-acquisitions-event-CODE/feast-google-acquisitions-event.zip",
+          "S3Key": "mobile/CODE/mobile-purchases-feast-google-acquisitions-event-CODE/mobile-purchases-feast-google-acquisitions-event-CODE.zip",
         },
         "Environment": {
           "Variables": {
@@ -47,7 +47,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
           },
         },
         "FunctionName": "mobile-purchases-feast-google-acquisitions-event-CODE",
-        "Handler": "feast-google-acquisitions-event.handler",
+        "Handler": "mobile-purchases-feast-google-acquisitions-event-CODE.handler",
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -209,7 +209,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 1`] = `
                       {
                         "Ref": "DistributionBucketName",
                       },
-                      "/mobile/CODE/mobile-purchases-feast-google-acquisitions-event-CODE/feast-google-acquisitions-event.zip",
+                      "/mobile/CODE/mobile-purchases-feast-google-acquisitions-event-CODE/mobile-purchases-feast-google-acquisitions-event-CODE.zip",
                     ],
                   ],
                 },
@@ -375,7 +375,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
           "S3Bucket": {
             "Ref": "DistributionBucketName",
           },
-          "S3Key": "mobile/PROD/mobile-purchases-feast-google-acquisitions-event-PROD/feast-google-acquisitions-event.zip",
+          "S3Key": "mobile/PROD/mobile-purchases-feast-google-acquisitions-event-PROD/mobile-purchases-feast-google-acquisitions-event-PROD.zip",
         },
         "Environment": {
           "Variables": {
@@ -385,7 +385,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
           },
         },
         "FunctionName": "mobile-purchases-feast-google-acquisitions-event-PROD",
-        "Handler": "feast-google-acquisitions-event.handler",
+        "Handler": "mobile-purchases-feast-google-acquisitions-event-PROD.handler",
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -547,7 +547,7 @@ exports[`The FeastAndroidSubscriptions stack matches the snapshot 2`] = `
                       {
                         "Ref": "DistributionBucketName",
                       },
-                      "/mobile/PROD/mobile-purchases-feast-google-acquisitions-event-PROD/feast-google-acquisitions-event.zip",
+                      "/mobile/PROD/mobile-purchases-feast-google-acquisitions-event-PROD/mobile-purchases-feast-google-acquisitions-event-PROD.zip",
                     ],
                   ],
                 },

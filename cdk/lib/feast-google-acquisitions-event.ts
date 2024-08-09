@@ -30,8 +30,8 @@ export class FeastGoogleAcquisitionsEvent extends GuStack {
             existingSnsTopic: { externalTopicName: feastGoogleAcquisitionsEvent.queueName },
             runtime: Runtime.NODEJS_20_X,
             monitoringConfiguration: { noMonitoring: true },
-            handler: 'feast-google-acquisitions-event.handler',
-            fileName: `feast-google-acquisitions-event.zip`,
+            handler: `${nameWithStage}.handler`,
+            fileName: `${nameWithStage}.zip`,
         });
 
         //permissions to read sns queue

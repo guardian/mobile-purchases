@@ -56,12 +56,6 @@ deployments:
       functionNames: [mobile-purchases-feastgooglepubsub-]
       fileName: feast-google-pubsub.zip
 
-  mobile-purchases-feast-google-acquisitions-event:
-    template: lambda
-    parameters:
-      functionNames: [mobile-purchases-feast-google-acquisitions-event-]
-      fileName: feast-google-acquisitions-event.zip
-
   mobile-purchases-google-pubsub:
     template: lambda
     parameters:
