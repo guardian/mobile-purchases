@@ -161,6 +161,7 @@ Resources:
                 - !GetAtt AppleSubscriptionsQueue.Arn
                 - !GetAtt FeastAppleSubscriptionsQueue.Arn
                 - !GetAtt FeastGoogleSubscriptionsQueue.Arn
+                - !GetAtt FeastGoogleAcquisitionsEventQueue.Arn
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-historical-subscriptions
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-google-historical-subscriptions
         - PolicyName: Kms
@@ -1708,3 +1709,40 @@ Resources:
               Action:
                 - cloudwatch:ListTagsForResource
               Resource: "*"
+
+    FeastGoogleAcquisitionsEventLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${App}-feast-google-acquisitions-event-${Stage}
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-feast-google-acquisitions-event/feast-google-acquisitions-event.zip
+      Environment:
+        Variables:
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+          QueueUrl: !Ref FeastGoogleAcquisitionsEventQueue
+      Description: Triggered by acquisitions event queue - gathers information on event from google api and writes to event-bus
+      Handler: feast-google-acquisitions-event.handler
+      MemorySize: 512
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Timeout: 25
+      Runtime: nodejs20.x
+
+      FeastGoogleAcquisitionsEventQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-feast-google-acquisitions-event-queue
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt FeastGoogleAcquisitionsEventQueueDlq.Arn
+        maxReceiveCount: 8
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: App
+          Value: !Ref App
+            
