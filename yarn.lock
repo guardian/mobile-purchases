@@ -370,10 +370,10 @@
   resolved "https://registry.npmjs.org/@discoveryjs/json-ext/-/json-ext-0.5.7.tgz"
   integrity sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==
 
-"@googleapis/androidpublisher@21.0.0":
-  version "21.0.0"
-  resolved "https://registry.yarnpkg.com/@googleapis/androidpublisher/-/androidpublisher-21.0.0.tgz#df5cb7ae64d65980ccb39f7655d20ccb58d2be0b"
-  integrity sha512-J/mPPkFyUt7mqkh/4RlQp+Zb1Iui4Bo/PPcQWXGLUFPTO3DSsBproYi7Ra0wTVlv6Oqjn+OcQXpCPy7u2G7wYw==
+"@googleapis/androidpublisher@21.1.0":
+  version "21.1.0"
+  resolved "https://registry.yarnpkg.com/@googleapis/androidpublisher/-/androidpublisher-21.1.0.tgz#3c2484be817dd8d0055efb9d93b9d6b5df1998d4"
+  integrity sha512-b/NWDI/oJQoyLfWx0Tt5s/qmbYgM2C5yVPVQd1QQADgBlxIj0H6qqmxxtQpaPeA3V5LUBjs9XKjwJbNezQwPcA==
   dependencies:
     googleapis-common "^7.0.0"
 
