@@ -9,7 +9,8 @@ import { ProcessingError } from "../../models/processingError";
 import { UserSubscription } from "../../models/userSubscription";
 import { getIdentityIdFromBraze } from "../../services/braze";
 import { GracefulProcessingError } from "../../models/GracefulProcessingError";
-import { storeUserSubscriptionInDynamo as defaultStoreUserSubscriptionInDynamo } from "./common";
+import { storeUserSubscriptionInDynamo as defaultStoreUserSubscriptionInDynamo, 
+    queueHistoricalSubscription as defaultSendSubscriptionToHistoricalQueue } from "./common";
 
 export type SubscriptionMaybeWithAppAccountToken = Subscription & {
     appAccountToken?: string
@@ -44,12 +45,14 @@ const defaultStoreSubscriptionInDynamo =
 
 type FetchSubsFromApple = (reference: AppleSubscriptionReference) => Promise<SubscriptionMaybeWithAppAccountToken[]>;
 type StoreSubInDynamo = (subscription: Subscription) => Promise<void>;
+type SendSubToHistoricalQueue = (subscription: Subscription) => Promise<void>;
 type ExchangeExternalIdForIdentityId = (externalId: string) => Promise<string>;
 type StoreUserSubInDynamo = (userSubscription: UserSubscription) => Promise<void>;
 
 const processRecord = async (
     fetchSubscriptionsFromApple: FetchSubsFromApple,
     storeSubscriptionInDynamo: StoreSubInDynamo,
+    sendSubscriptionToHistoricalQueue: SendSubToHistoricalQueue,
     exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId,
     storeUserSubscriptionInDynamo: StoreUserSubInDynamo,
     record: SQSRecord
@@ -59,6 +62,7 @@ const processRecord = async (
         const subscriptions = await fetchSubscriptionsFromApple(reference)
 
         await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
+        await Promise.all(subscriptions.map(sendSubscriptionToHistoricalQueue))
 
         await Promise.all(subscriptions.map(async s => {
             if (s.appAccountToken) {
@@ -77,6 +81,7 @@ const processRecord = async (
 const processRecordWithErrorHandling = async (
     fetchSubscriptionsFromApple: FetchSubsFromApple,
     storeSubscriptionInDynamo: StoreSubInDynamo,
+    sendSubscriptionToHistoricalQueue: SendSubToHistoricalQueue,
     exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId,
     storeUserSubscriptionInDynamo: StoreUserSubInDynamo,
     record: SQSRecord
@@ -85,6 +90,7 @@ const processRecordWithErrorHandling = async (
         return await processRecord(
             fetchSubscriptionsFromApple,
             storeSubscriptionInDynamo,
+            sendSubscriptionToHistoricalQueue,
             exchangeExternalIdForIdentityId,
             storeUserSubscriptionInDynamo,
             record
@@ -103,6 +109,7 @@ const processRecordWithErrorHandling = async (
 export function buildHandler(
     fetchSubscriptionsFromApple: FetchSubsFromApple = defaultFetchSubscriptionsFromApple,
     storeSubscriptionInDynamo: StoreSubInDynamo = defaultStoreSubscriptionInDynamo,
+    sendSubscriptionToHistoricalQueue: SendSubToHistoricalQueue = defaultSendSubscriptionToHistoricalQueue,
     exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId = getIdentityIdFromBraze,
     storeUserSubscriptionInDynamo: StoreUserSubInDynamo = defaultStoreUserSubscriptionInDynamo,
 ): (event: SQSEvent) => Promise<string> {
@@ -111,6 +118,7 @@ export function buildHandler(
             return processRecordWithErrorHandling(
                 fetchSubscriptionsFromApple,
                 storeSubscriptionInDynamo,
+                sendSubscriptionToHistoricalQueue,
                 exchangeExternalIdForIdentityId,
                 storeUserSubscriptionInDynamo,
                 record,
