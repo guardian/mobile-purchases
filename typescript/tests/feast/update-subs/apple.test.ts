@@ -7,7 +7,7 @@ import { ProcessingError } from "../../../src/models/processingError";
 import { buildSqsEvent } from "./test-helpers";
 
 describe("The Feast (Apple) subscription updater", () => {
-    it("Should fetch the subscription(s) associated with the reference from Apple and persist them to Dynamo", async () => {
+    it("Should fetch the subscription(s) associated with the reference from Apple, persist them to Dynamo and send to the historical queue", async () => {
         const event =
             buildSqsEvent([{ receipt: "TEST_RECEIPT_1" }, { receipt: "TEST_RECEIPT_2" }])
 
@@ -15,6 +15,7 @@ describe("The Feast (Apple) subscription updater", () => {
             buildHandler(
                 stubFetchSubscriptionsFromApple,
                 mockStoreSubscriptionInDynamo,
+                mockSendSubscriptionToHistoricalQueue,
                 stubExchangeExternalIdForIdentityId,
                 mockStoreUserSubscriptionInDynamo
             )
@@ -26,6 +27,7 @@ describe("The Feast (Apple) subscription updater", () => {
         // `"sub-1"`, `"sub-2"` & `"sub-3"`. Importantly, `"sub-4"` is referenced by the receipt `"TEST_RECEIPT_3"`,
         // which is not present in the event payload and therefore not looked up and persisted to the Dynamo table.
         expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(3)
+        expect(mockSendSubscriptionToHistoricalQueue.mock.calls.length).toEqual(3)
 
         const storedSubscriptionIds =
             mockStoreSubscriptionInDynamo.mock.calls.map(call => call[0].subscriptionId)
@@ -41,6 +43,7 @@ describe("The Feast (Apple) subscription updater", () => {
             buildHandler(
                 stubFetchSubscriptionsFromApple,
                 mockStoreSubscriptionInDynamo,
+                mockSendSubscriptionToHistoricalQueue,
                 stubExchangeExternalIdForIdentityId,
                 mockStoreUserSubscriptionInDynamo
             )
@@ -77,6 +80,7 @@ describe("The Feast (Apple) subscription updater", () => {
             buildHandler(
                 fetchSubFromAppleFailure,
                 mockStoreSubscriptionInDynamo,
+                mockSendSubscriptionToHistoricalQueue,
                 stubExchangeExternalIdForIdentityId,
                 mockStoreUserSubscriptionInDynamo
             );
@@ -91,6 +95,7 @@ describe("The Feast (Apple) subscription updater", () => {
             buildHandler(
                 stubFetchSubscriptionsFromApple,
                 mockStoreSubscriptionInDynamo,
+                mockSendSubscriptionToHistoricalQueue,
                 stubExchangeExternalIdForIdentityId,
                 mockStoreUserSubscriptionInDynamo
             )
@@ -105,12 +110,15 @@ describe("The Feast (Apple) subscription updater", () => {
         expect(storedSubscriptionIds).toEqual(["sub-5"])
         expect(mockStoreUserSubscriptionInDynamo.mock.calls.length).toEqual(0)
         expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1)
+        expect(mockSendSubscriptionToHistoricalQueue.mock.calls.length).toEqual(1)
     }
     )
 });
 
 beforeEach(() => {
+    process.env['HistoricalQueueUrl'] = ""
     mockStoreSubscriptionInDynamo.mockClear()
+    mockSendSubscriptionToHistoricalQueue.mockClear()
     mockStoreUserSubscriptionInDynamo.mockClear()
 });
 
@@ -152,5 +160,7 @@ const stubExchangeExternalIdForIdentityId =
     }
 
 const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) => Promise.resolve())
+
+const mockSendSubscriptionToHistoricalQueue = jest.fn((subscription: Subscription) => Promise.resolve())
 
 const mockStoreUserSubscriptionInDynamo = jest.fn((userSubscription: UserSubscription) => Promise.resolve())

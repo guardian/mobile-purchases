@@ -8,8 +8,12 @@ import { buildSqsEvent } from "./test-helpers";
 // I'm not sure why.
 jest.mock("../../../src/services/google-play-v2", () => jest.fn());
 
+beforeEach(() => {
+    process.env['HistoricalQueueUrl'] = "";
+});
+
 describe("The Feast Android subscription updater", () => {
-    it("Should fetch the subscription associated with the reference from Google and persist to Dynamo", async () => {
+    it("Should fetch the subscription associated with the reference from Google, persist to Dynamo and send to the historical queue", async () => {
         const packageName = "uk.co.guardian.feast";
         const purchaseToken = "test-purchase-token";
         const subscriptionId = "test-subscription-id";
@@ -50,11 +54,13 @@ describe("The Feast Android subscription updater", () => {
         const identityId = "123456";
         const mockFetchSubscriptionsFromGoogle = jest.fn(() => Promise.resolve(googleSubscription));
         const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) => Promise.resolve(subscription))
+        const mockSendSubscriptionToHistoricalQueue = jest.fn((subscription: Subscription) => Promise.resolve())
         const mockExchangeUuid = jest.fn((uuid: string) => Promise.resolve(identityId))
         const mockStoreUserSubInDynamo = jest.fn((userSub: UserSubscription) => Promise.resolve(undefined))
         const handler = buildHandler(
             mockFetchSubscriptionsFromGoogle,
             mockStoreSubscriptionInDynamo,
+            mockSendSubscriptionToHistoricalQueue,
             mockExchangeUuid,
             mockStoreUserSubInDynamo
         );
@@ -65,6 +71,8 @@ describe("The Feast Android subscription updater", () => {
         expect(mockFetchSubscriptionsFromGoogle).toHaveBeenCalledWith(purchaseToken, packageName);
         expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1);
         expect(mockStoreSubscriptionInDynamo).toHaveBeenCalledWith(subscription);
+        expect(mockSendSubscriptionToHistoricalQueue.mock.calls.length).toEqual(1);
+        expect(mockSendSubscriptionToHistoricalQueue).toHaveBeenCalledWith(subscription);
         expect(mockExchangeUuid).toHaveBeenCalledWith(googleSubscription.obfuscatedExternalAccountId);
         expect(mockStoreUserSubInDynamo).toHaveBeenCalledWith(expect.objectContaining({
             userId: identityId,
@@ -72,7 +80,7 @@ describe("The Feast Android subscription updater", () => {
         }));
     });
 
-    it("Still persists to Dynamo when no obfuscated id is available", async () => {
+    it("Still persists to Dynamo and send to historical queue when no obfuscated id is available", async () => {
         const packageName = "uk.co.guardian.feast";
         const purchaseToken = "test-purchase-token";
         const subscriptionId = "test-subscription-id";
@@ -113,11 +121,13 @@ describe("The Feast Android subscription updater", () => {
         const identityId = "123456";
         const mockFetchSubscriptionsFromGoogle = jest.fn(() => Promise.resolve(googleSubscription));
         const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) => Promise.resolve(subscription))
+        const mockSendSubscriptionToHistoricalQueue = jest.fn((subscription: Subscription) => Promise.resolve())
         const mockExchangeUuid = jest.fn((uuid: string) => Promise.resolve(identityId))
         const mockStoreUserSubInDynamo = jest.fn((userSub: UserSubscription) => Promise.resolve(undefined))
         const handler = buildHandler(
             mockFetchSubscriptionsFromGoogle,
             mockStoreSubscriptionInDynamo,
+            mockSendSubscriptionToHistoricalQueue,
             mockExchangeUuid,
             mockStoreUserSubInDynamo
         );
@@ -128,6 +138,8 @@ describe("The Feast Android subscription updater", () => {
         expect(mockFetchSubscriptionsFromGoogle).toHaveBeenCalledWith(purchaseToken, packageName);
         expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1);
         expect(mockStoreSubscriptionInDynamo).toHaveBeenCalledWith(subscription);
+        expect(mockSendSubscriptionToHistoricalQueue.mock.calls.length).toEqual(1);
+        expect(mockSendSubscriptionToHistoricalQueue).toHaveBeenCalledWith(subscription);
         expect(mockStoreUserSubInDynamo).toBeCalledTimes(0);
     });
 });
