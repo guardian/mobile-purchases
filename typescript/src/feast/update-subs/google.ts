@@ -10,7 +10,8 @@ import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from "../../uti
 import { getIdentityIdFromBraze } from "../../services/braze";
 import { storeUserSubscriptionInDynamo, queueHistoricalSubscription } from "./common";
 import { UserSubscription } from "../../models/userSubscription";
-import { fetchGoogleSubscription, GOOGLE_PAYMENT_STATE, GoogleResponseBody } from "../../services/google-play";
+import { fetchGoogleSubscription, GoogleResponseBody } from "../../services/google-play";
+import { googleResponseBodyToSubscription } from "../../update-subs/google";
 
 const googleSubscriptionToSubscription = (
     purchaseToken: string,
@@ -33,45 +34,6 @@ const googleSubscriptionToSubscription = (
         dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)),
     )
 };
-
-const googleResponseBodyToSubscription = (
-    purchaseToken: string,
-    packageName: string,
-    subscriptionId: string,
-    billingPeriod: string,
-    googleResponse: GoogleResponseBody | null
-): Subscription => {
-    if (!googleResponse) {
-        throw new ProcessingError("There was no data in the response from google", true);
-    }
-
-    const expiryDate = optionalMsToDate(googleResponse.expiryTimeMillis);
-    if (expiryDate === null) {
-        throw new ProcessingError(`Unable to parse the expiryTimeMillis field ${googleResponse.expiryTimeMillis}`, false)
-    }
-
-    const startDate = optionalMsToDate(googleResponse.startTimeMillis);
-    if (startDate === null) {
-        throw new ProcessingError(`Unable to parse the startTimeMillis field ${googleResponse.startTimeMillis}`, false)
-    }
-
-    const freeTrial = googleResponse.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL;
-    return new Subscription(
-        purchaseToken,
-        startDate.toISOString(),
-        expiryDate.toISOString(),
-        optionalMsToDate(googleResponse.userCancellationTimeMillis)?.toISOString(),
-        googleResponse.autoRenewing,
-        subscriptionId,
-        fromGooglePackageName(packageName)?.toString(),
-        freeTrial,
-        billingPeriod,
-        googleResponse,
-        undefined,
-        null,
-        dateToSecondTimestamp(thirtyMonths(expiryDate)),
-    );
-}
 
 export const buildHandler = (
     fetchSubscriptionDetails: (purchaseToken: string, packageName: string) => Promise<GoogleSubscription>,
