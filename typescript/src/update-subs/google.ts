@@ -6,8 +6,48 @@ import {ProcessingError} from "../models/processingError";
 import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/dates";
 import {GoogleSubscriptionReference} from "../models/subscriptionReference";
 import {fromGooglePackageName} from "../services/appToPlatform";
-import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE} from "../services/google-play";
+import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE, GoogleResponseBody} from "../services/google-play";
 import {PRODUCT_BILLING_PERIOD} from "../services/productBillingPeriod";
+
+export const googleResponseBodyToSubscription = (
+    purchaseToken: string,
+    packageName: string,
+    subscriptionId: string,
+    billingPeriod: string,
+    googleResponse: GoogleResponseBody | null
+): Subscription => {
+    if (!googleResponse) {
+        throw new ProcessingError("There was no data in the response from google", true);
+    }
+
+    const expiryDate = optionalMsToDate(googleResponse.expiryTimeMillis);
+    if (expiryDate === null) {
+        throw new ProcessingError(`Unable to parse the expiryTimeMillis field ${googleResponse.expiryTimeMillis}`, false)
+    }
+
+    const startDate = optionalMsToDate(googleResponse.startTimeMillis);
+    if (startDate === null) {
+        throw new ProcessingError(`Unable to parse the startTimeMillis field ${googleResponse.startTimeMillis}`, false)
+    }
+
+    const freeTrial = googleResponse.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL;
+    return new Subscription(
+        purchaseToken,
+        startDate.toISOString(),
+        expiryDate.toISOString(),
+        optionalMsToDate(googleResponse.userCancellationTimeMillis)?.toISOString(),
+        googleResponse.autoRenewing,
+        subscriptionId,
+        fromGooglePackageName(packageName)?.toString(),
+        freeTrial,
+        billingPeriod,
+        googleResponse,
+        undefined,
+        null,
+        dateToSecondTimestamp(thirtyMonths(expiryDate)),
+    );
+}
+
 
 export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> {
 
@@ -28,41 +68,13 @@ export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscript
         }
     }
 
-    if (!response) {
-        throw new ProcessingError("There was no data in the response from google", true);
-    }
-
-    const expiryDate = optionalMsToDate(response.expiryTimeMillis);
-    if (expiryDate === null) {
-        throw new ProcessingError(`Unable to parse the expiryTimeMillis field ${response.expiryTimeMillis}`, false)
-    }
-
-    const startDate = optionalMsToDate(response.startTimeMillis);
-    if (startDate === null) {
-        throw new ProcessingError(`Unable to parse the startTimeMillis field ${response.startTimeMillis}`, false)
-    }
-
     let billingPeriod = PRODUCT_BILLING_PERIOD[sub.subscriptionId];
     if (billingPeriod === undefined) {
         console.warn(`Unable to get the billing period, unknown google subscription ID ${sub.subscriptionId}`);
     }
 
-    const freeTrial = response.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL;
-    return [new Subscription(
-        sub.purchaseToken,
-        startDate.toISOString(),
-        expiryDate.toISOString(),
-        optionalMsToDate(response.userCancellationTimeMillis)?.toISOString(),
-        response.autoRenewing,
-        sub.subscriptionId,
-        fromGooglePackageName(sub.packageName)?.toString(),
-        freeTrial,
-        billingPeriod,
-        response,
-        undefined,
-        null,
-        dateToSecondTimestamp(thirtyMonths(expiryDate)),
-    )];
+    const subscription = googleResponseBodyToSubscription(sub.purchaseToken, sub.packageName, sub.subscriptionId, billingPeriod, response);
+    return [subscription];
 }
 
 export async function handler(event: SQSEvent) {
