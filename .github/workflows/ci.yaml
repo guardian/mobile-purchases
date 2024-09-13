@@ -2,6 +2,10 @@ name: CI
 
 on: [push]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   CI:
     runs-on: ubuntu-latest
@@ -104,3 +108,5 @@ jobs:
               - tsc-target/feast-google-pubsub.zip
             mobile-purchases-feast-google-update-subscriptions:
               - tsc-target/feast-google-update-subscriptions.zip
+            mobile-purchases-feast-google-acquisition-events:
+              - tsc-target/feast-google-acquistition-events.zip

@@ -1,23 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`The FeastSubscriptions stack matches the snapshot 1`] = `
+exports[`The FeastGoogleAcquisitionEvents stack matches the snapshot 1`] = `
 {
   "Metadata": {
     "gu:cdk:constructs": [
       "GuDistributionBucketParameter",
-      "GuSnsLambdaExperimental",
+      "GuLambdaFunction",
     ],
     "gu:cdk:version": "TEST",
-  },
-  "Outputs": {
-    "feastsubscriptionsCODEdatabaselambdaTopicNameA7BAF410": {
-      "Value": {
-        "Fn::GetAtt": [
-          "feastsubscriptionsCODEsnsqueueF2BD20CE",
-          "QueueName",
-        ],
-      },
-    },
   },
   "Parameters": {
     "DistributionBucketName": {
@@ -27,290 +17,32 @@ exports[`The FeastSubscriptions stack matches the snapshot 1`] = `
     },
   },
   "Resources": {
-    "feastsubscriptionsCODEdatabaselambda191E77D1": {
-      "DependsOn": [
-        "feastsubscriptionsCODEdatabaselambdaServiceRoleDefaultPolicy529EF1CD",
-        "feastsubscriptionsCODEdatabaselambdaServiceRoleB1801835",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Ref": "DistributionBucketName",
-          },
-          "S3Key": "mobile/CODE/feast-subscriptions-CODE-database-lambda/feast-subscriptions.zip",
-        },
-        "Environment": {
-          "Variables": {
-            "APP": "feast-subscriptions-CODE-database-lambda",
-            "STACK": "mobile",
-            "STAGE": "CODE",
-          },
-        },
-        "Handler": "index.handler",
-        "MemorySize": 512,
-        "Role": {
-          "Fn::GetAtt": [
-            "feastsubscriptionsCODEdatabaselambdaServiceRoleB1801835",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs18.x",
-        "Tags": [
-          {
-            "Key": "App",
-            "Value": "feast-subscriptions-CODE-database-lambda",
-          },
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/mobile-purchases",
-          },
-          {
-            "Key": "Stack",
-            "Value": "mobile",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-        "Timeout": 30,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "feastsubscriptionsCODEdatabaselambdaAllowInvokefeastsubscriptionsCODEfeastsubscriptionsCODEdatabaselambdaSnsExistingIncomingEventsTopic094866AB74B52CC0": {
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "feastsubscriptionsCODEdatabaselambda191E77D1",
-            "Arn",
-          ],
-        },
-        "Principal": "sns.amazonaws.com",
-        "SourceArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:aws:sns:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":",
-              {
-                "Fn::GetAtt": [
-                  "feastsubscriptionsCODEsnsqueueF2BD20CE",
-                  "QueueName",
-                ],
-              },
-            ],
-          ],
-        },
-      },
-      "Type": "AWS::Lambda::Permission",
-    },
-    "feastsubscriptionsCODEdatabaselambdaServiceRoleB1801835": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:",
-                {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-              ],
-            ],
-          },
-        ],
-        "Tags": [
-          {
-            "Key": "App",
-            "Value": "feast-subscriptions-CODE-database-lambda",
-          },
-          {
-            "Key": "gu:cdk:version",
-            "Value": "TEST",
-          },
-          {
-            "Key": "gu:repo",
-            "Value": "guardian/mobile-purchases",
-          },
-          {
-            "Key": "Stack",
-            "Value": "mobile",
-          },
-          {
-            "Key": "Stage",
-            "Value": "CODE",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "feastsubscriptionsCODEdatabaselambdaServiceRoleDefaultPolicy529EF1CD": {
+    "S3inlinepolicy3B07399A": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
             {
-              "Action": [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-              ],
+              "Action": "s3:GetObject",
               "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":s3:::",
-                      {
-                        "Ref": "DistributionBucketName",
-                      },
-                    ],
-                  ],
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":s3:::",
-                      {
-                        "Ref": "DistributionBucketName",
-                      },
-                      "/mobile/CODE/feast-subscriptions-CODE-database-lambda/feast-subscriptions.zip",
-                    ],
-                  ],
-                },
-              ],
-            },
-            {
-              "Action": "ssm:GetParametersByPath",
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:aws:ssm:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":parameter/CODE/mobile/feast-subscriptions-CODE-database-lambda",
-                  ],
-                ],
-              },
-            },
-            {
-              "Action": [
-                "ssm:GetParameters",
-                "ssm:GetParameter",
-              ],
-              "Effect": "Allow",
-              "Resource": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:aws:ssm:",
-                    {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":parameter/CODE/mobile/feast-subscriptions-CODE-database-lambda/*",
-                  ],
-                ],
-              },
+              "Resource": "arn:aws:s3::*:mobile-dist/mobile/CODE/feast-google-acquisition-events/",
             },
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "feastsubscriptionsCODEdatabaselambdaServiceRoleDefaultPolicy529EF1CD",
+        "PolicyName": "S3inlinepolicy3B07399A",
         "Roles": [
           {
-            "Ref": "feastsubscriptionsCODEdatabaselambdaServiceRoleB1801835",
+            "Ref": "feastgoogleacquisitioneventslambdaServiceRoleAB27E589",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "feastsubscriptionsCODEdatabaselambdafeastsubscriptionsCODEdatabaselambdaSnsExistingIncomingEventsTopic2F7C96D8": {
-      "Properties": {
-        "Endpoint": {
-          "Fn::GetAtt": [
-            "feastsubscriptionsCODEdatabaselambda191E77D1",
-            "Arn",
-          ],
-        },
-        "Protocol": "lambda",
-        "Region": {
-          "Ref": "AWS::Region",
-        },
-        "TopicArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:aws:sns:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":",
-              {
-                "Fn::GetAtt": [
-                  "feastsubscriptionsCODEsnsqueueF2BD20CE",
-                  "QueueName",
-                ],
-              },
-            ],
-          ],
-        },
-      },
-      "Type": "AWS::SNS::Subscription",
-    },
-    "feastsubscriptionsCODEsnsqueueF2BD20CE": {
+    "feastgoogleacquisitioneventsdlqCODEAE494D5F": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "MessageRetentionPeriod": 1209600,
-        "QueueName": "feast-subscriptions-CODE-queue",
+        "QueueName": "feast-google-acquisition-events-dlq-CODE",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -333,69 +65,43 @@ exports[`The FeastSubscriptions stack matches the snapshot 1`] = `
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
     },
-  },
-}
-`;
-
-exports[`The FeastSubscriptions stack matches the snapshot 2`] = `
-{
-  "Metadata": {
-    "gu:cdk:constructs": [
-      "GuDistributionBucketParameter",
-      "GuSnsLambdaExperimental",
-    ],
-    "gu:cdk:version": "TEST",
-  },
-  "Outputs": {
-    "feastsubscriptionsPRODdatabaselambdaTopicName3ED11F02": {
-      "Value": {
-        "Fn::GetAtt": [
-          "feastsubscriptionsPRODsnsqueue58434470",
-          "QueueName",
-        ],
-      },
-    },
-  },
-  "Parameters": {
-    "DistributionBucketName": {
-      "Default": "/account/services/artifact.bucket",
-      "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-  },
-  "Resources": {
-    "feastsubscriptionsPRODdatabaselambda7E087BB6": {
+    "feastgoogleacquisitioneventslambda2B309244": {
       "DependsOn": [
-        "feastsubscriptionsPRODdatabaselambdaServiceRoleDefaultPolicyCAE476A6",
-        "feastsubscriptionsPRODdatabaselambdaServiceRoleD4C1286B",
+        "feastgoogleacquisitioneventslambdaServiceRoleDefaultPolicy1A3A64B5",
+        "feastgoogleacquisitioneventslambdaServiceRoleAB27E589",
       ],
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DistributionBucketName",
           },
-          "S3Key": "mobile/PROD/feast-subscriptions-PROD-database-lambda/feast-subscriptions.zip",
+          "S3Key": "mobile/CODE/feast-google-acquisition-events/feast-google-acquisition-events.zip",
         },
+        "Description": "An API Gateway triggered lambda generated in the support-service-lambdas repo",
         "Environment": {
           "Variables": {
-            "APP": "feast-subscriptions-PROD-database-lambda",
+            "APP": "feast-google-acquisition-events",
+            "App": "feast-google-acquisition-events",
             "STACK": "mobile",
-            "STAGE": "PROD",
+            "STAGE": "CODE",
+            "Stack": "mobile",
+            "Stage": "CODE",
           },
         },
+        "FunctionName": "feast-google-acquisition-events-CODE",
         "Handler": "index.handler",
-        "MemorySize": 512,
+        "MemorySize": 1024,
         "Role": {
           "Fn::GetAtt": [
-            "feastsubscriptionsPRODdatabaselambdaServiceRoleD4C1286B",
+            "feastgoogleacquisitioneventslambdaServiceRoleAB27E589",
             "Arn",
           ],
         },
-        "Runtime": "nodejs18.x",
+        "Runtime": "nodejs20.x",
         "Tags": [
           {
             "Key": "App",
-            "Value": "feast-subscriptions-PROD-database-lambda",
+            "Value": "feast-google-acquisition-events",
           },
           {
             "Key": "gu:cdk:version",
@@ -411,49 +117,14 @@ exports[`The FeastSubscriptions stack matches the snapshot 2`] = `
           },
           {
             "Key": "Stage",
-            "Value": "PROD",
+            "Value": "CODE",
           },
         ],
-        "Timeout": 30,
+        "Timeout": 300,
       },
       "Type": "AWS::Lambda::Function",
     },
-    "feastsubscriptionsPRODdatabaselambdaAllowInvokefeastsubscriptionsPRODfeastsubscriptionsPRODdatabaselambdaSnsExistingIncomingEventsTopicBCDBB18B356B5165": {
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "feastsubscriptionsPRODdatabaselambda7E087BB6",
-            "Arn",
-          ],
-        },
-        "Principal": "sns.amazonaws.com",
-        "SourceArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:aws:sns:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":",
-              {
-                "Fn::GetAtt": [
-                  "feastsubscriptionsPRODsnsqueue58434470",
-                  "QueueName",
-                ],
-              },
-            ],
-          ],
-        },
-      },
-      "Type": "AWS::Lambda::Permission",
-    },
-    "feastsubscriptionsPRODdatabaselambdaServiceRoleD4C1286B": {
+    "feastgoogleacquisitioneventslambdaServiceRoleAB27E589": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -484,7 +155,7 @@ exports[`The FeastSubscriptions stack matches the snapshot 2`] = `
         "Tags": [
           {
             "Key": "App",
-            "Value": "feast-subscriptions-PROD-database-lambda",
+            "Value": "feast-google-acquisition-events",
           },
           {
             "Key": "gu:cdk:version",
@@ -500,16 +171,32 @@ exports[`The FeastSubscriptions stack matches the snapshot 2`] = `
           },
           {
             "Key": "Stage",
-            "Value": "PROD",
+            "Value": "CODE",
           },
         ],
       },
       "Type": "AWS::IAM::Role",
     },
-    "feastsubscriptionsPRODdatabaselambdaServiceRoleDefaultPolicyCAE476A6": {
+    "feastgoogleacquisitioneventslambdaServiceRoleDefaultPolicy1A3A64B5": {
       "Properties": {
         "PolicyDocument": {
           "Statement": [
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "feastgoogleacquisitioneventsqueueCODE1125D8B7",
+                  "Arn",
+                ],
+              },
+            },
             {
               "Action": [
                 "s3:GetObject*",
@@ -545,7 +232,7 @@ exports[`The FeastSubscriptions stack matches the snapshot 2`] = `
                       {
                         "Ref": "DistributionBucketName",
                       },
-                      "/mobile/PROD/feast-subscriptions-PROD-database-lambda/feast-subscriptions.zip",
+                      "/mobile/CODE/feast-google-acquisition-events/feast-google-acquisition-events.zip",
                     ],
                   ],
                 },
@@ -566,7 +253,7 @@ exports[`The FeastSubscriptions stack matches the snapshot 2`] = `
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/PROD/mobile/feast-subscriptions-PROD-database-lambda",
+                    ":parameter/CODE/mobile/feast-google-acquisition-events",
                   ],
                 ],
               },
@@ -589,7 +276,7 @@ exports[`The FeastSubscriptions stack matches the snapshot 2`] = `
                     {
                       "Ref": "AWS::AccountId",
                     },
-                    ":parameter/PROD/mobile/feast-subscriptions-PROD-database-lambda/*",
+                    ":parameter/CODE/mobile/feast-google-acquisition-events/*",
                   ],
                 ],
               },
@@ -597,57 +284,115 @@ exports[`The FeastSubscriptions stack matches the snapshot 2`] = `
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "feastsubscriptionsPRODdatabaselambdaServiceRoleDefaultPolicyCAE476A6",
+        "PolicyName": "feastgoogleacquisitioneventslambdaServiceRoleDefaultPolicy1A3A64B5",
         "Roles": [
           {
-            "Ref": "feastsubscriptionsPRODdatabaselambdaServiceRoleD4C1286B",
+            "Ref": "feastgoogleacquisitioneventslambdaServiceRoleAB27E589",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "feastsubscriptionsPRODdatabaselambdafeastsubscriptionsPRODdatabaselambdaSnsExistingIncomingEventsTopicE3D3F398": {
+    "feastgoogleacquisitioneventslambdaSqsEventSourcefeastgoogleacquisitioneventsCODEfeastgoogleacquisitioneventsqueueCODEF024DC5AE08E681C": {
       "Properties": {
-        "Endpoint": {
+        "EventSourceArn": {
           "Fn::GetAtt": [
-            "feastsubscriptionsPRODdatabaselambda7E087BB6",
+            "feastgoogleacquisitioneventsqueueCODE1125D8B7",
             "Arn",
           ],
         },
-        "Protocol": "lambda",
-        "Region": {
-          "Ref": "AWS::Region",
+        "FunctionName": {
+          "Ref": "feastgoogleacquisitioneventslambda2B309244",
         },
-        "TopicArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:aws:sns:",
-              {
-                "Ref": "AWS::Region",
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId",
-              },
-              ":",
-              {
-                "Fn::GetAtt": [
-                  "feastsubscriptionsPRODsnsqueue58434470",
-                  "QueueName",
-                ],
-              },
-            ],
-          ],
-        },
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures",
+        ],
       },
-      "Type": "AWS::SNS::Subscription",
+      "Type": "AWS::Lambda::EventSourceMapping",
     },
-    "feastsubscriptionsPRODsnsqueue58434470": {
+    "feastgoogleacquisitioneventsqueueCODE1125D8B7": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "feast-google-acquisition-events-queue-CODE",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "feastgoogleacquisitioneventsdlqCODEAE494D5F",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 5,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "CODE",
+          },
+        ],
+        "VisibilityTimeout": 300,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;
+
+exports[`The FeastGoogleAcquisitionEvents stack matches the snapshot 2`] = `
+{
+  "Metadata": {
+    "gu:cdk:constructs": [
+      "GuDistributionBucketParameter",
+      "GuLambdaFunction",
+    ],
+    "gu:cdk:version": "TEST",
+  },
+  "Parameters": {
+    "DistributionBucketName": {
+      "Default": "/account/services/artifact.bucket",
+      "Description": "SSM parameter containing the S3 bucket name holding distribution artifacts",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "S3inlinepolicy3B07399A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3::*:mobile-dist/mobile/PROD/feast-google-acquisition-events/",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "S3inlinepolicy3B07399A",
+        "Roles": [
+          {
+            "Ref": "feastgoogleacquisitioneventslambdaServiceRoleAB27E589",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "feastgoogleacquisitioneventsdlqPROD0BD7F8C4": {
       "DeletionPolicy": "Delete",
       "Properties": {
         "MessageRetentionPeriod": 1209600,
-        "QueueName": "feast-subscriptions-PROD-queue",
+        "QueueName": "feast-google-acquisition-events-dlq-PROD",
         "Tags": [
           {
             "Key": "gu:cdk:version",
@@ -666,6 +411,287 @@ exports[`The FeastSubscriptions stack matches the snapshot 2`] = `
             "Value": "PROD",
           },
         ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "feastgoogleacquisitioneventslambda2B309244": {
+      "DependsOn": [
+        "feastgoogleacquisitioneventslambdaServiceRoleDefaultPolicy1A3A64B5",
+        "feastgoogleacquisitioneventslambdaServiceRoleAB27E589",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DistributionBucketName",
+          },
+          "S3Key": "mobile/PROD/feast-google-acquisition-events/feast-google-acquisition-events.zip",
+        },
+        "Description": "An API Gateway triggered lambda generated in the support-service-lambdas repo",
+        "Environment": {
+          "Variables": {
+            "APP": "feast-google-acquisition-events",
+            "App": "feast-google-acquisition-events",
+            "STACK": "mobile",
+            "STAGE": "PROD",
+            "Stack": "mobile",
+            "Stage": "PROD",
+          },
+        },
+        "FunctionName": "feast-google-acquisition-events-PROD",
+        "Handler": "index.handler",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "feastgoogleacquisitioneventslambdaServiceRoleAB27E589",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "feast-google-acquisition-events",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "feastgoogleacquisitioneventslambdaServiceRoleAB27E589": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "feast-google-acquisition-events",
+          },
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "feastgoogleacquisitioneventslambdaServiceRoleDefaultPolicy1A3A64B5": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "feastgoogleacquisitioneventsqueuePROD8E7ABE58",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "DistributionBucketName",
+                      },
+                      "/mobile/PROD/feast-google-acquisition-events/feast-google-acquisition-events.zip",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "ssm:GetParametersByPath",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/PROD/mobile/feast-google-acquisition-events",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:ssm:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":parameter/PROD/mobile/feast-google-acquisition-events/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "feastgoogleacquisitioneventslambdaServiceRoleDefaultPolicy1A3A64B5",
+        "Roles": [
+          {
+            "Ref": "feastgoogleacquisitioneventslambdaServiceRoleAB27E589",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "feastgoogleacquisitioneventslambdaSqsEventSourcefeastgoogleacquisitioneventsPRODfeastgoogleacquisitioneventsqueuePRODCEE4A3E5200426E4": {
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "feastgoogleacquisitioneventsqueuePROD8E7ABE58",
+            "Arn",
+          ],
+        },
+        "FunctionName": {
+          "Ref": "feastgoogleacquisitioneventslambda2B309244",
+        },
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures",
+        ],
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "feastgoogleacquisitioneventsqueuePROD8E7ABE58": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "QueueName": "feast-google-acquisition-events-queue-PROD",
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "feastgoogleacquisitioneventsdlqPROD0BD7F8C4",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 5,
+        },
+        "Tags": [
+          {
+            "Key": "gu:cdk:version",
+            "Value": "TEST",
+          },
+          {
+            "Key": "gu:repo",
+            "Value": "guardian/mobile-purchases",
+          },
+          {
+            "Key": "Stack",
+            "Value": "mobile",
+          },
+          {
+            "Key": "Stage",
+            "Value": "PROD",
+          },
+        ],
+        "VisibilityTimeout": 300,
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
