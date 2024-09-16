@@ -622,10 +622,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@okta/jwt-verifier@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@okta/jwt-verifier/-/jwt-verifier-4.0.0.tgz#342368bfdf3dd2d1071a9140b450ffb6267aa97e"
-  integrity sha512-Mu9E8GxITx4AvoCbN9M8S4RWT2qgKnu6J4PqPGgyOU0P0u3NHtsO939Ruml93JLHVrf/leEqt9xXtPZYL/znCw==
+"@okta/jwt-verifier@^4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@okta/jwt-verifier/-/jwt-verifier-4.0.1.tgz#1d362aaaec62cb0e5f2c7eba3b191910038b8581"
+  integrity sha512-U9d8BDiR0LhRw2dyXVJwnc4eeudBc1VPn1b1hoOuKi1/kJpEoheB++/Lvi3rQjMGXgE6KtKN7hosILzw8bBB6w==
   dependencies:
     jwks-rsa "^3.1.0"
     njwt "^2.0.1"
