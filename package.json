@@ -38,7 +38,7 @@
     "@googleapis/androidpublisher": "22.0.0",
     "@guardian/types": "^9.0.1",
     "@okta/jwt-verifier": "^4.0.0",
-    "@types/aws-lambda": "8.10.143",
+    "@types/aws-lambda": "8.10.145",
     "@types/node": "^22.5.5",
     "aws-sdk": "^2.1691.0",
     "node-fetch": "2.6.7",
