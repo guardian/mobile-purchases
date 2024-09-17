@@ -4,18 +4,12 @@ regions: [eu-west-1]
 templates:
   lambda:
     type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation, mobile-purchases-exports-cloudformation, mobile-purchases-feast-google-acquisition-events-cloudformation]
+    dependencies: [mobile-purchases-cloudformation, mobile-purchases-exports-cloudformation, mobile-purchases-feast-acquisition-events-cloudformation]
     parameters:
       bucketSsmLookup: true
       prefixStack: false
 
 deployments:
-  # mobile-purchases-feast-cloudformation:
-  #   type: cloud-formation
-  #   parameters:
-  #     templateStagePaths:
-  #       CODE: MobilePurchasesFeast-CODE.template.json
-  #       PROD: MobilePurchasesFeast-PROD.template.json
 
   mobile-purchases-cloudformation:
     type: cloud-formation
@@ -175,25 +169,14 @@ deployments:
       functionNames: [mobile-purchases-apple-revalidate-receipts-]
       fileName: apple-revalidate-receipts.zip
 
-  mobile-purchases-feast-google-acquisition-events-cloudformation:
+  mobile-purchases-feast-acquisition-events-cloudformation:
     type: cloud-formation
     parameters:
-      regions: [eu-west-1]
-      templateStagePaths:
-        CODE: cdk/cdk.out/FeastGoogleAcquisitionsEvent-CODE.template.json
-        PROD: cdk/cdk.out/FeastGoogleAcquisitionsEvent-PROD.template.json
+      templatePath: feast-acquisition-events.cloudformation.yaml
 
-    mobile-purchases-feast-google-acquisition-events:
+  mobile-purchases-feast-google-acquisition-events:
       template: lambda
       parameters:
-        functionNames: [feast-google-acquisition-events-]
-        filename: feast-google-acquisition-events.zip
+        functionNames: [mobile-purchases-feast-google-acquisition-events-]
+        fileName: feast-google-acquisition-events.zip
 
-    #  type: aws-lambda
-    #  parameters:
-    #    fileName: feast-google-acquisition-events.zip
-    #    bucketSsmLookup: true
-    #    prefixStack: false
-    #    functionNames:
-    #      - feast-google-acquisition-events-
-    #  dependencies: [ mobile-purchases-feast-google-acquisition-events-cloudformation ]
