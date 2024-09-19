@@ -127,7 +127,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: !Ref DeployBucket
-        S3Key: !Sub ${Stack}/${Stage}/${App}-feast-google-acquisition-events/${App}-feast-google-acquisition-events.zip
+        S3Key: !Sub ${Stack}/${Stage}/${App}-feast-google-acquisition-events/feast-google-acquisition-events.zip
       Description: An SQS triggered lambda to process acquisition events for android devices and write to event buffer.
       Environment:
         Variables:
