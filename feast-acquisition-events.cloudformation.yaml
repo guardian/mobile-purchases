@@ -22,22 +22,37 @@ Resources:
   FeastGoogleAcquisitionEventsQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${App}-${Stage}-queue
+      QueueName: !Sub ${App}-${Stage}feast-google-acquisition-events-queue
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt FeastGoogleAcquisitionEventsDlq.Arn
         maxReceiveCount: 5
       Tags:
         - Key: gu:repo
           Value: guardian/mobile-purchases
+        - Key: App
+          Value: !Ref App
         - Key: Stack
           Value: !Ref Stack
         - Key: Stage
           Value: !Ref Stage
-        - Key: App
-          Value: !Ref App
       VisibilityTimeout: 300
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
+
+  FeastGoogleAcquisitionEventsDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}feast-google-acquisition-events-dlq
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: gu:repo
+          Value: guardian/mobile-purchases
+        - Key: App
+          Value: !Ref App
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: Stage
+          Value: !Ref Stage
 
   FeastGoogleAcquisitionEventsLambdaServiceRole:
     Type: AWS::IAM::Role
@@ -164,7 +179,7 @@ Resources:
       FunctionResponseTypes:
         - ReportBatchItemFailures
 
-   FeastGoogleAcquisitionEventsLambdaS3inlinepolicy:
+  FeastGoogleAcquisitionEventsLambdaS3inlinepolicy:
     Type: AWS::IAM::Policy
     Properties:
       PolicyDocument:
