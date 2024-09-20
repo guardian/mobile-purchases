@@ -8,6 +8,7 @@ Parameters:
   App:
     Description: Application name
     Type: String
+    Default: 'mobile-purchases'
   Stage:
     Description: Stage name
     Type: String
@@ -17,6 +18,7 @@ Parameters:
   DeployBucket:
     Description: Bucket where RiffRaff uploads artifacts on deploy
     Type: String
+    Default: 'mobile=dist'
 
 Resources:
   FeastGoogleAcquisitionEventsQueue:
