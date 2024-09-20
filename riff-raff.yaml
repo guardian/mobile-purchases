@@ -4,7 +4,7 @@ regions: [eu-west-1]
 templates:
   lambda:
     type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation, mobile-purchases-exports-cloudformation, mobile-purchases-feast-acquisition-events-eventbus-cloudformation]
+    dependencies: [mobile-purchases-cloudformation, mobile-purchases-exports-cloudformation]
     parameters:
       bucketSsmLookup: true
       prefixStack: false
@@ -169,18 +169,21 @@ deployments:
       functionNames: [mobile-purchases-apple-revalidate-receipts-]
       fileName: apple-revalidate-receipts.zip
 
-  mobile-purchases-feast-acquisition-events-eventbus-cloudformation:
+  mobile-purchases-feast-acquisition-events-bus-cloudformation:
     type: cloud-formation
     parameters:
       templatePath: feast-acquisition-events.cloudformation.yaml
-      cloudFormationStackName: mobile-purchases-feast-write-acquisition-events-bus
       appendStageToCloudFormationStackName: true
       cloudFormationStackByTags: false
+      cloudFormationStackName: mobile-purchases-feast-write-acquisition-events-bus
       prependStackToCloudFormationStackName: false
 
   mobile-purchases-feast-google-acquisition-events:
-      template: lambda
+      type: aws-lambda
+      dependencies: [mobile-purchases-feast-acquisition-events-bus-cloudformation]
       parameters:
         functionNames: [mobile-purchases-feast-google-acquisition-events-]
         fileName: feast-google-acquisition-events.zip
+        bucketSsmLookup: true
+        prefixStack: false
 
