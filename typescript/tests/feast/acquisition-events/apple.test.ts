@@ -13,18 +13,7 @@ const sQSRecord: SQSRecord = {
             "SenderId": "AROA4TAR37NZM4NZVE3D6BackplaneAssumeRoleSession",
             "ApproximateFirstReceiveTimestamp": "1724077616692"
         },
-        "messageAttributes":
-        {
-            "tickettailor-webhook-signature":
-            {
-                "stringValue": "t=1724160026,v1=a3dbd8cfb0f04a0a9b0dd9d2547f1dd1a51e60d528a4edaee3bc02085517bd50",
-                "stringListValues":
-                [],
-                "binaryListValues":
-                [],
-                "dataType": "String"
-            }
-        },
+        "messageAttributes": {},
         "md5OfBody": "f76fca7a395b41f1dd0d9af3b1755ac1",
         "eventSource": "aws:sqs",
         "eventSourceARN": "arn:aws:sqs:eu-west-1:865473395570:ticket-tailor-webhook-queue-CODE",

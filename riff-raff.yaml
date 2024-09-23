@@ -10,6 +10,12 @@ templates:
       prefixStack: false
 
 deployments:
+  # mobile-purchases-feast-cloudformation:
+  #   type: cloud-formation
+  #   parameters:
+  #     templateStagePaths:
+  #       CODE: MobilePurchasesFeast-CODE.template.json
+  #       PROD: MobilePurchasesFeast-PROD.template.json
 
   mobile-purchases-cloudformation:
     type: cloud-formation
@@ -173,7 +179,6 @@ deployments:
     type: cloud-formation
     parameters:
       templatePath: feast-acquisition-events.cloudformation.yaml
-      appendStageToCloudFormationStackName: true
       cloudFormationStackByTags: false
       cloudFormationStackName: mobile-purchases-feast-write-acquisition-events-bus
       prependStackToCloudFormationStackName: false
@@ -195,4 +200,3 @@ deployments:
         fileName: feast-google-acquisition-events.zip
         bucketSsmLookup: true
         prefixStack: false
-        
