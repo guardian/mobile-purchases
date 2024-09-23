@@ -1,10 +1,10 @@
 import {SQSEvent, SQSRecord} from "aws-lambda";
-import {handler} from "../../../src/feast/acquisition-events/google";
+import {handler} from "../../../src/feast/acquisition-events/apple";
 
 const sQSRecord: SQSRecord = {
         "messageId": "48501d06-2c1d-4e06-80b9-7617cd9df313",
         "receiptHandle": "Hi there",
-        "body": "Hello World",
+        "body": "This is a message from the feast apple acquisition events queue",
         "attributes":
         {
             "ApproximateReceiveCount": "1",
@@ -35,10 +35,10 @@ const sQSEvent: SQSEvent = {
     Records: [ sQSRecord ],
 }
 
-describe("The Feast Google Acquisition Event", () => {
+describe("The Feast Apple Acquisition Event", () => {
     it("Should return the appropriate message", async () => {
         const result = await handler(sQSEvent);
 
-        expect(result).toStrictEqual("Feast Google Acquisition Events Lambda has been called");
+        expect(result).toStrictEqual("Feast Apple Acquisition Events Lambda has been called");
     });
 });

@@ -19,10 +19,45 @@ Parameters:
     Type: String
 
 Resources:
+  FeastAppleAcquisitionEventsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-feast-apple-acquisition-events-queue
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt FeastAppleAcquisitionEventsDlq.Arn
+        maxReceiveCount: 5
+      Tags:
+        - Key: gu:repo
+          Value: guardian/mobile-purchases
+        - Key: App
+          Value: !Ref App
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: Stage
+          Value: !Ref Stage
+      VisibilityTimeout: 300
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  FeastAppleAcquisitionEventsDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-feast-apple-acquisition-events-dlq
+      KmsMasterKeyId: alias/aws/sqs
+      Tags:
+        - Key: gu:repo
+          Value: guardian/mobile-purchases
+        - Key: App
+          Value: !Ref App
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: Stage
+          Value: !Ref Stage
+
   FeastGoogleAcquisitionEventsQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${App}-${Stage}feast-google-acquisition-events-queue
+      QueueName: !Sub ${App}-${Stage}-feast-google-acquisition-events-queue
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt FeastGoogleAcquisitionEventsDlq.Arn
         maxReceiveCount: 5
@@ -42,7 +77,7 @@ Resources:
   FeastGoogleAcquisitionEventsDlq:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${App}-${Stage}feast-google-acquisition-events-dlq
+      QueueName: !Sub ${App}-${Stage}-feast-google-acquisition-events-dlq
       KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: gu:repo
@@ -54,7 +89,7 @@ Resources:
         - Key: Stage
           Value: !Ref Stage
 
-  FeastGoogleAcquisitionEventsLambdaServiceRole:
+  FeastAcquisitionEventsLambdaServiceRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -80,7 +115,7 @@ Resources:
         - Key: Stage
           Value: !Ref Stage
 
-  FeastGoogleAcquisitionEventsLambdaServiceRoleDefaultPolicy:
+  FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy:
     Type: AWS::IAM::Policy
     Properties:
       PolicyDocument:
@@ -92,7 +127,9 @@ Resources:
               - sqs:DeleteMessage
               - sqs:GetQueueAttributes
             Effect: Allow
-            Resource: !GetAtt FeastGoogleAcquisitionEventsQueue.Arn
+            Resource:
+              - !GetAtt FeastAppleAcquisitionEventsQueue.Arn
+              - !GetAtt FeastGoogleAcquisitionEventsQueue.Arn
           - Action:
               - s3:GetObject*
               - s3:GetBucket*
@@ -111,6 +148,13 @@ Resources:
                   - !Ref AWS::Partition
                   - ':s3:::'
                   - !Ref DeployBucket
+                  - !Sub ${Stack}/${Stage}/${App}-feast-apple-acquisition-events/${App}-feast-apple-acquisition-events.zip
+              - !Join
+                - ''
+                - - 'arn:'
+                  - !Ref AWS::Partition
+                  - ':s3:::'
+                  - !Ref DeployBucket
                   - !Sub ${Stack}/${Stage}/${App}-feast-google-acquisition-events/${App}-feast-google-acquisition-events.zip
           - Action: ssm:GetParametersByPath
             Effect: Allow
@@ -120,6 +164,7 @@ Resources:
                 - !Ref AWS::Region
                 - ':'
                 - !Ref AWS::AccountId
+                - ':parameter/PROD/mobile/feast-apple-acquisition-events'
                 - ':parameter/PROD/mobile/feast-google-acquisition-events'
           - Action:
               - ssm:GetParameters
@@ -131,11 +176,46 @@ Resources:
                 - !Ref AWS::Region
                 - ':'
                 - !Ref AWS::AccountId
+                - ':parameter/PROD/mobile/feast-apple-acquisition-events/*'
                 - ':parameter/PROD/mobile/feast-google-acquisition-events/*'
         Version: '2012-10-17'
-      PolicyName: FeastGoogleAcquisitionEventsLambdaServiceRoleDefaultPolicy
+      PolicyName: FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
       Roles:
-        - !Ref FeastGoogleAcquisitionEventsLambdaServiceRole
+        - !Ref FeastAcquisitionEventsLambdaServiceRole
+
+  FeastAppleAcquisitionEventsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-feast-apple-acquisition-events/feast-apple-acquisition-events.zip
+      Description: An SQS triggered lambda to process acquisition events for iOS devices and write to event buffer.
+      Environment:
+        Variables:
+          App: !Ref App
+          Stack: !Ref Stack
+          Stage: !Ref Stage
+          STACK: !Ref Stack
+          STAGE: !Ref Stage
+          APP: !Ref App
+      FunctionName: !Sub ${App}-feast-apple-acquisition-events-${Stage}
+      Handler: feast-apple-acquisition-events.handler
+      MemorySize: 1024
+      Role: !GetAtt FeastAcquisitionEventsLambdaServiceRole.Arn
+      Runtime: nodejs20.x
+      Tags:
+        - Key: App
+          Value: !Ref App
+        - Key: gu:repo
+          Value: guardian/mobile-purchases
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: Stage
+          Value: !Ref Stage
+      Timeout: 300
+    DependsOn:
+      - FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
+      - FeastAcquisitionEventsLambdaServiceRole
 
   FeastGoogleAcquisitionEventsLambda:
     Type: AWS::Lambda::Function
@@ -155,7 +235,7 @@ Resources:
       FunctionName: !Sub ${App}-feast-google-acquisition-events-${Stage}
       Handler: feast-google-acquisition-events.handler
       MemorySize: 1024
-      Role: !GetAtt FeastGoogleAcquisitionEventsLambdaServiceRole.Arn
+      Role: !GetAtt FeastAcquisitionEventsLambdaServiceRole.Arn
       Runtime: nodejs20.x
       Tags:
         - Key: App
@@ -168,8 +248,16 @@ Resources:
           Value: !Ref Stage
       Timeout: 300
     DependsOn:
-      - FeastGoogleAcquisitionEventsLambdaServiceRoleDefaultPolicy
-      - FeastGoogleAcquisitionEventsLambdaServiceRole
+      - FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
+      - FeastAcquisitionEventsLambdaServiceRole
+
+  FeastAppleAcquisitionEventsSqsEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt FeastAppleAcquisitionEventsQueue.Arn
+      FunctionName: !Ref FeastAppleAcquisitionEventsLambda
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
 
   FeastGoogleAcquisitionEventsSqsEventSource:
     Type: AWS::Lambda::EventSourceMapping
@@ -179,20 +267,22 @@ Resources:
       FunctionResponseTypes:
         - ReportBatchItemFailures
 
-  FeastGoogleAcquisitionEventsLambdaS3inlinepolicy:
+  FeastAcquisitionEventsLambdaS3inlinepolicy:
     Type: AWS::IAM::Policy
     Properties:
       PolicyDocument:
         Statement:
           - Action: s3:GetObject
             Effect: Allow
-            Resource: !Sub arn:aws:s3:::mobile-dist/mobile/${Stage}/${App}-feast-google-acquisition-events/
+            Resource:
+              - !Sub arn:aws:s3:::mobile-dist/mobile/${Stage}/${App}-feast-apple-acquisition-events/
+              - !Sub arn:aws:s3:::mobile-dist/mobile/${Stage}/${App}-feast-google-acquisition-events/
         Version: '2012-10-17'
       PolicyName: S3inlinepolicy
       Roles:
-        - !Ref FeastGoogleAcquisitionEventsLambdaServiceRole
+        - !Ref FeastAcquisitionEventsLambdaServiceRole
 
-  FeastGoogleAcquisitionEventsLambdaSecretManagerAccessPolicy:
+  FeastAcquisitionEventsLambdaSecretManagerAccessPolicy:
     Type: AWS::IAM::Policy
     Properties:
       PolicyDocument:
@@ -206,8 +296,9 @@ Resources:
                   - !Ref AWS::Region
                   - ':'
                   - !Ref AWS::AccountId
+                  - !Sub :secret:${Stage}/${App}-feast-apple-acquisition-events/*
                   - !Sub :secret:${Stage}/${App}-feast-google-acquisition-events/*
         Version: '2012-10-17'
       PolicyName: Secretmanageraccesspolicy79659139
       Roles:
-        - !Ref FeastGoogleAcquisitionEventsLambdaServiceRole
+        - !Ref FeastAcquisitionEventsLambdaServiceRole
