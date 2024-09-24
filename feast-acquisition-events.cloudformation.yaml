@@ -17,6 +17,22 @@ Parameters:
   DeployBucket:
     Description: Bucket where RiffRaff uploads artifacts on deploy
     Type: String
+  AlarmTopic:
+    Description: The ARN of the SNS topic to send all the cloudwatch alarms to
+    Type: String
+
+Mappings:
+  StageVariables:
+    CODE:
+      Schedule: 'rate(365 days)'
+      AlarmActionsEnabled: FALSE
+    PROD:
+      Schedule: 'rate(30 minutes)'
+      AlarmActionsEnabled: TRUE
+
+Conditions:
+  IsCode: !Equals [!Ref "Stage", "CODE"]
+  IsProd: !Equals [!Ref "Stage", "PROD"]
 
 Resources:
   FeastAppleAcquisitionEventsQueue:
@@ -54,6 +70,31 @@ Resources:
         - Key: Stage
           Value: !Ref Stage
 
+  FeastAppleAcquisitionEventsDlqDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled:
+        !FindInMap [ StageVariables, !Ref Stage, AlarmActionsEnabled ]
+      AlarmDescription: "Ensure that the feast apple acquisition events dead letter queue is empty"
+      Namespace: "AWS/SQS"
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt "FeastAppleAcquisitionEventsDlq.QueueName"
+      Period: 60
+      Statistic: Sum
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-feast-apple-acquisition-events
+
   FeastGoogleAcquisitionEventsQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -88,6 +129,31 @@ Resources:
           Value: !Ref Stack
         - Key: Stage
           Value: !Ref Stage
+
+  FeastGoogleAcquisitionEventsDlqDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled:
+        !FindInMap [ StageVariables, !Ref Stage, AlarmActionsEnabled ]
+      AlarmDescription: "Ensure that the feast google acquisition events dead letter queue is empty"
+      Namespace: "AWS/SQS"
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt "FeastGoogleAcquisitionEventsDlq.QueueName"
+      Period: 60
+      Statistic: Sum
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-feast-google-acquisition-events
 
   FeastAcquisitionEventsLambdaServiceRole:
     Type: AWS::IAM::Role
@@ -195,9 +261,6 @@ Resources:
           App: !Ref App
           Stack: !Ref Stack
           Stage: !Ref Stage
-          STACK: !Ref Stack
-          STAGE: !Ref Stage
-          APP: !Ref App
       FunctionName: !Sub ${App}-feast-apple-acquisition-events-${Stage}
       Handler: feast-apple-acquisition-events.handler
       MemorySize: 1024
@@ -229,9 +292,6 @@ Resources:
           App: !Ref App
           Stack: !Ref Stack
           Stage: !Ref Stage
-          STACK: !Ref Stack
-          STAGE: !Ref Stage
-          APP: !Ref App
       FunctionName: !Sub ${App}-feast-google-acquisition-events-${Stage}
       Handler: feast-google-acquisition-events.handler
       MemorySize: 1024
@@ -302,3 +362,9 @@ Resources:
       PolicyName: Secretmanageraccesspolicy79659139
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
+- Outputs:
+    - FeastGoogleAcquisitionEventsQueueUrl:
+        - Description: Url to add for feast-google-subscription events to acquisition-events event buffer
+        - Value: !GetAtt FeastGoogleAcquisitionEventsQueue.
+
+

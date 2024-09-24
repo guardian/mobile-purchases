@@ -1,7 +1,7 @@
 import {SQSEvent, SQSRecord} from "aws-lambda";
 import {handler} from "../../../src/feast/acquisition-events/apple";
 
-const sQSRecord: SQSRecord = {
+const sqsRecord: SQSRecord = {
         "messageId": "48501d06-2c1d-4e06-80b9-7617cd9df313",
         "receiptHandle": "Hi there",
         "body": "This is a message from the feast apple acquisition events queue",
@@ -20,13 +20,13 @@ const sQSRecord: SQSRecord = {
         "awsRegion": "eu-west-1"
     };
 
-const sQSEvent: SQSEvent = {
-    Records: [ sQSRecord ],
+const sqsEvent: SQSEvent = {
+    Records: [ sqsRecord ],
 }
 
 describe("The Feast Apple Acquisition Event", () => {
     it("Should return the appropriate message", async () => {
-        const result = await handler(sQSEvent);
+        const result = await handler(sqsEvent);
 
         expect(result).toStrictEqual("Feast Apple Acquisition Events Lambda has been called");
     });
