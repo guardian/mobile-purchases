@@ -59,7 +59,6 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${App}-${Stage}-feast-apple-acquisition-events-dlq
-      KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: gu:repo
           Value: guardian/mobile-purchases
@@ -119,7 +118,6 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${App}-${Stage}-feast-google-acquisition-events-dlq
-      KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: gu:repo
           Value: guardian/mobile-purchases
@@ -362,9 +360,3 @@ Resources:
       PolicyName: Secretmanageraccesspolicy79659139
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
-- Outputs:
-    - FeastGoogleAcquisitionEventsQueueUrl:
-        - Description: Url to add for feast-google-subscription events to acquisition-events event buffer
-        - Value: !GetAtt FeastGoogleAcquisitionEventsQueue.
-
-
