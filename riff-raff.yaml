@@ -183,6 +183,15 @@ deployments:
       cloudFormationStackName: mobile-purchases-feast-write-acquisition-events-bus
       prependStackToCloudFormationStackName: false
 
+  mobile-purchases-feast-acquisition-events-router:
+    type: aws-lambda
+    dependencies: [mobile-purchases-feast-acquisition-events-bus-cloudformation]
+    parameters:
+      functionNames: [mobile-purchases-feast-acquisition-events-router-]
+      fileName: feast-acquisition-events-router.zip
+      bucketSsmLookup: true
+      prefixStack: false
+
   mobile-purchases-feast-apple-acquisition-events:
     type: aws-lambda
     dependencies: [mobile-purchases-feast-acquisition-events-bus-cloudformation]

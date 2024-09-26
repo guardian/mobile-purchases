@@ -179,6 +179,32 @@ Resources:
         - Key: Stage
           Value: !Ref Stage
 
+  FeastAcquisitionEventsRouterLambdaServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - !Join
+          - ''
+          - - 'arn:'
+            - !Ref AWS::Partition
+            - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Tags:
+        - Key: App
+          Value: !Ref App
+        - Key: gu:repo
+          Value: guardian/mobile-purchases
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: Stage
+          Value: !Ref Stage
+
   FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -212,6 +238,13 @@ Resources:
                   - !Ref AWS::Partition
                   - ':s3:::'
                   - !Ref DeployBucket
+                  - !Sub ${Stack}/${Stage}/${App}-feast-apple-acquisition-events/${App}-feast-acquisition-events-router.zip
+              - !Join
+                - ''
+                - - 'arn:'
+                  - !Ref AWS::Partition
+                  - ':s3:::'
+                  - !Ref DeployBucket
                   - !Sub ${Stack}/${Stage}/${App}-feast-apple-acquisition-events/${App}-feast-apple-acquisition-events.zip
               - !Join
                 - ''
@@ -228,6 +261,7 @@ Resources:
                 - !Ref AWS::Region
                 - ':'
                 - !Ref AWS::AccountId
+                - ':parameter/PROD/mobile/feast-acquisition-events-router'
                 - ':parameter/PROD/mobile/feast-apple-acquisition-events'
                 - ':parameter/PROD/mobile/feast-google-acquisition-events'
           - Action:
@@ -240,12 +274,88 @@ Resources:
                 - !Ref AWS::Region
                 - ':'
                 - !Ref AWS::AccountId
+                - ':parameter/PROD/mobile/feast-acquisition-events-router/*'
                 - ':parameter/PROD/mobile/feast-apple-acquisition-events/*'
                 - ':parameter/PROD/mobile/feast-google-acquisition-events/*'
         Version: '2012-10-17'
       PolicyName: FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
+        - !Ref FeastAcquisitionEventsRouterLambdaServiceRole
+
+  FeastAcquisitionEventsRouterDynamoAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - "dynamodb:GetRecords"
+              - "dynamodb:GetShardIterator"
+              - "dynamodb:DescribeStream"
+              - "dynamodb:ListStreams"
+            Effect: Allow
+            Resource:
+              - Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+          - Action:
+              - "dynamodb:Query"
+              - "dynamodb:GetItem"
+            Effect: Allow
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
+        Version: '2012-10-17'
+      PolicyName: FeastAcquisitionEventsRouterDynamoAccessPolicy
+      Roles:
+        - !Ref FeastAcquisitionEventsRouterLambdaServiceRole
+
+  FeastAcquisitionEventsRouterWriteSQSPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - sqs:SendMessage
+            Effect: Allow
+            Resource:
+              - !GetAtt FeastAppleAcquisitionEventsQueue.Arn
+              - !GetAtt FeastGoogleAcquisitionEventsQueue.Arn
+        Version: '2012-10-17'
+      PolicyName: FeastAcquisitionEventsRouterWriteSQSPolicy
+      Roles:
+        - !Ref FeastAcquisitionEventsRouterLambdaServiceRole
+
+  FeastAcquisitionEventsRouterLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: !Sub ${Stack}/${Stage}/${App}-feast-acquisition-events-router/feast-acquisition-events-router.zip
+      Description: An lambda triggered by DynamoDB input actions to identify Feast subscriptions and write to the corresponding queue.
+      Environment:
+        Variables:
+          App: !Ref App
+          Stack: !Ref Stack
+          Stage: !Ref Stage
+      FunctionName: !Sub ${App}-feast-acquisition-events-router-${Stage}
+      Handler: feast-acquisition-events-router.handler
+      MemorySize: 1024
+      Role: !GetAtt FeastAcquisitionEventsLambdaServiceRole.Arn
+      Runtime: nodejs20.x
+      Tags:
+        - Key: App
+          Value: !Ref App
+        - Key: gu:repo
+          Value: guardian/mobile-purchases
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: Stage
+          Value: !Ref Stage
+      Timeout: 300
+    DependsOn:
+      - FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
+      - FeastAcquisitionEventsRouterDynamoAccessPolicy
+      - FeastAcquisitionEventsRouterWriteSQSPolicy
+      - FeastAcquisitionEventsRouterLambdaServiceRole
 
   FeastAppleAcquisitionEventsLambda:
     Type: AWS::Lambda::Function
@@ -309,6 +419,16 @@ Resources:
       - FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
       - FeastAcquisitionEventsLambdaServiceRole
 
+  FeastAcquisitionEventsRouterDynamoStreamEventSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+      StartingPosition: LATEST
+      FunctionName: !Ref FeastAcquisitionEventsRouterLambda
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
+
   FeastAppleAcquisitionEventsSqsEventSource:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
@@ -333,12 +453,14 @@ Resources:
           - Action: s3:GetObject
             Effect: Allow
             Resource:
+              - !Sub arn:aws:s3:::mobile-dist/mobile/${Stage}/${App}-feast-acquisition-events-router/
               - !Sub arn:aws:s3:::mobile-dist/mobile/${Stage}/${App}-feast-apple-acquisition-events/
               - !Sub arn:aws:s3:::mobile-dist/mobile/${Stage}/${App}-feast-google-acquisition-events/
         Version: '2012-10-17'
       PolicyName: S3inlinepolicy
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
+        - !Ref FeastAcquisitionEventsRouterLambdaServiceRole
 
   FeastAcquisitionEventsLambdaSecretManagerAccessPolicy:
     Type: AWS::IAM::Policy
@@ -354,9 +476,11 @@ Resources:
                   - !Ref AWS::Region
                   - ':'
                   - !Ref AWS::AccountId
+                  - !Sub :secret:${Stage}/${App}-feast-acquisition-events-router/*
                   - !Sub :secret:${Stage}/${App}-feast-apple-acquisition-events/*
                   - !Sub :secret:${Stage}/${App}-feast-google-acquisition-events/*
         Version: '2012-10-17'
       PolicyName: Secretmanageraccesspolicy79659139
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
+        - !Ref FeastAcquisitionEventsRouterLambdaServiceRole
