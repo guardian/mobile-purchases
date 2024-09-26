@@ -1209,6 +1209,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
+          HistoricalQueueUrl: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-apple-historical-subscriptions
       Description: Consumes Feast subscription data updates from app store from sqs and stores them in dynamo
       Handler: feast-apple-update-subscriptions.handler
       MemorySize: 512
@@ -1228,6 +1229,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
+          HistoricalQueueUrl: !Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${App}-${Stage}-google-historical-subscriptions
       Description: Consumes Feast subscription data updates from Google Play store from sqs and stores them in dynamo
       Handler: feast-google-update-subscriptions.handler
       MemorySize: 512

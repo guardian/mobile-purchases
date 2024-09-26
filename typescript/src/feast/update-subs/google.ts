@@ -6,10 +6,12 @@ import { putSubscription } from "../../update-subs/updatesub";
 import { GoogleSubscription, fetchGoogleSubscriptionV2 } from "../../services/google-play-v2";
 import { GoogleSubscriptionReference } from "../../models/subscriptionReference";
 import { fromGooglePackageName } from "../../services/appToPlatform";
-import { dateToSecondTimestamp, thirtyMonths } from "../../utils/dates";
+import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from "../../utils/dates";
 import { getIdentityIdFromBraze } from "../../services/braze";
-import { storeUserSubscriptionInDynamo } from "./common";
+import { storeUserSubscriptionInDynamo, queueHistoricalSubscription } from "./common";
 import { UserSubscription } from "../../models/userSubscription";
+import { fetchGoogleSubscription, GoogleResponseBody } from "../../services/google-play";
+import { googleResponseBodyToSubscription } from "../../update-subs/google";
 
 const googleSubscriptionToSubscription = (
     purchaseToken: string,
@@ -35,7 +37,9 @@ const googleSubscriptionToSubscription = (
 
 export const buildHandler = (
     fetchSubscriptionDetails: (purchaseToken: string, packageName: string) => Promise<GoogleSubscription>,
+    fetchSubscriptionDetailsV1: (subscriptionId: string, purchaseToken: string, packageName: string) => Promise<GoogleResponseBody | null>,
     putSubscription: (subscription: Subscription) => Promise<Subscription>,
+    sendSubscriptionToHistoricalQueue: (subscription: Subscription) => Promise<void>,
     exchangeExternalIdForIdentityId: (externalId: string) => Promise<string>,
     storeUserSubInDynamo: (userSub: UserSubscription) => Promise<void>,
 ) => (async (event: SQSEvent) => {
@@ -46,6 +50,11 @@ export const buildHandler = (
             const subscriptionFromGoogle = await fetchSubscriptionDetails(subRef.purchaseToken, subRef.packageName);
             const subscription = googleSubscriptionToSubscription(subRef.purchaseToken, subRef.packageName, subscriptionFromGoogle);
             await putSubscription(subscription);
+
+            // We need a subscription in the format from the "V1" endpoint from Google to fit the historical table
+            const googleResponseV1 = await fetchSubscriptionDetailsV1(subRef.subscriptionId, subRef.purchaseToken, subRef.packageName);
+            const subscriptionV1 = googleResponseBodyToSubscription(subRef.purchaseToken, subRef.packageName, subRef.subscriptionId, subscriptionFromGoogle.billingPeriodDuration, googleResponseV1);
+            await sendSubscriptionToHistoricalQueue(subscriptionV1);
 
             if (subscriptionFromGoogle.obfuscatedExternalAccountId) {
                 const identityId = await exchangeExternalIdForIdentityId(subscriptionFromGoogle.obfuscatedExternalAccountId);
@@ -90,7 +99,9 @@ export const buildHandler = (
 
 export const handler = buildHandler(
     fetchGoogleSubscriptionV2,
+    fetchGoogleSubscription,
     putSubscription,
+    queueHistoricalSubscription,
     getIdentityIdFromBraze,
     storeUserSubscriptionInDynamo,
 );

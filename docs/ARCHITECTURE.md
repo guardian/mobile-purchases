@@ -44,7 +44,7 @@ The apps call endpoints to check the status of a subscription.
 
 The subscriptions, subscription-events and user-subscriptions Dynamo tables are exported to the datalake. This is orchestrated by lambdas triggered on a cron schedule. Data is exported to s3 by the lambdas and then transferred to GCS and ingested into a table, scheduled by Airflow.
 
-For non-Feast subscriptions, the update-subscriptions lambdas push onto an SQS queue for each change and this historical data is exported by lambdas.
+The update-subscriptions lambdas push onto an SQS queue for each change and this historical data is exported by lambdas.
 
 ![Exports Architecture](exports.png)
 
