@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: FeastAcquisitionEventsLambdas
+Transform: AWS::Serverless-2016-10-31
 
 Parameters:
   Stack:
@@ -24,10 +25,8 @@ Parameters:
 Mappings:
   StageVariables:
     CODE:
-      Schedule: 'rate(365 days)'
       AlarmActionsEnabled: FALSE
     PROD:
-      Schedule: 'rate(30 minutes)'
       AlarmActionsEnabled: TRUE
 
 Conditions:
@@ -179,32 +178,6 @@ Resources:
         - Key: Stage
           Value: !Ref Stage
 
-  FeastAcquisitionEventsRouterLambdaServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action: sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-        Version: '2012-10-17'
-      ManagedPolicyArns:
-        - !Join
-          - ''
-          - - 'arn:'
-            - !Ref AWS::Partition
-            - ':iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-      Tags:
-        - Key: App
-          Value: !Ref App
-        - Key: gu:repo
-          Value: guardian/mobile-purchases
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: Stage
-          Value: !Ref Stage
-
   FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -281,81 +254,69 @@ Resources:
       PolicyName: FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
-        - !Ref FeastAcquisitionEventsRouterLambdaServiceRole
-
-  FeastAcquisitionEventsRouterDynamoAccessPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Action:
-              - "dynamodb:GetRecords"
-              - "dynamodb:GetShardIterator"
-              - "dynamodb:DescribeStream"
-              - "dynamodb:ListStreams"
-            Effect: Allow
-            Resource:
-              - Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
-          - Action:
-              - "dynamodb:Query"
-              - "dynamodb:GetItem"
-            Effect: Allow
-            Resource:
-              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
-              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
-        Version: '2012-10-17'
-      PolicyName: FeastAcquisitionEventsRouterDynamoAccessPolicy
-      Roles:
-        - !Ref FeastAcquisitionEventsRouterLambdaServiceRole
-
-  FeastAcquisitionEventsRouterWriteSQSPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Action:
-              - sqs:SendMessage
-            Effect: Allow
-            Resource:
-              - !GetAtt FeastAppleAcquisitionEventsQueue.Arn
-              - !GetAtt FeastGoogleAcquisitionEventsQueue.Arn
-        Version: '2012-10-17'
-      PolicyName: FeastAcquisitionEventsRouterWriteSQSPolicy
-      Roles:
-        - !Ref FeastAcquisitionEventsRouterLambdaServiceRole
 
   FeastAcquisitionEventsRouterLambda:
-    Type: AWS::Lambda::Function
+    Type: AWS::Serverless::Function
     Properties:
-      Code:
-        S3Bucket: !Ref DeployBucket
-        S3Key: !Sub ${Stack}/${Stage}/${App}-feast-acquisition-events-router/feast-acquisition-events-router.zip
-      Description: An lambda triggered by DynamoDB input actions to identify Feast subscriptions and write to the corresponding queue.
+      Handler: feast-acquisition-events-router.handler
+      Runtime: nodejs20.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-feast-acquisition-events-router/feast-acquisition-events-router.zip
+      FunctionName: !Sub ${App}-feast-acquisition-events-router-${Stage}
       Environment:
         Variables:
-          App: !Ref App
-          Stack: !Ref Stack
-          Stage: !Ref Stage
-      FunctionName: !Sub ${App}-feast-acquisition-events-router-${Stage}
-      Handler: feast-acquisition-events-router.handler
-      MemorySize: 1024
-      Role: !GetAtt FeastAcquisitionEventsLambdaServiceRole.Arn
-      Runtime: nodejs20.x
+          App: !Sub ${App}
+          Stack: !Sub ${Stack}
+          Stage: !Sub ${Stage}
+      Description: A lambda triggered by DynamoDB input actions to identify Feast subscriptions and write to the corresponding queue.
+      MemorySize: 512
+      Timeout: 60
+      Events:
+        Schedule:
+          Type: DynamoDB
+          Properties:
+            Stream:
+              Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+            StartingPosition: LATEST
+            MaximumRetryAttempts: 10
       Tags:
-        - Key: App
-          Value: !Ref App
-        - Key: gu:repo
-          Value: guardian/mobile-purchases
-        - Key: Stack
-          Value: !Ref Stack
-        - Key: Stage
-          Value: !Ref Stage
-      Timeout: 300
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:Query"
+                - "dynamodb:GetItem"
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParametersByPath
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetRecords"
+                - "dynamodb:GetShardIterator"
+                - "dynamodb:DescribeStream"
+                - "dynamodb:ListStreams"
+              Resource:
+                - Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+              Resource:
+                - !GetAtt FeastAppleAcquisitionEventsQueue.Arn
+                - !GetAtt FeastGoogleAcquisitionEventsQueue.Arn
     DependsOn:
       - FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
-      - FeastAcquisitionEventsRouterDynamoAccessPolicy
-      - FeastAcquisitionEventsRouterWriteSQSPolicy
-      - FeastAcquisitionEventsRouterLambdaServiceRole
+      - FeastAcquisitionEventsLambdaServiceRole
 
   FeastAppleAcquisitionEventsLambda:
     Type: AWS::Lambda::Function
@@ -419,16 +380,6 @@ Resources:
       - FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
       - FeastAcquisitionEventsLambdaServiceRole
 
-  FeastAcquisitionEventsRouterDynamoStreamEventSource:
-    Type: AWS::Lambda::EventSourceMapping
-    Properties:
-      EventSourceArn:
-        Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
-      StartingPosition: LATEST
-      FunctionName: !Ref FeastAcquisitionEventsRouterLambda
-      FunctionResponseTypes:
-        - ReportBatchItemFailures
-
   FeastAppleAcquisitionEventsSqsEventSource:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
@@ -460,7 +411,6 @@ Resources:
       PolicyName: S3inlinepolicy
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
-        - !Ref FeastAcquisitionEventsRouterLambdaServiceRole
 
   FeastAcquisitionEventsLambdaSecretManagerAccessPolicy:
     Type: AWS::IAM::Policy
@@ -483,4 +433,3 @@ Resources:
       PolicyName: Secretmanageraccesspolicy79659139
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
-        - !Ref FeastAcquisitionEventsRouterLambdaServiceRole
