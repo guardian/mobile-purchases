@@ -104,3 +104,11 @@ jobs:
               - tsc-target/feast-google-pubsub.zip
             mobile-purchases-feast-google-update-subscriptions:
               - tsc-target/feast-google-update-subscriptions.zip
+            mobile-purchases-feast-acquisition-events-bus-cloudformation:
+              - feast-acquisition-events.cloudformation.yaml
+            mobile-purchases-feast-acquisition-events-router:
+              - tsc-target/feast-acquisition-events-router.zip
+            mobile-purchases-feast-apple-acquisition-events:
+              - tsc-target/feast-apple-acquisition-events.zip
+            mobile-purchases-feast-google-acquisition-events:
+              - tsc-target/feast-google-acquisition-events.zip
