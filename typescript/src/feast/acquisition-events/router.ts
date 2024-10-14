@@ -1,9 +1,20 @@
 import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
 import { Platform } from "../../models/platform";
-import {ReadSubscription} from "../../models/subscription";
-import {dynamoMapper/*, sendToSqs*/} from "../../utils/aws";
-import {plusDays} from "../../utils/dates";
+import { ReadSubscription, Subscription } from "../../models/subscription";
+import {Stage} from "../../utils/appIdentity";
+import { dynamoMapper, sendToSqs } from "../../utils/aws";
+import { plusDays } from "../../utils/dates";
+import {Region} from "../../utils/appIdentity";
 
+
+const writeToDLQ = async (dlqUrl: string, subscriptionId: string, identityId: string) => {
+    try {
+        const timestamp = Date.now();
+        await sendToSqs(dlqUrl, {subscriptionId, identityId, timestamp});
+    } catch(e) {
+        console.error(`could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}. Error: `, e)
+    }
+}
 
 export const isActiveSubscription = (currentTime: Date, subscriptionRecord: ReadSubscription): boolean => {
     // Check if the subscription is active
@@ -12,7 +23,7 @@ export const isActiveSubscription = (currentTime: Date, subscriptionRecord: Read
     return (currentTime.getTime() <= endWithGracePeriod.getTime());
 }
 
-export const processAcquisition = (subscriptionRecord: ReadSubscription, identityId: string): boolean => {
+export const processAcquisition = async (subscriptionRecord: ReadSubscription, identityId: string): Promise <boolean> => {
     const subscriptionId = subscriptionRecord.subscriptionId;
     const now = new Date();
 
@@ -21,19 +32,36 @@ export const processAcquisition = (subscriptionRecord: ReadSubscription, identit
         return true;
     }
 
-    const platform = subscriptionRecord.platform;
-    const tokens = subscriptionRecord.applePayload ?? subscriptionRecord.googlePayload;
+    console.log('Building Queue Url')
 
-    //check if iOS or Android
-    //Assemble data anything needed for acquisitions records that we can get from the subscription, plus apple/google tokens to use in querying them
-    //Send to SQS
+    const mobileAccountId = process.env.MobileAccountId;
+    const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${mobileAccountId}`;
+    const platform = subscriptionRecord.platform == Platform.IosFeast? 'apple' : 'google';
 
-    return true;
+    const sqsUrl = `${queueNamePrefix}/mobile-purchases-${Stage}-feast-google-acquisition-events-queue`;
+
+    try {
+        await sendToSqs(sqsUrl, JSON.stringify(subscriptionRecord));
+        console.log(`Event sent to SQS queue: ${sqsUrl} for subscriptionId: ${subscriptionId}`);
+        return true;
+    } catch (e) {
+        if (e instanceof Error) {
+            console.error(`failed to send record for subscriptionId: ${subscriptionId} to SQS queue: ${sqsUrl}. Error message is ${e.message}`);
+        } else {
+            console.error(`failed to send record for subscriptionId: ${subscriptionId} to SQS queue: ${sqsUrl}.`);
+        }
+        return false;
+    }
 }
 
-export const handler = async (event: DynamoDBStreamEvent): Promise<String> => {
-    const message: String = 'Feast Acquisition Events Router Lambda has been called';
-    console.log(message)
+export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
+    const dlqUrl = process.env.DLQUrl;
+
+    if (!dlqUrl) {
+        throw new Error("process.env.DLQUrl is undefined");
+    }
+
+    console.log(`dlqUrl: ${dlqUrl}`);
 
     const records = event.Records;
 
@@ -49,7 +77,6 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<String> => {
             processedCount++;
 
             console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}`);
-// need to know if productId of the subscription contains "uk.co.guardian.Feast" or even just "Feast"
             let itemToQuery = new ReadSubscription();
             itemToQuery.setSubscriptionId(subscriptionId);
 
@@ -59,21 +86,20 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<String> => {
                 subscriptionRecord = await dynamoMapper.get(itemToQuery);
             } catch (error) {
                 console.log(`Subscription ${subscriptionId} record not found in the subscriptions table. Error: `, error);
-
-            /*
-                Need to add config for a router Dead Letter Queue and send to this in case of error.
-                try {
-                    const timestamp = Date.now();
-                    await sendToSqs(dlqUrl, {subscriptionId, identityId, timestamp});
-                } catch(e) {
-                    console.log(`could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}. Error: `, e)
-                }*/
+                await writeToDLQ(dlqUrl, subscriptionId, identityId);
 
                 return false;
             }
+
             const isFeast = subscriptionRecord.platform === Platform.IosFeast || subscriptionRecord.platform === Platform.AndroidFeast;
             if (isFeast) {
-                return processAcquisition(subscriptionRecord, identityId);
+                const result = await processAcquisition(subscriptionRecord, identityId);
+                if (!result) {
+                    await writeToDLQ(dlqUrl, subscriptionId, identityId);
+                    return false
+                }
+                processedCount ++;
+                return result;
             }
             return true;
         }
@@ -82,13 +108,4 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<String> => {
     await Promise.all(processRecordPromises);
 
     console.log(`Processed ${processedCount} newly inserted records from the link (mobile-purchases-${Stage}-user-subscriptions) DynamoDB table`);
-    //for each record
-    //check if eventName == "INSERT"
-    //extract 'dynamobb':StreamRecord
-    //extract key
-    //lookup key in DynamoDB
-    //If Subscription type is Feast, determine if Google or apple
-    //Extract relevant Fields
-    //Send message to queue
-    return message;
 }
