@@ -27,6 +27,9 @@ jobs:
           java-version: 11
           cache: sbt
 
+      - name: Setup Scala
+        uses: sbt/setup-sbt@v1
+
       - name: Test and Build TypeScript
         run: ./build-tc.sh
 
