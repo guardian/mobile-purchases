@@ -1,6 +1,6 @@
 import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
 import { Platform } from "../../models/platform";
-import { ReadSubscription, Subscription } from "../../models/subscription";
+import { ReadSubscription } from "../../models/subscription";
 import {Stage} from "../../utils/appIdentity";
 import { dynamoMapper, sendToSqs } from "../../utils/aws";
 import { plusDays } from "../../utils/dates";
@@ -38,7 +38,7 @@ export const processAcquisition = async (subscriptionRecord: ReadSubscription, i
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${mobileAccountId}`;
     const platform = subscriptionRecord.platform == Platform.IosFeast? 'apple' : 'google';
 
-    const sqsUrl = `${queueNamePrefix}/mobile-purchases-${Stage}-feast-google-acquisition-events-queue`;
+    const sqsUrl = `${queueNamePrefix}/mobile-purchases-${Stage}-feast-${platform}-acquisition-events-queue`;
 
     try {
         await sendToSqs(sqsUrl, JSON.stringify(subscriptionRecord));
@@ -74,7 +74,6 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
         const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
 
         if (eventName === "INSERT") {
-            processedCount++;
 
             console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}`);
             let itemToQuery = new ReadSubscription();
