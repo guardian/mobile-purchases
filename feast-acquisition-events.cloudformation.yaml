@@ -24,7 +24,6 @@ Parameters:
   AlarmTopic:
     Description: The ARN of the SNS topic to send all the cloudwatch alarms to
     Type: String
-  EventBusName: String
 
 Mappings:
   StageVariables:
@@ -477,14 +476,3 @@ Resources:
       PolicyName: Secretmanageraccesspolicy79659139
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
-
-  FeastAcquisitionEventsLambdaEventBridgePutEventsPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Action: PutEvents
-            Effect: Allow
-            Resource: !Ref EventBusName
-        Version: '2012-10-17'
-      PolicyName: WriteToEventBus
