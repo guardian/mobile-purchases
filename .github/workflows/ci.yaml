@@ -28,7 +28,7 @@ jobs:
           cache: sbt
 
       - name: Setup Scala
-        uses: sbt/setup-sbt@v1
+        uses: guardian/setup-scala@v1
 
       - name: Test and Build TypeScript
         run: ./build-tc.sh
