@@ -44,7 +44,7 @@ export class Subscription {
     @attribute()
     ttl?: number;
 
-    tableName: string
+    tableName: string;
 
     constructor(
         subscriptionId: string,
@@ -81,6 +81,7 @@ export class Subscription {
     get [DynamoDbTable]() {
         return `${App}-${Stage}-${this.tableName}`
     }
+
 }
 
 export class ReadSubscription extends Subscription {
