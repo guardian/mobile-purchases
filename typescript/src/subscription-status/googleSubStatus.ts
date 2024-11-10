@@ -45,10 +45,11 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
     if (purchaseToken && subscriptionId) {
 
         // We're testing the new implementation in production, but want to limit traffic through this codepath
-        const roll = Math.floor(Math.random() * 100 + 1)
-        if (roll <= 5) {
-            await updateParallelTestTable(purchaseToken, packageName)
-        }
+        // This was turned off 2024-11-06 in an attempt to reduce our API quota usage
+        // const roll = Math.floor(Math.random() * 100 + 1)
+        // if (roll <= 0) {
+        //     await updateParallelTestTable(purchaseToken, packageName)
+        // }
 
         const purchaseTokenHash = createHash('sha256').update(purchaseToken).digest('hex')
         console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}, for purchaseToken hash: ${purchaseTokenHash}`)
