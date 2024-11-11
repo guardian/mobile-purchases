@@ -6,7 +6,6 @@ import { dynamoMapper, sendToSqs } from "../../utils/aws";
 import { plusDays } from "../../utils/dates";
 import {Region} from "../../utils/appIdentity";
 
-
 const writeToDLQ = async (dlqUrl: string, subscriptionId: string, identityId: string) => {
     try {
         const timestamp = Date.now();
@@ -55,6 +54,8 @@ export const processAcquisition = async (subscriptionRecord: ReadSubscription, i
 }
 
 export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
+    console.log('[c9900d41] Feast Acquisition Events Router Lambda has been called');
+
     const dlqUrl = process.env.DLQUrl;
 
     if (!dlqUrl) {
@@ -63,15 +64,16 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
 
     console.log(`dlqUrl: ${dlqUrl}`);
 
-    const records = event.Records;
+    const records = event.Records; // retrieve records from DynamoDBStreamEvent
 
     let processedCount = 0;
 
     const processRecordPromises = records.map(async (record: DynamoDBRecord) => {
         const eventName = record.eventName;
-
         const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
         const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
+
+        console.log(`Processing: ${eventName} record for identityId: ${identityId} and subscriptionId: ${subscriptionId}`);
 
         if (eventName === "INSERT") {
 
