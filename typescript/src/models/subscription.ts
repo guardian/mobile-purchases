@@ -83,6 +83,10 @@ export class Subscription {
     }
 }
 
+// TODO: The name "ReadSubscription" is a little bit unfortunate.
+// It's basically an object that is passed to dynamoMapper.get function
+// Should probably give it a better name.
+
 export class ReadSubscription extends Subscription {
 
     constructor() {
