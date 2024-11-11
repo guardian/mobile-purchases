@@ -46,6 +46,8 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
             return;
         }
 
+        console.log(`subscription ${JSON.stringify(subscription)}`);
+
         const isFeast = subscription.platform === Platform.IosFeast || subscription.platform === Platform.AndroidFeast;
         
         // We are only interested in feast subscriptions
