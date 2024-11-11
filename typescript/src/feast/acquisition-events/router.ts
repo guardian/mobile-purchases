@@ -1,6 +1,6 @@
 import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
 
-export const handler = async (event: DynamoDBStreamEvent): Promise<String> => {
+export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
     console.log('[c9900d41] Feast Acquisition Events Router Lambda has been called');
 
     const records = event.Records; // retrieve records from DynamoDBStreamEvent
@@ -18,6 +18,4 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<String> => {
     await Promise.all(processRecordPromises);
 
     console.log(`Processed ${processedCount} records from DynamoDBStreamEvent`);
-
-    return 'Success';
 }
