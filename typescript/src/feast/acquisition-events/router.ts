@@ -8,11 +8,11 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
     let processedCount = 0;
 
     const processRecordPromises = records.map(async (record: DynamoDBRecord) => {
+        console.log(`Processing: record: ${JSON.stringify(record)}`);
         const eventName = record.eventName;
         const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
         const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
         console.log(`Processing: ${eventName} record for identityId: ${identityId} and subscriptionId: ${subscriptionId}`);
-        console.log(`Processing: record: ${JSON.stringify(record)}`);
         processedCount ++;
     });
 
