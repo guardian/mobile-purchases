@@ -44,7 +44,7 @@ export class Subscription {
     @attribute()
     ttl?: number;
 
-    tableName: string
+    tableName: string;
 
     constructor(
         subscriptionId: string,
