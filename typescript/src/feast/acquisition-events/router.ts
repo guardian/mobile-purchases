@@ -109,4 +109,35 @@ Example (sanited) of a DynamoDBStreamEvent's single record
     },
     "eventSourceARN": "arn:aws:dynamodb:eu-west-1:201359054765:table/mobile-purchases-PROD-user-subscriptions/stream/2023-03-29T15:54:42.240"
 }
+
+Possible event names: "INSERT", "MODIFY", "REMOVE"
+
+Subscription Example (sanited):
+{
+    "subscriptionId": "bjbl[sanited]iLNPQ",
+    "startTimestamp": "2020-06-12T07:00:59.108Z",
+    "endTimestamp": "2025-06-19T09:00:35.482Z",
+    "autoRenewing": true,
+    "productId": "com.guardian.subscription.annual.13",
+    "platform": "android",
+    "freeTrial": false,
+    "billingPeriod": "P1Y",
+    "googlePayload": {
+        "startTimeMillis": "1591945259108",
+        "priceAmountMicros": "94990000",
+        "orderId": "GPA.[sanited]09414..4",
+        "expiryTimeMillis": "1750323635482",
+        "countryCode": "US",
+        "kind": "androidpublisher#subscriptionPurchase",
+        "acknowledgementState": 1,
+        "developerPayload": null,
+        "paymentState": 1,
+        "priceCurrencyCode": "USD",
+        "autoRenewing": true
+    },
+    "applePayload": null,
+    "ttl": 1829206836,
+    "tableName": "subscriptions"
+}
+
 */
