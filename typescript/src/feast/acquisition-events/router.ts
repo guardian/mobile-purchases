@@ -58,7 +58,7 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
 
         const result = await processAcquisition(subscription);
         if (!result) {
-            // We are exiting but TODO: we are going to write to the deadl letter queue.
+            // We are exiting but TODO: we are going to write to the dead letter queue.
             return;
         }
 
