@@ -38,12 +38,8 @@ const processAcquisition = async (subscription: Subscription): Promise <boolean>
         await sendToSqs(sqsUrl, JSON.stringify(subscription));
         console.log(`Event sent to acquisition events queue: ${sqsUrl}, for subscriptionId: ${subscriptionId}`);
         return true;
-    } catch (e) {
-        if (e instanceof Error) {
-            console.error(`failed to send record for subscriptionId: ${subscriptionId} to acquisition events queue: ${sqsUrl}. Error message is ${e.message}`);
-        } else {
-            console.error(`failed to send record for subscriptionId: ${subscriptionId} to acquisition events queue: ${sqsUrl}.`);
-        }
+    } catch (error) {
+        console.error(`failed to send record for subscriptionId: ${subscriptionId} to acquisition events queue: ${sqsUrl}. Error message is ${error}`);
         return false;
     }
 }
