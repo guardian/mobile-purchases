@@ -84,6 +84,13 @@ export class Subscription {
 
 }
 
+// TODO: The name "ReadSubscription" is a little bit unfortunate.
+// It's basically an empty subscription that is passed to dynamoMapper.get function
+// Should probably rename it to EmptySubscription.
+// I have noticed that it's miunderstood as a subscription that is being read from the database.
+// For instance in the following code snippet: https://github.com/guardian/mobile-purchases/blob/ccc257c28a7d7a75b9dadfb47f214b074fd8ba50/typescript/src/soft-opt-ins/processSubscription.ts#L101
+// Where in fact that function should take a plain Subscription.
+
 export class ReadSubscription extends Subscription {
 
     constructor() {
