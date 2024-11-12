@@ -83,13 +83,13 @@ export class Subscription {
     }
 }
 
-export class ReadSubscription extends Subscription {
+export class SubscriptionEmpty extends Subscription {
 
     constructor() {
         super("", "", "", undefined, false, "", undefined, undefined, undefined)
     }
 
-    setSubscriptionId(subscriptionId: string): ReadSubscription {
+    setSubscriptionId(subscriptionId: string): SubscriptionEmpty {
         this.subscriptionId = subscriptionId;
         return this;
     }

@@ -1,5 +1,5 @@
 import {messageIsOneDayOld} from "../../src/soft-opt-ins/dlq-processor";
-import {ReadSubscription} from "../../src/models/subscription";
+import {SubscriptionEmpty} from "../../src/models/subscription";
 import {handler} from "../../src/soft-opt-ins/dlq-processor";
 import SQS from 'aws-sdk/clients/sqs';
 
@@ -153,7 +153,7 @@ describe('handler', () => {
         const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
         const mockSQS = new SQS();
 
-        const sub = new ReadSubscription();
+        const sub = new SubscriptionEmpty();
         sub.subscriptionId = '12345';
         sub.startTimestamp = "2023-03-01 07:24:38 UTC";
         sub.endTimestamp = "2025-03-01 07:24:38 UTC";
@@ -190,7 +190,7 @@ describe('handler', () => {
 
         expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
 
-        let expectedQuery = new ReadSubscription();
+        let expectedQuery = new SubscriptionEmpty();
         expectedQuery.setSubscriptionId("12345")
         expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 
@@ -206,7 +206,7 @@ describe('handler', () => {
         const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
         const mockSQS = new SQS();
 
-        const sub = new ReadSubscription();
+        const sub = new SubscriptionEmpty();
         sub.subscriptionId = '12345';
         sub.startTimestamp = "2023-03-01 07:24:38 UTC";
         sub.endTimestamp = "2025-03-01 07:24:38 UTC";
@@ -253,7 +253,7 @@ describe('handler', () => {
         const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
         const mockSQS = new SQS();
 
-        const sub = new ReadSubscription();
+        const sub = new SubscriptionEmpty();
         sub.subscriptionId = '12345';
         sub.startTimestamp = "2023-03-01 07:24:38 UTC";
         sub.endTimestamp = "2025-03-01 07:24:38 UTC";
@@ -290,7 +290,7 @@ describe('handler', () => {
 
         expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
 
-        let expectedQuery = new ReadSubscription();
+        let expectedQuery = new SubscriptionEmpty();
         expectedQuery.setSubscriptionId("12345")
         expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 

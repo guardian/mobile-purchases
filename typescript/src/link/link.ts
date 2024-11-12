@@ -1,6 +1,6 @@
 import {HTTPResponses} from '../models/apiGatewayHttp';
 import {UserSubscription} from "../models/userSubscription";
-import {ReadSubscription} from "../models/subscription";
+import {SubscriptionEmpty} from "../models/subscription";
 import {dynamoMapper, sqs} from "../utils/aws";
 import {getUserId, getAuthToken} from "../utils/guIdentityApi";
 import {SubscriptionReference} from "../models/subscriptionReference";
@@ -21,7 +21,7 @@ async function enqueueUnstoredPurchaseToken(subChecks: SubscriptionCheckData[]):
         return 0;
     }
 
-    const dynamoResult = dynamoMapper.batchGet(subChecks.map(sub => new ReadSubscription().setSubscriptionId(sub.subscriptionId)));
+    const dynamoResult = dynamoMapper.batchGet(subChecks.map(sub => new SubscriptionEmpty().setSubscriptionId(sub.subscriptionId)));
 
     type IndexedSubscriptionCheckData = {[id: string]: SubscriptionCheckData};
     const indexedReferences: IndexedSubscriptionCheckData = subChecks.reduce((agg, value) => {

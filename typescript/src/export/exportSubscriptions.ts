@@ -1,6 +1,6 @@
 import 'source-map-support/register'
 import {dynamoMapper, s3} from "../utils/aws";
-import {ReadSubscription} from "../models/subscription";
+import {SubscriptionEmpty} from "../models/subscription";
 import {ReadUserSubscription} from "../models/userSubscription";
 import zlib from 'zlib'
 import {Stage} from "../utils/appIdentity";
@@ -16,7 +16,7 @@ export async function handler(): Promise<any> {
     switch (className) {
         case "ReadSubscription":
             console.log("Reading subscription from subscriptions");
-            stream = new DynamoStream(dynamoMapper.scan(ReadSubscription));
+            stream = new DynamoStream(dynamoMapper.scan(SubscriptionEmpty));
             break;
         case "ReadUserSubscription":
             console.log("Reading user subscription from user subscription");

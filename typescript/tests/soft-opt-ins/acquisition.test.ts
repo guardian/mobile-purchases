@@ -1,7 +1,7 @@
 import {isPostAcquisition} from "../../src/soft-opt-ins/processSubscription";
 import {handler} from "../../src/soft-opt-ins/acquisitions";
 import {DynamoDBStreamEvent} from "aws-lambda";
-import {ReadSubscription} from "../../src/models/subscription";
+import { Subscription, SubscriptionEmpty } from "../../src/models/subscription";
 import { Platform } from "../../src/models/platform";
 
 jest.mock('@aws/dynamodb-data-mapper', () => {
@@ -141,7 +141,7 @@ describe('handler', () => {
         const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
         const mockSQS = new (require('aws-sdk/clients/sqs'))();
 
-        const sub = new ReadSubscription();
+        const sub = new SubscriptionEmpty();
         sub.subscriptionId = '12345';
         sub.startTimestamp = "2023-03-14 07:24:38 UTC";
         sub.endTimestamp = "2023-03-14 07:24:38 UTC";
@@ -152,9 +152,9 @@ describe('handler', () => {
 
         expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
 
-        let expectedQuery = new ReadSubscription();
-        expectedQuery.setSubscriptionId("12345")
-        expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
+        let subEmpty = new SubscriptionEmpty();
+        subEmpty.setSubscriptionId("12345")
+        expect(mockDataMapper.get).toHaveBeenCalledWith(subEmpty);
 
         expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
 
@@ -204,7 +204,7 @@ describe('handler', () => {
         // get the mock instances
         const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
         const mockSQS = new (require('aws-sdk/clients/sqs'))();
-        const sub = new ReadSubscription();
+        const sub = new SubscriptionEmpty();
         sub.subscriptionId = subscriptionId;
         sub.startTimestamp = "2023-03-14 07:24:38 UTC";
         sub.endTimestamp = "2023-03-14 07:24:38 UTC";
@@ -214,7 +214,7 @@ describe('handler', () => {
         await handler(event);
 
         expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
-        let expectedQuery = new ReadSubscription();
+        let expectedQuery = new SubscriptionEmpty();
         expectedQuery.setSubscriptionId(subscriptionId)
         expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 
@@ -277,7 +277,7 @@ describe('handler', () => {
         // get the mock instances
         const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
         const mockSQS = new (require('aws-sdk/clients/sqs'))();
-        const sub = new ReadSubscription();
+        const sub = new SubscriptionEmpty();
         sub.subscriptionId = subscriptionId;
         sub.startTimestamp = "2023-03-14 07:24:38 UTC";
         sub.endTimestamp = "2023-03-14 07:24:38 UTC";
@@ -287,7 +287,7 @@ describe('handler', () => {
         await handler(event);
 
         expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
-        let expectedQuery = new ReadSubscription();
+        let expectedQuery = new SubscriptionEmpty();
         expectedQuery.setSubscriptionId(subscriptionId)
         expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 
@@ -350,7 +350,7 @@ describe('handler', () => {
         const mockDataMapper = new (require('@aws/dynamodb-data-mapper').DataMapper)();
         const mockSQS = new (require('aws-sdk/clients/sqs'))();
 
-        const sub = new ReadSubscription();
+        const sub = new SubscriptionEmpty();
         sub.subscriptionId = '12345';
         sub.startTimestamp = "2023-03-01 07:24:38 UTC";
         sub.endTimestamp = "2025-03-01 07:24:38 UTC";
@@ -361,9 +361,9 @@ describe('handler', () => {
 
         expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
 
-        let expectedQuery = new ReadSubscription();
-        expectedQuery.setSubscriptionId("12345")
-        expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
+        let subEmpty = new SubscriptionEmpty();
+        subEmpty.setSubscriptionId("12345")
+        expect(mockDataMapper.get).toHaveBeenCalledWith(subEmpty);
 
         expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
 
