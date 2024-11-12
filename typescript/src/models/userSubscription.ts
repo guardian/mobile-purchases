@@ -25,7 +25,7 @@ export class UserSubscription {
 
 }
 
-export class ReadUserSubscription extends UserSubscription {
+export class UserSubscriptionEmpty extends UserSubscription {
 
     constructor() {
         super("", "", "");

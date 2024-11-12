@@ -1,7 +1,7 @@
 import 'source-map-support/register'
 import {DynamoDBStreamEvent} from "aws-lambda";
 import {dynamoMapper, putMetric, sendToSqsSoftOptIns} from "../utils/aws";
-import {ReadUserSubscription} from "../models/userSubscription";
+import { UserSubscriptionEmpty, UserSubscription } from "../models/userSubscription";
 import {getMembershipAccountId} from "../utils/guIdentityApi";
 import {Region, Stage} from "../utils/appIdentity";
 import { mapPlatformToSoftOptInProductName } from '../utils/softOptIns';
@@ -12,11 +12,11 @@ async function handleSoftOptInsError(message: string) {
 }
 
 async function getUserLinks(subscriptionId: string) {
-    const userLinks = await dynamoMapper.query(ReadUserSubscription, {subscriptionId}, {indexName: "subscriptionId-userId"});
+    const userLinks = await dynamoMapper.query(UserSubscriptionEmpty, {subscriptionId}, {indexName: "subscriptionId-userId"});
     return userLinks;
 }
 
-async function deleteUserSubscription(userLinks: ReadUserSubscription[]): Promise<number> {
+async function deleteUserSubscription(userLinks: UserSubscription[]): Promise<number> {
     let count = 0;
     for (const userLink of userLinks) {
         const deletionResult = await dynamoMapper.delete(userLink);
@@ -33,7 +33,7 @@ async function deleteUserSubscription(userLinks: ReadUserSubscription[]): Promis
     return count;
 }
 
-async function disableSoftOptIns(userLinks: ReadUserSubscription[], subscriptionId: string, platform: string | undefined) {
+async function disableSoftOptIns(userLinks: UserSubscription[], subscriptionId: string, platform: string | undefined) {
     const membershipAccountId = await getMembershipAccountId();
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
 
@@ -69,7 +69,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
         const subscriptionId = subscription?.subscriptionId?.S!;
         const userLinksIterator = await getUserLinks(subscriptionId);
 
-        const userSubscriptions: ReadUserSubscription[] = [];
+        const userSubscriptions: UserSubscription[] = [];
         for await (const userLink of userLinksIterator) {
             userSubscriptions.push(userLink);
         }

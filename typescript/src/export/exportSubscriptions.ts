@@ -1,7 +1,7 @@
 import 'source-map-support/register'
 import {dynamoMapper, s3} from "../utils/aws";
 import {ReadSubscription} from "../models/subscription";
-import {ReadUserSubscription} from "../models/userSubscription";
+import {UserSubscriptionEmpty} from "../models/userSubscription";
 import zlib from 'zlib'
 import {Stage} from "../utils/appIdentity";
 import {DynamoStream} from "./dynamoStream";
@@ -20,7 +20,7 @@ export async function handler(): Promise<any> {
             break;
         case "ReadUserSubscription":
             console.log("Reading user subscription from user subscription");
-            stream = new DynamoStream(dynamoMapper.scan(ReadUserSubscription));
+            stream = new DynamoStream(dynamoMapper.scan(UserSubscriptionEmpty));
             break;
         default:
             throw new Error(`Invalid ClassName value ${className}`);

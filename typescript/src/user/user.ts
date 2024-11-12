@@ -1,7 +1,7 @@
 import 'source-map-support/register'
 import {HTTPResponses} from "../models/apiGatewayHttp";
 import {Subscription, ReadSubscription} from "../models/subscription";
-import {ReadUserSubscription} from "../models/userSubscription";
+import {UserSubscriptionEmpty} from "../models/userSubscription";
 import {dynamoMapper} from "../utils/aws"
 import {getUserId, getAuthToken, UserIdResolution} from "../utils/guIdentityApi";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
@@ -28,7 +28,7 @@ interface SubscriptionStatusResponse {
 async function getUserSubscriptionIds(userId: string): Promise<string[]> {
     const subs: string[] = [];
 
-    const subscriptionResults = dynamoMapper.query(ReadUserSubscription, {userId: userId});
+    const subscriptionResults = dynamoMapper.query(UserSubscriptionEmpty, {userId: userId});
 
     for await (const sub of subscriptionResults) {
         subs.push(sub.subscriptionId)
