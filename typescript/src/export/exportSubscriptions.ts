@@ -18,7 +18,7 @@ export async function handler(): Promise<any> {
             console.log("Reading subscription from subscriptions");
             stream = new DynamoStream(dynamoMapper.scan(ReadSubscription));
             break;
-        case "ReadUserSubscription":
+        case "UserSubscription":
             console.log("Reading user subscription from user subscription");
             stream = new DynamoStream(dynamoMapper.scan(UserSubscriptionEmpty));
             break;
