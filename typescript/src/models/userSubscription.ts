@@ -25,11 +25,13 @@ export class UserSubscription {
 
 }
 
-export class UserSubscriptionEmpty extends UserSubscription {
+// Note: 
+//   UserSubscriptionEmpty is a convenience class for when you need to create an empty UserSubscription object.
+//   It's not meant to stand in places where we a UserSubscription would suffice.
 
+export class UserSubscriptionEmpty extends UserSubscription {
     constructor() {
         super("", "", "");
     }
-
 }
 
