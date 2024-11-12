@@ -42,7 +42,7 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
             subscription = await dynamoMapper.get(emptySubscription);
         } catch (error) {
             console.log(`[d2c0251e] Subscription ${subscriptionId} record not found in the subscriptions table. Error: `, error);
-            // We are exiting but TODO: we are going to write to the deadl letter queue.
+            // We are exiting but TODO: we are going to write to the dead letter queue.
             return;
         }
 
