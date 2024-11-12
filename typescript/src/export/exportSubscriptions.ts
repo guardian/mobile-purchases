@@ -14,7 +14,7 @@ export async function handler(): Promise<any> {
     const className = process.env['ClassName'];
     let stream = null;
     switch (className) {
-        case "ReadSubscription":
+        case "Subscription":
             console.log("Reading subscription from subscriptions");
             stream = new DynamoStream(dynamoMapper.scan(SubscriptionEmpty));
             break;
