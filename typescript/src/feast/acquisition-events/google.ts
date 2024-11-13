@@ -7,9 +7,8 @@ const processSQSRecord = async (record: FeastSQSRecord): Promise<void> => {
     console.log(`Feast Google Acquisition Events Lambda has been called for subscriptionId: ${subscriptionId} with platform: ${platform}`);
 }
 
-export const handler = async (event: FeastSQSEvent): Promise<string> => {
+export const handler = async (event: FeastSQSEvent): Promise<void> => {
     console.log('[e01d21bb] Feast Google Acquisition Events Lambda has been called');
     console.log(`[8b8b51a5] Processing ${event.Records.length} records`);
     event.Records.map( async record => await processSQSRecord(record) );
-    return "Feast Google Acquisition Events Lambda has been called";
 }
