@@ -3,6 +3,9 @@ Description: FeastAcquisitionEventsLambdas
 Transform: AWS::Serverless-2016-10-31
 
 Parameters:
+  MobileAccountId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: 'mobileAccountId'
   Stack:
     Description: Stack name
     Type: String
@@ -269,6 +272,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
+          MobileAccountId: !Sub ${MobileAccountId}
       Description: A lambda triggered by DynamoDB input actions to identify Feast subscriptions and write to the corresponding queue.
       MemorySize: 512
       Timeout: 60

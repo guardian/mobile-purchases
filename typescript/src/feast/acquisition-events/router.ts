@@ -1,11 +1,49 @@
 import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
 import { Subscription, SubscriptionEmpty } from "../../models/subscription";
-import { dynamoMapper } from "../../utils/aws";
+import { dynamoMapper, sendToSqs } from "../../utils/aws";
 import { Platform } from "../../models/platform";
+import { plusDays } from "../../utils/dates";
+import { Region, Stage } from "../../utils/appIdentity";
+
+const isActiveSubscription = (currentTime: Date, subscription: Subscription): boolean => {
+    // Returns whether the subscription is active or not, by checking
+    // that the current time is before the end of the subscription plus the grace period.
+    // The grace period is 30 days.
+    const end = new Date(Date.parse(subscription.endTimestamp));
+    const endWithGracePeriod = plusDays(end, 30);
+    return (currentTime.getTime() <= endWithGracePeriod.getTime());
+}
 
 const processAcquisition = async (subscription: Subscription): Promise <boolean> => {
-    console.log(`Processing acquisition for subscription: ${JSON.stringify(subscription)}`);
-    return false;
+    // return value indicates whether the processing was successful or not
+    // We return true in the case of an inactive subscription.
+
+    console.log(`[46218776] Processing acquisition for subscription: ${JSON.stringify(subscription)}`);
+    const subscriptionId = subscription.subscriptionId;
+
+    if (!isActiveSubscription(new Date(), subscription)) {
+        console.log(`Subscription ${subscription.subscriptionId} is not active. Processing stopped.`);
+        return true;
+    }
+
+    const mobileAccountId = process.env.MobileAccountId;
+    const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${mobileAccountId}`;
+    const platform = subscription.platform == Platform.IosFeast? 'apple' : 'google';
+
+    const sqsUrl = `${queueNamePrefix}/mobile-purchases-${Stage}-feast-${platform}-acquisition-events-queue`;
+
+    console.log(`sqsUrl: ${sqsUrl}`);
+
+    console.log(`[9507d8b6] posting subscription to SQS`);
+
+    try {
+        await sendToSqs(sqsUrl, JSON.stringify(subscription));
+        console.log(`Event sent to acquisition events queue: ${sqsUrl}, for subscriptionId: ${subscriptionId}`);
+        return true;
+    } catch (error) {
+        console.error(`failed to send record for subscriptionId: ${subscriptionId} to acquisition events queue: ${sqsUrl}. Error message is ${error}`);
+        return false;
+    }
 }
 
 export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
