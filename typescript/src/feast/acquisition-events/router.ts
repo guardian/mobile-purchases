@@ -1,6 +1,6 @@
 import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
 import { Platform } from "../../models/platform";
-import { ReadSubscription, Subscription } from "../../models/subscription";
+import { Subscription, ReadSubscription } from "../../models/subscription";
 import { dynamoMapper, sendToSqs } from "../../utils/aws";
 import { plusDays } from "../../utils/dates";
 import { Region, Stage } from "../../utils/appIdentity";
@@ -14,21 +14,24 @@ const writeToDLQ = async (dlqUrl: string, subscriptionId: string, identityId: st
     }
 }
 
-export const isActiveSubscription = (currentTime: Date, subscriptionRecord: Subscription): boolean => {
-    // Check if the subscription is active
-    const end = new Date(Date.parse(subscriptionRecord.endTimestamp));
+const isActiveSubscription = (currentTime: Date, subscription: Subscription): boolean => {
+    // Returns whether the subscription is active or not, by checking
+    // that the current time is before the end of the subscription plus the grace period.
+    // The grace period is 30 days.
+    const end = new Date(Date.parse(subscription.endTimestamp));
     const endWithGracePeriod = plusDays(end, 30);
     return (currentTime.getTime() <= endWithGracePeriod.getTime());
 }
 
 export const processAcquisition = async (subscription: Subscription, identityId: string): Promise <boolean> => {
-    console.log(`Processing acquisition for subscription: ${JSON.stringify(subscription)}`);
+    // return value indicates whether the processing was successful or not
+    // We return true in the case of an inactive subscription.
 
+    console.log(`[46218776] Processing acquisition for subscription: ${JSON.stringify(subscription)}`);
     const subscriptionId = subscription.subscriptionId;
-    const now = new Date();
 
-    if (!isActiveSubscription(now, subscription)) {
-        console.log(`Subscription ${subscription.subscriptionId} is not active. Stopping processing.`);
+    if (!isActiveSubscription(new Date(), subscription)) {
+        console.log(`Subscription ${subscription.subscriptionId} is not active. Processing stopped.`);
         return true;
     }
 
@@ -40,16 +43,16 @@ export const processAcquisition = async (subscription: Subscription, identityId:
 
     const sqsUrl = `${queueNamePrefix}/mobile-purchases-${Stage}-feast-${platform}-acquisition-events-queue`;
 
+    console.log(`sqsUrl: ${sqsUrl}`);
+
+    console.log(`[9507d8b6] posting subscription to SQS`);
+
     try {
         await sendToSqs(sqsUrl, JSON.stringify(subscription));
-        console.log(`Event sent to SQS queue: ${sqsUrl} for subscriptionId: ${subscriptionId}`);
+        console.log(`Event sent to acquisition events queue: ${sqsUrl}, for subscriptionId: ${subscriptionId}`);
         return true;
-    } catch (e) {
-        if (e instanceof Error) {
-            console.error(`failed to send record for subscriptionId: ${subscriptionId} to SQS queue: ${sqsUrl}. Error message is ${e.message}`);
-        } else {
-            console.error(`failed to send record for subscriptionId: ${subscriptionId} to SQS queue: ${sqsUrl}.`);
-        }
+    } catch (error) {
+        console.error(`failed to send record for subscriptionId: ${subscriptionId} to acquisition events queue: ${sqsUrl}. Error message is ${error}`);
         return false;
     }
 }

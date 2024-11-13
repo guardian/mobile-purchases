@@ -311,6 +311,7 @@ Resources:
           App: !Sub ${App}
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
+          MobileAccountId: !Sub ${MobileAccountId}
           DLQUrl: !Ref FeastAcquisitionEventsRouterDlq
       Description: A lambda triggered by DynamoDB input actions to identify Feast subscriptions and write to the corresponding queue.
       MemorySize: 512
