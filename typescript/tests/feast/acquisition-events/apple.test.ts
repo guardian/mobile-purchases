@@ -1,9 +1,9 @@
 import { FeastSQSEvent, FeastSQSRecord } from '../../../src/feast/acquisition-events/models'
 import { handler } from "../../../src/feast/acquisition-events/apple";
-import { ReadSubscription } from "../../../src/models/subscription";
+import { SubscriptionEmpty } from "../../../src/models/subscription";
 import exp from 'constants';
 
-const subscription = new ReadSubscription()
+const subscription = new SubscriptionEmpty()
 
 const sqsRecord: FeastSQSRecord = {
         "messageId": "48501d06-2c1d-4e06-80b9-7617cd9df313",
