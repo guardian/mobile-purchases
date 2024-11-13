@@ -34,6 +34,8 @@ const processAcquisition = async (subscription: Subscription): Promise <boolean>
 
     console.log(`sqsUrl: ${sqsUrl}`);
 
+    console.log(`[9507d8b6] posting subscription to SQS`);
+
     try {
         await sendToSqs(sqsUrl, JSON.stringify(subscription));
         console.log(`Event sent to acquisition events queue: ${sqsUrl}, for subscriptionId: ${subscriptionId}`);
