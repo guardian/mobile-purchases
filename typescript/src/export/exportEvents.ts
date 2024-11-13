@@ -3,7 +3,7 @@ import {dynamoMapper, s3} from "../utils/aws";
 import zlib from 'zlib'
 import {Stage} from "../utils/appIdentity";
 import {DynamoStream} from "./dynamoStream";
-import {ReadSubscriptionEvent, SubscriptionEvent} from "../models/subscriptionEvent";
+import {SubscriptionEventEmpty, SubscriptionEvent} from "../models/subscriptionEvent";
 import {plusDays} from "../utils/dates";
 
 function cleanupEvent(subEvent: SubscriptionEvent): any {
@@ -28,7 +28,7 @@ export async function handler(event?: ManualBackfillEvent): Promise<any> {
         yesterday = event.date;
     }
 
-    const iterator = dynamoMapper.query(ReadSubscriptionEvent,{date: yesterday}, {indexName: "date-timestamp-index-v2"});
+    const iterator = dynamoMapper.query(SubscriptionEventEmpty,{date: yesterday}, {indexName: "date-timestamp-index-v2"});
     const stream = new DynamoStream(iterator, cleanupEvent);
 
     let zippedStream = zlib.createGzip();

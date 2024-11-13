@@ -1,5 +1,5 @@
 import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
-import { Subscription, ReadSubscription } from "../../models/subscription";
+import { Subscription, SubscriptionEmpty } from "../../models/subscription";
 import { dynamoMapper, sendToSqs } from "../../utils/aws";
 import { Platform } from "../../models/platform";
 import { plusDays } from "../../utils/dates";
@@ -71,7 +71,7 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
         const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
         console.log(`Processing: ${eventName} record for identityId: ${identityId} and subscriptionId: ${subscriptionId}`);
         
-        let emptySubscription = new ReadSubscription();
+        let emptySubscription = new SubscriptionEmpty();
         emptySubscription.setSubscriptionId(subscriptionId);
 
         let subscription: Subscription;

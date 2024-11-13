@@ -10,7 +10,7 @@ import {fetchGoogleSubscriptionV2} from "../services/google-play-v2";
 import {Subscription} from '../models/subscription';
 import {fromGooglePackageName} from "../services/appToPlatform";
 import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/dates";
-import {ReadSubscription} from "../models/subscription";
+import {SubscriptionEmpty} from "../models/subscription";
 import {dynamoMapper} from "../utils/aws";
 import {createHash} from 'crypto'
 
@@ -91,7 +91,7 @@ async function getSubscriptionStatusFromGoogle(subscriptionId: string, purchaseT
 async function getSubscriptionStatusFromDynamo(purchaseToken: string, purchaseTokenHash: string): Promise<SubscriptionStatus | null> {
     try {
         console.log(`Fetching subscription from Dynamo for purchaseToken hash: ${purchaseTokenHash}`)
-        let itemToQuery = new ReadSubscription()
+        let itemToQuery = new SubscriptionEmpty()
         itemToQuery.setSubscriptionId(purchaseToken)
         const subscription = await dynamoMapper.get(itemToQuery)
         const subscriptionExpiryDate = new Date(subscription.endTimestamp)
