@@ -77,7 +77,7 @@ export class SubscriptionEvent {
     }
 }
 
-export class ReadSubscriptionEvent extends SubscriptionEvent {
+export class SubscriptionEventEmpty extends SubscriptionEvent {
     constructor() {
         super("", "", "", "", "", "", "", undefined,{}, {}, 0, "", "", "", 0, 0);
     }

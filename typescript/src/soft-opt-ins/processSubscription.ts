@@ -1,5 +1,5 @@
 import {sendToSqsComms, sendToSqsSoftOptIns, SoftOptInEvent} from "../utils/aws";
-import {ReadSubscription} from "../models/subscription";
+import { Subscription } from "../models/subscription";
 import {Region, Stage} from "../utils/appIdentity";
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
@@ -98,7 +98,7 @@ const buildBrazeEmailMessage = (emailAddress: string, identityId: string, platfo
 };
 
 // returns true if message successfully processed
-export async function processAcquisition(subscriptionRecord: ReadSubscription, identityId: string): Promise<boolean> {
+export async function processAcquisition(subscriptionRecord: Subscription, identityId: string): Promise<boolean> {
     const subscriptionId = subscriptionRecord.subscriptionId;
 
     // Check if the subscription is active
