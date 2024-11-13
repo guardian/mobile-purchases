@@ -1,9 +1,11 @@
 import { FeastSQSEvent, FeastSQSRecord } from './models'
+import { Subscription } from "../../models/subscription";
 
 const processSQSRecord = async (record: FeastSQSRecord): Promise<void> => {
     console.log(`[48bb04a0] calling processRecord (Google version) with record ${JSON.stringify(record)}`);
-    const subscriptionId = record.body.subscriptionId;
-    const platform = record.body.platform ?? 'missing platform definition';
+    const subscription: Subscription = JSON.parse(record.body);
+    const subscriptionId = subscription.subscriptionId ?? 'missing subscriptionId';
+    const platform = subscription.platform ?? 'missing platform definition';
     console.log(`Feast Google Acquisition Events Lambda has been called for subscriptionId: ${subscriptionId} with platform: ${platform}`);
 }
 
