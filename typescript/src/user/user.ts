@@ -1,12 +1,12 @@
 import 'source-map-support/register'
-import {HTTPResponses} from "../models/apiGatewayHttp";
-import {Subscription, SubscriptionEmpty} from "../models/subscription";
-import {ReadUserSubscription} from "../models/userSubscription";
-import {dynamoMapper} from "../utils/aws"
-import {getUserId, getAuthToken, UserIdResolution} from "../utils/guIdentityApi";
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {plusDays} from "../utils/dates";
-import {getConfigValue} from "../utils/ssmConfig";
+import { HTTPResponses } from "../models/apiGatewayHttp";
+import { Subscription, SubscriptionEmpty } from "../models/subscription";
+import { UserSubscriptionEmpty } from "../models/userSubscription";
+import { dynamoMapper } from "../utils/aws"
+import { getUserId, getAuthToken, UserIdResolution } from "../utils/guIdentityApi";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { plusDays } from "../utils/dates";
+import { getConfigValue } from "../utils/ssmConfig";
 import { mapPlatformToSoftOptInProductName } from '../utils/softOptIns';
 
 interface SubscriptionStatus {
@@ -28,7 +28,14 @@ interface SubscriptionStatusResponse {
 async function getUserSubscriptionIds(userId: string): Promise<string[]> {
     const subs: string[] = [];
 
-    const subscriptionResults = dynamoMapper.query(ReadUserSubscription, {userId: userId});
+    // ( comment group #488db8c1 )
+    // TODO:
+    // In PR: https://github.com/guardian/mobile-purchases/pull/1698
+    // we performed a renaming of ReadSubscription to UserSubscriptionEmpty
+    // With that said it should now be possible to use UserSubscription instead of
+    // UserSubscriptionEmpty as first argument of the dynamoMapper.query(
+
+    const subscriptionResults = dynamoMapper.query(UserSubscriptionEmpty, {userId: userId});
 
     for await (const sub of subscriptionResults) {
         subs.push(sub.subscriptionId)
