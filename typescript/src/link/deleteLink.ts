@@ -12,6 +12,14 @@ async function handleSoftOptInsError(message: string) {
 }
 
 async function getUserLinks(subscriptionId: string) {
+
+    // ( comment group #488db8c1 )
+    // TODO:
+    // In PR: https://github.com/guardian/mobile-purchases/pull/1698
+    // we performed a renaming of ReadSubscription to UserSubscriptionEmpty
+    // With that said it should now be possible to use UserSubscription instead of
+    // UserSubscriptionEmpty as first argument of the dynamoMapper.query(
+
     const userLinks = await dynamoMapper.query(UserSubscriptionEmpty, {subscriptionId}, {indexName: "subscriptionId-userId"});
     return userLinks;
 }

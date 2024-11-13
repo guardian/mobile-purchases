@@ -28,6 +28,13 @@ interface SubscriptionStatusResponse {
 async function getUserSubscriptionIds(userId: string): Promise<string[]> {
     const subs: string[] = [];
 
+    // ( comment group #488db8c1 )
+    // TODO:
+    // In PR: https://github.com/guardian/mobile-purchases/pull/1698
+    // we performed a renaming of ReadSubscription to UserSubscriptionEmpty
+    // With that said it should now be possible to use UserSubscription instead of
+    // UserSubscriptionEmpty as first argument of the dynamoMapper.query(
+
     const subscriptionResults = dynamoMapper.query(UserSubscriptionEmpty, {userId: userId});
 
     for await (const sub of subscriptionResults) {
