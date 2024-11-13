@@ -84,7 +84,7 @@ export class Subscription {
 }
 
 // Note:
-//     SubscriptionEmpty is a convenience class to help with the instanciation of an empty Subscription object.
+//     SubscriptionEmpty is a convenience class to help with the instantiation of an empty Subscription object.
 //     It's often used to create a argument of dynamoMapper.get (we instanciate it and then
 //     set the subscriptionId, before passing the resulting object to dynamoMapper.get).
 //     It is not meant to stand where a Subscription is the right type, notably as the return type of dynamoMapper.get.
