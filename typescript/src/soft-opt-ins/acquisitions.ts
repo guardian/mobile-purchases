@@ -1,7 +1,7 @@
 import {DynamoDBRecord, DynamoDBStreamEvent} from "aws-lambda";
 import {Stage} from "../utils/appIdentity";
 import { processAcquisition } from "./processSubscription";
-import {ReadSubscription} from "../models/subscription";
+import { SubscriptionEmpty, Subscription } from "../models/subscription";
 import {dynamoMapper, sendToSqs} from "../utils/aws";
 
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {
@@ -28,10 +28,10 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
             console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}`);
 
-            let itemToQuery = new ReadSubscription();
+            let itemToQuery = new SubscriptionEmpty();
             itemToQuery.setSubscriptionId(subscriptionId);
 
-            let subscriptionRecord: ReadSubscription;
+            let subscriptionRecord: Subscription;
 
             try {
                 subscriptionRecord = await dynamoMapper.get(itemToQuery);

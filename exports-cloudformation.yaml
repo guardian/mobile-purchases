@@ -116,7 +116,7 @@ Resources:
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
           ExportBucket: !Ref SubscriptionExportBucket
-          ClassName: ReadSubscription
+          ClassName: Subscription
       Description: Export subscription table to the datalake
       MemorySize: 10240
       Timeout: 900

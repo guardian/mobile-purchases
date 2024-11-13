@@ -1,6 +1,6 @@
 import {dynamoMapper, sendToSqs, sqs} from "../utils/aws";
 import { processAcquisition } from "./processSubscription";
-import {ReadSubscription} from "../models/subscription";
+import { SubscriptionEmpty, Subscription } from "../models/subscription";
 
 interface MessageBody {
     identityId: string;
@@ -69,13 +69,13 @@ export async function handler(event: any): Promise<void> {
 
             console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}, timestamp: ${timestamp}`);
 
-            let itemToQuery = new ReadSubscription();
-            itemToQuery.setSubscriptionId(subscriptionId);
+            let subEmpty = new SubscriptionEmpty();
+            subEmpty.setSubscriptionId(subscriptionId);
 
-            let subscriptionRecord: ReadSubscription;
+            let subscriptionRecord: Subscription;
 
             try {
-                subscriptionRecord = await dynamoMapper.get(itemToQuery);
+                subscriptionRecord = await dynamoMapper.get(subEmpty);
             } catch (error) {
                 console.log(`Subscription ${subscriptionId} record not found in the subscriptions table. Error: `, error);
                 continue;

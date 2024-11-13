@@ -84,20 +84,20 @@ export class Subscription {
 
 }
 
-// TODO: The name "ReadSubscription" is a little bit unfortunate.
-// It's basically an empty subscription that is passed to dynamoMapper.get function
-// Should probably rename it to EmptySubscription.
-// I have noticed that it's miunderstood as a subscription that is being read from the database.
-// For instance in the following code snippet: https://github.com/guardian/mobile-purchases/blob/ccc257c28a7d7a75b9dadfb47f214b074fd8ba50/typescript/src/soft-opt-ins/processSubscription.ts#L101
-// Where in fact that function should take a plain Subscription.
+// Note:
+//     SubscriptionEmpty is a convenience class to help with the instantiation of an empty Subscription object.
+//     It's often used to create a argument of dynamoMapper.get (we instantiate it and then
+//     set the subscriptionId, before passing the resulting object to dynamoMapper.get).
+//     It is not meant to stand where a Subscription is the right type, notably as the return type of dynamoMapper.get.
+//     Function dynamoMapper.get will return a Subscription object, not a SubscriptionEmpty object.
 
-export class ReadSubscription extends Subscription {
+export class SubscriptionEmpty extends Subscription {
 
     constructor() {
         super("", "", "", undefined, false, "", undefined, undefined, undefined)
     }
 
-    setSubscriptionId(subscriptionId: string): ReadSubscription {
+    setSubscriptionId(subscriptionId: string): SubscriptionEmpty {
         this.subscriptionId = subscriptionId;
         return this;
     }

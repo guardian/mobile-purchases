@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { handler } from "../../src/user/user";
-import { ReadSubscription } from "../../src/models/subscription";
+import { SubscriptionEmpty } from "../../src/models/subscription";
 import { plusDays } from "../../src/utils/dates";
 
 const TEST_SECRET = 'test_secret';
@@ -54,7 +54,7 @@ describe("The user subscriptions lambda", () => {
                 subscriptionId,
             };
         });
-        const sub = new ReadSubscription();
+        const sub = new SubscriptionEmpty();
         sub.subscriptionId = subscriptionId;
         sub.platform = "ios-feast";
         sub.productId = "product-id";
