@@ -1,9 +1,9 @@
 import 'source-map-support/register'
-import {DynamoDBStreamEvent} from "aws-lambda";
-import {dynamoMapper, putMetric, sendToSqsSoftOptIns} from "../utils/aws";
-import { UserSubscriptionEmpty, UserSubscription } from "../models/userSubscription";
-import {getMembershipAccountId} from "../utils/guIdentityApi";
-import {Region, Stage} from "../utils/appIdentity";
+import { DynamoDBStreamEvent } from "aws-lambda";
+import { dynamoMapper, putMetric, sendToSqsSoftOptIns } from "../utils/aws";
+import { UserSubscription, UserSubscriptionEmpty } from "../models/userSubscription";
+import { getMembershipAccountId } from "../utils/guIdentityApi";
+import { Region, Stage } from "../utils/appIdentity";
 import { mapPlatformToSoftOptInProductName } from '../utils/softOptIns';
 
 async function handleSoftOptInsError(message: string) {
