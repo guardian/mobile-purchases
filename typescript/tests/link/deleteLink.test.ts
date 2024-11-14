@@ -1,5 +1,5 @@
 import { DynamoDBRecord, DynamoDBStreamEvent } from "aws-lambda";
-import { ReadUserSubscription } from "../../src/models/userSubscription";
+import { UserSubscriptionEmpty } from "../../src/models/userSubscription";
 import { handler } from "../../src/link/deleteLink";
 
 jest.mock('@aws/dynamodb-data-mapper', () => {
@@ -110,7 +110,7 @@ describe("handler", () => {
         const result = await handler(event);
 
         expect(mockDataMapper.query).toHaveBeenCalledTimes(1);
-        expect(mockDataMapper.query).toHaveBeenCalledWith(ReadUserSubscription, { subscriptionId: "1" }, { indexName: "subscriptionId-userId" });
+        expect(mockDataMapper.query).toHaveBeenCalledWith(UserSubscriptionEmpty, { subscriptionId: "1" }, { indexName: "subscriptionId-userId" });
 
         expect(mockDataMapper.delete).toHaveBeenCalledTimes(1);
         expect(mockDataMapper.delete).toHaveBeenCalledWith({"subscriptionId": "1", "userId": "123"});

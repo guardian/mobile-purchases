@@ -1,6 +1,6 @@
-import {hashKey, attribute, rangeKey} from '@aws/dynamodb-data-mapper-annotations';
-import {DynamoDbTable} from "@aws/dynamodb-data-mapper";
-import {App, Stage} from "../utils/appIdentity";
+import { hashKey, attribute, rangeKey } from '@aws/dynamodb-data-mapper-annotations';
+import { DynamoDbTable } from "@aws/dynamodb-data-mapper";
+import { App, Stage } from "../utils/appIdentity";
 
 export class UserSubscription {
 
@@ -25,11 +25,13 @@ export class UserSubscription {
 
 }
 
-export class ReadUserSubscription extends UserSubscription {
+// Note: 
+//   UserSubscriptionEmpty is a convenience class for when you need to create an empty UserSubscription object.
+//   It's not meant to stand in places where we a UserSubscription would suffice.
 
+export class UserSubscriptionEmpty extends UserSubscription {
     constructor() {
         super("", "", "");
     }
-
 }
 
