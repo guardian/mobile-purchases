@@ -263,3 +263,31 @@ We now have a path from a DynamoDB Subscription object, and an Apple Subscriptio
                                      (validateReceipt)                                (toAppleSubscription)
 DynamoDB Subscription -> receipt -------------------------> AppleValidationResponse -------------------------> Apple Subscription
 ```
+
+### Working with the command line
+
+Considering the PROD endpoint: `https://buy.itunes.apple.com/verifyReceipt`, the (fake) password: `da9e2ed6aaa2`, and the receipt (example) `IwMjQtMTEtMTZUMTM6MzY6MTFaM`, the body of a verifyReceipt POST HTTP request is
+
+```
+
+{
+    "receipt-data":"IwMjQtMTEtMTZUMTM6MzY6MTFaM",
+    "password":"da9e2ed6aaa2",
+    "exclude-old-transactions":true
+}
+```
+
+Leading to the curl that perform the apple API lookup
+
+```
+curl \
+    -X POST \
+    -d '{
+        "receipt-data":"IwMjQtMTEtMTZUMTM6MzY6MTFaM",
+        "password":"da9e2ed6aaa2",
+        "exclude-old-transactions":true
+    }' \
+    https://buy.itunes.apple.com/verifyReceipt
+```
+
+A `AppleValidationResponse` and then a `Subscription` object if then built from the answer to that query.
