@@ -27,9 +27,9 @@ There are three Dynamo DB tables:
 
 These tables are exported daily to the datalake.
 
-### Architecture
+### Documentation Portal
 
-See [here](docs/ARCHITECTURE.md).
+See [docs/README.md](docs/README.md).
 
 ## Running TypeScript lambdas locally
 
