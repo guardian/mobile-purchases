@@ -1,8 +1,8 @@
-import { FeastSQSEvent, FeastSQSRecord } from '../../../src/feast/acquisition-events/models';
+import type { SQSEvent, SQSRecord } from 'aws-lambda';
 import { SubscriptionEmpty } from "../../../src/models/subscription";
 import {Platform} from "../../../src/models/platform";
 
-export const appleFeastRecord: FeastSQSRecord = {
+export const appleFeastRecord: SQSRecord = {
     "messageId": "48501d06-2c1d-4e06-80b9-7617cd9df313",
     "receiptHandle": "Hi there",
     "body": "subscription",
@@ -21,11 +21,11 @@ export const appleFeastRecord: FeastSQSRecord = {
     "awsRegion": "eu-west-1"
 };
 
-export const appleSQSRecord: FeastSQSEvent = {
-    "Records": new Array<FeastSQSRecord>(appleFeastRecord),
+export const appleSQSRecord: SQSEvent = {
+    "Records": new Array<SQSRecord>(appleFeastRecord),
 };
 
-export const googleFeastRecord: FeastSQSRecord = {
+export const googleFeastRecord: SQSRecord = {
     "messageId": "48501d06-2c1d-4e06-80b9-7617cd9df313",
     "receiptHandle": "Hi there",
     "body": "subscription",
@@ -44,7 +44,7 @@ export const googleFeastRecord: FeastSQSRecord = {
     "awsRegion": "eu-west-1"
 };
 
-export const googleSQSRecord: FeastSQSEvent = {
-    "Records": new Array<FeastSQSRecord>(googleFeastRecord),
+export const googleSQSRecord: SQSEvent = {
+    "Records": new Array<SQSRecord>(googleFeastRecord),
 };
 

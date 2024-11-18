@@ -223,6 +223,7 @@ Resources:
   FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy:
     Type: AWS::IAM::Policy
     Properties:
+      PolicyName: FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
       PolicyDocument:
         Statement:
           - Action:
@@ -292,8 +293,11 @@ Resources:
                 - ':parameter/PROD/mobile/feast-acquisition-events-router/*'
                 - ':parameter/PROD/mobile/feast-apple-acquisition-events/*'
                 - ':parameter/PROD/mobile/feast-google-acquisition-events/*'
+          - Action:
+              - ssm:GetParametersByPath
+            Effect: Allow
+            Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
         Version: '2012-10-17'
-      PolicyName: FeastAcquisitionEventsLambdaServiceRoleDefaultPolicy
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
 
