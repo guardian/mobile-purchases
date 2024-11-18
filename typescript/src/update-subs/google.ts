@@ -5,7 +5,7 @@ import {Subscription} from "../models/subscription";
 import {ProcessingError} from "../models/processingError";
 import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/dates";
 import {GoogleSubscriptionReference} from "../models/subscriptionReference";
-import {fromGooglePackageName} from "../services/appToPlatform";
+import {googlePackageNameToPlatform} from "../services/appToPlatform";
 import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE, GoogleResponseBody} from "../services/google-play";
 import {PRODUCT_BILLING_PERIOD} from "../services/productBillingPeriod";
 
@@ -38,7 +38,7 @@ export const googleResponseBodyToSubscription = (
         optionalMsToDate(googleResponse.userCancellationTimeMillis)?.toISOString(),
         googleResponse.autoRenewing,
         subscriptionId,
-        fromGooglePackageName(packageName)?.toString(),
+        googlePackageNameToPlatform(packageName)?.toString(),
         freeTrial,
         billingPeriod,
         googleResponse,

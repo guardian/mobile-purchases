@@ -4,7 +4,7 @@ import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/da
 import {GoogleSubscriptionReference} from "../models/subscriptionReference";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {Option} from "../utils/option";
-import {fromGooglePackageName} from "../services/appToPlatform";
+import {googlePackageNameToPlatform} from "../services/appToPlatform";
 import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE} from "../services/google-play";
 import { z } from "zod";
 import { Ignorable } from './ignorable';
@@ -124,7 +124,7 @@ export function toDynamoEvent(notification: SubscriptionNotification, metaData?:
     const date = eventTimestamp.substring(0, 10);
     const eventType = notification.subscriptionNotification.notificationType;
     const eventTypeString = GOOGLE_SUBS_EVENT_TYPE[eventType] ?? eventType.toString();
-    const platform = fromGooglePackageName(notification.packageName)?.toString();
+    const platform = googlePackageNameToPlatform(notification.packageName)?.toString();
     if (!platform) {
         console.warn(`Unknown package name ${notification.packageName}`)
     }

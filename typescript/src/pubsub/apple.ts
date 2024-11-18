@@ -4,7 +4,7 @@ import {SubscriptionEvent} from "../models/subscriptionEvent";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {fromAppleBundle} from "../services/appToPlatform";
+import {appleBundleToPlatform} from "../services/appToPlatform";
 import { Stage } from '../utils/appIdentity';
 import {StatusUpdateNotification, parsePayload} from "./apple-common";
 
@@ -13,7 +13,7 @@ export function toDynamoEvent(notification: StatusUpdateNotification): Subscript
     const eventType = notification.notification_type;
     const receiptInfo = notification.unified_receipt.latest_receipt_info;
     console.log(`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.unified_receipt.latest_receipt_info === undefined}`);
-    const platform = fromAppleBundle(notification.bid);
+    const platform = appleBundleToPlatform(notification.bid);
     if (!platform) {
         console.warn(`Unknown bundle id ${notification.bid}`)
     }

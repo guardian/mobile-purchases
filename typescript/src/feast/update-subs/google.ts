@@ -5,7 +5,7 @@ import { GracefulProcessingError } from "../../models/GracefulProcessingError";
 import { putSubscription } from "../../update-subs/updatesub";
 import { GoogleSubscription, fetchGoogleSubscriptionV2 } from "../../services/google-play-v2";
 import { GoogleSubscriptionReference } from "../../models/subscriptionReference";
-import { fromGooglePackageName } from "../../services/appToPlatform";
+import { googlePackageNameToPlatform } from "../../services/appToPlatform";
 import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from "../../utils/dates";
 import { getIdentityIdFromBraze } from "../../services/braze";
 import { storeUserSubscriptionInDynamo, queueHistoricalSubscription } from "./common";
@@ -25,7 +25,7 @@ const googleSubscriptionToSubscription = (
         googleSubscription.userCancellationTime?.toISOString(),
         googleSubscription.autoRenewing,
         googleSubscription.productId,
-        fromGooglePackageName(packageName),
+        googlePackageNameToPlatform(packageName),
         googleSubscription.freeTrial,
         googleSubscription.billingPeriodDuration,
         googleSubscription,
