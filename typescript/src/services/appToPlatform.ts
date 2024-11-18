@@ -7,7 +7,7 @@ const bundleToPlatform: {[bundle: string]: Platform} = {
     "uk.co.guardian.Feast": Platform.IosFeast
 };
 
-export function fromAppleBundle(bundle?: string): Platform | undefined {
+export function appleBundleToPlatform(bundle?: string): Platform | undefined {
     return (bundle) ? bundleToPlatform[bundle] : undefined;
 }
 
@@ -19,6 +19,6 @@ const packageToPlatform: {[packageName: string]: Platform} = {
     "uk.co.guardian.feast": Platform.AndroidFeast
 };
 
-export function fromGooglePackageName(packageName: string): Platform | undefined {
+export function googlePackageNameToPlatform(packageName: string): Platform | undefined {
     return packageToPlatform[packageName];
 }

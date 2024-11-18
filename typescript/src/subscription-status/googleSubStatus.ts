@@ -8,7 +8,7 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {fetchGoogleSubscription} from "../services/google-play";
 import {fetchGoogleSubscriptionV2} from "../services/google-play-v2";
 import {Subscription} from '../models/subscription';
-import {fromGooglePackageName} from "../services/appToPlatform";
+import {googlePackageNameToPlatform} from "../services/appToPlatform";
 import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/dates";
 import {SubscriptionEmpty} from "../models/subscription";
 import {dynamoMapper} from "../utils/aws";
@@ -122,7 +122,7 @@ async function updateParallelTestTable(purchaseToken: string, packageName: strin
                 googleSubscription.userCancellationTime?.toISOString(),
                 googleSubscription.autoRenewing,
                 googleSubscription.productId,
-                fromGooglePackageName(packageName),
+                googlePackageNameToPlatform(packageName),
                 googleSubscription.freeTrial,
                 googleSubscription.billingPeriodDuration,
                 googleSubscription,
