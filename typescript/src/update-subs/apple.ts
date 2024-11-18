@@ -5,7 +5,7 @@ import {Subscription} from "../models/subscription";
 import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
 import {AppleSubscriptionReference} from "../models/subscriptionReference";
 import {AppleValidationResponse, validateReceipt} from "../services/appleValidateReceipts";
-import {fromAppleBundle} from "../services/appToPlatform";
+import {appleBundleToPlatform} from "../services/appToPlatform";
 import {PRODUCT_BILLING_PERIOD} from "../services/productBillingPeriod";
 
 export function toAppleSubscription(response: AppleValidationResponse): Subscription {
@@ -33,7 +33,7 @@ export function toAppleSubscription(response: AppleValidationResponse): Subscrip
         cancellationDate,
         autoRenewStatus,
         latestReceiptInfo.productId,
-        fromAppleBundle(response.latestReceiptInfo.bundleId)?.toString(),
+        appleBundleToPlatform(response.latestReceiptInfo.bundleId)?.toString(),
         latestReceiptInfo.trialPeriod || latestReceiptInfo.inIntroOfferPeriod,
         billingPeriod,
         null,
