@@ -44,13 +44,6 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
 
     if (purchaseToken && subscriptionId) {
 
-        // We're testing the new implementation in production, but want to limit traffic through this codepath
-        // This was turned off 2024-11-06 in an attempt to reduce our API quota usage
-        // const roll = Math.floor(Math.random() * 100 + 1)
-        // if (roll <= 0) {
-        //     await updateParallelTestTable(purchaseToken, packageName)
-        // }
-
         const purchaseTokenHash = createHash('sha256').update(purchaseToken).digest('hex')
         console.log(`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}, for purchaseToken hash: ${purchaseTokenHash}`)
         try {
@@ -77,7 +70,6 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
         return HTTPResponses.INVALID_REQUEST
     }
 }
-
 
 async function getSubscriptionStatusFromGoogle(subscriptionId: string, purchaseToken: string, packageName: string, purchaseTokenHash: string): Promise<SubscriptionStatus | null> {
     console.log(`Fetching subscription from Google for purchaseToken hash: ${purchaseTokenHash}`)
@@ -106,35 +98,6 @@ async function getSubscriptionStatusFromDynamo(purchaseToken: string, purchaseTo
         }
         // All exceptions are swallowed here as we fall-back on the Google API for all failure modes (including cache misses)
         return null
-    }
-}
-
-async function updateParallelTestTable(purchaseToken: string, packageName: string) {
-    try {
-        const googleSubscription =
-            await fetchGoogleSubscriptionV2(purchaseToken, packageName)
-
-        const subscription =
-            new Subscription(
-                purchaseToken,
-                googleSubscription.startTime?.toISOString() ?? "",
-                googleSubscription.expiryTime.toISOString(),
-                googleSubscription.userCancellationTime?.toISOString(),
-                googleSubscription.autoRenewing,
-                googleSubscription.productId,
-                fromGooglePackageName(packageName),
-                googleSubscription.freeTrial,
-                googleSubscription.billingPeriodDuration,
-                googleSubscription,
-                undefined,
-                null,
-                dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)),
-                "subscriptions-parallel-test"
-            )
-
-        await dynamoMapper.put({item: subscription})
-    } catch (err) {
-        console.log(`ANDROID-PARALLEL-TEST: Error: ${JSON.stringify(err)}`)
     }
 }
 
