@@ -1,7 +1,7 @@
-import { FeastSQSEvent, FeastSQSRecord } from '../../../src/feast/acquisition-events/models'
+import type { SQSEvent, SQSRecord } from 'aws-lambda';
 import { handler } from "../../../src/feast/acquisition-events/apple";
 
-const sqsRecord: FeastSQSRecord = {
+const sqsRecord: SQSRecord = {
         "messageId": "48501d06-2c1d-4e06-80b9-7617cd9df313",
         "receiptHandle": "1234567890ABCDEF",
         "body": "subscription",
@@ -20,7 +20,7 @@ const sqsRecord: FeastSQSRecord = {
         "awsRegion": "eu-west-1"
     };
 
-    const sqsEvent: FeastSQSEvent = {
+    const sqsEvent: SQSEvent = {
         Records: [ sqsRecord ],
     }
 
