@@ -1,13 +1,13 @@
 import 'source-map-support/register'
-import {SQSEvent, SQSRecord} from 'aws-lambda';
-import {parseAndStoreSubscriptionUpdate} from './updatesub';
-import {Subscription} from "../models/subscription";
-import {ProcessingError} from "../models/processingError";
-import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/dates";
-import {GoogleSubscriptionReference} from "../models/subscriptionReference";
-import {googlePackageNameToPlatform} from "../services/appToPlatform";
-import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE, GoogleResponseBody} from "../services/google-play";
-import {PRODUCT_BILLING_PERIOD} from "../services/productBillingPeriod";
+import { SQSEvent, SQSRecord } from 'aws-lambda';
+import { parseAndStoreSubscriptionUpdate } from './updatesub';
+import { Subscription } from "../models/subscription";
+import { ProcessingError } from "../models/processingError";
+import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from "../utils/dates";
+import { GoogleSubscriptionReference } from "../models/subscriptionReference";
+import { googlePackageNameToPlatform } from "../services/appToPlatform";
+import { fetchGoogleSubscription, GOOGLE_PAYMENT_STATE, GoogleResponseBody } from "../services/google-play";
+import { PRODUCT_BILLING_PERIOD } from "../services/productBillingPeriod";
 
 export const googleResponseBodyToSubscription = (
     purchaseToken: string,

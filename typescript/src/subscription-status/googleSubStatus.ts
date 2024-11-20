@@ -4,15 +4,15 @@ import {
     HttpRequestHeaders,
     PathParameters
 } from '../models/apiGatewayHttp';
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {fetchGoogleSubscription} from "../services/google-play";
-import {fetchGoogleSubscriptionV2} from "../services/google-play-v2";
-import {Subscription} from '../models/subscription';
-import {googlePackageNameToPlatform} from "../services/appToPlatform";
-import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/dates";
-import {SubscriptionEmpty} from "../models/subscription";
-import {dynamoMapper} from "../utils/aws";
-import {createHash} from 'crypto'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { fetchGoogleSubscription } from "../services/google-play";
+import { fetchGoogleSubscriptionV2 } from "../services/google-play-v2";
+import { Subscription } from '../models/subscription';
+import { googlePackageNameToPlatform } from "../services/appToPlatform";
+import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from "../utils/dates";
+import { SubscriptionEmpty } from "../models/subscription";
+import { dynamoMapper } from "../utils/aws";
+import { createHash } from 'crypto'
 
 type SubscriptionStatus = {
     "subscriptionHasLapsed": boolean
