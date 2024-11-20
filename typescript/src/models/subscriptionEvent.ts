@@ -1,6 +1,6 @@
-import {hashKey, rangeKey, attribute} from '@aws/dynamodb-data-mapper-annotations';
-import {DynamoDbTable} from "@aws/dynamodb-data-mapper";
-import {App, Stage} from "../utils/appIdentity";
+import { hashKey, rangeKey, attribute } from '@aws/dynamodb-data-mapper-annotations';
+import { DynamoDbTable } from "@aws/dynamodb-data-mapper";
+import { App, Stage } from "../utils/appIdentity";
 
 export class SubscriptionEvent {
     @hashKey()

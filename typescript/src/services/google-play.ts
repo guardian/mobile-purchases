@@ -1,7 +1,7 @@
 import aws = require("../utils/aws");
 import S3 from 'aws-sdk/clients/s3'
-import {Stage} from "../utils/appIdentity";
-import {restClient} from "../utils/restClient";
+import { Stage } from "../utils/appIdentity";
+import { restClient } from "../utils/restClient";
 
 export const GOOGLE_PAYMENT_STATE = {
     PAYMENT_PENDING: 0,
@@ -15,14 +15,14 @@ export interface AccessToken {
     date: Date
 }
 
-export function getParams(stage: string): S3.Types.GetObjectRequest {
+function getParams(stage: string): S3.Types.GetObjectRequest {
   return {
       Bucket: "gu-mobile-access-tokens",
       Key: `${stage}/google-play-developer-api/access_token.json`
   }
 }
 
-export function getAccessToken(params: S3.Types.GetObjectRequest) : Promise<AccessToken> {
+function getAccessToken(params: S3.Types.GetObjectRequest) : Promise<AccessToken> {
     return aws.s3.getObject(params).promise()
         .then( s3OutPut => {
             if(s3OutPut.Body) {
@@ -37,7 +37,7 @@ export function getAccessToken(params: S3.Types.GetObjectRequest) : Promise<Acce
         })
 }
 
-export function buildGoogleUrl(subscriptionId: string, purchaseToken: string, packageName: string) {
+function buildGoogleUrl(subscriptionId: string, purchaseToken: string, packageName: string) {
     const baseUrl = `https://www.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions`;
     return `${baseUrl}/${subscriptionId}/tokens/${purchaseToken}`;
 }
@@ -54,6 +54,5 @@ export async function fetchGoogleSubscription(subscriptionId: string, purchaseTo
     const url = buildGoogleUrl(subscriptionId, purchaseToken, packageName);
     const accessToken = await getAccessToken(getParams(Stage));
     const response = await restClient.get<GoogleResponseBody>(url, {additionalHeaders: {Authorization: `Bearer ${accessToken.token}`}});
-
     return response.result;
 }

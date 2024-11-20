@@ -131,9 +131,9 @@ export async function fetchGoogleSubscriptionV2(
         }
     } catch (error: any) {
         if (error?.status == 400 || error?.status == 404 || error?.status == 410) {
-            console.error(`fetchGoogleSubscription error: invalid purchase token; subscription not found; or no such package name (status = ${error.status})`, error)
+            console.error(`fetchGoogleSubscriptionV2 error: invalid purchase token; subscription not found; or no such package name (status = ${error.status})`, error)
         } else {
-            console.error(`fetchGoogleSubscription error:`, error)
+            console.error(`fetchGoogleSubscriptionV2 error:`, error)
         }
         throw error
     }

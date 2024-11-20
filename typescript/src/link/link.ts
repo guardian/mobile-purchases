@@ -85,14 +85,6 @@ export async function parseAndStoreLink<A, B>(
                 }
                 case "success": {
                     const userId = resolution.userId as string;
-
-                    // --------------------------------
-                    // Date: 21 June 2023
-                    // Author: Pascal
-                    // I am temporarily adding an extra amount of logging while doing an investigation
-                    console.log(`[db1c1255] userId: ${userId}`);
-                    // --------------------------------
-
                     const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
                     const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
                     console.log(`put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
