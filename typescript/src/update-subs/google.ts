@@ -51,11 +51,11 @@ export const googleResponseBodyToSubscription = (
 
 export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> {
 
-    const sub = JSON.parse(record.body) as GoogleSubscriptionReference;
+    const subscriptionReference = JSON.parse(record.body) as GoogleSubscriptionReference;
 
     let response;
     try {
-        response = await fetchGoogleSubscription(sub.subscriptionId, sub.purchaseToken, sub.packageName);
+        response = await fetchGoogleSubscription(subscriptionReference.subscriptionId, subscriptionReference.purchaseToken, subscriptionReference.packageName);
     } catch (exception: any) {
         if (exception.statusCode === 410) {
             console.log(`Purchase expired a very long time ago, ignoring`);
@@ -68,12 +68,12 @@ export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscript
         }
     }
 
-    let billingPeriod = PRODUCT_BILLING_PERIOD[sub.subscriptionId];
+    let billingPeriod = PRODUCT_BILLING_PERIOD[subscriptionReference.subscriptionId];
     if (billingPeriod === undefined) {
-        console.warn(`Unable to get the billing period, unknown google subscription ID ${sub.subscriptionId}`);
+        console.warn(`Unable to get the billing period, unknown google subscription ID ${subscriptionReference.subscriptionId}`);
     }
 
-    const subscription = googleResponseBodyToSubscription(sub.purchaseToken, sub.packageName, sub.subscriptionId, billingPeriod, response);
+    const subscription = googleResponseBodyToSubscription(subscriptionReference.purchaseToken, subscriptionReference.packageName, subscriptionReference.subscriptionId, billingPeriod, response);
     return [subscription];
 }
 
