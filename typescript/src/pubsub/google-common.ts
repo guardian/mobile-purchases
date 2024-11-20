@@ -1,11 +1,10 @@
 import 'source-map-support/register'
-import {SubscriptionEvent} from "../models/subscriptionEvent";
-import {dateToSecondTimestamp, optionalMsToDate, thirtyMonths} from "../utils/dates";
-import {GoogleSubscriptionReference} from "../models/subscriptionReference";
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {Option} from "../utils/option";
-import {googlePackageNameToPlatform} from "../services/appToPlatform";
-import {fetchGoogleSubscription, GOOGLE_PAYMENT_STATE} from "../services/google-play";
+import { SubscriptionEvent } from "../models/subscriptionEvent";
+import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from "../utils/dates";
+import { GoogleSubscriptionReference } from "../models/subscriptionReference";
+import { Option } from "../utils/option";
+import { googlePackageNameToPlatform } from "../services/appToPlatform";
+import { fetchGoogleSubscription, GOOGLE_PAYMENT_STATE } from "../services/google-play";
 import { z } from "zod";
 import { Ignorable } from './ignorable';
 
