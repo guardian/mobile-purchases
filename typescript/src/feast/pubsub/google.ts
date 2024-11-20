@@ -1,6 +1,6 @@
 import type {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import { HTTPResponses } from "../../models/apiGatewayHttp";
-import { MetaData,
+import { GoogleSubscriptionMetaData,
     SubscriptionNotification,
     fetchMetadata as defaultFetchMetadata,
     parsePayload,
@@ -21,7 +21,7 @@ const defaultStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => {
 export function buildHandler(
     sendMessageToSqs: (queueUrl: string, message: GoogleSubscriptionReference) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
     storeEventInDynamo: (event: SubscriptionEvent) => Promise<void> = defaultStoreEventInDynamo,
-    fetchMetadata: (notification: SubscriptionNotification) => Promise<MetaData | undefined> = defaultFetchMetadata
+    fetchMetadata: (notification: SubscriptionNotification) => Promise<GoogleSubscriptionMetaData | undefined> = defaultFetchMetadata
 ): (request: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult> {
     return async (request: APIGatewayProxyEvent) => {
         const secret = process.env.Secret;

@@ -46,7 +46,7 @@ const DeveloperNotificationSchema = z.union([
 );
 export type DeveloperNotification = z.infer<typeof DeveloperNotificationSchema>;
 
-export interface MetaData {
+export interface GoogleSubscriptionMetaData {
     freeTrial: boolean
 }
 
@@ -88,7 +88,7 @@ export const GOOGLE_SUBS_EVENT_TYPE: {[_: number]: string} = {
     13: "SUBSCRIPTION_EXPIRED"
 };
 
-export async function fetchMetadata(notification: SubscriptionNotification): Promise<MetaData | undefined> {
+export async function fetchMetadata(notification: SubscriptionNotification): Promise<GoogleSubscriptionMetaData | undefined> {
     try {
         const subscription = await fetchGoogleSubscription(
             notification.subscriptionNotification.subscriptionId,
@@ -113,7 +113,7 @@ export async function fetchMetadata(notification: SubscriptionNotification): Pro
     }
 }
 
-export function toDynamoEvent(notification: SubscriptionNotification, metaData?: MetaData): SubscriptionEvent {
+export function toDynamoEvent(notification: SubscriptionNotification, metaData?: GoogleSubscriptionMetaData): SubscriptionEvent {
     const eventTime = optionalMsToDate(notification.eventTimeMillis);
     if (!eventTime) {
         // this is tested while parsing the payload in order to return HTTP 400 early.
