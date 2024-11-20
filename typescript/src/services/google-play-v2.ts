@@ -1,8 +1,7 @@
 import aws = require("../utils/aws");
 import S3 from 'aws-sdk/clients/s3'
-import {Stage} from "../utils/appIdentity";
-
-import {androidpublisher, auth} from '@googleapis/androidpublisher';
+import { Stage } from "../utils/appIdentity";
+import { androidpublisher, auth } from '@googleapis/androidpublisher';
 import { mapAndroidProductId } from "../utils/mapAndroidProductId";
 
 export type GoogleSubscription = {
