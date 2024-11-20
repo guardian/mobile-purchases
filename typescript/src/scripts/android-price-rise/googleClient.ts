@@ -1,4 +1,4 @@
-import {androidpublisher, androidpublisher_v3, auth} from '@googleapis/androidpublisher';
+import { androidpublisher, androidpublisher_v3, auth } from '@googleapis/androidpublisher';
 import SSM = require("aws-sdk/clients/ssm");
 import { GoogleAuth } from 'google-auth-library';
 

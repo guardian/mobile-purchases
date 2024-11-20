@@ -1,12 +1,12 @@
 import 'source-map-support/register'
-import {parseStoreAndSend} from "./pubsub";
-import {SubscriptionEvent} from "../models/subscriptionEvent";
-import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
-import {AppleSubscriptionReference} from "../models/subscriptionReference";
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {appleBundleToPlatform} from "../services/appToPlatform";
+import { parseStoreAndSend } from "./pubsub";
+import { SubscriptionEvent } from "../models/subscriptionEvent";
+import { dateToSecondTimestamp, thirtyMonths } from "../utils/dates";
+import { AppleSubscriptionReference } from "../models/subscriptionReference";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { appleBundleToPlatform } from "../services/appToPlatform";
 import { Stage } from '../utils/appIdentity';
-import {StatusUpdateNotification, parsePayload} from "./apple-common";
+import { StatusUpdateNotification, parsePayload } from "./apple-common";
 
 export function toDynamoEvent(notification: StatusUpdateNotification): SubscriptionEvent {
     const now = new Date();

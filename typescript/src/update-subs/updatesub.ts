@@ -1,8 +1,8 @@
-import {SQSRecord} from 'aws-lambda'
-import {Subscription} from '../models/subscription';
-import {dynamoMapper, sendToSqs} from "../utils/aws";
-import {ProcessingError} from "../models/processingError";
-import {GracefulProcessingError} from "../models/GracefulProcessingError";
+import { SQSRecord } from 'aws-lambda'
+import { Subscription } from '../models/subscription';
+import { dynamoMapper, sendToSqs } from "../utils/aws";
+import { ProcessingError } from "../models/processingError";
+import { GracefulProcessingError } from "../models/GracefulProcessingError";
 
 export function putSubscription(subscription: Subscription): Promise<Subscription> {
     return dynamoMapper.put({item: subscription}).then(result => result.item)
