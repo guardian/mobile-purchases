@@ -1,8 +1,8 @@
 import 'source-map-support/register'
-import {Platform} from "../models/platform";
-import {parseAndStoreLink, SubscriptionCheckData} from "./link";
-import {UserSubscription} from "../models/userSubscription";
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import { Platform } from "../models/platform";
+import { parseAndStoreLink, SubscriptionCheckData } from "./link";
+import { UserSubscription } from "../models/userSubscription";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
 type GoogleSubscription = {
     purchaseToken: string
