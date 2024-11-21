@@ -88,7 +88,6 @@ export async function parseAndStoreLink<A, B>(
                     const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
                     const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
                     console.log(`put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
-
                     return HTTPResponses.OK;
                 }
             }

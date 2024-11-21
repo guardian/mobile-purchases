@@ -9,4 +9,4 @@ mobile-purchases performs at least two primary functions.
 
 ### Additional Pieces
 
-- [The interesting story of the Google purchase tokens](google-purchase-tokens.md)
+- [Google subscriptions: Understanding subscription identifiers and purchase tokens](google-identifiers.md)
