@@ -6,7 +6,7 @@ import { putSubscription } from "../../update-subs/updatesub";
 import { GoogleSubscription, fetchGoogleSubscriptionV2 } from "../../services/google-play-v2";
 import { GoogleSubscriptionReference } from "../../models/subscriptionReference";
 import { googlePackageNameToPlatform } from "../../services/appToPlatform";
-import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from "../../utils/dates";
+import { dateToSecondTimestamp, thirtyMonths } from "../../utils/dates";
 import { getIdentityIdFromBraze } from "../../services/braze";
 import { storeUserSubscriptionInDynamo, queueHistoricalSubscription } from "./common";
 import { UserSubscription } from "../../models/userSubscription";

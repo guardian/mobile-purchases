@@ -1,8 +1,15 @@
-import {hashKey, attribute} from '@aws/dynamodb-data-mapper-annotations';
-import {DynamoDbTable} from "@aws/dynamodb-data-mapper";
-import {App, Stage} from "../utils/appIdentity";
+import { hashKey, attribute } from '@aws/dynamodb-data-mapper-annotations';
+import { DynamoDbTable } from "@aws/dynamodb-data-mapper";
+import { App, Stage } from "../utils/appIdentity";
 
 export class Subscription {
+
+    /*
+        Warning: The subscriptionId value, defined in this schema, is going to carry the purchase token (`purchaseToken`) 
+        from a Google Play notification and not the value of the attribute `subscriptionId` of that notification.
+
+        See the file: google-identifiers.md in the documentation folder for details.
+    */
 
     @hashKey()
     subscriptionId: string;
