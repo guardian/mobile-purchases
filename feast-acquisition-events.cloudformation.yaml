@@ -297,6 +297,10 @@ Resources:
               - ssm:GetParametersByPath
             Effect: Allow
             Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+          - Action:
+              - s3:GetObject
+            Effect: Allow
+            Resource: !Sub arn:aws:s3:::gu-mobile-access-tokens/${Stage}/google-play-developer-api/*
         Version: '2012-10-17'
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
