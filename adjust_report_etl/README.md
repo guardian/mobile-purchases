@@ -32,7 +32,8 @@ or configuring a request in an API testing tool, such as Postman, and verifying 
 - Connection name automatically maps to the connection name in fivetran as well as the dataset name in bigquery
 
 ## Troubleshooting
-_I was unable to find a log section in fivetran that would help to debug any issues with the script. When something went wrong, it was sometimes necessary to strip the metrics and dimensions all the way back to one of each, and rebuild from there to zero in on which one was causing the issue._
+_I was unable to find a log section in fivetran that would help to debug any issues with the script._
 
 - Fivetran indicates that only the extract was performed
   - check metrics and dimensions specifications. Ensure each one exists in Adjust, and ensure they are typed correctly in the python script.
+  - When the issue is likely a dimension or a metric, it was sometimes necessary to strip the metrics and dimensions all the way back to one of each, and rebuild from there to zero-in on which one was causing the issue.
