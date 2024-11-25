@@ -1,3 +1,6 @@
+# Upload to fivetran using the following command:
+# fivetran deploy --api-key xxx --destination GNM --connection <connection name (same as bigquery dataset name)> --configuration configuration.json
+
 import requests
 import json
 import csv
@@ -9,7 +12,7 @@ from fivetran_connector_sdk import Operations as op
 
 log.LOG_LEVEL = log.Level.INFO
 
-TABLE_NAME = 'data'
+TABLE_NAME = 'csv_report'
 
 def schema(configuration: dict):
     return [
