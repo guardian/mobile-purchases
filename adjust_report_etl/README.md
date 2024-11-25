@@ -16,7 +16,7 @@ or configuring a request in an API testing tool, such as Postman, and verifying 
 
 - Update the script iteratively and upload to fivetran in production. Check-in with Data Design to ensure data schema is correct and records are displaying as expected.
 
-Considerations
+## Considerations
 - Adding a dimension (an aggregator, or a field that groups the data, such as by 'country'), can significantly increase the time needed to extract and load the data.
 
 - Each dimension should comprise part of the primary key as defined in the script, otherwise some records risk being overwritten
@@ -34,5 +34,5 @@ Considerations
 ## Troubleshooting
 _I was unable to find a log section in fivetran that would help to debug any issues with the script. When something went wrong, it was sometimes necessary to strip the metrics and dimensions all the way back to one of each, and rebuild from there to zero in on which one was causing the issue._
 
-- fivetran indicates that only the extract was performed
+- Fivetran indicates that only the extract was performed
   - check metrics and dimensions specifications. Ensure each one exists in Adjust, and ensure they are typed correctly in the python script.
