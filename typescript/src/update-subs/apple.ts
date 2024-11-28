@@ -45,7 +45,7 @@ export function toAppleSubscription(response: AppleValidationResponse): Subscrip
 
 function sqsRecordToAppleSubscription(record: SQSRecord): Promise<Subscription[]> {
     const subRef = JSON.parse(record.body) as AppleSubscriptionReference;
-
+    console.log(`[2550c605] ${JSON.stringify(subRef)}`);
     // sandboxRetry is set to false such that in production we don't store any sandbox receipt that would have snuck all the way here
     // In CODE or locally the default endpoint will be sanbox therefore no retry is necessary
     return validateReceipt(subRef.receipt, {sandboxRetry: false})
@@ -53,6 +53,7 @@ function sqsRecordToAppleSubscription(record: SQSRecord): Promise<Subscription[]
 }
 
 export async function handler(event: SQSEvent): Promise<string> {
+    console.log(`[8357c340] ${JSON.stringify(event)}`);
     const promises = event.Records.map( record => parseAndStoreSubscriptionUpdate(record, sqsRecordToAppleSubscription));
     return Promise.all(promises)
         .then( _ => "OK");
