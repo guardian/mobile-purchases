@@ -1,11 +1,11 @@
 # Upload to fivetran using the following command:
 # fivetran deploy --api-key xxx --destination GNM --connection <connection name (same as bigquery dataset name)> --configuration configuration.json
 
-import requests
-import json
 import csv
-
+import json
 from io import StringIO
+
+import requests
 from fivetran_connector_sdk import Connector
 from fivetran_connector_sdk import Logging as log
 from fivetran_connector_sdk import Operations as op
