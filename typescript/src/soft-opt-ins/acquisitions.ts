@@ -15,11 +15,13 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
     const records = event.Records;
 
+    console.log(`[8a9ae63f] ${JSON.stringify(records)}`);
+
     let processedCount = 0;
 
     const processRecordPromises = records.map(async (record: DynamoDBRecord) => {
+        console.log(`[34828b51] ${JSON.stringify(record)}`);
         const eventName = record.eventName;
-
         const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
         const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
 
@@ -35,12 +37,15 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
             try {
                 subscriptionRecord = await dynamoMapper.get(itemToQuery);
+                console.log(`[7c0646c5] ${JSON.stringify(subscriptionRecord)}`);
             } catch (error) {
                 console.log(`Subscription ${subscriptionId} record not found in the subscriptions table. Error: `, error);
 
                 try {
                     const timestamp = Date.now();
-                    await sendToSqs(dlqUrl, {subscriptionId, identityId, timestamp});
+                    const m1 = {subscriptionId, identityId, timestamp};
+                    console.log(`[a609b6f5] ${JSON.stringify(m1)}`);
+                    await sendToSqs(dlqUrl, m1);
                 } catch(e) {
                     console.log(`could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}. Error: `, e)
                 }

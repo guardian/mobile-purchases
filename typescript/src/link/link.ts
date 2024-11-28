@@ -44,8 +44,11 @@ async function enqueueUnstoredPurchaseToken(subChecks: SubscriptionCheckData[]):
             Id: index.toString(),
             MessageBody: JSON.stringify(subRef)
         }));
+        console.log(`[81a99c04] ${JSON.stringify(sqsMessages)}`);
 
         const result = await sqs.sendMessageBatch({QueueUrl: queueUrl, Entries: sqsMessages}).promise();
+        console.log(`[7cec2a26] ${JSON.stringify(result)}`);
+
         if (result.Failed && result.Failed.length > 0) {
             throw new ProcessingError("Unable to send all the subscription reference to SQS, will retry", true);
         }
@@ -57,6 +60,7 @@ async function enqueueUnstoredPurchaseToken(subChecks: SubscriptionCheckData[]):
 }
 
 async function persistUserSubscriptionLinks(userSubscriptions: UserSubscription[]): Promise<number>  {
+    console.log(`[c14ad290] ${JSON.stringify(userSubscriptions)}`);
     let count = 0;
     for await (const r of dynamoMapper.batchPut(userSubscriptions)) {
         count++;
@@ -72,7 +76,9 @@ export async function parseAndStoreLink<A, B>(
     try {
         if (httpRequest.headers && getAuthToken(httpRequest.headers)) {
             const payload: A = parsePayload(httpRequest);
+            console.log(`[c2f01bdf] ${JSON.stringify(payload)}`);
             const resolution: UserIdResolution = await getUserId(httpRequest.headers);
+            console.log(`[dc3f0863] ${JSON.stringify(resolution)}`);
             switch(resolution.status) {
                 case "incorrect-token": {
                     return HTTPResponses.UNAUTHORISED;
@@ -85,8 +91,11 @@ export async function parseAndStoreLink<A, B>(
                 }
                 case "success": {
                     const userId = resolution.userId as string;
+                    console.log(`[499e6255] ${userId}`);
                     const insertCount = await persistUserSubscriptionLinks(toUserSubscription(userId, payload));
+                    console.log(`[962a8df6] ${insertCount}`);
                     const sqsCount = await enqueueUnstoredPurchaseToken(toSqsPayload(payload));
+                    console.log(`[8a9ae63f] ${sqsCount}`);
                     console.log(`put ${insertCount} links in the DB, and sent ${sqsCount} subscription refs to SQS`);
                     return HTTPResponses.OK;
                 }

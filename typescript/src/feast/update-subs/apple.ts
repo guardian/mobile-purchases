@@ -28,8 +28,10 @@ const decodeSubscriptionReference =
 export const defaultFetchSubscriptionsFromApple =
     async (reference: AppleSubscriptionReference): Promise<SubscriptionMaybeWithAppAccountToken[]> => {
         const responses = await validateReceipt(reference.receipt, { sandboxRetry: false }, App.Feast);
+        console.log(`[a151644c] ${JSON.stringify(responses)}`);
         return responses.map(response => {
             const subscription = toAppleSubscription(response);
+            console.log(`[b3931ac2] ${JSON.stringify(subscription)}`);
             if (response.latestReceiptInfo.appAccountToken) {
                 return withAppAccountToken(subscription, response.latestReceiptInfo.appAccountToken)
             } else {
@@ -58,8 +60,10 @@ const processRecord = async (
     record: SQSRecord
 ) => {
         const reference = decodeSubscriptionReference(record)
+        console.log(`[95524cfe] ${JSON.stringify(reference)}`);
 
         const subscriptions = await fetchSubscriptionsFromApple(reference)
+        console.log(`[119d8c98] ${JSON.stringify(subscriptions)}`);
 
         await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
         await Promise.all(subscriptions.map(sendSubscriptionToHistoricalQueue))

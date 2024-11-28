@@ -51,6 +51,7 @@ function toSqsPayload(payload: GoogleLinkPayload): SubscriptionCheckData[] {
 }
 
 export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+    console.log(`[fb0aabd5] ${JSON.stringify(httpRequest)}`);
     return parseAndStoreLink(
         httpRequest,
         parseGoogleLinkPayload,
