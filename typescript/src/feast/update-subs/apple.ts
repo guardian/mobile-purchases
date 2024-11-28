@@ -42,6 +42,7 @@ export const defaultFetchSubscriptionsFromApple =
 
 const defaultStoreSubscriptionInDynamo =
     (subscription: Subscription): Promise<void> => {
+        console.log(`[332bedcb] ${JSON.stringify(subscription)}`);
         return dynamoMapper.put({ item: subscription }).then(_ => { })
     }
 
@@ -73,6 +74,7 @@ const processRecord = async (
                 const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
                 const now = new Date().toISOString()
                 const linked = new UserSubscription(identityId, s.subscriptionId, now)
+                console.log(`[289049ee] ${JSON.stringify(linked)}`);
                 await storeUserSubscriptionInDynamo(linked)
             }
             else {

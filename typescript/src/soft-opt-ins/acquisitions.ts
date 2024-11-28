@@ -32,6 +32,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
             let itemToQuery = new SubscriptionEmpty();
             itemToQuery.setSubscriptionId(subscriptionId);
+            console.log(`[1fe300a7] ${JSON.stringify(itemToQuery)}`);
 
             let subscriptionRecord: Subscription;
 
@@ -40,7 +41,6 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
                 console.log(`[7c0646c5] ${JSON.stringify(subscriptionRecord)}`);
             } catch (error) {
                 console.log(`Subscription ${subscriptionId} record not found in the subscriptions table. Error: `, error);
-
                 try {
                     const timestamp = Date.now();
                     const m1 = {subscriptionId, identityId, timestamp};
