@@ -5,8 +5,9 @@ export const PRODUCT_BILLING_PERIOD: {[productId: string]: string} = {
 
     // com.guardian.subscription*
     "com.guardian.subscription.6monthly.12": "P6M",
-    "com.guardian.subscription.annual.13": "P1Y",
     "com.guardian.subscription.monthly.10": "P1M",
+    "com.guardian.subscription.monthly.11.freetrial": "P1M",
+    "com.guardian.subscription.annual.13": "P1Y",
 
     // uk.co.guardian.gia*
     "uk.co.guardian.gia.1month": "P1M",
@@ -24,6 +25,7 @@ export const PRODUCT_BILLING_PERIOD: {[productId: string]: string} = {
     "uk.co.guardian.gla.6months.2018May.withFreeTrial": "P6M",
     "uk.co.guardian.gla.12months.2018Dec.withFreeTrial": "P1Y",
     "uk.co.guardian.gla.12months.2018Dec.stepUp": "P1Y",
+    "uk.co.guardian.gla.12months.2023Mar.metered": "P1Y",
 
     // uk.co.guardian.subscription*
     "uk.co.guardian.subscription": "P1M",
