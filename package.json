@@ -39,7 +39,7 @@
     "@guardian/types": "^9.0.1",
     "@okta/jwt-verifier": "^4.0.1",
     "@types/aws-lambda": "8.10.146",
-    "@types/node": "^22.9.3",
+    "@types/node": "^22.10.1",
     "aws-sdk": "^2.1692.0",
     "node-fetch": "2.6.7",
     "source-map-support": "^0.5.21",
