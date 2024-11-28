@@ -24,6 +24,7 @@ export const PRODUCT_BILLING_PERIOD: {[productId: string]: string} = {
     "uk.co.guardian.gla.6months.2018May.withFreeTrial": "P6M",
     "uk.co.guardian.gla.12months.2018Dec.withFreeTrial": "P1Y",
     "uk.co.guardian.gla.12months.2018Dec.stepUp": "P1Y",
+    "uk.co.guardian.gla.12months.2023Mar.metered": "P1Y",
 
     // uk.co.guardian.subscription*
     "uk.co.guardian.subscription": "P1M",
