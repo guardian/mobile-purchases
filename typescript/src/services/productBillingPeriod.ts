@@ -29,4 +29,5 @@ export const PRODUCT_BILLING_PERIOD: {[productId: string]: string} = {
     "uk.co.guardain.Feast.yearly.discounted": "P1Y",
     "uk.co.guardian.Feast.monthly": "P1M",
     "uk.co.guardian.Feast.monthly.discounted": "P1M",
+    "guardian.subscription.month.meteredoffer": "P1M",
 };
