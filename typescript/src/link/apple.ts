@@ -1,10 +1,10 @@
 import 'source-map-support/register'
 
-import {parseAndStoreLink, SubscriptionCheckData} from "./link";
-import {UserSubscription} from "../models/userSubscription";
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {parseAppleLinkPayload} from "./apple-utils"
-import {AppleLinkPayload} from "./apple-utils"
+import { parseAndStoreLink, SubscriptionCheckData } from "./link";
+import { UserSubscription } from "../models/userSubscription";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { parseAppleLinkPayload } from "./apple-utils"
+import { AppleLinkPayload } from "./apple-utils"
 import { Platform } from '../models/platform';
 
 function toUserSubscription(userId: string, payload: AppleLinkPayload): UserSubscription[] {
@@ -46,6 +46,7 @@ function toSqsPayload(payload: AppleLinkPayload): SubscriptionCheckData[] {
 }
 
 export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+    console.log(`[5cd3083e] ${JSON.stringify(httpRequest)}`);
     return parseAndStoreLink(
         httpRequest,
         parseAppleLinkPayload,
