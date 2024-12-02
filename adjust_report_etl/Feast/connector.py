@@ -130,7 +130,13 @@ def update(configuration: dict, state: dict):
 
         log.info(f"Received response with status code: {response.status_code}")
         response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        log.error(f"HTTP error occurred: {err}")
+        log.error(f"Response content: {response.text}")
+    except Exception as err:
+        log.error(f"Other error occurred: {err}")
 
+    try:
         log.info("Processing Adjust data...")
         csv_reader = csv.DictReader(StringIO(response.text))
         report_data = [row for row in csv_reader]
@@ -169,10 +175,7 @@ def update(configuration: dict, state: dict):
                 },
             )
         log.info(f"Completed upserting {len(report_data)} rows to BigQuery.")
-
-    except requests.exceptions.HTTPError as err:
-        log.error(f"HTTP error occurred: {err}")
-        log.error(f"Response content: {response.text}")
+        
     except json.JSONDecodeError as json_err:
         log.error(f"JSON decoding error: {json_err}")
         log.error(f"Raw response content: {response.text}")
