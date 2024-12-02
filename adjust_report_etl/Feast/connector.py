@@ -171,13 +171,13 @@ def update(configuration: dict, state: dict):
         log.info(f"Completed upserting {len(report_data)} rows to BigQuery.")
 
     except requests.exceptions.HTTPError as err:
-        log.warning(f"HTTP error occurred: {err}")
-        log.warning(f"Response content: {response.text}")
+        log.error(f"HTTP error occurred: {err}")
+        log.error(f"Response content: {response.text}")
     except json.JSONDecodeError as json_err:
-        log.warning(f"JSON decoding error: {json_err}")
-        log.warning(f"Raw response content: {response.text}")
+        log.error(f"JSON decoding error: {json_err}")
+        log.error(f"Raw response content: {response.text}")
     except Exception as err:
-        log.warning(f"Other error occurred: {err}")
+        log.error(f"Other error occurred: {err}")
 
 
 connector = Connector(update=update, schema=schema)
