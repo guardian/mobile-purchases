@@ -28,15 +28,15 @@ type AcquisitionApiPayload = {
     campaignCode?: string,
     source?: string,
     referrerUrl?: string,
-    abTests: [],
+    abTests: void[], // this will have to be updated later if we want to use it
     paymentFrequency: string,
-    paymentProvider?: string,
-    printOptions?: string,
+    paymentProvider?: void, // this will have to be updated later if we want to use it
+    printOptions?: void, // this will have to be updated later if we want to use it
     browserId?: string,
     identityId?: string,
     pageViewId?: string,
     referrerPageViewId?: string,
-    labels: [],
+    labels: void[],
     promoCode?: string,
     reusedExistingPaymentMethod: boolean,
     readerType: string,
@@ -74,48 +74,95 @@ const googleSubscriptionToSubscription = (
 };
 
 const googleSubscriptionToAcquisitionApiPayload = (subscription: Subscription): AcquisitionApiPayload => {
+    
+    const eventTimeStamp = subscription.startTimestamp;
+    const product = "FEAST_APP";
+    const amount = undefined; // Tom said to leave it undefined
+    const country = subscription.googlePayload?.rawResponse?.regionCode ?? "GB";
+
+    // mapping of country to currency is not ideal but the best solution for now
+    // TODO: implement
+    const currency = "GBP"; // We do not have access to the currency in the Google Subscription object 
+
+    const componentId = undefined;
+    const componentType = undefined;
+    const campaignCode = undefined;
+    const source = undefined;
+    const referrerUrl = undefined;
+    const abTests: void[] = [];
+
+    // from rawResponse.lineItems.offerDetails.basePlanId: feast-annual
+    // We are going to be mapping to one of the allowed values
+    // "ONE_OFF"
+    // "MONTHLY"
+    // "QUARTERLY"
+    // "SIX_MONTHLY"
+    // "ANNUALLY"
+    // TODO: implement the mapping.
+    const paymentFrequency = "ANNUALLY";
+
+    const paymentProvider = undefined;
+    const printOptions = undefined;
+    const browserId = undefined;
+    const identityId = undefined;
+    const pageViewId = undefined;
+    const referrerPageViewId = undefined;
+    const labels: void[] = [];
+    const promoCode = undefined;
+    const reusedExistingPaymentMethod = false;
+    const readerType = "Direct";
+    const acquisitionType = "PURCHASE";
+    const zuoraSubscriptionNumber = undefined;
+    const contributionId = undefined;
+    const paymentId = undefined;
+    const queryParameters: AcquisitionApiPayloadQueryParameter[] = [];
+    const platform = undefined;
+    const postalCode = undefined;
+    const state = undefined;
+    const email = undefined;
+
     const payload: AcquisitionApiPayload = {
-        eventTimeStamp : subscription.startTimestamp,
-        product: subscription.googlePayload?.productId ?? "uk.co.guardian.feast.access", // Scala model to be updated and value to be used here.
-        amount: undefined, // Tom said to leave it undefined
-        country: subscription.googlePayload?.rawResponse?.regionCode ?? "GB",
-        currency: "GBP", // We do not have access to the currency in the Google Subscription object
-        componentId: undefined, // TODO: which value would go there ?
-        componentType: undefined, // TODO: which value would go there ?
-        campaignCode: undefined,
-        source: undefined,
-        referrerUrl: undefined,
-        abTests: [],
-        paymentFrequency: "", // from rawResponse.lineItems.offerDetails.basePlanId: feast-annual
-        paymentProvider: undefined,
-        printOptions: undefined,
-        browserId: undefined,
-        identityId: undefined,
-        pageViewId: undefined,
-        referrerPageViewId: undefined,
-        labels: [],
-        promoCode: undefined,
-        reusedExistingPaymentMethod: false,
-        readerType: "Direct",
-        acquisitionType: "Purchase",
-        zuoraSubscriptionNumber: undefined,
-        contributionId: undefined,
-        paymentId: undefined,
-        queryParameters: [],
-        platform: undefined,
-        postalCode: undefined,
-        state: undefined,
-        email: undefined
+        eventTimeStamp,
+        product,
+        amount,
+        country,
+        currency,
+        componentId,
+        componentType,
+        campaignCode,
+        source,
+        referrerUrl,
+        abTests,
+        paymentFrequency,
+        paymentProvider,
+        printOptions,
+        browserId,
+        identityId,
+        pageViewId,
+        referrerPageViewId,
+        labels,
+        promoCode,
+        reusedExistingPaymentMethod,
+        readerType,
+        acquisitionType,
+        zuoraSubscriptionNumber,
+        contributionId,
+        paymentId,
+        queryParameters,
+        platform,
+        postalCode,
+        state,
+        email,
     }
     return payload;
 }
 
-const postPayload = async (payload: AcquisitionApiPayload) => {
-    const endpoint = "https://api.guardian.com/acquisition-events"; // TODO: get the right value
-    const additionalHeaders = {Authorization: `Bearer TEST_TOKEN`};
-    const body = JSON.stringify(payload);
-    await restClient.client.post(endpoint, body, additionalHeaders);
-}
+//const postPayload = async (payload: AcquisitionApiPayload) => {
+//    const endpoint = "https://api.guardian.com/acquisition-events"; // TODO: get the right value
+//    const additionalHeaders = {Authorization: `Bearer TEST_TOKEN`};
+//    const body = JSON.stringify(payload);
+//    await restClient.client.post(endpoint, body, additionalHeaders);
+//}
 
 const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     console.log(`[48bb04a0] calling processRecord (Google version) with record ${JSON.stringify(record)}`);
@@ -129,7 +176,8 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     const subscriptionUpdated: Subscription = googleSubscriptionToSubscription(purchaseToken, packageName, subscriptionFromGoogle);
     console.log(`[2ba4a5a7] subscriptionUpdated: ${JSON.stringify(subscriptionUpdated)}`);
     const payload = googleSubscriptionToAcquisitionApiPayload(subscriptionUpdated);
-    await postPayload(payload);
+    console.log(`[d522f940] acquisition api payload: ${JSON.stringify(payload)}`);
+    //await postPayload(payload);
 }
 
 export const handler = async (event: SQSEvent): Promise<void> => {
