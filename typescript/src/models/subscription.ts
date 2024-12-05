@@ -87,6 +87,7 @@ export class Subscription {
     get [DynamoDbTable]() {
         return `${App}-${Stage}-${this.tableName}`
     }
+
 }
 
 // Note:
