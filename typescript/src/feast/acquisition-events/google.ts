@@ -3,9 +3,53 @@ import { Subscription } from "../../models/subscription";
 import { GoogleSubscription, fetchGoogleSubscriptionV2 } from "../../services/google-play-v2";
 import { googlePackageNameToPlatform } from "../../services/appToPlatform";
 import { dateToSecondTimestamp, thirtyMonths } from "../../utils/dates";
+import { restClient } from "../../utils/restClient";
 
 // This function is duplicated from the copy in src/update-subs/google.ts
 // This will be corrected in the future refactoring
+
+type AcquisitionApiPayloadQueryParameter = {
+    name: string,
+    value: string
+}
+
+// This schema simply follows the one given here: 
+// direct link: https://github.com/guardian/support-frontend/blob/main/support-modules/acquisition-events/src/main/scala/com/gu/support/acquisitions/models/AcquisitionDataRow.scala
+// permalink  : https://github.com/guardian/support-frontend/blob/4d8c76a16bddd01ab91e59f89adbcf0867923c69/support-modules/acquisition-events/src/main/scala/com/gu/support/acquisitions/models/AcquisitionDataRow.scala
+
+type AcquisitionApiPayload = {
+    eventTimeStamp: string,
+    product: string,
+    amount?: number,
+    country: string,
+    currency: string,
+    componentId?: string,
+    componentType?: string,
+    campaignCode?: string,
+    source?: string,
+    referrerUrl?: string,
+    abTests: void[], // this will have to be updated later if we want to use it
+    paymentFrequency: string,
+    paymentProvider?: void, // this will have to be updated later if we want to use it
+    printOptions?: void, // this will have to be updated later if we want to use it
+    browserId?: string,
+    identityId?: string,
+    pageViewId?: string,
+    referrerPageViewId?: string,
+    labels: void[],
+    promoCode?: string,
+    reusedExistingPaymentMethod: boolean,
+    readerType: string,
+    acquisitionType: string,
+    zuoraSubscriptionNumber?: string,
+    contributionId?: string,
+    paymentId?: string,
+    queryParameters: AcquisitionApiPayloadQueryParameter[],
+    platform?: string,
+    postalCode?: string,
+    state?: string,
+    email?: string
+}
 
 const googleSubscriptionToSubscription = (
     purchaseToken: string,
@@ -29,6 +73,97 @@ const googleSubscriptionToSubscription = (
     )
 };
 
+const googleSubscriptionToAcquisitionApiPayload = (subscription: Subscription): AcquisitionApiPayload => {
+    
+    const eventTimeStamp = subscription.startTimestamp;
+    const product = "FEAST_APP";
+    const amount = undefined; // Tom said to leave it undefined
+    const country = subscription.googlePayload?.rawResponse?.regionCode ?? "GB";
+
+    // mapping of country to currency is not ideal but the best solution for now
+    // TODO: implement
+    const currency = "GBP"; // We do not have access to the currency in the Google Subscription object 
+
+    const componentId = undefined;
+    const componentType = undefined;
+    const campaignCode = undefined;
+    const source = undefined;
+    const referrerUrl = undefined;
+    const abTests: void[] = [];
+
+    // from rawResponse.lineItems.offerDetails.basePlanId: feast-annual
+    // We are going to be mapping to one of the allowed values
+    // "ONE_OFF"
+    // "MONTHLY"
+    // "QUARTERLY"
+    // "SIX_MONTHLY"
+    // "ANNUALLY"
+    // TODO: implement the mapping.
+    const paymentFrequency = "ANNUALLY";
+
+    const paymentProvider = undefined;
+    const printOptions = undefined;
+    const browserId = undefined;
+    const identityId = undefined;
+    const pageViewId = undefined;
+    const referrerPageViewId = undefined;
+    const labels: void[] = [];
+    const promoCode = undefined;
+    const reusedExistingPaymentMethod = false;
+    const readerType = "Direct";
+    const acquisitionType = "PURCHASE";
+    const zuoraSubscriptionNumber = undefined;
+    const contributionId = undefined;
+    const paymentId = undefined;
+    const queryParameters: AcquisitionApiPayloadQueryParameter[] = [];
+    const platform = undefined;
+    const postalCode = undefined;
+    const state = undefined;
+    const email = undefined;
+
+    const payload: AcquisitionApiPayload = {
+        eventTimeStamp,
+        product,
+        amount,
+        country,
+        currency,
+        componentId,
+        componentType,
+        campaignCode,
+        source,
+        referrerUrl,
+        abTests,
+        paymentFrequency,
+        paymentProvider,
+        printOptions,
+        browserId,
+        identityId,
+        pageViewId,
+        referrerPageViewId,
+        labels,
+        promoCode,
+        reusedExistingPaymentMethod,
+        readerType,
+        acquisitionType,
+        zuoraSubscriptionNumber,
+        contributionId,
+        paymentId,
+        queryParameters,
+        platform,
+        postalCode,
+        state,
+        email,
+    }
+    return payload;
+}
+
+const postPayload = async (payload: AcquisitionApiPayload) => {
+    const endpoint = "https://glkgqotkk3.execute-api.eu-west-1.amazonaws.com";
+    const additionalHeaders = {"Content-Type": "application/json"};
+    const body = JSON.stringify(payload);
+    await restClient.client.post(endpoint, body, additionalHeaders);
+}
+
 const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     console.log(`[48bb04a0] calling processRecord (Google version) with record ${JSON.stringify(record)}`);
     const subscriptionFromQueue: Subscription = JSON.parse(record.body);
@@ -40,6 +175,9 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     console.log(`[4fe9b14b] subscriptionFromGoogle: ${JSON.stringify(subscriptionFromGoogle)}`);
     const subscriptionUpdated: Subscription = googleSubscriptionToSubscription(purchaseToken, packageName, subscriptionFromGoogle);
     console.log(`[2ba4a5a7] subscriptionUpdated: ${JSON.stringify(subscriptionUpdated)}`);
+    const payload = googleSubscriptionToAcquisitionApiPayload(subscriptionUpdated);
+    console.log(`[d522f940] acquisition api payload: ${JSON.stringify(payload)}`);
+    await postPayload(payload);
 }
 
 export const handler = async (event: SQSEvent): Promise<void> => {
