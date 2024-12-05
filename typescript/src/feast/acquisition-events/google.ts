@@ -157,12 +157,12 @@ const googleSubscriptionToAcquisitionApiPayload = (subscription: Subscription): 
     return payload;
 }
 
-//const postPayload = async (payload: AcquisitionApiPayload) => {
-//    const endpoint = "https://api.guardian.com/acquisition-events"; // TODO: get the right value
-//    const additionalHeaders = {Authorization: `Bearer TEST_TOKEN`};
-//    const body = JSON.stringify(payload);
-//    await restClient.client.post(endpoint, body, additionalHeaders);
-//}
+const postPayload = async (payload: AcquisitionApiPayload) => {
+    const endpoint = "https://glkgqotkk3.execute-api.eu-west-1.amazonaws.com";
+    const additionalHeaders = {"Content-Type": "application/json"};
+    const body = JSON.stringify(payload);
+    await restClient.client.post(endpoint, body, additionalHeaders);
+}
 
 const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     console.log(`[48bb04a0] calling processRecord (Google version) with record ${JSON.stringify(record)}`);
@@ -177,7 +177,7 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     console.log(`[2ba4a5a7] subscriptionUpdated: ${JSON.stringify(subscriptionUpdated)}`);
     const payload = googleSubscriptionToAcquisitionApiPayload(subscriptionUpdated);
     console.log(`[d522f940] acquisition api payload: ${JSON.stringify(payload)}`);
-    //await postPayload(payload);
+    await postPayload(payload);
 }
 
 export const handler = async (event: SQSEvent): Promise<void> => {
