@@ -13,30 +13,30 @@ from fivetran_connector_sdk import Operations as op
 log.LOG_LEVEL = log.Level.INFO
 
 TABLE_NAME = "csv_report"
-
+DIMENSIONS = [
+    "adgroup",
+    "adgroup_network",
+    "app",
+    "app_token",
+    "campaign",
+    "campaign_network",
+    "channel",
+    "country",
+    "creative",
+    "creative_network",
+    "currency",
+    "day",
+    "network",
+    "partner_name",
+    "source_network",
+    "store_type",
+]
 
 def schema(configuration: dict):
     return [
         {
             "table": TABLE_NAME,
-            "primary_key": [
-                "adgroup",
-                "adgroup_network",
-                "app",
-                "app_token",
-                "campaign",
-                "campaign_network",
-                "channel",
-                "country",
-                "creative",
-                "creative_network",
-                "currency",
-                "day",
-                "network",
-                "partner_name",
-                "source_network",
-                "store_type",
-            ],
+            "primary_key": DIMENSIONS,
             "columns": {
                 # Dimensions
                 "adgroup": "STRING",
@@ -76,39 +76,16 @@ def update(configuration: dict, state: dict):
     AD_SPEND_MODE = "network"
     DATE_PERIOD = "2023-04-01:-0d"
 
-    DIMENSIONS = ",".join(
-        [
-            "adgroup",
-            "adgroup_network",
-            "app",
-            "app_token",
-            "campaign",
-            "campaign_network",
-            "channel",
-            "country",
-            "creative",
-            "creative_network",
-            "currency",
-            "day",
-            "network",
-            "partner_name",
-            "source_network",
-            "store_type",
-        ]
-    )
-
-    METRICS = ",".join(
-        [
-            "clicks",
-            "impressions",
-            "installs",
-            "cost",
-            "ad_revenue",
-            "revenue",
-            "att_status_authorized",
-            "att_status_denied",
-        ]
-    )
+    METRICS = [
+        "clicks",
+        "impressions",
+        "installs",
+        "cost",
+        "ad_revenue",
+        "revenue",
+        "att_status_authorized",
+        "att_status_denied",
+    ]
 
     try:
         API_KEY = configuration["API_KEY"]
@@ -121,8 +98,8 @@ def update(configuration: dict, state: dict):
             "ad_spend_mode": AD_SPEND_MODE,
             "app_token__in": APP_TOKEN,
             "date_period": DATE_PERIOD,
-            "dimensions": DIMENSIONS,
-            "metrics": METRICS,
+            "dimensions": ",".join(DIMENSIONS),
+            "metrics": ",".join(METRICS),
         }
 
         log.info("Fetching data from Adjust...")
