@@ -1,7 +1,7 @@
-import {Option} from "../utils/option";
-import {PendingRenewalInfo} from "../services/appleValidateReceipts";
-import type {Result} from "@guardian/types";
-import {ok, err, ResultKind} from "@guardian/types";
+import { Option} from "../utils/option";
+import { PendingRenewalInfo } from "../services/appleValidateReceipts";
+import type { Result } from "@guardian/types";
+import { ok, err, ResultKind } from "@guardian/types";
 
 // this is the definition of a receipt as received by the server to server notification system.
 // Not to be confused with apple's receipt validation receipt info (although they do look similar, they are different)

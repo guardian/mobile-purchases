@@ -1,4 +1,4 @@
-In this file we explain an interesting idiosyncrasy affecting the Google pubsub logic and how it has affected how models.
+In this file we explain an interesting idiosyncrasy affecting the Google pubsub logic and how it has affected our models.
 
 ### Purchase tokens are the subscriptions unique identifiers
 
