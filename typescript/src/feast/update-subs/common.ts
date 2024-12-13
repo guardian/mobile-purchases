@@ -1,6 +1,6 @@
 import { UserSubscription } from "../../models/userSubscription"
 import { dynamoMapper, sendToSqs } from "../../utils/aws"
-import {Subscription} from '../../models/subscription';
+import { Subscription } from '../../models/subscription';
 
 export const storeUserSubscriptionInDynamo = (userSubscription: UserSubscription): Promise<void> => {
     return dynamoMapper.put({ item: userSubscription }).then(_ => {})
