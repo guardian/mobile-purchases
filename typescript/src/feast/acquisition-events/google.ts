@@ -107,7 +107,7 @@ const googleSubscriptionToAcquisitionApiPayload = (subscription: Subscription): 
     // We do not have access to the currency in the Google Subscription object
     // mapping of country to currency is not ideal but the best solution for now
 
-    const currency = "GBP";  
+    const currency = countryToCurrency(country);  
 
     const componentId = undefined;
     const componentType = undefined;
