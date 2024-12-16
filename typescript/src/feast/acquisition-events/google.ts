@@ -3,10 +3,8 @@ import { Subscription } from "../../models/subscription";
 import { GoogleSubscription, fetchGoogleSubscriptionV2 } from "../../services/google-play-v2";
 import { googlePackageNameToPlatform } from "../../services/appToPlatform";
 import { dateToSecondTimestamp, thirtyMonths } from "../../utils/dates";
-import { restClient } from "../../utils/restClient";
-import { getConfigValue } from "../../utils/ssmConfig";
-import { Stage } from "../../utils/appIdentity";
-import { AcquisitionApiPayload, AcquisitionApiPayloadQueryParameter } from "./types";
+import { AcquisitionApiPayload, AcquisitionApiPayloadQueryParameter } from "./common";
+import { postPayloadToAcquisitionAPI } from "./common";
 
 const googleSubscriptionToSubscription = (
     purchaseToken: string,
@@ -273,21 +271,6 @@ const googleSubscriptionToAcquisitionApiPayload = (subscription: Subscription): 
     return payload;
 }
 
-const postPayload = async (payload: AcquisitionApiPayload) => {
-    // Date: 12 Dec 2024
-    // We are only performing that operation on PROD, because we do not have a code endpoint 
-    // the parameter `acquisitionApiUrl` has only been defined for stage PROD in Paremeter Store
-    if (Stage === "PROD") {
-        const url = await getConfigValue<string>("acquisitionApiUrl");
-        console.log(`[9118860a] acquisition api url: ${url}`);
-        const additionalHeaders = {"Content-Type": "application/json"};
-        const body = JSON.stringify(payload);
-        await restClient.client.post(url, body, additionalHeaders);
-    } else{
-        console.log(`[69460012] postPayload has been called with payload: ${JSON.stringify(payload)}`);
-    }
-}
-
 const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     console.log(`[48bb04a0] calling processRecord (Google version) with record ${JSON.stringify(record)}`);
     const subscriptionFromQueue: Subscription = JSON.parse(record.body);
@@ -301,7 +284,7 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     console.log(`[2ba4a5a7] subscriptionUpdated: ${JSON.stringify(subscriptionUpdated)}`);
     const payload = googleSubscriptionToAcquisitionApiPayload(subscriptionUpdated);
     console.log(`[d522f940] acquisition api payload: ${JSON.stringify(payload)}`);
-    await postPayload(payload);
+    await postPayloadToAcquisitionAPI(payload);
 }
 
 export const handler = async (event: SQSEvent): Promise<void> => {
