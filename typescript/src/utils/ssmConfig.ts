@@ -1,6 +1,6 @@
-import {ssm} from "./aws";
-import {App, Stack, Stage} from "./appIdentity";
-import {Option} from "./option";
+import { ssm } from "./aws";
+import { App, Stack, Stage } from "./appIdentity";
+import { Option } from "./option";
 
 type Config = {[key: string]: any};
 
