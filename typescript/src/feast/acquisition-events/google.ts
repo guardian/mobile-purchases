@@ -76,16 +76,63 @@ const googleSubscriptionToSubscription = (
 };
 
 const countryToCurr = {
-    "US": "USD", // United States - Dollar
     "GB": "GBP", // United Kingdom - Pound Sterling
-    "DE": "EUR", // Germany - Euro
-    "FR": "EUR", // France - Euro
+
+    // Rest of Europe
+    "AL": "ALL", // Albania
+    "AD": "EUR", // Andorra
+    "AT": "EUR", // Austria
+    "BY": "BYN", // Belarus
+    "BE": "EUR", // Belgium
+    "BA": "BAM", // Bosnia & Herzegovina
+    "BG": "BGN", // Bulgaria
+    "HR": "EUR", // Croatia
+    "CY": "EUR", // Cyprus
+    "CZ": "CZK", // Czech Republic
+    "DK": "DKK", // Denmark
+    "EE": "EUR", // Estonia
+    "FI": "EUR", // Finland
+    "FR": "EUR", // France
+    "DE": "EUR", // Germany
+    "GR": "EUR", // Greece
+    "HU": "HUF", // Hungary
+    "IS": "ISK", // Iceland
+    "IE": "EUR", // Ireland
+    "IT": "EUR", // Italy
+    "XK": "EUR", // Kosovo
+    "LV": "EUR", // Latvia
+    "LI": "CHF", // Liechtenstein
+    "LT": "EUR", // Lithuania
+    "LU": "EUR", // Luxembourg
+    "MT": "EUR", // Malta
+    "MD": "MDL", // Moldova
+    "MC": "EUR", // Monaco
+    "ME": "EUR", // Montenegro
+    "NL": "EUR", // Netherlands
+    "MK": "MKD", // North Macedonia
+    "NO": "NOK", // Norway
+    "PL": "PLN", // Poland
+    "PT": "EUR", // Portugal
+    "RO": "RON", // Romania
+    "SM": "EUR", // San Marino
+    "RS": "RSD", // Serbia
+    "SK": "EUR", // Slovakia
+    "SI": "EUR", // Slovenia
+    "ES": "EUR", // Spain
+    "SE": "SEK", // Sweden
+    "CH": "CHF", // Switzerland
+    "TR": "TRY", // Turkey
+    "UA": "UAH", // Ukraine
+    "VA": "EUR", // Vatican City
+
+    // Rest of the world
+    "US": "USD", // United States - Dollar
     "JP": "JPY", // Japan - Yen
     "CN": "CNY", // China - Yuan Renminbi
     "IN": "INR", // India - Indian Rupee
     "CA": "CAD", // Canada - Canadian Dollar
     "AU": "AUD", // Australia - Australian Dollar
-    "BR": "BRL"  // Brazil - Brazilian Real
+    "BR": "BRL",  // Brazil - Brazilian Real
 };
 
 const countryToCurrency = (country: string): string => {
