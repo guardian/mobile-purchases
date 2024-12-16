@@ -3,55 +3,8 @@ import { Subscription } from "../../models/subscription";
 import { GoogleSubscription, fetchGoogleSubscriptionV2 } from "../../services/google-play-v2";
 import { googlePackageNameToPlatform } from "../../services/appToPlatform";
 import { dateToSecondTimestamp, thirtyMonths } from "../../utils/dates";
-import { restClient } from "../../utils/restClient";
-import { getConfigValue } from "../../utils/ssmConfig"
-import { Stage } from "../../utils/appIdentity"
-
-// This function is duplicated from the copy in src/update-subs/google.ts
-// This will be corrected in the future refactoring
-
-type AcquisitionApiPayloadQueryParameter = {
-    name: string,
-    value: string
-}
-
-// This schema simply follows the one given here: 
-// direct link: https://github.com/guardian/support-frontend/blob/main/support-modules/acquisition-events/src/main/scala/com/gu/support/acquisitions/models/AcquisitionDataRow.scala
-// permalink  : https://github.com/guardian/support-frontend/blob/4d8c76a16bddd01ab91e59f89adbcf0867923c69/support-modules/acquisition-events/src/main/scala/com/gu/support/acquisitions/models/AcquisitionDataRow.scala
-
-type AcquisitionApiPayload = {
-    eventTimeStamp: string,
-    product: string,
-    amount?: number,
-    country: string,
-    currency: string,
-    componentId?: string,
-    componentType?: string,
-    campaignCode?: string,
-    source?: string,
-    referrerUrl?: string,
-    abTests: void[], // this will have to be updated later if we want to use it
-    paymentFrequency: string,
-    paymentProvider?: void, // this will have to be updated later if we want to use it
-    printOptions?: void, // this will have to be updated later if we want to use it
-    browserId?: string,
-    identityId?: string,
-    pageViewId?: string,
-    referrerPageViewId?: string,
-    labels: void[],
-    promoCode?: string,
-    reusedExistingPaymentMethod: boolean,
-    readerType: string,
-    acquisitionType: string,
-    zuoraSubscriptionNumber?: string,
-    contributionId?: string,
-    paymentId: string, // optional in the acquisition API model, but required by Data Design, see comment id: e3f790af 
-    queryParameters: AcquisitionApiPayloadQueryParameter[],
-    platform?: string,
-    postalCode?: string,
-    state?: string,
-    email?: string
-}
+import { AcquisitionApiPayload, AcquisitionApiPayloadQueryParameter } from "./common";
+import { postPayloadToAcquisitionAPI } from "./common";
 
 const googleSubscriptionToSubscription = (
     purchaseToken: string,
@@ -273,21 +226,6 @@ const googleSubscriptionToAcquisitionApiPayload = (subscription: Subscription): 
     return payload;
 }
 
-const postPayload = async (payload: AcquisitionApiPayload) => {
-    // Date: 12 Dec 2024
-    // We are only performing that operation on PROD, because we do not have a code endpoint 
-    // the parameter `acquisitionApiUrl` has only been defined for stage PROD in Paremeter Store
-    if (Stage === "PROD") {
-        const url = await getConfigValue<string>("acquisitionApiUrl");
-        console.log(`[9118860a] acquisition api url: ${url}`);
-        const additionalHeaders = {"Content-Type": "application/json"};
-        const body = JSON.stringify(payload);
-        await restClient.client.post(url, body, additionalHeaders);
-    } else{
-        console.log(`[69460012] postPayload has been called with payload: ${JSON.stringify(payload)}`);
-    }
-}
-
 const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     console.log(`[48bb04a0] calling processRecord (Google version) with record ${JSON.stringify(record)}`);
     const subscriptionFromQueue: Subscription = JSON.parse(record.body);
@@ -301,7 +239,7 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     console.log(`[2ba4a5a7] subscriptionUpdated: ${JSON.stringify(subscriptionUpdated)}`);
     const payload = googleSubscriptionToAcquisitionApiPayload(subscriptionUpdated);
     console.log(`[d522f940] acquisition api payload: ${JSON.stringify(payload)}`);
-    await postPayload(payload);
+    await postPayloadToAcquisitionAPI(payload);
 }
 
 export const handler = async (event: SQSEvent): Promise<void> => {
