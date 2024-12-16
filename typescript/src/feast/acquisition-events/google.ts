@@ -75,7 +75,7 @@ const googleSubscriptionToSubscription = (
     )
 };
 
-const countryToCurr = {
+const countryToCurrencyMap = {
     "GB": "GBP", // United Kingdom - Pound Sterling
 
     // Rest of Europe
@@ -136,12 +136,57 @@ const countryToCurr = {
 };
 
 const countryToCurrency = (country: string): string => {
-    const supportedCountries = Object.keys(countryToCurr);
+    const supportedCountries = Object.keys(countryToCurrencyMap);
     if (supportedCountries.includes(country)) {
-        return countryToCurr[country as keyof typeof countryToCurr];
+        return countryToCurrencyMap[country as keyof typeof countryToCurrencyMap];
     }
     // Throwing an error here is not ideal, but it will do for the moment...
     throw new Error(`[acba643d] Country ${country} is not supported`);
+}
+
+const basePlanIdToPaymentFrequencyMap = {
+    "feast-annual" : "ANNUALLY"
+}
+
+const basePlanIdToPaymentFrequency = (basePlanId: string): string => {
+    const supportedBasePlanIds = Object.keys(basePlanIdToPaymentFrequencyMap);
+    if (supportedBasePlanIds.includes(basePlanId)) {
+        return basePlanIdToPaymentFrequencyMap[basePlanId as keyof typeof basePlanIdToPaymentFrequencyMap];
+    }
+    // Throwing an error here is not ideal, but it will do for the moment...
+    throw new Error(`[fd8665bb] basePlanId ${basePlanId} is not supported`);
+}
+
+const extractBasePlanId = (subscription: Subscription): string => {
+    // The logic of this code is based on the idea that we can determine the Payment Frequency from the basePlanId 
+    // which can be found in the rawResponse of the Google Subscription object
+    // -> rawResponse.lineItems[0].offerDetails.basePlanId: feast-annual
+
+    // It needs to be mapped to one of the allowed values:
+    // "ONE_OFF"
+    // "MONTHLY"
+    // "QUARTERLY"
+    // "SIX_MONTHLY"
+    // "ANNUALLY"
+
+    const lineItems = subscription.googlePayload?.rawResponse?.lineItems;
+
+    if (lineItems === undefined) {
+        throw new Error(`[bb575066] lineItems is undefined`);
+    }
+
+    if (lineItems.length === 0) {
+        throw new Error(`[bb575066] lineItems is defined but is empty`);        
+    }
+    const lineItem = lineItems[0];
+
+    const basePlanId = lineItem.offerDetails?.basePlanId;
+
+    if (basePlanId === undefined) {
+        throw new Error(`[c1755b69] basePlanId is undefined`);
+    }
+
+    return basePlanId;
 }
 
 const googleSubscriptionToAcquisitionApiPayload = (subscription: Subscription): AcquisitionApiPayload => {
@@ -153,7 +198,6 @@ const googleSubscriptionToAcquisitionApiPayload = (subscription: Subscription): 
 
     // We do not have access to the currency in the Google Subscription object
     // mapping of country to currency is not ideal but the best solution for now
-
     const currency = countryToCurrency(country);  
 
     const componentId = undefined;
@@ -163,15 +207,8 @@ const googleSubscriptionToAcquisitionApiPayload = (subscription: Subscription): 
     const referrerUrl = undefined;
     const abTests: void[] = [];
 
-    // from rawResponse.lineItems.offerDetails.basePlanId: feast-annual
-    // We are going to be mapping to one of the allowed values
-    // "ONE_OFF"
-    // "MONTHLY"
-    // "QUARTERLY"
-    // "SIX_MONTHLY"
-    // "ANNUALLY"
-    // TODO: implement the mapping.
-    const paymentFrequency = "ANNUALLY";
+    const basePlanId = extractBasePlanId(subscription);
+    const paymentFrequency = basePlanIdToPaymentFrequency(basePlanId);
 
     const paymentProvider = undefined;
     const printOptions = undefined;
