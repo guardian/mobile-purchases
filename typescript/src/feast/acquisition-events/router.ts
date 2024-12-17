@@ -1,9 +1,18 @@
 import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
+import { Platform } from "../../models/platform";
 import { Subscription, SubscriptionEmpty } from "../../models/subscription";
 import { dynamoMapper, sendToSqs } from "../../utils/aws";
-import { Platform } from "../../models/platform";
 import { plusDays } from "../../utils/dates";
 import { Region, Stage } from "../../utils/appIdentity";
+
+const writeToDLQ = async (dlqUrl: string, subscriptionId: string, identityId: string) => {
+    try {
+        const timestamp = Date.now();
+        await sendToSqs(dlqUrl, {subscriptionId, identityId, timestamp});
+    } catch(e) {
+        console.error(`could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}. Error: `, e)
+    }
+}
 
 const isActiveSubscription = (currentTime: Date, subscription: Subscription): boolean => {
     // Returns whether the subscription is active or not, by checking
@@ -14,7 +23,7 @@ const isActiveSubscription = (currentTime: Date, subscription: Subscription): bo
     return (currentTime.getTime() <= endWithGracePeriod.getTime());
 }
 
-const processAcquisition = async (subscription: Subscription): Promise <boolean> => {
+export const processAcquisition = async (subscription: Subscription, identityId: string): Promise <boolean> => {
     // return value indicates whether the processing was successful or not
     // We return true in the case of an inactive subscription.
 
@@ -25,6 +34,8 @@ const processAcquisition = async (subscription: Subscription): Promise <boolean>
         console.log(`Subscription ${subscription.subscriptionId} is not active. Processing stopped.`);
         return true;
     }
+
+    console.log('Building Queue Url')
 
     const mobileAccountId = process.env.MobileAccountId;
     const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${mobileAccountId}`;
@@ -49,6 +60,14 @@ const processAcquisition = async (subscription: Subscription): Promise <boolean>
 export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
     console.log('[c9900d41] Feast Acquisition Events Router Lambda has been called');
 
+    const dlqUrl = process.env.DLQUrl;
+
+    if (!dlqUrl) {
+        throw new Error("process.env.DLQUrl is undefined");
+    }
+
+    console.log(`dlqUrl: ${dlqUrl}`);
+
     const records = event.Records; // retrieve records from DynamoDBStreamEvent
 
     let insertReceivedCount = 0;
@@ -69,43 +88,52 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
 
         const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
         const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
+
         console.log(`Processing: ${eventName} record for identityId: ${identityId} and subscriptionId: ${subscriptionId}`);
-        
         let emptySubscription = new SubscriptionEmpty();
         emptySubscription.setSubscriptionId(subscriptionId);
 
-        let subscription: Subscription;
+        if (eventName === "INSERT") {
 
-        try {
-            subscription = await dynamoMapper.get(emptySubscription);
-        } catch (error) {
-            console.log(`[d2c0251e] Subscription ${subscriptionId}, error: `, error);
-            // We are exiting but TODO: we are going to write to the dead letter queue.
-            return;
+            console.log(`identityId: ${identityId}, subscriptionId: ${subscriptionId}`);
+
+            let emptySubscription = new SubscriptionEmpty();
+            emptySubscription.setSubscriptionId(subscriptionId);
+
+            let subscription: Subscription;
+
+            try {
+                subscription = await dynamoMapper.get(emptySubscription);
+            } catch (error) {
+                console.log(`[d2c0251e] Subscription ${subscriptionId}, error: `, error);
+                await writeToDLQ(dlqUrl, subscriptionId, identityId);
+
+                return false;
+            }
+
+            console.log(`subscription ${JSON.stringify(subscription)}`);
+
+            const isFeast = subscription.platform === Platform.IosFeast || subscription.platform === Platform.AndroidFeast;
+
+            // We are only interested in feast subscriptions
+            if (!isFeast) {
+                console.log(`Skipping non Feast subscription ${subscriptionId}`);
+                return;
+            }
+
+            const result = await processAcquisition(subscription, identityId);
+            if (!result) {
+                await writeToDLQ(dlqUrl, subscriptionId, identityId);
+                return false
+            }
+            insertProcessedCount ++;
+            return true;
         }
-
-        console.log(`subscription ${JSON.stringify(subscription)}`);
-
-        const isFeast = subscription.platform === Platform.IosFeast || subscription.platform === Platform.AndroidFeast;
-        
-        // We are only interested in feast subscriptions
-        if (!isFeast) {
-            console.log(`Skipping non Feast subscription ${subscriptionId}`);
-            return;
-        }
-
-        const result = await processAcquisition(subscription);
-        if (!result) {
-            // We are exiting but TODO: we are going to write to the dead letter queue.
-            return;
-        }
-
-        insertProcessedCount ++; 
     });
 
     await Promise.all(processRecordPromises);
 
-    console.log(`Sucessfully processed ${insertProcessedCount} insertions from a collection of ${insertReceivedCount} from DynamoDBStreamEvent`);
+    console.log(`Sucessfully processed ${insertProcessedCount} insertions from a collection of ${insertReceivedCount} from DynamoDBStreamEvent, (mobile-purchases-${Stage}-user-subscriptions) DynamoDB table`);
 }
 
 // --------------------------------------------------------------------------
