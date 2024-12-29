@@ -133,6 +133,7 @@ const countryToCurrencyMap = {
     "CA": "CAD", // Canada - Canadian Dollar
     "AU": "AUD", // Australia - Australian Dollar
     "BR": "BRL",  // Brazil - Brazilian Real
+    "ID": "IDR", // Indonesia - Rupiah
 };
 
 const countryToCurrency = (country: string): string => {
