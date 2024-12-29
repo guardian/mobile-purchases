@@ -145,7 +145,8 @@ const countryToCurrency = (country: string): string => {
 }
 
 const basePlanIdToPaymentFrequencyMap = {
-    "feast-annual" : "ANNUALLY"
+    "feast-annual" : "ANNUALLY",
+    "feast-monthly": "MONTHLY",
 }
 
 const basePlanIdToPaymentFrequency = (basePlanId: string): string => {
