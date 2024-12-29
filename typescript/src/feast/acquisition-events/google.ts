@@ -134,6 +134,8 @@ const countryToCurrencyMap = {
     "AU": "AUD", // Australia - Australian Dollar
     "BR": "BRL",  // Brazil - Brazilian Real
     "ID": "IDR", // Indonesia - Rupiah
+    "HK": "HKD", // Hong Kong - Hong Kong Dollar,
+    "NZ": "NZD", // New Zealand - New Zealand Dollar
 };
 
 const countryToCurrency = (country: string): string => {
