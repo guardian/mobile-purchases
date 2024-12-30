@@ -133,6 +133,9 @@ const countryToCurrencyMap = {
     "CA": "CAD", // Canada - Canadian Dollar
     "AU": "AUD", // Australia - Australian Dollar
     "BR": "BRL",  // Brazil - Brazilian Real
+    "ID": "IDR", // Indonesia - Rupiah
+    "HK": "HKD", // Hong Kong - Hong Kong Dollar,
+    "NZ": "NZD", // New Zealand - New Zealand Dollar
 };
 
 const countryToCurrency = (country: string): string => {
@@ -145,7 +148,8 @@ const countryToCurrency = (country: string): string => {
 }
 
 const basePlanIdToPaymentFrequencyMap = {
-    "feast-annual" : "ANNUALLY"
+    "feast-annual" : "ANNUALLY",
+    "feast-monthly": "MONTHLY",
 }
 
 const basePlanIdToPaymentFrequency = (basePlanId: string): string => {
