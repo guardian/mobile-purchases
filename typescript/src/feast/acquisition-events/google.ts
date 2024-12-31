@@ -136,6 +136,7 @@ const countryToCurrencyMap = {
     "ID": "IDR", // Indonesia - Rupiah
     "HK": "HKD", // Hong Kong - Hong Kong Dollar,
     "NZ": "NZD", // New Zealand - New Zealand Dollar
+    "PH": "PHP", // Philippines - Philippine Peso
 };
 
 const countryToCurrency = (country: string): string => {
