@@ -1,12 +1,12 @@
 import 'source-map-support/register'
-import {SQSEvent, SQSRecord} from 'aws-lambda'
-import {parseAndStoreSubscriptionUpdate} from "./updatesub";
-import {Subscription} from "../models/subscription";
-import {dateToSecondTimestamp, thirtyMonths} from "../utils/dates";
-import {AppleSubscriptionReference} from "../models/subscriptionReference";
-import {AppleValidationResponse, validateReceipt} from "../services/appleValidateReceipts";
-import {appleBundleToPlatform} from "../services/appToPlatform";
-import {PRODUCT_BILLING_PERIOD} from "../services/productBillingPeriod";
+import { SQSEvent, SQSRecord } from 'aws-lambda'
+import { parseAndStoreSubscriptionUpdate } from "./updatesub";
+import { Subscription } from "../models/subscription";
+import { dateToSecondTimestamp, thirtyMonths } from "../utils/dates";
+import { AppleSubscriptionReference } from "../models/subscriptionReference";
+import { AppleValidationResponse, validateReceipt } from "../services/appleValidateReceipts";
+import { appleBundleToPlatform } from "../services/appToPlatform";
+import { PRODUCT_BILLING_PERIOD } from "../services/productBillingPeriod";
 
 export function toAppleSubscription(response: AppleValidationResponse): Subscription {
     const latestReceiptInfo = response.latestReceiptInfo;
