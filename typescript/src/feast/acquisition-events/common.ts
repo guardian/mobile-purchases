@@ -26,7 +26,14 @@ export type AcquisitionApiPayload = {
     source?: string,
     referrerUrl?: string,
     abTests: void[], // this will have to be updated later if we want to use it
-    paymentFrequency: string,
+
+    paymentFrequency: string, // TODO: make it a set of values
+        // "ONE_OFF"
+        // "MONTHLY"
+        // "QUARTERLY"
+        // "SIX_MONTHLY"
+        // "ANNUALLY"
+
     paymentProvider?: void, // this will have to be updated later if we want to use it
     printOptions?: void, // this will have to be updated later if we want to use it
     browserId?: string,

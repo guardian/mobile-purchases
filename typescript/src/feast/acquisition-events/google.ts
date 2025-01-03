@@ -158,14 +158,7 @@ const basePlanIdToPaymentFrequency = (basePlanId: string): string => {
 const extractBasePlanId = (subscription: Subscription): string => {
     // The logic of this code is based on the idea that we can determine the Payment Frequency from the basePlanId 
     // which can be found in the rawResponse of the Google Subscription object
-    // -> rawResponse.lineItems[0].offerDetails.basePlanId: feast-annual
-
-    // It needs to be mapped to one of the allowed values:
-    // "ONE_OFF"
-    // "MONTHLY"
-    // "QUARTERLY"
-    // "SIX_MONTHLY"
-    // "ANNUALLY"
+    // -> rawResponse.lineItems[0].offerDetails.basePlanId: feast-annual or feast-monthly
 
     const lineItems = subscription.googlePayload?.rawResponse?.lineItems;
 
