@@ -235,9 +235,9 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
     const promises = appleValidationResponses.map(async appleValidationResponse => {
         const appleSubscription: Subscription = toAppleSubscription(appleValidationResponse)
         console.log(`[a41a0078] appleSubscription: ${JSON.stringify(appleSubscription)}`);
-        const payload = await appleSubscriptionToAcquisitionApiPayload(appleSubscription);
-        console.log(`[ffdce775] acquisition api payload: ${JSON.stringify(payload)}`);
-        await postPayloadToAcquisitionAPI(payload);
+        //const payload = await appleSubscriptionToAcquisitionApiPayload(appleSubscription);
+        //console.log(`[ffdce775] acquisition api payload: ${JSON.stringify(payload)}`);
+        //await postPayloadToAcquisitionAPI(payload);
     })
     await Promise.all(promises);
 }
