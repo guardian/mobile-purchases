@@ -76,8 +76,9 @@ export async function handler(event: any): Promise<void> {
 
             try {
                 subscriptionRecord = await dynamoMapper.get(subEmpty);
+                console.log(`[116eb87a] ${JSON.stringify(subscriptionRecord)}`);
             } catch (error) {
-                console.log(`Subscription ${subscriptionId} record not found in the subscriptions table. Error: `, error);
+                console.log(`[4b0ef7b6] Subscription ${subscriptionId} record not found in the subscriptions table. Error: `, error);
                 continue;
             }
 

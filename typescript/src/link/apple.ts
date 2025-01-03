@@ -46,6 +46,7 @@ function toSqsPayload(payload: AppleLinkPayload): SubscriptionCheckData[] {
 }
 
 export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+    console.log(`[5cd3083e] ${JSON.stringify(httpRequest)}`);
     return parseAndStoreLink(
         httpRequest,
         parseAppleLinkPayload,

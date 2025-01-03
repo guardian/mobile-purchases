@@ -49,11 +49,13 @@ export const buildHandler = (
             const subRef = JSON.parse(sqsRecord.body) as GoogleSubscriptionReference;
             const subscriptionFromGoogle = await fetchSubscriptionDetails(subRef.purchaseToken, subRef.packageName);
             const subscription = googleSubscriptionToSubscription(subRef.purchaseToken, subRef.packageName, subscriptionFromGoogle);
+            console.log(`[34d62192] ${JSON.stringify(subscription)}`);
             await putSubscription(subscription);
 
             // We need a subscription in the format from the "V1" endpoint from Google to fit the historical table
             const googleResponseV1 = await fetchSubscriptionDetailsV1(subRef.subscriptionId, subRef.purchaseToken, subRef.packageName);
             const subscriptionV1 = googleResponseBodyToSubscription(subRef.purchaseToken, subRef.packageName, subRef.subscriptionId, subscriptionFromGoogle.billingPeriodDuration, googleResponseV1);
+            console.log(`[bc6b4784] ${JSON.stringify(subscriptionV1)}`);
             await sendSubscriptionToHistoricalQueue(subscriptionV1);
 
             if (subscriptionFromGoogle.obfuscatedExternalAccountId) {
@@ -61,6 +63,7 @@ export const buildHandler = (
                 console.log("Successfully exchanged UUID for identity ID");
     
                 const userSubscription = new UserSubscription(identityId, subscription.subscriptionId, new Date().toISOString());
+                console.log(`[1f3c7b2] ${JSON.stringify(userSubscription)}`);
                 await storeUserSubInDynamo(userSubscription);
     
                 console.log(`Processed subscription: ${subscription.subscriptionId}`); 

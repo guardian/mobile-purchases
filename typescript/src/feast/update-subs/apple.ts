@@ -28,8 +28,10 @@ const decodeSubscriptionReference =
 export const defaultFetchSubscriptionsFromApple =
     async (reference: AppleSubscriptionReference): Promise<SubscriptionMaybeWithAppAccountToken[]> => {
         const responses = await validateReceipt(reference.receipt, { sandboxRetry: false }, App.Feast);
+        console.log(`[a151644c] ${JSON.stringify(responses)}`);
         return responses.map(response => {
             const subscription = toAppleSubscription(response);
+            console.log(`[b3931ac2] ${JSON.stringify(subscription)}`);
             if (response.latestReceiptInfo.appAccountToken) {
                 return withAppAccountToken(subscription, response.latestReceiptInfo.appAccountToken)
             } else {
@@ -40,6 +42,7 @@ export const defaultFetchSubscriptionsFromApple =
 
 const defaultStoreSubscriptionInDynamo =
     (subscription: Subscription): Promise<void> => {
+        console.log(`[332bedcb] ${JSON.stringify(subscription)}`);
         return dynamoMapper.put({ item: subscription }).then(_ => { })
     }
 
@@ -58,8 +61,10 @@ const processRecord = async (
     record: SQSRecord
 ) => {
         const reference = decodeSubscriptionReference(record)
+        console.log(`[95524cfe] ${JSON.stringify(reference)}`);
 
         const subscriptions = await fetchSubscriptionsFromApple(reference)
+        console.log(`[119d8c98] ${JSON.stringify(subscriptions)}`);
 
         await Promise.all(subscriptions.map(storeSubscriptionInDynamo))
         await Promise.all(subscriptions.map(sendSubscriptionToHistoricalQueue))
@@ -69,6 +74,7 @@ const processRecord = async (
                 const identityId = await exchangeExternalIdForIdentityId(s.appAccountToken)
                 const now = new Date().toISOString()
                 const linked = new UserSubscription(identityId, s.subscriptionId, now)
+                console.log(`[289049ee] ${JSON.stringify(linked)}`);
                 await storeUserSubscriptionInDynamo(linked)
             }
             else {
