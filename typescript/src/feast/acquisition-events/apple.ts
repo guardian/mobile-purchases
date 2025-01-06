@@ -7,6 +7,16 @@ import { AcquisitionApiPayload, AcquisitionApiPayloadQueryParameter } from "./co
 import { postPayloadToAcquisitionAPI } from "./common";
 import fetch from 'node-fetch';
 import { getConfigValue } from "../../utils/ssmConfig";
+import * as crypto from "crypto";
+
+const jwt = require('jsonwebtoken');
+
+interface AppleTransactionQueryResponse {
+    transactionId: string,
+    productId: string // from which we are going to derive the paymentFrequency
+    storefront: string, // storefront seems to be the country as three letter code
+    currency: string, // currency as three letter code
+}
 
 // AppleExtendedData is built from the answer from
 // https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/{transactionId}
@@ -24,6 +34,33 @@ interface AppleExtendedData {
         // "ANNUALLY"
 }
 
+const storefrontToCountryMap = {
+    "GBR" : "GB", // United Kingdom
+};
+
+const storefrontToCountry = (storefront: string): string => {
+    const supportedCountries = Object.keys(storefrontToCountryMap);
+    if (supportedCountries.includes(storefront)) {
+        return storefrontToCountryMap[storefront as keyof typeof storefrontToCountryMap];
+    }
+    // Throwing an error here is not ideal, but it will do for the moment...
+    throw new Error(`[898812c2] storefront ${storefront} is not supported`);
+}
+
+const productIdToPaymentFrequencyMap = {
+    "uk.co.guardian.Feast.annual" : "ANNUALLY",
+    "uk.co.guardian.Feast.monthly": "MONTHLY",
+}
+
+const productIdToPaymentFrequency = (productId: string): string => {
+    const supportedproductIds = Object.keys(productIdToPaymentFrequencyMap);
+    if (supportedproductIds.includes(productId)) {
+        return productIdToPaymentFrequencyMap[productId as keyof typeof productIdToPaymentFrequencyMap];
+    }
+    // Throwing an error here is not ideal, but it will do for the moment...
+    throw new Error(`[9f6fa4a0] productId ${productId} is not supported`);
+}
+
 const appleSubscriptionToExtendedData = async (subscription: Subscription): Promise<AppleExtendedData> => {
     /*
         This function takes a Subscription and return the extra data that is retrieved from the Apple API
@@ -36,13 +73,37 @@ const appleSubscriptionToExtendedData = async (subscription: Subscription): Prom
     const url = `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${transactionId}`;
     console.log(`[5330931d] url: ${url}`);
 
-    // /mobile-purchases/PROD/mobile/pascalAuthExperimental
-    const auth = await getConfigValue<string>("pascalAuthExperimental");
+    const issuerId = await getConfigValue<string>("feastAppleStoreKitConfigIssuerId");
+    const keyId = await getConfigValue<string>("feastAppleStoreKitConfigKeyId"); 
+    const audience = await getConfigValue<string>("feastAppleStoreKitConfigAudience");
+    const appBundleId = await getConfigValue<string>("feastAppleStoreKitConfigAppBunbleId");
+    const privateKey1 = await getConfigValue<string>("feastAppleStoreKitConfigPrivateKey1");
+
+    const jwt_headers = {
+        alg: 'ES256',
+        kid: keyId,
+        typ: "JWT"
+    }
+  
+    const jwt_payload = {
+        iss: issuerId,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        aud: audience,
+        bid: appBundleId
+    }
+
+    const token = jwt.sign(jwt_payload, privateKey1, {
+        header: jwt_headers
+      });
+
+    console.log(`[f1335718] ${token}`);
+
     const params = {
         method: 'GET',
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${auth}`
+            "Authorization": `Bearer ${token}`
         }
     }
 
@@ -104,6 +165,12 @@ const appleSubscriptionToExtendedData = async (subscription: Subscription): Prom
 
     console.log(`[c5dabbcc] ${signedTransactionInfo}`);
 
+    const data1 = jwt.decode(signedTransactionInfo);
+
+    console.log(`[7f53de39] data1: ${JSON.stringify(data1)}`);
+
+    // At this point we need to transform the signedTransactionInfo into a JSON object: a AppleTransactionQueryResponse
+
     /*
         payload (anonymized) from the answer
 
@@ -131,11 +198,21 @@ const appleSubscriptionToExtendedData = async (subscription: Subscription): Prom
             "currency": "GBP",
             "offerDiscountType": "FREE_TRIAL"
         }
+
+        Sample of AppleTransactionQueryResponse {
+            "transactionId": "2200001105",
+            "productId": "uk.co.guardian.Feast.monthly",
+            "storefront": "GBR",
+            "currency": "GBP",
+        }
+
     */
 
-    const country = "UK"; // function of `answer.storefront`
-    const currency = "GBP";
-    const paymentFrequency = "MONTHLY"; // function of `answer.productId`
+    const appleResponse: AppleTransactionQueryResponse = data1 as AppleTransactionQueryResponse;
+
+    const country = storefrontToCountry(appleResponse.storefront); 
+    const currency = appleResponse.currency;
+    const paymentFrequency = productIdToPaymentFrequency(appleResponse.productId);
     return {
         transactionId,
         country,
@@ -147,6 +224,8 @@ const appleSubscriptionToExtendedData = async (subscription: Subscription): Prom
 const appleSubscriptionToAcquisitionApiPayload = async (subscription: Subscription): Promise<AcquisitionApiPayload> => {
 
     const extendedData = await appleSubscriptionToExtendedData(subscription);
+
+    console.log(`[12901310] acquisition api payload: ${JSON.stringify(extendedData)}`);
 
     const eventTimeStamp = subscription.startTimestamp;
     const product = "FEAST_APP";
