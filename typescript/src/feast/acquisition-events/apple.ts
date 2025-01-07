@@ -69,7 +69,9 @@ const appleSubscriptionToExtendedData = async (subscription: Subscription): Prom
 
     console.log(`[940dc079] ${new Date}`);
 
-    const transactionId = "220002304451105";
+    const transactionId = subscription.applePayload["latest_receipt_info"][0]["transaction_id"];
+    console.log(`[116fa7d4] transactionId: ${transactionId}`);
+
     const url = `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${transactionId}`;
     console.log(`[5330931d] url: ${url}`);
 
