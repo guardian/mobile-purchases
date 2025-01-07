@@ -149,6 +149,9 @@ const appleSubscriptionToExtendedData = async (subscription: Subscription): Prom
                         "signedTransactionInfo": "eyJhbGciOeUJEWlhKMGF[removed]"
     */
 
+    // extracting signedTransactionInfo
+    // Currently doing it by hand but it will be validated with zod in a coming refactoring
+
     const data = json.data
     if (data === undefined) {
         throw new Error("[92d086b6] json.data is undefined");
