@@ -108,6 +108,20 @@ const storefrontToCountryMap = {
     "UGA": "UG", // Uganda
     "TZA": "TZ", // Tanzania
     "ETH": "ET", // Ethiopia
+    "SRB": "RS", // Serbia
+    "ALB": "AL", // Albania
+    "AND": "AD", // Andorra
+    "BLR": "BY", // Belarus
+    "BIH": "BA", // Bosnia and Herzegovina
+    "ISL": "IS", // Iceland
+    "XKX": "XK", // Kosovo
+    "LIE": "LI", // Liechtenstein
+    "MCO": "MC", // Monaco
+    "MNE": "ME", // Montenegro
+    "MKD": "MK", // North Macedonia
+    "SMR": "SM", // San Marino
+    "UKR": "UA", // Ukraine
+    "VAT": "VA", // Vatican City
 };
 
 const storefrontToCountry = (storefront: string): string => {
