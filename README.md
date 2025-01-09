@@ -19,7 +19,7 @@ Make sure that you are using the Node version specified by the `.nvmrc` file. We
 
 ### Linting
 
-prettier is now used to provide consistent formatting. It is not yet mandatory, so doesn't yet exists as a pre-commit hook. To apply run `yarn lint` or `yarn lint-fix`.
+prettier is now used to provide consistent formatting. It is not yet mandatory, so doesn't yet exist as a pre-commit hook. To apply run `yarn lint` or `yarn lint-fix`.
 
 ### Data
 
