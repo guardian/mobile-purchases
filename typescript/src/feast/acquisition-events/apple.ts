@@ -135,6 +135,7 @@ const storefrontToCountry = (storefront: string): string => {
 
 const productIdToPaymentFrequencyMap = {
     "uk.co.guardian.Feast.yearly" : "ANNUALLY",
+    "uk.co.guardain.Feast.yearly.discounted": "ANNUALLY",
     "uk.co.guardian.Feast.monthly": "MONTHLY",
     "uk.co.guardian.Feast.monthly.discounted": "MONTHLY",
 }
