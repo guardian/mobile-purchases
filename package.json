@@ -9,8 +9,8 @@
     "test": "jest",
     "test-lambda": "yarn build:dev && node ./tsc-target/test-launcher.js",
     "android-price-rise": "AWS_PROFILE=mobile ts-node ./typescript/src/scripts/android-price-rise/runPriceRise.ts",
-    "lint": "npx prettier --check --config .prettierrc \"./typescript/src/**/*.ts\"",
-    "lint-fix": "prettier --write --config .prettierrc \"./typescript/src/**/*.ts\""
+    "lint": "npx prettier --check --config .prettierrc \"./typescript/**/*.ts\"",
+    "lint-fix": "prettier --write --config .prettierrc \"./typescript/**/*.ts\""
   },
   "repository": {
     "type": "git",
