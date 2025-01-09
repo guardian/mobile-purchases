@@ -30,7 +30,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 				`identityId: ${identityId}, subscriptionId: ${subscriptionId}`,
 			);
 
-			let itemToQuery = new SubscriptionEmpty();
+			const itemToQuery = new SubscriptionEmpty();
 			itemToQuery.setSubscriptionId(subscriptionId);
 
 			let subscriptionRecord: Subscription;

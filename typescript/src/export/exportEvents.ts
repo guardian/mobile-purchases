@@ -38,12 +38,12 @@ export async function handler(event?: ManualBackfillEvent): Promise<any> {
 	);
 	const stream = new DynamoStream(iterator, cleanupEvent);
 
-	let zippedStream = zlib.createGzip();
+	const zippedStream = zlib.createGzip();
 	stream.pipe(zippedStream);
 
 	const prefix = Stage === 'PROD' ? 'data' : 'code-data';
 	const filename = `${prefix}/date=${yesterday}/${yesterday}.json.gz`;
-	let managedUpload = s3.upload({
+	const managedUpload = s3.upload({
 		Bucket: bucket,
 		Key: filename,
 		Body: zippedStream,

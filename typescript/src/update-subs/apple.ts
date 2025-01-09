@@ -16,7 +16,7 @@ export function toAppleSubscription(
 ): Subscription {
 	const latestReceiptInfo = response.latestReceiptInfo;
 
-	let autoRenewStatus: boolean = false;
+	let autoRenewStatus = false;
 	if (response.latestReceiptInfo.autoRenewStatus) {
 		autoRenewStatus = true;
 	}
@@ -26,7 +26,7 @@ export function toAppleSubscription(
 		cancellationDate = latestReceiptInfo.cancellationDate.toISOString();
 	}
 
-	let billingPeriod = PRODUCT_BILLING_PERIOD[latestReceiptInfo.productId];
+	const billingPeriod = PRODUCT_BILLING_PERIOD[latestReceiptInfo.productId];
 	if (billingPeriod === undefined) {
 		console.warn(
 			`Unable to get the billing period, unknown product ID ${latestReceiptInfo.productId}`,

@@ -100,17 +100,17 @@ const fieldAllowList = [
 
 function debugCleanPayload(
 	data: unknown,
-	depth: number = 4,
-	whitelisted: boolean = false,
+	depth = 4,
+	whitelisted = false,
 ): object | string {
 	if (isObject(data) && depth > 0) {
 		if (Array.isArray(data)) {
-			let res = [];
-			for (let item of data) res.push(debugCleanPayload(item, depth - 1));
+			const res = [];
+			for (const item of data) res.push(debugCleanPayload(item, depth - 1));
 			return res;
 		} else {
-			let result: Record<string, unknown> = {};
-			for (let k in data)
+			const result: Record<string, unknown> = {};
+			for (const k in data)
 				result[k] = debugCleanPayload(
 					data[k],
 					depth - 1,
@@ -122,7 +122,7 @@ function debugCleanPayload(
 	else return `<${typeof data}>`;
 }
 
-function debugLogPayload(data: unknown, maxDepth: number = 4) {
+function debugLogPayload(data: unknown, maxDepth = 4) {
 	return JSON.stringify(debugCleanPayload(data, maxDepth));
 }
 
@@ -502,7 +502,9 @@ export function parsePayload(
 			return parsedNotification.value;
 		}
 		console.log(
-			`debugLogPayload (parse error: ${parsedNotification.err}): ${debugLogPayload(notification)}`,
+			`debugLogPayload (parse error: ${
+				parsedNotification.err
+			}): ${debugLogPayload(notification)}`,
 		);
 		throw Error(
 			`The payload could not be parsed due to ${parsedNotification.err}`,

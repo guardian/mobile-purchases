@@ -65,7 +65,7 @@ export class Subscription {
 		receipt?: string,
 		applePayload?: any,
 		ttl?: number,
-		tableName: string = 'subscriptions',
+		tableName = 'subscriptions',
 	) {
 		this.subscriptionId = subscriptionId;
 		this.startTimestamp = startTimestamp;

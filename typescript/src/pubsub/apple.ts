@@ -15,7 +15,11 @@ export function toDynamoEvent(
 	const eventType = notification.notification_type;
 	const receiptInfo = notification.unified_receipt.latest_receipt_info;
 	console.log(
-		`notification is from ${notification.environment}, latest_receipt_info is undefined: ${notification.unified_receipt.latest_receipt_info === undefined}`,
+		`notification is from ${
+			notification.environment
+		}, latest_receipt_info is undefined: ${
+			notification.unified_receipt.latest_receipt_info === undefined
+		}`,
 	);
 	const platform = appleBundleToPlatform(notification.bid);
 	if (!platform) {

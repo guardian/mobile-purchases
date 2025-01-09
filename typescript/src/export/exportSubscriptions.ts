@@ -26,7 +26,7 @@ export async function handler(): Promise<any> {
 			throw new Error(`Invalid ClassName value ${className}`);
 	}
 
-	let zippedStream = zlib.createGzip();
+	const zippedStream = zlib.createGzip();
 	stream.pipe(zippedStream);
 
 	const yesterday = plusDays(new Date(), -1).toISOString().substr(0, 10);

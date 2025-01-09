@@ -85,7 +85,7 @@ export async function handler(event: any): Promise<void> {
 				`identityId: ${identityId}, subscriptionId: ${subscriptionId}, timestamp: ${timestamp}`,
 			);
 
-			let subEmpty = new SubscriptionEmpty();
+			const subEmpty = new SubscriptionEmpty();
 			subEmpty.setSubscriptionId(subscriptionId);
 
 			let subscriptionRecord: Subscription;

@@ -95,7 +95,7 @@ function passwordForApp(app: App): Promise<string> {
 function callValidateReceipt(
 	receipt: string,
 	app: App = App.Live,
-	forceSandbox: boolean = false,
+	forceSandbox = false,
 ): Promise<IHttpClientResponse> {
 	const endpoint = forceSandbox ? sandboxReceiptEndpoint : receiptEndpoint;
 	return passwordForApp(app)

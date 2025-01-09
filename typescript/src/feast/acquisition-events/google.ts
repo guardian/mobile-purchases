@@ -275,11 +275,15 @@ const googleSubscriptionToAcquisitionApiPayload = (
 
 const processSQSRecord = async (record: SQSRecord): Promise<void> => {
 	console.log(
-		`[48bb04a0] calling processRecord (Google version) with record ${JSON.stringify(record)}`,
+		`[48bb04a0] calling processRecord (Google version) with record ${JSON.stringify(
+			record,
+		)}`,
 	);
 	const subscriptionFromQueue: Subscription = JSON.parse(record.body);
 	console.log(
-		`[cf7fd559] subscriptionFromQueue: ${JSON.stringify(subscriptionFromQueue)}`,
+		`[cf7fd559] subscriptionFromQueue: ${JSON.stringify(
+			subscriptionFromQueue,
+		)}`,
 	);
 	// We are now collecting the the data required to query the Google Play API (v2) for subscription details
 	const purchaseToken = subscriptionFromQueue.subscriptionId;
@@ -289,7 +293,9 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
 		packageName,
 	);
 	console.log(
-		`[4fe9b14b] subscriptionFromGoogle: ${JSON.stringify(subscriptionFromGoogle)}`,
+		`[4fe9b14b] subscriptionFromGoogle: ${JSON.stringify(
+			subscriptionFromGoogle,
+		)}`,
 	);
 	const subscriptionUpdated: Subscription = googleSubscriptionToSubscription(
 		purchaseToken,

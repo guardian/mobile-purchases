@@ -24,7 +24,9 @@ const processAcquisition = async (
 	// We return true in the case of an inactive subscription.
 
 	console.log(
-		`[46218776] Processing acquisition for subscription: ${JSON.stringify(subscription)}`,
+		`[46218776] Processing acquisition for subscription: ${JSON.stringify(
+			subscription,
+		)}`,
 	);
 	const subscriptionId = subscription.subscriptionId;
 
@@ -89,7 +91,7 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
 			`Processing: ${eventName} record for identityId: ${identityId} and subscriptionId: ${subscriptionId}`,
 		);
 
-		let emptySubscription = new SubscriptionEmpty();
+		const emptySubscription = new SubscriptionEmpty();
 		emptySubscription.setSubscriptionId(subscriptionId);
 
 		let subscription: Subscription;

@@ -99,7 +99,7 @@ export async function getGoogleSubResponse(
 		}
 	}
 
-	let billingPeriod =
+	const billingPeriod =
 		PRODUCT_BILLING_PERIOD[subscriptionReference.subscriptionId];
 	if (billingPeriod === undefined) {
 		console.warn(

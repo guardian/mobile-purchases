@@ -23,7 +23,7 @@ if (!filePath) {
 }
 
 const DRY_RUN = process.argv.includes('--dry-run');
-let writeStream = fs.createWriteStream('price-rise-output.csv');
+const writeStream = fs.createWriteStream('price-rise-output.csv');
 writeStream.write(
 	'productId,regionCode,currency,oldPrice,newPrice,pcIncrease\n',
 );
@@ -97,7 +97,9 @@ const updatePrices = (
 				}
 				const currency =
 					regionalConfig.price?.currencyCode ?? priceDetails.currency;
-				const currentPrice = `${regionalConfig.price?.units ?? 0}.${regionalConfig.price?.nanos?.toString().slice(0, 2) ?? '00'}`;
+				const currentPrice = `${regionalConfig.price?.units ?? 0}.${
+					regionalConfig.price?.nanos?.toString().slice(0, 2) ?? '00'
+				}`;
 				const pcIncrease =
 					(priceDetails.price - parseFloat(currentPrice)) /
 					parseFloat(currentPrice);
@@ -126,7 +128,9 @@ getClient()
 			// For each product_id in priceRiseData, update the prices in each region
 			Object.entries(priceRiseData).map(([productId, regionPriceMap]) => {
 				console.log(
-					`Updating productId ${productId} in ${Object.keys(regionPriceMap).length} regions`,
+					`Updating productId ${productId} in ${
+						Object.keys(regionPriceMap).length
+					} regions`,
 				);
 
 				return getCurrentBasePlan(client, productId, packageName)

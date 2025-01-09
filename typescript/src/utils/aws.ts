@@ -133,7 +133,7 @@ const cloudWatchClient = new CloudWatch({ region: Region });
 
 export async function putMetric(
 	metricName: string,
-	value: number = 1.0,
+	value = 1.0,
 ): Promise<void> {
 	const metricDatum: AWS.CloudWatch.MetricDatum = {
 		MetricName: metricName,

@@ -94,15 +94,16 @@ export async function handler(params: {
 	const sqsUrl = process.env['SqsUrl'];
 	if (!sqsUrl) throw new Error('Variable SqsUrl must be set');
 
-	const numberOfMessagesNotVisible =
-		await getNumberOfMessagesNotVisible(sqsUrl);
+	const numberOfMessagesNotVisible = await getNumberOfMessagesNotVisible(
+		sqsUrl,
+	);
 	if (numberOfMessagesNotVisible > 1) {
 		throw new Error(
 			`Approximately ${numberOfMessagesNotVisible} messages are unavailable for processing. Something else is currently consuming messages from ${sqsUrl}`,
 		);
 	}
 
-	let zippedStream = zlib.createGzip();
+	const zippedStream = zlib.createGzip();
 
 	const maxMessagesToFetch = params.maxMessagesToFetch ?? Number.MAX_VALUE;
 

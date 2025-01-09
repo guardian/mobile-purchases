@@ -189,7 +189,7 @@ describe('handler', () => {
 
 		expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
 
-		let expectedQuery = new SubscriptionEmpty();
+		const expectedQuery = new SubscriptionEmpty();
 		expectedQuery.setSubscriptionId('12345');
 		expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 
@@ -291,7 +291,7 @@ describe('handler', () => {
 
 		expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
 
-		let expectedQuery = new SubscriptionEmpty();
+		const expectedQuery = new SubscriptionEmpty();
 		expectedQuery.setSubscriptionId('12345');
 		expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 

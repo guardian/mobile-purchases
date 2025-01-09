@@ -439,7 +439,9 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
 	const appleValidationResponses: AppleValidationResponse[] =
 		await validateReceipt(receipt, validationOptions, App.Feast);
 	console.log(
-		`[2dc25207] AppleValidationResponses: ${JSON.stringify(appleValidationResponses)}`,
+		`[2dc25207] AppleValidationResponses: ${JSON.stringify(
+			appleValidationResponses,
+		)}`,
 	);
 	const promises = appleValidationResponses.map(
 		async (appleValidationResponse) => {
@@ -449,8 +451,9 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
 			console.log(
 				`[a41a0078] appleSubscription: ${JSON.stringify(appleSubscription)}`,
 			);
-			const payload =
-				await appleSubscriptionToAcquisitionApiPayload(appleSubscription);
+			const payload = await appleSubscriptionToAcquisitionApiPayload(
+				appleSubscription,
+			);
 			console.log(
 				`[ffdce775] acquisition api payload: ${JSON.stringify(payload)}`,
 			);

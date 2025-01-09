@@ -69,7 +69,9 @@ export const postPayloadToAcquisitionAPI = async (
 		await restClient.client.post(url, body, additionalHeaders);
 	} else {
 		console.log(
-			`[69460012] postPayload has been called with payload: ${JSON.stringify(payload)}`,
+			`[69460012] postPayload has been called with payload: ${JSON.stringify(
+				payload,
+			)}`,
 		);
 	}
 };

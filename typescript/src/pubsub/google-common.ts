@@ -93,7 +93,9 @@ export function parsePayload(
 		}
 
 		return new Ignorable(
-			`Notification is not a subscription notification. Notification was: ${JSON.stringify(data)}`,
+			`Notification is not a subscription notification. Notification was: ${JSON.stringify(
+				data,
+			)}`,
 		);
 	} catch (e) {
 		console.log('Error during the parsing of the HTTP Payload body: ' + e);

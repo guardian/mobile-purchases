@@ -17,7 +17,7 @@ export class Subscription {
 	receipt?: string;
 
 	@attribute()
-	autoRenewing: Boolean;
+	autoRenewing: boolean;
 
 	@attribute()
 	platform: string;
@@ -25,7 +25,7 @@ export class Subscription {
 	constructor(
 		subscriptionId: string,
 		endTimestamp: string,
-		autoRenewStatus: Boolean,
+		autoRenewStatus: boolean,
 		platform: string,
 		receipt?: string,
 	) {

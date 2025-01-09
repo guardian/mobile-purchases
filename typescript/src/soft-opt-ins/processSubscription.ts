@@ -92,7 +92,9 @@ async function sendSoftOptIns(
 		message,
 	);
 	console.log(
-		`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`,
+		`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(
+			message,
+		)}`,
 	);
 }
 
@@ -191,7 +193,9 @@ export async function processAcquisition(
 		}
 
 		console.log(
-			`Sent message to braze-emails queue for user: ${identityId}: ${JSON.stringify(brazeMessage)}`,
+			`Sent message to braze-emails queue for user: ${identityId}: ${JSON.stringify(
+				brazeMessage,
+			)}`,
 		);
 	}
 

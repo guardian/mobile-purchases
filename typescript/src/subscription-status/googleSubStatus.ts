@@ -93,7 +93,9 @@ export async function handler(
 				return HTTPResponses.NOT_FOUND;
 			} else {
 				console.log(
-					`Serving an Internal Server Error due to: ${error.toString().split('/tokens/')[0]}`,
+					`Serving an Internal Server Error due to: ${
+						error.toString().split('/tokens/')[0]
+					}`,
 				);
 				return HTTPResponses.INTERNAL_ERROR;
 			}
@@ -124,7 +126,9 @@ async function getSubscriptionStatusFromGoogle(
 		? subscriptionStatus(subscriptionExpiryDate)
 		: null;
 	console.log(
-		`Google SubscriptionStatus for purchaseToken hash: ${purchaseTokenHash}: ${JSON.stringify(googleSubscriptionStatus)}`,
+		`Google SubscriptionStatus for purchaseToken hash: ${purchaseTokenHash}: ${JSON.stringify(
+			googleSubscriptionStatus,
+		)}`,
 	);
 	return googleSubscriptionStatus;
 }
@@ -137,13 +141,15 @@ async function getSubscriptionStatusFromDynamo(
 		console.log(
 			`Fetching subscription from Dynamo for purchaseToken hash: ${purchaseTokenHash}`,
 		);
-		let itemToQuery = new SubscriptionEmpty();
+		const itemToQuery = new SubscriptionEmpty();
 		itemToQuery.setSubscriptionId(purchaseToken);
 		const subscription = await dynamoMapper.get(itemToQuery);
 		const subscriptionExpiryDate = new Date(subscription.endTimestamp);
 		const dynamoSubscriptionStatus = subscriptionStatus(subscriptionExpiryDate);
 		console.log(
-			`Dynamo SubscriptionStatus for purchaseToken hash: ${purchaseTokenHash}: ${JSON.stringify(dynamoSubscriptionStatus)}`,
+			`Dynamo SubscriptionStatus for purchaseToken hash: ${purchaseTokenHash}: ${JSON.stringify(
+				dynamoSubscriptionStatus,
+			)}`,
 		);
 		return dynamoSubscriptionStatus;
 	} catch (error: any) {

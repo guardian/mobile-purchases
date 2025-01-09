@@ -36,7 +36,9 @@ export async function parseAndStoreSubscriptionUpdate(
 		await Promise.all(subscriptions.map(putSubscription));
 		await Promise.all(subscriptions.map(queueHistoricalSubscription));
 		console.log(
-			`Processed ${subscriptions.length} subscriptions: ${subscriptions.map((s) => s.subscriptionId)}`,
+			`Processed ${subscriptions.length} subscriptions: ${subscriptions.map(
+				(s) => s.subscriptionId,
+			)}`,
 		);
 		return 'OK';
 	} catch (error) {
