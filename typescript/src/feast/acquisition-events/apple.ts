@@ -122,6 +122,7 @@ const storefrontToCountryMap = {
     "SMR": "SM", // San Marino
     "UKR": "UA", // Ukraine
     "VAT": "VA", // Vatican City
+    "HKG": "HK", // Hong Kong
 };
 
 const storefrontToCountry = (storefront: string): string => {
@@ -135,6 +136,7 @@ const storefrontToCountry = (storefront: string): string => {
 
 const productIdToPaymentFrequencyMap = {
     "uk.co.guardian.Feast.yearly" : "ANNUALLY",
+    "uk.co.guardain.Feast.yearly.discounted": "ANNUALLY",
     "uk.co.guardian.Feast.monthly": "MONTHLY",
     "uk.co.guardian.Feast.monthly.discounted": "MONTHLY",
 }
