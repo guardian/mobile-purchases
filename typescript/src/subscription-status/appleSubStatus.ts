@@ -1,12 +1,12 @@
-import 'source-map-support/register';
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { Platform } from '../models/platform';
+import "source-map-support/register";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { Platform } from "../models/platform";
 import {
   AppleValidationResponse,
   validateReceipt,
-} from '../services/appleValidateReceipts';
-import { HTTPResponses } from '../models/apiGatewayHttp';
-import { plusDays } from '../utils/dates';
+} from "../services/appleValidateReceipts";
+import { HTTPResponses } from "../models/apiGatewayHttp";
+import { plusDays } from "../utils/dates";
 
 interface AppleSubscription {
   receipt: string;
@@ -33,7 +33,7 @@ interface AppleSubscriptionStatusResponse {
 }
 
 function toResponse(
-  validationResponse: AppleValidationResponse
+  validationResponse: AppleValidationResponse,
 ): AppleSubscriptionStatusResponse {
   const now = new Date();
 
@@ -59,27 +59,27 @@ function toResponse(
 
 function logClientServerStatusDiff(
   responses: AppleSubscriptionStatusResponse[],
-  requests: AppleSubscription[]
+  requests: AppleSubscription[],
 ): void {
   for (const req of requests) {
     const resp = responses.find(
-      (resp) => resp.originalTransactionId === req.originalTransactionId
+      (resp) => resp.originalTransactionId === req.originalTransactionId,
     );
     // if the server decide the subscription isn't valid, but the client has decided the subscription is valid
     if (!resp?.valid && req.clientSideValid === true) {
       console.warn(
-        `Client thought ${req.originalTransactionId} was valid but server disagreed`
+        `Client thought ${req.originalTransactionId} was valid but server disagreed`,
       );
     }
   }
 }
 
 export async function handler(
-  httpRequest: APIGatewayProxyEvent
+  httpRequest: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
   let payload: AppleLinkPayload;
   try {
-    payload = JSON.parse(httpRequest.body ?? '') as AppleLinkPayload;
+    payload = JSON.parse(httpRequest.body ?? "") as AppleLinkPayload;
   } catch (e) {
     return HTTPResponses.INVALID_REQUEST;
   }
@@ -87,12 +87,12 @@ export async function handler(
   try {
     const validationResults = await Promise.all(
       payload.subscriptions.map((sub) =>
-        validateReceipt(sub.receipt, { sandboxRetry: true })
-      )
+        validateReceipt(sub.receipt, { sandboxRetry: true }),
+      ),
     );
     const flattenedValidationResults = validationResults.reduce(
       (agg: AppleValidationResponse[], value) => agg.concat(value),
-      []
+      [],
     );
     const calculatedResponse = flattenedValidationResults.map(toResponse);
     logClientServerStatusDiff(calculatedResponse, payload.subscriptions);

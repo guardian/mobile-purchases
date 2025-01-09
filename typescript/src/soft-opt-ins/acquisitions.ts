@@ -1,14 +1,14 @@
-import { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
-import { Stage } from '../utils/appIdentity';
-import { processAcquisition } from './processSubscription';
-import { SubscriptionEmpty, Subscription } from '../models/subscription';
-import { dynamoMapper, sendToSqs } from '../utils/aws';
+import { DynamoDBRecord, DynamoDBStreamEvent } from "aws-lambda";
+import { Stage } from "../utils/appIdentity";
+import { processAcquisition } from "./processSubscription";
+import { SubscriptionEmpty, Subscription } from "../models/subscription";
+import { dynamoMapper, sendToSqs } from "../utils/aws";
 
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {
   const dlqUrl = process.env.DLQUrl;
 
   if (!dlqUrl) {
-    throw new Error('process.env.DLQUrl is undefined');
+    throw new Error("process.env.DLQUrl is undefined");
   }
 
   console.log(`dlqUrl: ${dlqUrl}`);
@@ -20,14 +20,14 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
   const processRecordPromises = records.map(async (record: DynamoDBRecord) => {
     const eventName = record.eventName;
 
-    const identityId = record?.dynamodb?.NewImage?.userId?.S || '';
-    const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || '';
+    const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
+    const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
 
-    if (eventName === 'INSERT') {
+    if (eventName === "INSERT") {
       processedCount++;
 
       console.log(
-        `identityId: ${identityId}, subscriptionId: ${subscriptionId}`
+        `identityId: ${identityId}, subscriptionId: ${subscriptionId}`,
       );
 
       let itemToQuery = new SubscriptionEmpty();
@@ -40,7 +40,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
       } catch (error) {
         console.log(
           `Subscription ${subscriptionId} record not found in the subscriptions table. Error: `,
-          error
+          error,
         );
 
         try {
@@ -49,7 +49,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
         } catch (e) {
           console.log(
             `could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}. Error: `,
-            e
+            e,
           );
         }
 
@@ -63,6 +63,6 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
   await Promise.all(processRecordPromises);
 
   console.log(
-    `Processed ${processedCount} newly inserted records from the link (mobile-purchases-${Stage}-user-subscriptions) DynamoDB table`
+    `Processed ${processedCount} newly inserted records from the link (mobile-purchases-${Stage}-user-subscriptions) DynamoDB table`,
   );
 }

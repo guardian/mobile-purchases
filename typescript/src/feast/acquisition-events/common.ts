@@ -1,6 +1,6 @@
-import { restClient } from '../../utils/restClient';
-import { getConfigValue } from '../../utils/ssmConfig';
-import { Stage } from '../../utils/appIdentity';
+import { restClient } from "../../utils/restClient";
+import { getConfigValue } from "../../utils/ssmConfig";
+import { Stage } from "../../utils/appIdentity";
 
 // This function is duplicated from the copy in src/update-subs/google.ts
 // This will be corrected in the future refactoring
@@ -56,20 +56,20 @@ export type AcquisitionApiPayload = {
 };
 
 export const postPayloadToAcquisitionAPI = async (
-  payload: AcquisitionApiPayload
+  payload: AcquisitionApiPayload,
 ) => {
   // Date: 12 Dec 2024
   // We are only performing that operation on PROD, because we do not have a code endpoint
   // the parameter `acquisitionApiUrl` has only been defined for stage PROD in Paremeter Store
-  if (Stage === 'PROD') {
-    const url = await getConfigValue<string>('acquisitionApiUrl');
+  if (Stage === "PROD") {
+    const url = await getConfigValue<string>("acquisitionApiUrl");
     console.log(`[9118860a] acquisition api url: ${url}`);
-    const additionalHeaders = { 'Content-Type': 'application/json' };
+    const additionalHeaders = { "Content-Type": "application/json" };
     const body = JSON.stringify(payload);
     await restClient.client.post(url, body, additionalHeaders);
   } else {
     console.log(
-      `[69460012] postPayload has been called with payload: ${JSON.stringify(payload)}`
+      `[69460012] postPayload has been called with payload: ${JSON.stringify(payload)}`,
     );
   }
 };

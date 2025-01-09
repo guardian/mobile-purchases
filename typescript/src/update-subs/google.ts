@@ -1,33 +1,33 @@
-import 'source-map-support/register';
-import { SQSEvent, SQSRecord } from 'aws-lambda';
-import { parseAndStoreSubscriptionUpdate } from './updatesub';
-import { Subscription } from '../models/subscription';
-import { ProcessingError } from '../models/processingError';
+import "source-map-support/register";
+import { SQSEvent, SQSRecord } from "aws-lambda";
+import { parseAndStoreSubscriptionUpdate } from "./updatesub";
+import { Subscription } from "../models/subscription";
+import { ProcessingError } from "../models/processingError";
 import {
   dateToSecondTimestamp,
   optionalMsToDate,
   thirtyMonths,
-} from '../utils/dates';
-import { GoogleSubscriptionReference } from '../models/subscriptionReference';
-import { googlePackageNameToPlatform } from '../services/appToPlatform';
+} from "../utils/dates";
+import { GoogleSubscriptionReference } from "../models/subscriptionReference";
+import { googlePackageNameToPlatform } from "../services/appToPlatform";
 import {
   fetchGoogleSubscription,
   GOOGLE_PAYMENT_STATE,
   GoogleResponseBody,
-} from '../services/google-play';
-import { PRODUCT_BILLING_PERIOD } from '../services/productBillingPeriod';
+} from "../services/google-play";
+import { PRODUCT_BILLING_PERIOD } from "../services/productBillingPeriod";
 
 export const googleResponseBodyToSubscription = (
   purchaseToken: string,
   packageName: string,
   subscriptionId: string,
   billingPeriod: string,
-  googleResponse: GoogleResponseBody | null
+  googleResponse: GoogleResponseBody | null,
 ): Subscription => {
   if (!googleResponse) {
     throw new ProcessingError(
-      'There was no data in the response from google',
-      true
+      "There was no data in the response from google",
+      true,
     );
   }
 
@@ -35,7 +35,7 @@ export const googleResponseBodyToSubscription = (
   if (expiryDate === null) {
     throw new ProcessingError(
       `Unable to parse the expiryTimeMillis field ${googleResponse.expiryTimeMillis}`,
-      false
+      false,
     );
   }
 
@@ -43,7 +43,7 @@ export const googleResponseBodyToSubscription = (
   if (startDate === null) {
     throw new ProcessingError(
       `Unable to parse the startTimeMillis field ${googleResponse.startTimeMillis}`,
-      false
+      false,
     );
   }
 
@@ -62,15 +62,15 @@ export const googleResponseBodyToSubscription = (
     googleResponse,
     undefined,
     null,
-    dateToSecondTimestamp(thirtyMonths(expiryDate))
+    dateToSecondTimestamp(thirtyMonths(expiryDate)),
   );
 };
 
 export async function getGoogleSubResponse(
-  record: SQSRecord
+  record: SQSRecord,
 ): Promise<Subscription[]> {
   const subscriptionReference = JSON.parse(
-    record.body
+    record.body,
   ) as GoogleSubscriptionReference;
 
   let response;
@@ -78,7 +78,7 @@ export async function getGoogleSubResponse(
     response = await fetchGoogleSubscription(
       subscriptionReference.subscriptionId,
       subscriptionReference.purchaseToken,
-      subscriptionReference.packageName
+      subscriptionReference.packageName,
     );
   } catch (exception: any) {
     if (exception.statusCode === 410) {
@@ -87,13 +87,13 @@ export async function getGoogleSubResponse(
     }
     if (
       exception.statusCode === 400 &&
-      exception?.result?.error?.message === 'Invalid Value'
+      exception?.result?.error?.message === "Invalid Value"
     ) {
       console.warn(
         "The purchase token value was invalid, we can't recover from this error",
-        exception
+        exception,
       );
-      throw new ProcessingError('Invalid token value', false);
+      throw new ProcessingError("Invalid token value", false);
     } else {
       throw exception;
     }
@@ -103,7 +103,7 @@ export async function getGoogleSubResponse(
     PRODUCT_BILLING_PERIOD[subscriptionReference.subscriptionId];
   if (billingPeriod === undefined) {
     console.warn(
-      `Unable to get the billing period, unknown google subscription ID ${subscriptionReference.subscriptionId}`
+      `Unable to get the billing period, unknown google subscription ID ${subscriptionReference.subscriptionId}`,
     );
   }
 
@@ -112,15 +112,15 @@ export async function getGoogleSubResponse(
     subscriptionReference.packageName,
     subscriptionReference.subscriptionId,
     billingPeriod,
-    response
+    response,
   );
   return [subscription];
 }
 
 export async function handler(event: SQSEvent) {
   const promises = event.Records.map((record) =>
-    parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse)
+    parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse),
   );
 
-  return Promise.all(promises).then((_) => 'OK');
+  return Promise.all(promises).then((_) => "OK");
 }

@@ -2,19 +2,19 @@ import {
   sendToSqsComms,
   sendToSqsSoftOptIns,
   SoftOptInEvent,
-} from '../utils/aws';
-import { Subscription } from '../models/subscription';
-import { Region, Stage } from '../utils/appIdentity';
-import fetch from 'node-fetch';
-import { Response } from 'node-fetch';
+} from "../utils/aws";
+import { Subscription } from "../models/subscription";
+import { Region, Stage } from "../utils/appIdentity";
+import fetch from "node-fetch";
+import { Response } from "node-fetch";
 import {
   getIdentityApiKey,
   getIdentityUrl,
   getMembershipAccountId,
-} from '../utils/guIdentityApi';
-import { plusDays } from '../utils/dates';
-import { Platform } from '../models/platform';
-import { mapPlatformToSoftOptInProductName } from '../utils/softOptIns';
+} from "../utils/guIdentityApi";
+import { plusDays } from "../utils/dates";
+import { Platform } from "../models/platform";
+import { mapPlatformToSoftOptInProductName } from "../utils/softOptIns";
 
 export function isPostAcquisition(startTimestamp: string): boolean {
   const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
@@ -31,13 +31,13 @@ async function handleError(message: string): Promise<never> {
 
 async function getUserEmailAddress(
   identityId: string,
-  identityApiKey: string
+  identityApiKey: string,
 ): Promise<string> {
   const domain = await getIdentityUrl();
   const url = `${domain}/user/${identityId}`;
 
   const params = {
-    method: 'GET',
+    method: "GET",
     headers: {
       Authorization: `Bearer ${identityApiKey}`,
     },
@@ -52,20 +52,20 @@ async function getUserEmailAddress(
 
         if (!json.user || !json.user.primaryEmailAddress) {
           return await handleError(
-            `User or primaryEmailAddress is undefined for user ${identityId}`
+            `User or primaryEmailAddress is undefined for user ${identityId}`,
           );
         }
 
         return json.user.primaryEmailAddress;
       } else {
         return await handleError(
-          `Could not fetch details from identity API for user ${identityId}`
+          `Could not fetch details from identity API for user ${identityId}`,
         );
       }
     });
   } catch (error) {
     return await handleError(
-      `error while retrieving user data for identityId: ${identityId}: ${error}`
+      `error while retrieving user data for identityId: ${identityId}: ${error}`,
     );
   }
 }
@@ -74,32 +74,32 @@ async function sendSoftOptIns(
   identityId: string,
   subscriptionId: string,
   platform: string | undefined,
-  queueNamePrefix: string
+  queueNamePrefix: string,
 ) {
   const productName = mapPlatformToSoftOptInProductName(platform);
 
   const message: SoftOptInEvent = {
     identityId: identityId,
-    eventType: 'Acquisition',
+    eventType: "Acquisition",
     productName,
     subscriptionId: subscriptionId,
   };
 
   await sendToSqsSoftOptIns(
-    Stage === 'PROD'
+    Stage === "PROD"
       ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
       : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-CODE`,
-    message
+    message,
   );
   console.log(
-    `Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`
+    `Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(message)}`,
   );
 }
 
 const buildBrazeEmailMessage = (
   emailAddress: string,
   identityId: string,
-  platform: string | undefined
+  platform: string | undefined,
 ) => {
   switch (platform) {
     case Platform.IosFeast:
@@ -109,7 +109,7 @@ const buildBrazeEmailMessage = (
           Address: emailAddress,
           ContactAttributes: { SubscriberAttributes: {} },
         },
-        DataExtensionName: 'SV_FA_SOINotification',
+        DataExtensionName: "SV_FA_SOINotification",
         IdentityUserId: identityId,
       };
     default:
@@ -118,7 +118,7 @@ const buildBrazeEmailMessage = (
           Address: emailAddress,
           ContactAttributes: { SubscriberAttributes: {} },
         },
-        DataExtensionName: 'SV_PA_SOINotification',
+        DataExtensionName: "SV_PA_SOINotification",
         IdentityUserId: identityId,
       };
   }
@@ -127,7 +127,7 @@ const buildBrazeEmailMessage = (
 // returns true if message successfully processed
 export async function processAcquisition(
   subscriptionRecord: Subscription,
-  identityId: string
+  identityId: string,
 ): Promise<boolean> {
   const subscriptionId = subscriptionRecord.subscriptionId;
 
@@ -139,12 +139,12 @@ export async function processAcquisition(
 
   if (!valid) {
     console.log(
-      `Subscription ${subscriptionRecord.subscriptionId} is not active. Stopping processing.`
+      `Subscription ${subscriptionRecord.subscriptionId} is not active. Stopping processing.`,
     );
     return true;
   }
 
-  console.log('Setting soft opt-ins for acquisition event');
+  console.log("Setting soft opt-ins for acquisition event");
 
   const membershipAccountId = await getMembershipAccountId();
   const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
@@ -154,11 +154,11 @@ export async function processAcquisition(
       identityId,
       subscriptionId,
       subscriptionRecord.platform,
-      queueNamePrefix
+      queueNamePrefix,
     );
   } catch (e) {
     handleError(
-      `Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`
+      `Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`,
     );
   }
 
@@ -176,22 +176,22 @@ export async function processAcquisition(
     const brazeMessage = buildBrazeEmailMessage(
       emailAddress,
       identityId,
-      subscriptionRecord.platform
+      subscriptionRecord.platform,
     );
 
     try {
       await sendToSqsComms(
         `${queueNamePrefix}/braze-emails-${Stage}`,
-        brazeMessage
+        brazeMessage,
       );
     } catch (e) {
       handleError(
-        `Failed to send comms for subscriptionId: ${subscriptionId}. ${e}`
+        `Failed to send comms for subscriptionId: ${subscriptionId}. ${e}`,
       );
     }
 
     console.log(
-      `Sent message to braze-emails queue for user: ${identityId}: ${JSON.stringify(brazeMessage)}`
+      `Sent message to braze-emails queue for user: ${identityId}: ${JSON.stringify(brazeMessage)}`,
     );
   }
 

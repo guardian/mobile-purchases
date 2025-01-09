@@ -2,9 +2,9 @@ import {
   hashKey,
   rangeKey,
   attribute,
-} from '@aws/dynamodb-data-mapper-annotations';
-import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
-import { App, Stage } from '../utils/appIdentity';
+} from "@aws/dynamodb-data-mapper-annotations";
+import { DynamoDbTable } from "@aws/dynamodb-data-mapper";
+import { App, Stage } from "../utils/appIdentity";
 
 export class SubscriptionEvent {
   @hashKey()
@@ -56,7 +56,7 @@ export class SubscriptionEvent {
     promotional_offer_name: string | null,
     product_id: any,
     purchase_date_ms: any,
-    expires_date_ms: any
+    expires_date_ms: any,
   ) {
     this.subscriptionId = subscriptionId;
     this.timestampAndType = timestampAndType;
@@ -77,12 +77,12 @@ export class SubscriptionEvent {
   }
 
   get [DynamoDbTable]() {
-    return App + '-' + Stage + '-subscription-events-v2';
+    return App + "-" + Stage + "-subscription-events-v2";
   }
 }
 
 export class SubscriptionEventEmpty extends SubscriptionEvent {
   constructor() {
-    super('', '', '', '', '', '', '', undefined, {}, {}, 0, '', '', '', 0, 0);
+    super("", "", "", "", "", "", "", undefined, {}, {}, 0, "", "", "", 0, 0);
   }
 }

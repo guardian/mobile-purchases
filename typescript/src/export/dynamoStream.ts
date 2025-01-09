@@ -1,7 +1,7 @@
 // @ts-nocheck
 
-import { Readable, ReadableOptions } from 'stream';
-import { ScanIterator } from '@aws/dynamodb-data-mapper';
+import { Readable, ReadableOptions } from "stream";
+import { ScanIterator } from "@aws/dynamodb-data-mapper";
 
 export class DynamoStream<T> extends Readable {
   iterator: ScanIterator<T>;
@@ -10,7 +10,7 @@ export class DynamoStream<T> extends Readable {
   constructor(
     iterator: ScanIterator<T>,
     transformItem?: (t: T) => any,
-    opts?: ReadableOptions
+    opts?: ReadableOptions,
   ) {
     super(opts);
     this.iterator = iterator;
@@ -25,7 +25,7 @@ export class DynamoStream<T> extends Readable {
     this.iterator.next().then((iteratorResult) => {
       if (!iteratorResult.done) {
         const value = this.transformItem(iteratorResult.value);
-        const pushResult = this.push(JSON.stringify(value) + '\n');
+        const pushResult = this.push(JSON.stringify(value) + "\n");
         if (pushResult) {
           this.readNext();
         }

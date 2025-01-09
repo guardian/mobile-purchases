@@ -1,8 +1,8 @@
-import 'source-map-support/register';
-import { Platform } from '../models/platform';
-import { parseAndStoreLink, SubscriptionCheckData } from './link';
-import { UserSubscription } from '../models/userSubscription';
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import "source-map-support/register";
+import { Platform } from "../models/platform";
+import { parseAndStoreLink, SubscriptionCheckData } from "./link";
+import { UserSubscription } from "../models/userSubscription";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
 type GoogleSubscription = {
   purchaseToken: string;
@@ -18,29 +18,29 @@ type GoogleLinkPayload = {
 };
 
 export function parseGoogleLinkPayload(
-  request: APIGatewayProxyEvent
+  request: APIGatewayProxyEvent,
 ): GoogleLinkPayload {
-  return JSON.parse(request.body ?? '') as GoogleLinkPayload;
+  return JSON.parse(request.body ?? "") as GoogleLinkPayload;
 }
 
 function toUserSubscription(
   userId: string,
-  payload: GoogleLinkPayload
+  payload: GoogleLinkPayload,
 ): UserSubscription[] {
   return payload.subscriptions.map(
     (sub) =>
-      new UserSubscription(userId, sub.purchaseToken, new Date().toISOString())
+      new UserSubscription(userId, sub.purchaseToken, new Date().toISOString()),
   );
 }
 
 function platformToPackage(platform: Platform): string {
   switch (platform) {
     case Platform.Android:
-      return 'com.guardian';
+      return "com.guardian";
     case Platform.AndroidPuzzles:
-      return 'uk.co.guardian.puzzles';
+      return "uk.co.guardian.puzzles";
     case Platform.AndroidEdition:
-      return 'com.guardian.editions';
+      return "com.guardian.editions";
     default:
       throw new Error(`Invalid platform`);
   }
@@ -58,12 +58,12 @@ function toSqsPayload(payload: GoogleLinkPayload): SubscriptionCheckData[] {
 }
 
 export async function handler(
-  httpRequest: APIGatewayProxyEvent
+  httpRequest: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
   return parseAndStoreLink(
     httpRequest,
     parseGoogleLinkPayload,
     toUserSubscription,
-    toSqsPayload
+    toSqsPayload,
   );
 }

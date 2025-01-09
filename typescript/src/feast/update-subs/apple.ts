@@ -1,18 +1,18 @@
-import { SQSEvent, SQSRecord } from 'aws-lambda';
-import { validateReceipt } from '../../services/appleValidateReceipts';
-import { AppleSubscriptionReference } from '../../models/subscriptionReference';
-import { toAppleSubscription } from '../../update-subs/apple';
-import { Subscription } from '../../models/subscription';
-import { dynamoMapper } from '../../utils/aws';
-import { App } from '../../models/app';
-import { ProcessingError } from '../../models/processingError';
-import { UserSubscription } from '../../models/userSubscription';
-import { getIdentityIdFromBraze } from '../../services/braze';
-import { GracefulProcessingError } from '../../models/GracefulProcessingError';
+import { SQSEvent, SQSRecord } from "aws-lambda";
+import { validateReceipt } from "../../services/appleValidateReceipts";
+import { AppleSubscriptionReference } from "../../models/subscriptionReference";
+import { toAppleSubscription } from "../../update-subs/apple";
+import { Subscription } from "../../models/subscription";
+import { dynamoMapper } from "../../utils/aws";
+import { App } from "../../models/app";
+import { ProcessingError } from "../../models/processingError";
+import { UserSubscription } from "../../models/userSubscription";
+import { getIdentityIdFromBraze } from "../../services/braze";
+import { GracefulProcessingError } from "../../models/GracefulProcessingError";
 import {
   storeUserSubscriptionInDynamo as defaultStoreUserSubscriptionInDynamo,
   queueHistoricalSubscription as defaultSendSubscriptionToHistoricalQueue,
-} from './common';
+} from "./common";
 
 export type SubscriptionMaybeWithAppAccountToken = Subscription & {
   appAccountToken?: string;
@@ -20,30 +20,30 @@ export type SubscriptionMaybeWithAppAccountToken = Subscription & {
 
 export const withAppAccountToken = (
   subscription: Subscription,
-  appAccountToken: string
+  appAccountToken: string,
 ): SubscriptionMaybeWithAppAccountToken =>
   Object.assign(subscription, { appAccountToken: appAccountToken });
 
 const decodeSubscriptionReference = (
-  record: SQSRecord
+  record: SQSRecord,
 ): AppleSubscriptionReference => {
   return JSON.parse(record.body) as AppleSubscriptionReference;
 };
 
 export const defaultFetchSubscriptionsFromApple = async (
-  reference: AppleSubscriptionReference
+  reference: AppleSubscriptionReference,
 ): Promise<SubscriptionMaybeWithAppAccountToken[]> => {
   const responses = await validateReceipt(
     reference.receipt,
     { sandboxRetry: false },
-    App.Feast
+    App.Feast,
   );
   return responses.map((response) => {
     const subscription = toAppleSubscription(response);
     if (response.latestReceiptInfo.appAccountToken) {
       return withAppAccountToken(
         subscription,
-        response.latestReceiptInfo.appAccountToken
+        response.latestReceiptInfo.appAccountToken,
       );
     } else {
       return subscription;
@@ -52,19 +52,19 @@ export const defaultFetchSubscriptionsFromApple = async (
 };
 
 const defaultStoreSubscriptionInDynamo = (
-  subscription: Subscription
+  subscription: Subscription,
 ): Promise<void> => {
   return dynamoMapper.put({ item: subscription }).then((_) => {});
 };
 
 type FetchSubsFromApple = (
-  reference: AppleSubscriptionReference
+  reference: AppleSubscriptionReference,
 ) => Promise<SubscriptionMaybeWithAppAccountToken[]>;
 type StoreSubInDynamo = (subscription: Subscription) => Promise<void>;
 type SendSubToHistoricalQueue = (subscription: Subscription) => Promise<void>;
 type ExchangeExternalIdForIdentityId = (externalId: string) => Promise<string>;
 type StoreUserSubInDynamo = (
-  userSubscription: UserSubscription
+  userSubscription: UserSubscription,
 ) => Promise<void>;
 
 const processRecord = async (
@@ -73,7 +73,7 @@ const processRecord = async (
   sendSubscriptionToHistoricalQueue: SendSubToHistoricalQueue,
   exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId,
   storeUserSubscriptionInDynamo: StoreUserSubInDynamo,
-  record: SQSRecord
+  record: SQSRecord,
 ) => {
   const reference = decodeSubscriptionReference(record);
 
@@ -86,17 +86,17 @@ const processRecord = async (
     subscriptions.map(async (s) => {
       if (s.appAccountToken) {
         const identityId = await exchangeExternalIdForIdentityId(
-          s.appAccountToken
+          s.appAccountToken,
         );
         const now = new Date().toISOString();
         const linked = new UserSubscription(identityId, s.subscriptionId, now);
         await storeUserSubscriptionInDynamo(linked);
       } else {
         console.log(
-          `Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`
+          `Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`,
         );
       }
-    })
+    }),
   );
 };
 
@@ -106,7 +106,7 @@ const processRecordWithErrorHandling = async (
   sendSubscriptionToHistoricalQueue: SendSubToHistoricalQueue,
   exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId,
   storeUserSubscriptionInDynamo: StoreUserSubInDynamo,
-  record: SQSRecord
+  record: SQSRecord,
 ) => {
   try {
     return await processRecord(
@@ -115,17 +115,17 @@ const processRecordWithErrorHandling = async (
       sendSubscriptionToHistoricalQueue,
       exchangeExternalIdForIdentityId,
       storeUserSubscriptionInDynamo,
-      record
+      record,
     );
   } catch (error) {
     if (error instanceof GracefulProcessingError) {
       console.warn(
-        'Error processing the subscription update is being handled gracefully',
-        error
+        "Error processing the subscription update is being handled gracefully",
+        error,
       );
       return;
     } else {
-      console.error('Unexpected error, will throw to retry: ', error);
+      console.error("Unexpected error, will throw to retry: ", error);
       throw error;
     }
   }
@@ -136,7 +136,7 @@ export function buildHandler(
   storeSubscriptionInDynamo: StoreSubInDynamo = defaultStoreSubscriptionInDynamo,
   sendSubscriptionToHistoricalQueue: SendSubToHistoricalQueue = defaultSendSubscriptionToHistoricalQueue,
   exchangeExternalIdForIdentityId: ExchangeExternalIdForIdentityId = getIdentityIdFromBraze,
-  storeUserSubscriptionInDynamo: StoreUserSubInDynamo = defaultStoreUserSubscriptionInDynamo
+  storeUserSubscriptionInDynamo: StoreUserSubInDynamo = defaultStoreUserSubscriptionInDynamo,
 ): (event: SQSEvent) => Promise<string> {
   return (event: SQSEvent) => {
     const promises = event.Records.map((record) => {
@@ -146,7 +146,7 @@ export function buildHandler(
         sendSubscriptionToHistoricalQueue,
         exchangeExternalIdForIdentityId,
         storeUserSubscriptionInDynamo,
-        record
+        record,
       );
     });
 
@@ -155,7 +155,7 @@ export function buildHandler(
         console.log(`Successfully processed ${promises.length} record(s)`);
         return promises;
       })
-      .then((_) => 'OK');
+      .then((_) => "OK");
   };
 }
 

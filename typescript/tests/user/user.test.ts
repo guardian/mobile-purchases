@@ -1,17 +1,17 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
-import { handler } from '../../src/user/user';
-import { SubscriptionEmpty } from '../../src/models/subscription';
-import { plusDays } from '../../src/utils/dates';
+import { APIGatewayProxyEvent } from "aws-lambda";
+import { handler } from "../../src/user/user";
+import { SubscriptionEmpty } from "../../src/models/subscription";
+import { plusDays } from "../../src/utils/dates";
 
-const TEST_SECRET = 'test_secret';
-jest.mock('../../src/utils/ssmConfig', () => {
+const TEST_SECRET = "test_secret";
+jest.mock("../../src/utils/ssmConfig", () => {
   return {
     getConfigValue: () => Promise.resolve(TEST_SECRET),
   };
 });
 
-jest.mock('@aws/dynamodb-data-mapper', () => {
-  const actualDataMapper = jest.requireActual('@aws/dynamodb-data-mapper');
+jest.mock("@aws/dynamodb-data-mapper", () => {
+  const actualDataMapper = jest.requireActual("@aws/dynamodb-data-mapper");
 
   const queryFn = jest.fn();
   const batchGetFn = jest.fn();
@@ -40,15 +40,15 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
     },
   };
 });
-const setMockQuery = require('@aws/dynamodb-data-mapper').setMockQuery;
-const setMockBatchGet = require('@aws/dynamodb-data-mapper').setMockBatchGet;
+const setMockQuery = require("@aws/dynamodb-data-mapper").setMockQuery;
+const setMockBatchGet = require("@aws/dynamodb-data-mapper").setMockBatchGet;
 
-describe('The user subscriptions lambda', () => {
-  it('returns the correct subscriptions for a user', async () => {
+describe("The user subscriptions lambda", () => {
+  it("returns the correct subscriptions for a user", async () => {
     const mockDataMapper =
-      new (require('@aws/dynamodb-data-mapper').DataMapper)();
-    const userId = '123';
-    const subscriptionId = '1';
+      new (require("@aws/dynamodb-data-mapper").DataMapper)();
+    const userId = "123";
+    const subscriptionId = "1";
     setMockQuery(async function* () {
       yield {
         userId,
@@ -57,8 +57,8 @@ describe('The user subscriptions lambda', () => {
     });
     const sub = new SubscriptionEmpty();
     sub.subscriptionId = subscriptionId;
-    sub.platform = 'ios-feast';
-    sub.productId = 'product-id';
+    sub.platform = "ios-feast";
+    sub.productId = "product-id";
     sub.startTimestamp = new Date().toISOString();
     sub.endTimestamp = plusDays(new Date(), 35).toISOString();
     setMockBatchGet(async function* () {
@@ -76,7 +76,7 @@ describe('The user subscriptions lambda', () => {
     expect(data.subscriptions[0].subscriptionId).toEqual(subscriptionId);
     expect(data.subscriptions[0].valid).toEqual(true);
     expect(data.subscriptions[0].softOptInProductName).toEqual(
-      'FeastInAppPurchase'
+      "FeastInAppPurchase",
     );
   });
 });
@@ -87,14 +87,14 @@ const buildApiGatewayEvent = (userId: string): APIGatewayProxyEvent => {
       Authorization: `Bearer ${TEST_SECRET}`,
     },
     multiValueHeaders: {},
-    httpMethod: 'POST',
+    httpMethod: "POST",
     isBase64Encoded: false,
-    path: '',
+    path: "",
     pathParameters: { userId },
     queryStringParameters: {},
     multiValueQueryStringParameters: {},
     // @ts-ignore
     requestContext: null,
-    resource: '',
+    resource: "",
   };
 };

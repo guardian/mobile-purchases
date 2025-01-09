@@ -1,19 +1,19 @@
-import { getConfigValue } from '../utils/ssmConfig';
-import { ProcessingError } from '../models/processingError';
-import { Stage } from '../utils/appIdentity';
-import { optionalMsToDate } from '../utils/dates';
-import { Option } from '../utils/option';
-import { restClient } from '../utils/restClient';
-import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
-import { GracefulProcessingError } from '../models/GracefulProcessingError';
-import { App } from '../models/app';
+import { getConfigValue } from "../utils/ssmConfig";
+import { ProcessingError } from "../models/processingError";
+import { Stage } from "../utils/appIdentity";
+import { optionalMsToDate } from "../utils/dates";
+import { Option } from "../utils/option";
+import { restClient } from "../utils/restClient";
+import { IHttpClientResponse } from "typed-rest-client/Interfaces";
+import { GracefulProcessingError } from "../models/GracefulProcessingError";
+import { App } from "../models/app";
 
 export interface PendingRenewalInfo {
   auto_renew_product_id?: string;
-  auto_renew_status: '0' | '1';
-  expiration_intent?: '1' | '2' | '3' | '4' | '5';
+  auto_renew_status: "0" | "1";
+  expiration_intent?: "1" | "2" | "3" | "4" | "5";
   grace_period_expires_date_ms?: string;
-  is_in_billing_retry_period?: '0' | '1';
+  is_in_billing_retry_period?: "0" | "1";
   original_transaction_id: string;
   product_id: string;
   price_consent_status?: string;
@@ -45,7 +45,7 @@ export interface ValidationOptions {
 // Both documentation are equally wrong when compared to the reality, so some of the definition below match neither.
 export interface AppleValidationServerResponse {
   auto_renew_status: 0 | 1;
-  'is-retryable'?: boolean;
+  "is-retryable"?: boolean;
   latest_receipt?: string;
   // yes you've read the type well. It can both be an array or a value, good luck parsing that
   latest_receipt_info?:
@@ -78,32 +78,32 @@ export interface AppleValidationResponse {
   originalResponse: any;
 }
 
-const sandboxReceiptEndpoint = 'https://sandbox.itunes.apple.com/verifyReceipt';
-const prodReceiptEndpoint = 'https://buy.itunes.apple.com/verifyReceipt';
+const sandboxReceiptEndpoint = "https://sandbox.itunes.apple.com/verifyReceipt";
+const prodReceiptEndpoint = "https://buy.itunes.apple.com/verifyReceipt";
 const receiptEndpoint =
-  Stage === 'PROD' ? prodReceiptEndpoint : sandboxReceiptEndpoint;
+  Stage === "PROD" ? prodReceiptEndpoint : sandboxReceiptEndpoint;
 
 function passwordForApp(app: App): Promise<string> {
   switch (app) {
     case App.Feast:
-      return getConfigValue<string>('feast.apple.password');
+      return getConfigValue<string>("feast.apple.password");
     default:
-      return getConfigValue<string>('apple.password');
+      return getConfigValue<string>("apple.password");
   }
 }
 
 function callValidateReceipt(
   receipt: string,
   app: App = App.Live,
-  forceSandbox: boolean = false
+  forceSandbox: boolean = false,
 ): Promise<IHttpClientResponse> {
   const endpoint = forceSandbox ? sandboxReceiptEndpoint : receiptEndpoint;
   return passwordForApp(app)
     .then((password) => {
       const body = JSON.stringify({
-        'receipt-data': receipt,
+        "receipt-data": receipt,
         password: password,
-        'exclude-old-transactions': true,
+        "exclude-old-transactions": true,
       });
       return restClient.client.post(endpoint, body);
     })
@@ -112,23 +112,23 @@ function callValidateReceipt(
       const statusText = response.message.statusMessage;
       if (statusCode && (statusCode < 200 || statusCode >= 300)) {
         console.error(
-          `Impossible to validate the receipt, got ${statusCode} ${statusText} from ${endpoint}`
+          `Impossible to validate the receipt, got ${statusCode} ${statusText} from ${endpoint}`,
         );
-        throw new ProcessingError('Impossible to validate receipt', true);
+        throw new ProcessingError("Impossible to validate receipt", true);
       }
       return response;
     });
 }
 
 function checkResponseStatus(
-  response: AppleValidationServerResponse
+  response: AppleValidationServerResponse,
 ): AppleValidationServerResponse {
   if (
     (response.status >= 21100 && response.status <= 21199) ||
-    response['is-retryable']
+    response["is-retryable"]
   ) {
     console.error(
-      `Server error received from Apple, got status ${response.status}, will retry`
+      `Server error received from Apple, got status ${response.status}, will retry`,
     );
     throw new ProcessingError(`Server error, status ${response.status}`, true);
   }
@@ -136,20 +136,20 @@ function checkResponseStatus(
     const msg = `Got status 21007 and we're in ${Stage}, so we are processing a receipt from the wrong environment.`;
     console.error(msg);
     throw new GracefulProcessingError(
-      `Got status ${response.status} and we're in ${Stage}`
+      `Got status ${response.status} and we're in ${Stage}`,
     );
   }
   if (response.status === 21008) {
     console.error(
-      `Got status ${response.status} and we're in ${Stage}, so we are processing a receipt from the wrong environment`
+      `Got status ${response.status} and we're in ${Stage}, so we are processing a receipt from the wrong environment`,
     );
     throw new ProcessingError(
-      `Got status ${response.status} and we're in ${Stage}`
+      `Got status ${response.status} and we're in ${Stage}`,
     );
   }
   if (response.status != 0 && response.status != 21006) {
     console.error(
-      `Invalid receipt, got status ${response.status} for ${response.latest_receipt}`
+      `Invalid receipt, got status ${response.status} for ${response.latest_receipt}`,
     );
     throw new ProcessingError(`Invalid receipt, got status ${response.status}`);
   }
@@ -162,10 +162,10 @@ function checkResponseStatus(
 
 export function toSensiblePayloadFormat(
   response: AppleValidationServerResponse,
-  receipt: string
+  receipt: string,
 ): AppleValidationResponse[] {
   function expiryDate(
-    receiptServerInfo: AppleValidatedReceiptServerInfo
+    receiptServerInfo: AppleValidatedReceiptServerInfo,
   ): number {
     if (receiptServerInfo.expires_date_ms) {
       return Number.parseInt(receiptServerInfo.expires_date_ms);
@@ -173,8 +173,8 @@ export function toSensiblePayloadFormat(
       return Number.parseInt(receiptServerInfo.expires_date);
     } else {
       throw new ProcessingError(
-        'Receipt has no expiry, this should have been filtered by now',
-        false
+        "Receipt has no expiry, this should have been filtered by now",
+        false,
       );
     }
   }
@@ -186,16 +186,16 @@ export function toSensiblePayloadFormat(
           response.latest_receipt_info as AppleValidatedReceiptServerInfo[];
         if (latestReceipt.length == 0) {
           console.error(
-            `Invalid validation response, empty receipt info array`
+            `Invalid validation response, empty receipt info array`,
           );
           throw new ProcessingError(
-            `Invalid validation response, empty receipt info array`
+            `Invalid validation response, empty receipt info array`,
           );
         }
 
         // only keep receipts that have an expiry date, those who don't aren't subscriptions or are pre 2011
         const filteredLatestReceipt = latestReceipt.filter(
-          (receipt) => receipt.expires_date || receipt.expires_date_ms
+          (receipt) => receipt.expires_date || receipt.expires_date_ms,
         );
 
         const deDupedReceipts = filteredLatestReceipt
@@ -203,12 +203,12 @@ export function toSensiblePayloadFormat(
           .reduce(
             (
               acc: { [key: string]: AppleValidatedReceiptServerInfo },
-              current
+              current,
             ) => {
               acc[current.original_transaction_id] = current;
               return acc;
             },
-            {}
+            {},
           );
 
         return Object.values(deDupedReceipts);
@@ -224,7 +224,7 @@ export function toSensiblePayloadFormat(
         // should be impossible as this will be caught by checkResponseStatus
         console.error(`No receipt info`);
         throw new ProcessingError(
-          `Invalid validation response, no receipt info`
+          `Invalid validation response, no receipt info`,
         );
       }
     }
@@ -242,7 +242,7 @@ export function toSensiblePayloadFormat(
     const pendingRenewalInfo: PendingRenewalInfo =
       pendingRenewalInfoById[receiptInfo.original_transaction_id];
     const autoRenewStatus = pendingRenewalInfo
-      ? pendingRenewalInfo.auto_renew_status === '1'
+      ? pendingRenewalInfo.auto_renew_status === "1"
       : response.auto_renew_status === 1;
 
     // bundle_id is the documented field, however it's sometimes not valued, but instead there's the field bid
@@ -255,25 +255,25 @@ export function toSensiblePayloadFormat(
       response.receipt?.bid;
     if (!bundleId) {
       console.warn(
-        `Unable to identify the bundle id for the original transaction id ${receiptInfo.original_transaction_id}`
+        `Unable to identify the bundle id for the original transaction id ${receiptInfo.original_transaction_id}`,
       );
     }
 
     const originalPurchaseDate = optionalMsToDate(
-      receiptInfo.original_purchase_date_ms
+      receiptInfo.original_purchase_date_ms,
     );
     if (originalPurchaseDate === null) {
       console.error(
-        `Unable to parse the original purchase date ${receiptInfo.original_purchase_date_ms}`
+        `Unable to parse the original purchase date ${receiptInfo.original_purchase_date_ms}`,
       );
       throw new ProcessingError(
         `Unable to parse the original purchase date`,
-        false
+        false,
       );
     }
 
     return {
-      isRetryable: response['is-retryable'] === true,
+      isRetryable: response["is-retryable"] === true,
       latestReceipt: response.latest_receipt ?? receipt,
       latestReceiptInfo: {
         bundleId: bundleId,
@@ -283,8 +283,8 @@ export function toSensiblePayloadFormat(
         originalPurchaseDate: originalPurchaseDate,
         originalTransactionId: receiptInfo.original_transaction_id,
         productId: receiptInfo.product_id,
-        trialPeriod: receiptInfo.is_trial_period === 'true',
-        inIntroOfferPeriod: receiptInfo.is_in_intro_offer_period === 'true',
+        trialPeriod: receiptInfo.is_trial_period === "true",
+        inIntroOfferPeriod: receiptInfo.is_in_intro_offer_period === "true",
         appAccountToken: receiptInfo.app_account_token,
       },
       originalResponse: response,
@@ -295,10 +295,10 @@ export function toSensiblePayloadFormat(
 async function retryInSandboxIfNecessary(
   parsedResponse: AppleValidationServerResponse,
   receipt: string,
-  options: ValidationOptions
+  options: ValidationOptions,
 ): Promise<AppleValidationServerResponse> {
   if (parsedResponse.status === 21007 && options.sandboxRetry) {
-    console.log('Got status code 21007, retrying in Sandbox');
+    console.log("Got status code 21007, retrying in Sandbox");
     return callValidateReceipt(receipt, App.Live, true)
       .then((response) => response.readBody())
       .then((body) => JSON.parse(body))
@@ -311,14 +311,14 @@ async function retryInSandboxIfNecessary(
 export function validateReceipt(
   receipt: string,
   options: ValidationOptions,
-  app: App = App.Live
+  app: App = App.Live,
 ): Promise<AppleValidationResponse[]> {
   return callValidateReceipt(receipt, app)
     .then((response) => response.readBody())
     .then((body) => JSON.parse(body))
     .then((body) => body as AppleValidationServerResponse)
     .then((parsedResponse) =>
-      retryInSandboxIfNecessary(parsedResponse, receipt, options)
+      retryInSandboxIfNecessary(parsedResponse, receipt, options),
     )
     .then(checkResponseStatus)
     .then((response) => toSensiblePayloadFormat(response, receipt));

@@ -1,23 +1,23 @@
-import { Subscription } from '../../src/models/endTimestampFilter';
-import { buildHandler } from '../../src/revalidate-receipts/appleRevalidateReceipts';
-import { Platform } from '../../src/models/platform';
-import { withEnv } from '../helpers/withEnv';
+import { Subscription } from "../../src/models/endTimestampFilter";
+import { buildHandler } from "../../src/revalidate-receipts/appleRevalidateReceipts";
+import { Platform } from "../../src/models/platform";
+import { withEnv } from "../helpers/withEnv";
 
-describe('appleRevalidateReceipts', () => {
-  it('pushes events to the correct SQS queue', async () => {
+describe("appleRevalidateReceipts", () => {
+  it("pushes events to the correct SQS queue", async () => {
     const feastSub = new Subscription(
-      '12345',
+      "12345",
       new Date().toISOString(),
       true,
       Platform.IosFeast,
-      'FEAST-RECEIPT'
+      "FEAST-RECEIPT",
     );
     const liveAppSub = new Subscription(
-      '67890',
+      "67890",
       new Date().toISOString(),
       true,
       Platform.Ios,
-      'LIVE-RECEIPT'
+      "LIVE-RECEIPT",
     );
     const getSubscriptions = () => [feastSub, liveAppSub];
     const sendToQueue = jest.fn();
@@ -25,22 +25,22 @@ describe('appleRevalidateReceipts', () => {
     const handler = buildHandler(getSubscriptions, sendToQueue);
 
     await withEnv(
-      { LiveAppSqsUrl: 'LiveAppSqsUrl', FeastAppSqsUrl: 'FeastAppSqsUrl' },
+      { LiveAppSqsUrl: "LiveAppSqsUrl", FeastAppSqsUrl: "FeastAppSqsUrl" },
       async () => {
         await handler({});
-      }
+      },
     );
 
     expect(sendToQueue).toHaveBeenCalledTimes(2);
     expect(sendToQueue).toHaveBeenCalledWith(
-      'FeastAppSqsUrl',
+      "FeastAppSqsUrl",
       { receipt: feastSub.receipt },
-      0
+      0,
     );
     expect(sendToQueue).toHaveBeenCalledWith(
-      'LiveAppSqsUrl',
+      "LiveAppSqsUrl",
       { receipt: liveAppSub.receipt },
-      0
+      0,
     );
   });
 });

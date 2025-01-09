@@ -1,19 +1,19 @@
-import 'source-map-support/register';
+import "source-map-support/register";
 
-import { parseAndStoreLink, SubscriptionCheckData } from './link';
-import { UserSubscription } from '../models/userSubscription';
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { parseAppleLinkPayload } from './apple-utils';
-import { AppleLinkPayload } from './apple-utils';
-import { Platform } from '../models/platform';
+import { parseAndStoreLink, SubscriptionCheckData } from "./link";
+import { UserSubscription } from "../models/userSubscription";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { parseAppleLinkPayload } from "./apple-utils";
+import { AppleLinkPayload } from "./apple-utils";
+import { Platform } from "../models/platform";
 
 function toUserSubscription(
   userId: string,
-  payload: AppleLinkPayload
+  payload: AppleLinkPayload,
 ): UserSubscription[] {
   const now = new Date().toISOString();
   return payload.subscriptions.map(
-    (sub) => new UserSubscription(userId, sub.originalTransactionId, now)
+    (sub) => new UserSubscription(userId, sub.originalTransactionId, now),
   );
 }
 
@@ -34,7 +34,7 @@ function toSqsPayload(payload: AppleLinkPayload): SubscriptionCheckData[] {
   // part, due to the aforementioned lack of appAccountToken. So I think the
   // easiest solution for now is just not to enqueue Feast subs for lookup.
   if (payload.platform === Platform.IosFeast) {
-    console.log('Not enqueuing Feast subs for lookup');
+    console.log("Not enqueuing Feast subs for lookup");
     return [];
   }
 
@@ -47,12 +47,12 @@ function toSqsPayload(payload: AppleLinkPayload): SubscriptionCheckData[] {
 }
 
 export async function handler(
-  httpRequest: APIGatewayProxyEvent
+  httpRequest: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
   return parseAndStoreLink(
     httpRequest,
     parseAppleLinkPayload,
     toUserSubscription,
-    toSqsPayload
+    toSqsPayload,
   );
 }

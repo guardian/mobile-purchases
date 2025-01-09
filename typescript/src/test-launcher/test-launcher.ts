@@ -1,8 +1,8 @@
-import * as fs from 'fs';
+import * as fs from "fs";
 
 if (process.argv.length == 4) {
   let rawPayload = fs.readFileSync(
-    `mobile-purchases-payload/${process.argv[3]}`
+    `mobile-purchases-payload/${process.argv[3]}`,
   );
   import(`../${process.argv[2]}`)
     .then((module) => {
@@ -16,6 +16,6 @@ if (process.argv.length == 4) {
     });
 } else {
   console.log(
-    'Please run  tsc && node ./tsc-target/src/test-launcher/test-launcher.js <../module/path> <payload-filename> '
+    "Please run  tsc && node ./tsc-target/src/test-launcher/test-launcher.js <../module/path> <payload-filename> ",
   );
 }

@@ -1,6 +1,6 @@
-import { hashKey, attribute } from '@aws/dynamodb-data-mapper-annotations';
-import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
-import { App, Stage } from '../utils/appIdentity';
+import { hashKey, attribute } from "@aws/dynamodb-data-mapper-annotations";
+import { DynamoDbTable } from "@aws/dynamodb-data-mapper";
+import { App, Stage } from "../utils/appIdentity";
 
 export class Subscription {
   /*
@@ -65,7 +65,7 @@ export class Subscription {
     receipt?: string,
     applePayload?: any,
     ttl?: number,
-    tableName: string = 'subscriptions'
+    tableName: string = "subscriptions",
   ) {
     this.subscriptionId = subscriptionId;
     this.startTimestamp = startTimestamp;
@@ -97,7 +97,7 @@ export class Subscription {
 
 export class SubscriptionEmpty extends Subscription {
   constructor() {
-    super('', '', '', undefined, false, '', undefined, undefined, undefined);
+    super("", "", "", undefined, false, "", undefined, undefined, undefined);
   }
 
   setSubscriptionId(subscriptionId: string): SubscriptionEmpty {

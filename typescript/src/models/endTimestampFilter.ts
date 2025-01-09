@@ -2,9 +2,9 @@ import {
   hashKey,
   attribute,
   rangeKey,
-} from '@aws/dynamodb-data-mapper-annotations';
-import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
-import { App, Stage } from '../utils/appIdentity';
+} from "@aws/dynamodb-data-mapper-annotations";
+import { DynamoDbTable } from "@aws/dynamodb-data-mapper";
+import { App, Stage } from "../utils/appIdentity";
 
 export class Subscription {
   @hashKey()
@@ -27,7 +27,7 @@ export class Subscription {
     endTimestamp: string,
     autoRenewStatus: Boolean,
     platform: string,
-    receipt?: string
+    receipt?: string,
   ) {
     this.subscriptionId = subscriptionId;
     this.endTimestamp = endTimestamp;
@@ -43,6 +43,6 @@ export class Subscription {
 
 export class EndTimeStampFilterSubscription extends Subscription {
   constructor() {
-    super('', '', false, '');
+    super("", "", false, "");
   }
 }

@@ -1,11 +1,11 @@
-import { isPostAcquisition } from '../../src/soft-opt-ins/processSubscription';
-import { handler } from '../../src/soft-opt-ins/acquisitions';
-import { DynamoDBStreamEvent } from 'aws-lambda';
-import { Subscription, SubscriptionEmpty } from '../../src/models/subscription';
-import { Platform } from '../../src/models/platform';
+import { isPostAcquisition } from "../../src/soft-opt-ins/processSubscription";
+import { handler } from "../../src/soft-opt-ins/acquisitions";
+import { DynamoDBStreamEvent } from "aws-lambda";
+import { Subscription, SubscriptionEmpty } from "../../src/models/subscription";
+import { Platform } from "../../src/models/platform";
 
-jest.mock('@aws/dynamodb-data-mapper', () => {
-  const actualDataMapper = jest.requireActual('@aws/dynamodb-data-mapper');
+jest.mock("@aws/dynamodb-data-mapper", () => {
+  const actualDataMapper = jest.requireActual("@aws/dynamodb-data-mapper");
 
   const getFn = jest.fn();
 
@@ -27,23 +27,23 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
     },
   };
 });
-const setMockGet = require('@aws/dynamodb-data-mapper').setMockGet;
+const setMockGet = require("@aws/dynamodb-data-mapper").setMockGet;
 
 // mock so imports don't use real client which throws an error as credentials are needed
-jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
-jest.mock('aws-sdk/clients/s3', () => jest.fn());
-jest.mock('aws-sdk/clients/ssm', () => jest.fn());
+jest.mock("aws-sdk/clients/dynamodb", () => jest.fn());
+jest.mock("aws-sdk/clients/s3", () => jest.fn());
+jest.mock("aws-sdk/clients/ssm", () => jest.fn());
 
-const fetch = require('node-fetch');
-jest.mock('node-fetch');
+const fetch = require("node-fetch");
+jest.mock("node-fetch");
 
-jest.mock('../../src/utils/guIdentityApi');
-jest.mock('aws-sdk/clients/ssm', () => jest.fn());
-jest.mock('aws-sdk/clients/cloudwatch', () => jest.fn());
+jest.mock("../../src/utils/guIdentityApi");
+jest.mock("aws-sdk/clients/ssm", () => jest.fn());
+jest.mock("aws-sdk/clients/cloudwatch", () => jest.fn());
 
-jest.mock('util', () => jest.fn());
+jest.mock("util", () => jest.fn());
 
-jest.mock('aws-sdk/clients/sqs', () => {
+jest.mock("aws-sdk/clients/sqs", () => {
   const mockSQS = {
     sendMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
   };
@@ -51,14 +51,14 @@ jest.mock('aws-sdk/clients/sqs', () => {
   return jest.fn(() => mockSQS);
 });
 
-jest.mock('aws-sdk/clients/sts', () => {
+jest.mock("aws-sdk/clients/sts", () => {
   const mockSTS = {
     assumeRole: jest.fn().mockReturnValue({
       promise: jest.fn().mockResolvedValue({
         Credentials: {
-          AccessKeyId: 'mockAccessKeyId',
-          SecretAccessKey: 'mockSecretAccessKey',
-          SessionToken: 'mockSessionToken',
+          AccessKeyId: "mockAccessKeyId",
+          SecretAccessKey: "mockSecretAccessKey",
+          SessionToken: "mockSessionToken",
         },
       }),
     }),
@@ -67,7 +67,7 @@ jest.mock('aws-sdk/clients/sts', () => {
   return jest.fn(() => mockSTS);
 });
 
-jest.mock('aws-sdk/lib/core', () => {
+jest.mock("aws-sdk/lib/core", () => {
   class SharedIniFileCredentialsMock {}
 
   class CredentialProviderChainMock {}
@@ -78,11 +78,11 @@ jest.mock('aws-sdk/lib/core', () => {
   };
 });
 
-describe('isPostAcquisition() function', () => {
+describe("isPostAcquisition() function", () => {
   beforeEach(() => {
     // Set the current time to a fixed date (2023-03-14)
-    jest.useFakeTimers('modern');
-    jest.setSystemTime(new Date('2023-03-14'));
+    jest.useFakeTimers("modern");
+    jest.setSystemTime(new Date("2023-03-14"));
   });
 
   afterEach(() => {
@@ -90,27 +90,27 @@ describe('isPostAcquisition() function', () => {
     jest.useRealTimers();
   });
 
-  test('Return true if acquisition was more than two days ago', () => {
-    const startTimestamp = '2023-03-01 07:24:38 UTC';
+  test("Return true if acquisition was more than two days ago", () => {
+    const startTimestamp = "2023-03-01 07:24:38 UTC";
 
     expect(isPostAcquisition(startTimestamp)).toStrictEqual(true);
   });
 
-  test('Return false if acquisition was less than two days ago', () => {
-    const startTimestamp = '2023-03-13 07:24:38 UTC';
+  test("Return false if acquisition was less than two days ago", () => {
+    const startTimestamp = "2023-03-13 07:24:38 UTC";
 
     expect(isPostAcquisition(startTimestamp)).toStrictEqual(false);
   });
 });
 
-describe('handler', () => {
+describe("handler", () => {
   beforeEach(() => {
-    process.env.DLQUrl = 'https://example.com';
+    process.env.DLQUrl = "https://example.com";
     jest.clearAllMocks();
 
     // Set the current time to a fixed date (2023-03-14)
-    jest.useFakeTimers('modern');
-    jest.setSystemTime(new Date('2023-03-14'));
+    jest.useFakeTimers("modern");
+    jest.setSystemTime(new Date("2023-03-14"));
   });
 
   afterEach(() => {
@@ -120,15 +120,15 @@ describe('handler', () => {
     fetch.mockReset();
   });
 
-  it('should process an acquisition correctly', async () => {
+  it("should process an acquisition correctly", async () => {
     const event: DynamoDBStreamEvent = {
       Records: [
         {
-          eventName: 'INSERT',
+          eventName: "INSERT",
           dynamodb: {
             NewImage: {
-              subscriptionId: { S: '12345' },
-              userId: { S: '67890' },
+              subscriptionId: { S: "12345" },
+              userId: { S: "67890" },
             },
           },
         },
@@ -137,13 +137,13 @@ describe('handler', () => {
 
     // get the mock instances
     const mockDataMapper =
-      new (require('@aws/dynamodb-data-mapper').DataMapper)();
-    const mockSQS = new (require('aws-sdk/clients/sqs'))();
+      new (require("@aws/dynamodb-data-mapper").DataMapper)();
+    const mockSQS = new (require("aws-sdk/clients/sqs"))();
 
     const sub = new SubscriptionEmpty();
-    sub.subscriptionId = '12345';
-    sub.startTimestamp = '2023-03-14 07:24:38 UTC';
-    sub.endTimestamp = '2023-03-14 07:24:38 UTC';
+    sub.subscriptionId = "12345";
+    sub.startTimestamp = "2023-03-14 07:24:38 UTC";
+    sub.endTimestamp = "2023-03-14 07:24:38 UTC";
 
     setMockGet(() => sub);
 
@@ -152,7 +152,7 @@ describe('handler', () => {
     expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
 
     let subEmpty = new SubscriptionEmpty();
-    subEmpty.setSubscriptionId('12345');
+    subEmpty.setSubscriptionId("12345");
     expect(mockDataMapper.get).toHaveBeenCalledWith(subEmpty);
 
     expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
@@ -160,32 +160,32 @@ describe('handler', () => {
     const expectedSendMessageParams = {
       QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
       MessageBody: JSON.stringify({
-        identityId: '67890',
-        eventType: 'Acquisition',
-        productName: 'InAppPurchase',
-        subscriptionId: '12345',
+        identityId: "67890",
+        eventType: "Acquisition",
+        productName: "InAppPurchase",
+        subscriptionId: "12345",
       }),
     };
 
     expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSendMessageParams);
   });
 
-  it('sends the correct SOI consents and SOI email for Feast acquisitions', async () => {
-    const subscriptionId = '11111';
-    const identityId = '22222';
-    const emailAddress = '97823f89@gmail.com';
+  it("sends the correct SOI consents and SOI email for Feast acquisitions", async () => {
+    const subscriptionId = "11111";
+    const identityId = "22222";
+    const emailAddress = "97823f89@gmail.com";
     fetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        status: 'ok',
+        status: "ok",
         user: {
           primaryEmailAddress: emailAddress,
           id: identityId,
           publicFields: {
-            displayName: 'user',
+            displayName: "user",
           },
           dates: {
-            accountCreatedDate: '2019-08-20T14:53:04Z',
+            accountCreatedDate: "2019-08-20T14:53:04Z",
           },
           consents: [],
           hasPassword: true,
@@ -195,7 +195,7 @@ describe('handler', () => {
     const event: DynamoDBStreamEvent = {
       Records: [
         {
-          eventName: 'INSERT',
+          eventName: "INSERT",
           dynamodb: {
             NewImage: {
               subscriptionId: { S: subscriptionId },
@@ -207,12 +207,12 @@ describe('handler', () => {
     };
     // get the mock instances
     const mockDataMapper =
-      new (require('@aws/dynamodb-data-mapper').DataMapper)();
-    const mockSQS = new (require('aws-sdk/clients/sqs'))();
+      new (require("@aws/dynamodb-data-mapper").DataMapper)();
+    const mockSQS = new (require("aws-sdk/clients/sqs"))();
     const sub = new SubscriptionEmpty();
     sub.subscriptionId = subscriptionId;
-    sub.startTimestamp = '2023-03-14 07:24:38 UTC';
-    sub.endTimestamp = '2023-03-14 07:24:38 UTC';
+    sub.startTimestamp = "2023-03-14 07:24:38 UTC";
+    sub.endTimestamp = "2023-03-14 07:24:38 UTC";
     sub.platform = Platform.IosFeast;
     setMockGet(() => sub);
 
@@ -229,8 +229,8 @@ describe('handler', () => {
       QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
       MessageBody: JSON.stringify({
         identityId,
-        eventType: 'Acquisition',
-        productName: 'FeastInAppPurchase',
+        eventType: "Acquisition",
+        productName: "FeastInAppPurchase",
         subscriptionId,
       }),
     };
@@ -242,29 +242,29 @@ describe('handler', () => {
           Address: emailAddress,
           ContactAttributes: { SubscriberAttributes: {} },
         },
-        DataExtensionName: 'SV_FA_SOINotification',
+        DataExtensionName: "SV_FA_SOINotification",
         IdentityUserId: identityId,
       }),
     };
     expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedEmailParams);
   });
 
-  it('sends the correct SOI for Feast Android acquisitions', async () => {
-    const subscriptionId = '11111';
-    const identityId = '22222';
-    const emailAddress = '97823f89@gmail.com';
+  it("sends the correct SOI for Feast Android acquisitions", async () => {
+    const subscriptionId = "11111";
+    const identityId = "22222";
+    const emailAddress = "97823f89@gmail.com";
     fetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        status: 'ok',
+        status: "ok",
         user: {
           primaryEmailAddress: emailAddress,
           id: identityId,
           publicFields: {
-            displayName: 'user',
+            displayName: "user",
           },
           dates: {
-            accountCreatedDate: '2019-08-20T14:53:04Z',
+            accountCreatedDate: "2019-08-20T14:53:04Z",
           },
           consents: [],
           hasPassword: true,
@@ -274,7 +274,7 @@ describe('handler', () => {
     const event: DynamoDBStreamEvent = {
       Records: [
         {
-          eventName: 'INSERT',
+          eventName: "INSERT",
           dynamodb: {
             NewImage: {
               subscriptionId: { S: subscriptionId },
@@ -286,12 +286,12 @@ describe('handler', () => {
     };
     // get the mock instances
     const mockDataMapper =
-      new (require('@aws/dynamodb-data-mapper').DataMapper)();
-    const mockSQS = new (require('aws-sdk/clients/sqs'))();
+      new (require("@aws/dynamodb-data-mapper").DataMapper)();
+    const mockSQS = new (require("aws-sdk/clients/sqs"))();
     const sub = new SubscriptionEmpty();
     sub.subscriptionId = subscriptionId;
-    sub.startTimestamp = '2023-03-14 07:24:38 UTC';
-    sub.endTimestamp = '2023-03-14 07:24:38 UTC';
+    sub.startTimestamp = "2023-03-14 07:24:38 UTC";
+    sub.endTimestamp = "2023-03-14 07:24:38 UTC";
     sub.platform = Platform.AndroidFeast;
     setMockGet(() => sub);
 
@@ -308,8 +308,8 @@ describe('handler', () => {
       QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
       MessageBody: JSON.stringify({
         identityId,
-        eventType: 'Acquisition',
-        productName: 'FeastInAppPurchase',
+        eventType: "Acquisition",
+        productName: "FeastInAppPurchase",
         subscriptionId,
       }),
     };
@@ -321,26 +321,26 @@ describe('handler', () => {
           Address: emailAddress,
           ContactAttributes: { SubscriberAttributes: {} },
         },
-        DataExtensionName: 'SV_FA_SOINotification',
+        DataExtensionName: "SV_FA_SOINotification",
         IdentityUserId: identityId,
       }),
     };
     expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedEmailParams);
   });
 
-  it('should process a post acquisition sign-in correctly', async () => {
+  it("should process a post acquisition sign-in correctly", async () => {
     fetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        status: 'ok',
+        status: "ok",
         user: {
-          primaryEmailAddress: '97823f89@gmail.com',
-          id: '100005546',
+          primaryEmailAddress: "97823f89@gmail.com",
+          id: "100005546",
           publicFields: {
-            displayName: 'user',
+            displayName: "user",
           },
           dates: {
-            accountCreatedDate: '2019-08-20T14:53:04Z',
+            accountCreatedDate: "2019-08-20T14:53:04Z",
           },
           consents: [],
           hasPassword: true,
@@ -351,11 +351,11 @@ describe('handler', () => {
     const event: DynamoDBStreamEvent = {
       Records: [
         {
-          eventName: 'INSERT',
+          eventName: "INSERT",
           dynamodb: {
             NewImage: {
-              subscriptionId: { S: '12345' },
-              userId: { S: '67890' },
+              subscriptionId: { S: "12345" },
+              userId: { S: "67890" },
             },
           },
         },
@@ -364,13 +364,13 @@ describe('handler', () => {
 
     // get the mock instances
     const mockDataMapper =
-      new (require('@aws/dynamodb-data-mapper').DataMapper)();
-    const mockSQS = new (require('aws-sdk/clients/sqs'))();
+      new (require("@aws/dynamodb-data-mapper").DataMapper)();
+    const mockSQS = new (require("aws-sdk/clients/sqs"))();
 
     const sub = new SubscriptionEmpty();
-    sub.subscriptionId = '12345';
-    sub.startTimestamp = '2023-03-01 07:24:38 UTC';
-    sub.endTimestamp = '2025-03-01 07:24:38 UTC';
+    sub.subscriptionId = "12345";
+    sub.startTimestamp = "2023-03-01 07:24:38 UTC";
+    sub.endTimestamp = "2025-03-01 07:24:38 UTC";
 
     setMockGet(() => sub);
 
@@ -379,7 +379,7 @@ describe('handler', () => {
     expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
 
     let subEmpty = new SubscriptionEmpty();
-    subEmpty.setSubscriptionId('12345');
+    subEmpty.setSubscriptionId("12345");
     expect(mockDataMapper.get).toHaveBeenCalledWith(subEmpty);
 
     expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
@@ -389,15 +389,15 @@ describe('handler', () => {
     const expectedSendMessageParams1 = {
       QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
       MessageBody: JSON.stringify({
-        identityId: '67890',
-        eventType: 'Acquisition',
-        productName: 'InAppPurchase',
-        subscriptionId: '12345',
+        identityId: "67890",
+        eventType: "Acquisition",
+        productName: "InAppPurchase",
+        subscriptionId: "12345",
       }),
     };
 
     expect(mockSQS.sendMessage).toHaveBeenCalledWith(
-      expectedSendMessageParams1
+      expectedSendMessageParams1,
     );
   });
 });

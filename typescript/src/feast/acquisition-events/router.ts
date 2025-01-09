@@ -1,13 +1,13 @@
-import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
-import { Subscription, SubscriptionEmpty } from '../../models/subscription';
-import { dynamoMapper, sendToSqs } from '../../utils/aws';
-import { Platform } from '../../models/platform';
-import { plusDays } from '../../utils/dates';
-import { Region, Stage } from '../../utils/appIdentity';
+import type { DynamoDBRecord, DynamoDBStreamEvent } from "aws-lambda";
+import { Subscription, SubscriptionEmpty } from "../../models/subscription";
+import { dynamoMapper, sendToSqs } from "../../utils/aws";
+import { Platform } from "../../models/platform";
+import { plusDays } from "../../utils/dates";
+import { Region, Stage } from "../../utils/appIdentity";
 
 const isActiveSubscription = (
   currentTime: Date,
-  subscription: Subscription
+  subscription: Subscription,
 ): boolean => {
   // Returns whether the subscription is active or not, by checking
   // that the current time is before the end of the subscription plus the grace period.
@@ -18,19 +18,19 @@ const isActiveSubscription = (
 };
 
 const processAcquisition = async (
-  subscription: Subscription
+  subscription: Subscription,
 ): Promise<boolean> => {
   // return value indicates whether the processing was successful or not
   // We return true in the case of an inactive subscription.
 
   console.log(
-    `[46218776] Processing acquisition for subscription: ${JSON.stringify(subscription)}`
+    `[46218776] Processing acquisition for subscription: ${JSON.stringify(subscription)}`,
   );
   const subscriptionId = subscription.subscriptionId;
 
   if (!isActiveSubscription(new Date(), subscription)) {
     console.log(
-      `Subscription ${subscription.subscriptionId} is not active. Processing stopped.`
+      `Subscription ${subscription.subscriptionId} is not active. Processing stopped.`,
     );
     return true;
   }
@@ -38,7 +38,7 @@ const processAcquisition = async (
   const mobileAccountId = process.env.MobileAccountId;
   const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${mobileAccountId}`;
   const platform =
-    subscription.platform == Platform.IosFeast ? 'apple' : 'google';
+    subscription.platform == Platform.IosFeast ? "apple" : "google";
 
   const sqsUrl = `${queueNamePrefix}/mobile-purchases-${Stage}-feast-${platform}-acquisition-events-queue`;
 
@@ -49,12 +49,12 @@ const processAcquisition = async (
   try {
     await sendToSqs(sqsUrl, subscription);
     console.log(
-      `Event sent to acquisition events queue: ${sqsUrl}, for subscriptionId: ${subscriptionId}`
+      `Event sent to acquisition events queue: ${sqsUrl}, for subscriptionId: ${subscriptionId}`,
     );
     return true;
   } catch (error) {
     console.error(
-      `failed to send record for subscriptionId: ${subscriptionId} to acquisition events queue: ${sqsUrl}. Error message is ${error}`
+      `failed to send record for subscriptionId: ${subscriptionId} to acquisition events queue: ${sqsUrl}. Error message is ${error}`,
     );
     return false;
   }
@@ -62,7 +62,7 @@ const processAcquisition = async (
 
 export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
   console.log(
-    '[c9900d41] Feast Acquisition Events Router Lambda has been called'
+    "[c9900d41] Feast Acquisition Events Router Lambda has been called",
   );
 
   const records = event.Records; // retrieve records from DynamoDBStreamEvent
@@ -76,17 +76,17 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
     const eventName = record.eventName;
 
     // We are only interested in the "INSERT" eventName
-    if (eventName !== 'INSERT') {
+    if (eventName !== "INSERT") {
       console.log(`Skipping: ${eventName} record`);
       return;
     }
 
     insertReceivedCount++;
 
-    const identityId = record?.dynamodb?.NewImage?.userId?.S || '';
-    const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || '';
+    const identityId = record?.dynamodb?.NewImage?.userId?.S || "";
+    const subscriptionId = record?.dynamodb?.NewImage?.subscriptionId?.S || "";
     console.log(
-      `Processing: ${eventName} record for identityId: ${identityId} and subscriptionId: ${subscriptionId}`
+      `Processing: ${eventName} record for identityId: ${identityId} and subscriptionId: ${subscriptionId}`,
     );
 
     let emptySubscription = new SubscriptionEmpty();
@@ -126,7 +126,7 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
   await Promise.all(processRecordPromises);
 
   console.log(
-    `Sucessfully processed ${insertProcessedCount} insertions from a collection of ${insertReceivedCount} from DynamoDBStreamEvent`
+    `Sucessfully processed ${insertProcessedCount} insertions from a collection of ${insertReceivedCount} from DynamoDBStreamEvent`,
   );
 };
 

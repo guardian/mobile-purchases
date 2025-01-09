@@ -9,8 +9,8 @@
     "test": "jest",
     "test-lambda": "yarn build:dev && node ./tsc-target/test-launcher.js",
     "android-price-rise": "AWS_PROFILE=mobile ts-node ./typescript/src/scripts/android-price-rise/runPriceRise.ts",
-    "lint": "npx prettier --check --config .prettierrc \"./typescript/**/*.ts\"",
-    "lint-fix": "prettier --write --config .prettierrc \"./typescript/**/*.ts\""
+    "lint": "npx prettier --check \"./typescript/**/*.ts\"",
+    "lint-fix": "prettier --write \"./typescript/**/*.ts\""
   },
   "repository": {
     "type": "git",
@@ -23,6 +23,7 @@
   "homepage": "https://github.com/guardian/mobile-purchases#readme",
   "private": true,
   "devDependencies": {
+    "@guardian/prettier": "^8.0.1",
     "@types/jest": "^27.4.1",
     "@types/node-fetch": "^2.6.2",
     "jest": "^26.6.3",

@@ -1,19 +1,19 @@
-import 'source-map-support/register';
-import { SubscriptionEvent } from '../models/subscriptionEvent';
+import "source-map-support/register";
+import { SubscriptionEvent } from "../models/subscriptionEvent";
 import {
   dateToSecondTimestamp,
   optionalMsToDate,
   thirtyMonths,
-} from '../utils/dates';
-import { GoogleSubscriptionReference } from '../models/subscriptionReference';
-import { Option } from '../utils/option';
-import { googlePackageNameToPlatform } from '../services/appToPlatform';
+} from "../utils/dates";
+import { GoogleSubscriptionReference } from "../models/subscriptionReference";
+import { Option } from "../utils/option";
+import { googlePackageNameToPlatform } from "../services/appToPlatform";
 import {
   fetchGoogleSubscription,
   GOOGLE_PAYMENT_STATE,
-} from '../services/google-play';
-import { z } from 'zod';
-import { Ignorable } from './ignorable';
+} from "../services/google-play";
+import { z } from "zod";
+import { Ignorable } from "./ignorable";
 
 const DeveloperNotificationBaseSchema = z.object({
   version: z.string(),
@@ -41,7 +41,7 @@ const VoidedPurchaseNotificationSchema = DeveloperNotificationBaseSchema.extend(
       productType: z.number(),
       refundType: z.number(),
     }),
-  }
+  },
 );
 export type VoidedPurchaseNotification = z.infer<
   typeof VoidedPurchaseNotificationSchema
@@ -55,7 +55,7 @@ const DeveloperNotificationSchema = z
     (data) => optionalMsToDate(data.eventTimeMillis) !== null,
     (data) => ({
       message: `Unable to parse the eventTimeMillis field ${data.eventTimeMillis}`,
-    })
+    }),
   );
 export type DeveloperNotification = z.infer<typeof DeveloperNotificationSchema>;
 
@@ -64,7 +64,7 @@ export interface GoogleSubscriptionMetaData {
 }
 
 function isSubscriptionNotification(
-  notification: DeveloperNotification
+  notification: DeveloperNotification,
 ): notification is SubscriptionNotification {
   return (
     (notification as SubscriptionNotification).subscriptionNotification !==
@@ -73,15 +73,15 @@ function isSubscriptionNotification(
 }
 
 export function parsePayload(
-  body: Option<string>
+  body: Option<string>,
 ): Error | SubscriptionNotification | Ignorable {
   try {
     const rawNotification = Buffer.from(
-      JSON.parse(body ?? '').message.data,
-      'base64'
+      JSON.parse(body ?? "").message.data,
+      "base64",
     );
     const parseResult = DeveloperNotificationSchema.safeParse(
-      JSON.parse(rawNotification.toString())
+      JSON.parse(rawNotification.toString()),
     );
     if (!parseResult.success) {
       return new Error(`HTTP Payload body parse error: ${parseResult.error}`);
@@ -93,36 +93,36 @@ export function parsePayload(
     }
 
     return new Ignorable(
-      `Notification is not a subscription notification. Notification was: ${JSON.stringify(data)}`
+      `Notification is not a subscription notification. Notification was: ${JSON.stringify(data)}`,
     );
   } catch (e) {
-    console.log('Error during the parsing of the HTTP Payload body: ' + e);
+    console.log("Error during the parsing of the HTTP Payload body: " + e);
     return e as Error;
   }
 }
 
 export const GOOGLE_SUBS_EVENT_TYPE: { [_: number]: string } = {
-  1: 'SUBSCRIPTION_RECOVERED',
-  2: 'SUBSCRIPTION_RENEWED',
-  3: 'SUBSCRIPTION_CANCELED',
-  4: 'SUBSCRIPTION_PURCHASED',
-  5: 'SUBSCRIPTION_ON_HOLD',
-  6: 'SUBSCRIPTION_IN_GRACE_PERIOD',
-  7: 'SUBSCRIPTION_RESTARTED',
-  8: 'SUBSCRIPTION_PRICE_CHANGE_CONFIRMED',
-  9: 'SUBSCRIPTION_DEFERRED',
-  12: 'SUBSCRIPTION_REVOKED',
-  13: 'SUBSCRIPTION_EXPIRED',
+  1: "SUBSCRIPTION_RECOVERED",
+  2: "SUBSCRIPTION_RENEWED",
+  3: "SUBSCRIPTION_CANCELED",
+  4: "SUBSCRIPTION_PURCHASED",
+  5: "SUBSCRIPTION_ON_HOLD",
+  6: "SUBSCRIPTION_IN_GRACE_PERIOD",
+  7: "SUBSCRIPTION_RESTARTED",
+  8: "SUBSCRIPTION_PRICE_CHANGE_CONFIRMED",
+  9: "SUBSCRIPTION_DEFERRED",
+  12: "SUBSCRIPTION_REVOKED",
+  13: "SUBSCRIPTION_EXPIRED",
 };
 
 export async function fetchMetadata(
-  notification: SubscriptionNotification
+  notification: SubscriptionNotification,
 ): Promise<GoogleSubscriptionMetaData | undefined> {
   try {
     const subscription = await fetchGoogleSubscription(
       notification.subscriptionNotification.subscriptionId,
       notification.subscriptionNotification.purchaseToken,
-      notification.packageName
+      notification.packageName,
     );
     return {
       freeTrial: subscription?.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL,
@@ -133,12 +133,12 @@ export async function fetchMetadata(
     // So even if something goes horribly wrong, we'll cary on the processing
     console.error(
       `Unable to fetch the subscription associated with the event`,
-      exception
+      exception,
     );
 
     // Log the notification 5% of the time for debugging - I don't want this to be too noisy
     if (Math.random() < 0.05) {
-      console.error('Notification was: ', notification);
+      console.error("Notification was: ", notification);
     }
 
     return undefined;
@@ -147,7 +147,7 @@ export async function fetchMetadata(
 
 export function toDynamoEvent(
   notification: SubscriptionNotification,
-  metaData?: GoogleSubscriptionMetaData
+  metaData?: GoogleSubscriptionMetaData,
 ): SubscriptionEvent {
   const eventTime = optionalMsToDate(notification.eventTimeMillis);
   if (!eventTime) {
@@ -161,7 +161,7 @@ export function toDynamoEvent(
   const eventTypeString =
     GOOGLE_SUBS_EVENT_TYPE[eventType] ?? eventType.toString();
   const platform = googlePackageNameToPlatform(
-    notification.packageName
+    notification.packageName,
   )?.toString();
   if (!platform) {
     console.warn(`Unknown package name ${notification.packageName}`);
@@ -169,11 +169,11 @@ export function toDynamoEvent(
 
   return new SubscriptionEvent(
     notification.subscriptionNotification.purchaseToken,
-    eventTimestamp + '|' + eventTypeString,
+    eventTimestamp + "|" + eventTypeString,
     date,
     eventTimestamp,
     eventTypeString,
-    platform ?? 'unknown',
+    platform ?? "unknown",
     notification.packageName,
     metaData?.freeTrial,
     notification,
@@ -183,12 +183,12 @@ export function toDynamoEvent(
     null, // string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
     undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
     undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-    undefined // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+    undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
   );
 }
 
 export function toSqsSubReference(
-  event: SubscriptionNotification
+  event: SubscriptionNotification,
 ): GoogleSubscriptionReference {
   return {
     packageName: event.packageName,

@@ -1,8 +1,8 @@
-import 'source-map-support/register';
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { HTTPResponses } from '../models/apiGatewayHttp';
-import * as crypto from 'crypto';
-import { getConfigValue } from '../utils/ssmConfig';
+import "source-map-support/register";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { HTTPResponses } from "../models/apiGatewayHttp";
+import * as crypto from "crypto";
+import { getConfigValue } from "../utils/ssmConfig";
 
 interface HttpRequestPayload {
   username: string;
@@ -18,7 +18,7 @@ interface Response {
 }
 
 async function payloadToResponse(
-  payload: HttpRequestPayload
+  payload: HttpRequestPayload,
 ): Promise<Response> {
   // https://developer.apple.com/documentation/storekit/in-app_purchase/original_api_for_in-app_purchase/subscriptions_and_offers/generating_a_signature_for_promotional_offers
   // appBundleId         : (from ssm parameter store)
@@ -43,10 +43,10 @@ async function payloadToResponse(
   //      have to be updated in AWS.
 
   const appBundleId = await getConfigValue<string>(
-    'promotional-offers-appBundleId'
+    "promotional-offers-appBundleId",
   );
   const keyIdentifier = await getConfigValue<string>(
-    'promotional-offers-keyIdentifier'
+    "promotional-offers-keyIdentifier",
   );
   const productIdentifier = payload.productIdentifier;
   const offerIdentifier = payload.offerIdentifier;
@@ -54,7 +54,7 @@ async function payloadToResponse(
   const nonce = crypto.randomUUID().toLowerCase();
   const timestamp = Date.now();
 
-  const separator = '\u2063';
+  const separator = "\u2063";
   const str1 =
     appBundleId +
     separator +
@@ -70,26 +70,26 @@ async function payloadToResponse(
     separator +
     timestamp;
 
-  const data = Buffer.from(str1, 'utf8');
+  const data = Buffer.from(str1, "utf8");
   const privateKey1 = await getConfigValue<string>(
-    'promotional-offers-encryption-private-key'
+    "promotional-offers-encryption-private-key",
   );
   const privateKey2 = crypto.createPrivateKey({ key: privateKey1 });
-  const signature = crypto.sign('SHA256', data, privateKey2);
+  const signature = crypto.sign("SHA256", data, privateKey2);
 
   return {
     nonce: nonce,
     timestamp: timestamp,
     keyIdentifier: keyIdentifier,
-    signature: signature.toString('base64'),
+    signature: signature.toString("base64"),
   };
 }
 
 export async function handler(
-  request: APIGatewayProxyEvent
+  request: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
   const requestBody = request.body;
-  const payloadObject = JSON.parse(requestBody ?? '');
+  const payloadObject = JSON.parse(requestBody ?? "");
   try {
     const responseObject = await payloadToResponse(payloadObject);
     const answer = {
@@ -98,10 +98,10 @@ export async function handler(
     };
     return Promise.resolve(answer);
   } catch (error) {
-    console.log('error while computing response: ' + error);
+    console.log("error while computing response: " + error);
     const answer = {
       statusCode: 500,
-      body: 'error while computing response',
+      body: "error while computing response",
     };
     return Promise.resolve(answer);
   }

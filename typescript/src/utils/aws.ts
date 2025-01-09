@@ -3,25 +3,25 @@ import {
   CredentialProviderChain,
   ECSCredentials,
   AWSError,
-} from 'aws-sdk/lib/core';
-import { Region, Stage } from './appIdentity';
-import { DataMapper, ItemNotFoundException } from '@aws/dynamodb-data-mapper';
-import DynamoDB from 'aws-sdk/clients/dynamodb';
-import Sqs from 'aws-sdk/clients/sqs';
-import S3 from 'aws-sdk/clients/s3';
-import CloudWatch from 'aws-sdk/clients/cloudwatch';
-import { PromiseResult } from 'aws-sdk/lib/request';
-import SSM = require('aws-sdk/clients/ssm');
-import STS from 'aws-sdk/clients/sts';
-import { getMembershipAccountId } from './guIdentityApi';
-import { SoftOptInEventProductName } from './softOptIns';
+} from "aws-sdk/lib/core";
+import { Region, Stage } from "./appIdentity";
+import { DataMapper, ItemNotFoundException } from "@aws/dynamodb-data-mapper";
+import DynamoDB from "aws-sdk/clients/dynamodb";
+import Sqs from "aws-sdk/clients/sqs";
+import S3 from "aws-sdk/clients/s3";
+import CloudWatch from "aws-sdk/clients/cloudwatch";
+import { PromiseResult } from "aws-sdk/lib/request";
+import SSM = require("aws-sdk/clients/ssm");
+import STS from "aws-sdk/clients/sts";
+import { getMembershipAccountId } from "./guIdentityApi";
+import { SoftOptInEventProductName } from "./softOptIns";
 
 const credentialProvider = new CredentialProviderChain([
   function () {
     return new ECSCredentials();
   },
   function () {
-    return new SharedIniFileCredentials({ profile: 'mobile' });
+    return new SharedIniFileCredentials({ profile: "mobile" });
   },
 ]);
 
@@ -54,19 +54,19 @@ async function getSqsClientForSoftOptIns(): Promise<Sqs> {
     const membershipAccountId = await getMembershipAccountId();
     const sts = new STS();
 
-    const softOptInConsentSetterStage = Stage === 'PROD' ? 'PROD' : 'CODE';
+    const softOptInConsentSetterStage = Stage === "PROD" ? "PROD" : "CODE";
 
     const assumeRoleResult = await sts
       .assumeRole({
         RoleArn: `arn:aws:iam::${membershipAccountId}:role/membership-${softOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole`,
-        RoleSessionName: 'CrossAccountSession',
+        RoleSessionName: "CrossAccountSession",
       })
       .promise();
 
     const credentials = assumeRoleResult.Credentials;
 
     if (!credentials) {
-      throw Error('credentials undefined in getSqsClientForSoftOptIns');
+      throw Error("credentials undefined in getSqsClientForSoftOptIns");
     }
 
     SOISqsClient = new Sqs({
@@ -96,14 +96,14 @@ async function getSqsClientForComms(): Promise<Sqs> {
     const assumeRoleResult = await sts
       .assumeRole({
         RoleArn: `arn:aws:iam::${membershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole`,
-        RoleSessionName: 'CrossAccountSession',
+        RoleSessionName: "CrossAccountSession",
       })
       .promise();
 
     const credentials = assumeRoleResult.Credentials;
 
     if (!credentials) {
-      throw Error('credentials undefined in getSqsClientForComms');
+      throw Error("credentials undefined in getSqsClientForComms");
     }
 
     commsSqsClient = new Sqs({
@@ -133,22 +133,22 @@ const cloudWatchClient = new CloudWatch({ region: Region });
 
 export async function putMetric(
   metricName: string,
-  value: number = 1.0
+  value: number = 1.0,
 ): Promise<void> {
   const metricDatum: AWS.CloudWatch.MetricDatum = {
     MetricName: metricName,
-    Unit: 'Count',
+    Unit: "Count",
     Value: value,
     Dimensions: [
       {
-        Name: 'Stage',
+        Name: "Stage",
         Value: Stage,
       },
     ],
   };
 
   const params: AWS.CloudWatch.PutMetricDataInput = {
-    Namespace: 'soft-opt-ins',
+    Namespace: "soft-opt-ins",
     MetricData: [metricDatum],
   };
 
@@ -158,7 +158,7 @@ export async function putMetric(
 export function sendToSqs(
   queueUrl: string,
   event: any,
-  delaySeconds?: number
+  delaySeconds?: number,
 ): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
   return sqs
     .sendMessage({
@@ -171,14 +171,14 @@ export function sendToSqs(
 
 export interface SoftOptInEvent {
   identityId: string;
-  eventType: 'Acquisition' | 'Cancellation' | 'Switch';
+  eventType: "Acquisition" | "Cancellation" | "Switch";
   productName: SoftOptInEventProductName;
   subscriptionId: string;
 }
 export async function sendToSqsSoftOptIns(
   queueUrl: string,
   event: SoftOptInEvent,
-  delaySeconds?: number
+  delaySeconds?: number,
 ): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
   const membershipSqs = await getSqsClientForSoftOptIns();
   return membershipSqs
@@ -193,7 +193,7 @@ export async function sendToSqsSoftOptIns(
 export async function sendToSqsComms(
   queueUrl: string,
   event: any,
-  delaySeconds?: number
+  delaySeconds?: number,
 ): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
   const membershipSqs = await getSqsClientForComms();
   return membershipSqs

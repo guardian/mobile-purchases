@@ -1,17 +1,17 @@
-import 'source-map-support/register';
-import { HTTPResponses } from '../models/apiGatewayHttp';
-import { Subscription, SubscriptionEmpty } from '../models/subscription';
-import { UserSubscriptionEmpty } from '../models/userSubscription';
-import { dynamoMapper } from '../utils/aws';
+import "source-map-support/register";
+import { HTTPResponses } from "../models/apiGatewayHttp";
+import { Subscription, SubscriptionEmpty } from "../models/subscription";
+import { UserSubscriptionEmpty } from "../models/userSubscription";
+import { dynamoMapper } from "../utils/aws";
 import {
   getUserId,
   getAuthToken,
   UserIdResolution,
-} from '../utils/guIdentityApi';
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { plusDays } from '../utils/dates';
-import { getConfigValue } from '../utils/ssmConfig';
-import { mapPlatformToSoftOptInProductName } from '../utils/softOptIns';
+} from "../utils/guIdentityApi";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { plusDays } from "../utils/dates";
+import { getConfigValue } from "../utils/ssmConfig";
+import { mapPlatformToSoftOptInProductName } from "../utils/softOptIns";
 
 interface SubscriptionStatus {
   subscriptionId: string;
@@ -50,11 +50,11 @@ async function getUserSubscriptionIds(userId: string): Promise<string[]> {
 }
 
 async function getSubscriptions(
-  subscriptionIds: string[]
+  subscriptionIds: string[],
 ): Promise<SubscriptionStatusResponse> {
   const subs: SubscriptionEmpty[] = [];
   const toGet = subscriptionIds.map((subscriptionId) =>
-    new SubscriptionEmpty().setSubscriptionId(subscriptionId)
+    new SubscriptionEmpty().setSubscriptionId(subscriptionId),
   );
 
   for await (const sub of dynamoMapper.batchGet(toGet)) {
@@ -72,7 +72,7 @@ async function getSubscriptions(
           Date.parse(subscriptionB.endTimestamp)) ||
         0;
       return endTimeA - endTimeB;
-    }
+    },
   );
 
   const now = new Date();
@@ -103,15 +103,15 @@ async function getSubscriptions(
 
 async function apiKeysConfig(): Promise<string[]> {
   // returning an array just in case we get more than one client one day
-  const apiKey0Default = await getConfigValue<string>('user.api-key.0');
+  const apiKey0Default = await getConfigValue<string>("user.api-key.0");
   const apiKey1Salesforce = await getConfigValue<string>(
-    'user.api-key.1.salesforce'
+    "user.api-key.1.salesforce",
   );
   return [apiKey0Default, apiKey1Salesforce];
 }
 
 export async function handler(
-  httpRequest: APIGatewayProxyEvent
+  httpRequest: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
   try {
     const apiKeys = await apiKeysConfig();
@@ -120,24 +120,24 @@ export async function handler(
     let userId: string;
 
     if (authToken && apiKeys.includes(authToken)) {
-      if (httpRequest.pathParameters && httpRequest.pathParameters['userId']) {
-        userId = httpRequest.pathParameters['userId'];
+      if (httpRequest.pathParameters && httpRequest.pathParameters["userId"]) {
+        userId = httpRequest.pathParameters["userId"];
       } else {
         return HTTPResponses.INVALID_REQUEST;
       }
     } else {
       const resolution: UserIdResolution = await getUserId(httpRequest.headers);
       switch (resolution.status) {
-        case 'incorrect-token': {
+        case "incorrect-token": {
           return HTTPResponses.UNAUTHORISED;
         }
-        case 'incorrect-scope': {
+        case "incorrect-scope": {
           return HTTPResponses.FORBIDDEN;
         }
-        case 'missing-identity-id': {
+        case "missing-identity-id": {
           return HTTPResponses.INVALID_REQUEST;
         }
-        case 'success': {
+        case "success": {
           userId = resolution.userId as string;
           break;
         }

@@ -1,63 +1,63 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
-import { buildHandler } from '../../../src/feast/pubsub/google';
-import { HTTPResponses } from '../../../src/models/apiGatewayHttp';
-import { SubscriptionEvent } from '../../../src/models/subscriptionEvent';
+import { APIGatewayProxyEvent } from "aws-lambda";
+import { buildHandler } from "../../../src/feast/pubsub/google";
+import { HTTPResponses } from "../../../src/models/apiGatewayHttp";
+import { SubscriptionEvent } from "../../../src/models/subscriptionEvent";
 import Mock = jest.Mock;
-import { GoogleSubscriptionReference } from '../../../src/models/subscriptionReference';
+import { GoogleSubscriptionReference } from "../../../src/models/subscriptionReference";
 
 const buildApiGatewayEvent = (secret: string): APIGatewayProxyEvent => {
   const receivedEvent = {
-    version: '1.0',
-    packageName: 'uk.co.guardian.feast',
-    eventTimeMillis: '1503349566168',
+    version: "1.0",
+    packageName: "uk.co.guardian.feast",
+    eventTimeMillis: "1503349566168",
     subscriptionNotification: {
-      version: '1.0',
+      version: "1.0",
       notificationType: 4,
-      purchaseToken: 'PURCHASE_TOKEN',
-      subscriptionId: 'uk.co.guardian.feast.access.test',
+      purchaseToken: "PURCHASE_TOKEN",
+      subscriptionId: "uk.co.guardian.feast.access.test",
     },
   };
 
   const encodedEvent = Buffer.from(JSON.stringify(receivedEvent)).toString(
-    'base64'
+    "base64",
   );
 
   const body = {
     message: {
       data: encodedEvent,
-      messageId: '123',
-      message_id: '123',
-      publishTime: '2019-05-24T15:06:47.701Z',
-      publish_time: '2019-05-24T15:06:47.701Z',
+      messageId: "123",
+      message_id: "123",
+      publishTime: "2019-05-24T15:06:47.701Z",
+      publish_time: "2019-05-24T15:06:47.701Z",
     },
     subscription:
-      'projects/guardian.co.uk/subscriptions/feast-in-app-subscription-test',
+      "projects/guardian.co.uk/subscriptions/feast-in-app-subscription-test",
   };
 
   return {
     body: JSON.stringify(body),
     headers: {},
     multiValueHeaders: {},
-    httpMethod: 'POST',
+    httpMethod: "POST",
     isBase64Encoded: false,
-    path: '',
+    path: "",
     pathParameters: {},
     queryStringParameters: { secret: secret },
     multiValueQueryStringParameters: {},
     // @ts-ignore
     requestContext: null,
-    resource: '',
+    resource: "",
   };
 };
 
 beforeEach(() => {
-  process.env['QueueUrl'] = '';
-  process.env['Secret'] = 'test_secret';
+  process.env["QueueUrl"] = "";
+  process.env["Secret"] = "test_secret";
 });
 
-describe('The Feast Google pubsub', () => {
-  it('Should return HTTP 200 if secret is correct and input is valid', async () => {
-    const correctSecret = 'test_secret';
+describe("The Feast Google pubsub", () => {
+  it("Should return HTTP 200 if secret is correct and input is valid", async () => {
+    const correctSecret = "test_secret";
     const input = buildApiGatewayEvent(correctSecret);
 
     const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> =>
@@ -67,12 +67,12 @@ describe('The Feast Google pubsub', () => {
       [string, GoogleSubscriptionReference]
     > = jest.fn((queueurl, event) => Promise.resolve({}));
     const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
-      Promise.resolve({ freeTrial: true })
+      Promise.resolve({ freeTrial: true }),
     );
     const handler = buildHandler(
       mockSqsFunction,
       noOpStoreEventInDynamo,
-      mockFetchMetadataFunction
+      mockFetchMetadataFunction,
     );
 
     const result = await handler(input);
@@ -80,8 +80,8 @@ describe('The Feast Google pubsub', () => {
     expect(result).toStrictEqual(HTTPResponses.OK);
   });
 
-  it('Should return HTTP 401 if secret is incorrect', async () => {
-    const incorrectSecret = 'incorrect_secret';
+  it("Should return HTTP 401 if secret is incorrect", async () => {
+    const incorrectSecret = "incorrect_secret";
     const input = buildApiGatewayEvent(incorrectSecret);
 
     const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> =>
@@ -91,12 +91,12 @@ describe('The Feast Google pubsub', () => {
       [string, GoogleSubscriptionReference]
     > = jest.fn((queueurl, event) => Promise.resolve({}));
     const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
-      Promise.resolve({ freeTrial: true })
+      Promise.resolve({ freeTrial: true }),
     );
     const handler = buildHandler(
       mockSqsFunction,
       noOpStoreEventInDynamo,
-      mockFetchMetadataFunction
+      mockFetchMetadataFunction,
     );
 
     const result = await handler(input);
@@ -104,8 +104,8 @@ describe('The Feast Google pubsub', () => {
     expect(result).toStrictEqual(HTTPResponses.UNAUTHORISED);
   });
 
-  it('invokes the method to add the event to the Dynamo table', async () => {
-    const correctSecret = 'test_secret';
+  it("invokes the method to add the event to the Dynamo table", async () => {
+    const correctSecret = "test_secret";
     const input = buildApiGatewayEvent(correctSecret);
 
     const mockSqsFunction: Mock<
@@ -114,35 +114,35 @@ describe('The Feast Google pubsub', () => {
     > = jest.fn((queueurl, event) => Promise.resolve({}));
     const storeEventInDynamoMock = jest.fn(() => Promise.resolve());
     const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
-      Promise.resolve({ freeTrial: true })
+      Promise.resolve({ freeTrial: true }),
     );
     const handler = buildHandler(
       mockSqsFunction,
       storeEventInDynamoMock,
-      mockFetchMetadataFunction
+      mockFetchMetadataFunction,
     );
 
     const result = await handler(input);
     const expectedSubscriptionEventInDynamo: SubscriptionEvent =
       new SubscriptionEvent(
-        'PURCHASE_TOKEN',
-        '2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED',
-        '2017-08-21',
-        '2017-08-21T21:06:06.168Z',
-        'SUBSCRIPTION_PURCHASED',
-        'android-feast',
-        'uk.co.guardian.feast',
+        "PURCHASE_TOKEN",
+        "2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED",
+        "2017-08-21",
+        "2017-08-21T21:06:06.168Z",
+        "SUBSCRIPTION_PURCHASED",
+        "android-feast",
+        "uk.co.guardian.feast",
         true,
         {
-          eventTimeMillis: '1503349566168',
-          packageName: 'uk.co.guardian.feast',
+          eventTimeMillis: "1503349566168",
+          packageName: "uk.co.guardian.feast",
           subscriptionNotification: {
             notificationType: 4,
-            purchaseToken: 'PURCHASE_TOKEN',
-            subscriptionId: 'uk.co.guardian.feast.access.test',
-            version: '1.0',
+            purchaseToken: "PURCHASE_TOKEN",
+            subscriptionId: "uk.co.guardian.feast.access.test",
+            version: "1.0",
           },
-          version: '1.0',
+          version: "1.0",
         },
         null,
         1582319167,
@@ -150,23 +150,23 @@ describe('The Feast Google pubsub', () => {
         null,
         undefined,
         undefined,
-        undefined
+        undefined,
       );
 
     expect(result).toStrictEqual(HTTPResponses.OK);
     expect(storeEventInDynamoMock).toHaveBeenCalledTimes(1);
     expect(storeEventInDynamoMock).toHaveBeenCalledWith(
-      expectedSubscriptionEventInDynamo
+      expectedSubscriptionEventInDynamo,
     );
   });
 
-  it('Should publish data to SQS queue', async () => {
-    const correctSecret = 'test_secret';
+  it("Should publish data to SQS queue", async () => {
+    const correctSecret = "test_secret";
     const input = buildApiGatewayEvent(correctSecret);
     const expectedSubscriptionReferenceInSqs = {
-      packageName: 'uk.co.guardian.feast',
-      purchaseToken: 'PURCHASE_TOKEN',
-      subscriptionId: 'uk.co.guardian.feast.access.test',
+      packageName: "uk.co.guardian.feast",
+      purchaseToken: "PURCHASE_TOKEN",
+      subscriptionId: "uk.co.guardian.feast.access.test",
     };
 
     const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> =>
@@ -176,12 +176,12 @@ describe('The Feast Google pubsub', () => {
       [string, GoogleSubscriptionReference]
     > = jest.fn((queueurl, event) => Promise.resolve({}));
     const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
-      Promise.resolve({ freeTrial: true })
+      Promise.resolve({ freeTrial: true }),
     );
     const handler = buildHandler(
       mockSqsFunction,
       noOpStoreEventInDynamo,
-      mockFetchMetadataFunction
+      mockFetchMetadataFunction,
     );
 
     const result = await handler(input);
@@ -189,7 +189,7 @@ describe('The Feast Google pubsub', () => {
     expect(result).toStrictEqual(HTTPResponses.OK);
     expect(mockSqsFunction.mock.calls.length).toEqual(1);
     expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(
-      expectedSubscriptionReferenceInSqs
+      expectedSubscriptionReferenceInSqs,
     );
   });
 });

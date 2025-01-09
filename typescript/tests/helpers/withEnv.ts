@@ -1,6 +1,6 @@
 export const withEnv = async (
   env: Record<string, string>,
-  callback: () => any
+  callback: () => any,
 ) => {
   const oldEnv = process.env;
   process.env = env;

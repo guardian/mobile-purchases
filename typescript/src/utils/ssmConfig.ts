@@ -1,12 +1,12 @@
-import { ssm } from './aws';
-import { App, Stack, Stage } from './appIdentity';
-import { Option } from './option';
+import { ssm } from "./aws";
+import { App, Stack, Stage } from "./appIdentity";
+import { Option } from "./option";
 
 type Config = { [key: string]: any };
 
 function recursivelyFetchConfig(
   nextToken?: string,
-  currentConfig?: Config
+  currentConfig?: Config,
 ): Promise<Config> {
   const path = `/${App}/${Stage}/${Stack}/`;
   return ssm
@@ -21,7 +21,7 @@ function recursivelyFetchConfig(
       if (result.Parameters) {
         result.Parameters.forEach((param) => {
           if (param.Name) {
-            const name = param.Name.replace(path, '');
+            const name = param.Name.replace(path, "");
             fetchedConfig[name] = param.Value;
           }
         });
@@ -57,7 +57,7 @@ export function getConfigValue<A>(key: string, defaultValue?: A): Promise<A> {
         return defaultValue;
       } else {
         throw new Error(
-          `No config value for key: /${App}/${Stage}/${Stack}/${key}`
+          `No config value for key: /${App}/${Stage}/${Stack}/${key}`,
         );
       }
     }

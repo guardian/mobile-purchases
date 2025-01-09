@@ -1,8 +1,8 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
-import { parseAppleLinkPayload } from '../../src/link/apple-utils';
+import { APIGatewayProxyEvent } from "aws-lambda";
+import { parseAppleLinkPayload } from "../../src/link/apple-utils";
 
-describe('The apple link service', () => {
-  test('Should deduplicate originalTransactionIds', () => {
+describe("The apple link service", () => {
+  test("Should deduplicate originalTransactionIds", () => {
     const raw = `{
       "platform":"ios-puzzles",
       "subscriptions":[

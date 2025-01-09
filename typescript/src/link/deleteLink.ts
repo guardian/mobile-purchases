@@ -1,17 +1,17 @@
-import 'source-map-support/register';
-import { DynamoDBStreamEvent } from 'aws-lambda';
-import { dynamoMapper, putMetric, sendToSqsSoftOptIns } from '../utils/aws';
+import "source-map-support/register";
+import { DynamoDBStreamEvent } from "aws-lambda";
+import { dynamoMapper, putMetric, sendToSqsSoftOptIns } from "../utils/aws";
 import {
   UserSubscription,
   UserSubscriptionEmpty,
-} from '../models/userSubscription';
-import { getMembershipAccountId } from '../utils/guIdentityApi';
-import { Region, Stage } from '../utils/appIdentity';
-import { mapPlatformToSoftOptInProductName } from '../utils/softOptIns';
+} from "../models/userSubscription";
+import { getMembershipAccountId } from "../utils/guIdentityApi";
+import { Region, Stage } from "../utils/appIdentity";
+import { mapPlatformToSoftOptInProductName } from "../utils/softOptIns";
 
 async function handleSoftOptInsError(message: string) {
   console.error(message);
-  await putMetric('failed_to_send_cancellation_message', 1);
+  await putMetric("failed_to_send_cancellation_message", 1);
 }
 
 async function getUserLinks(subscriptionId: string) {
@@ -25,13 +25,13 @@ async function getUserLinks(subscriptionId: string) {
   const userLinks = await dynamoMapper.query(
     UserSubscriptionEmpty,
     { subscriptionId },
-    { indexName: 'subscriptionId-userId' }
+    { indexName: "subscriptionId-userId" },
   );
   return userLinks;
 }
 
 async function deleteUserSubscription(
-  userLinks: UserSubscription[]
+  userLinks: UserSubscription[],
 ): Promise<number> {
   let count = 0;
   for (const userLink of userLinks) {
@@ -52,7 +52,7 @@ async function deleteUserSubscription(
 async function disableSoftOptIns(
   userLinks: UserSubscription[],
   subscriptionId: string,
-  platform: string | undefined
+  platform: string | undefined,
 ) {
   const membershipAccountId = await getMembershipAccountId();
   const queueNamePrefix = `https://sqs.${Region}.amazonaws.com/${membershipAccountId}`;
@@ -60,15 +60,15 @@ async function disableSoftOptIns(
   const user = userLinks[0];
 
   await sendToSqsSoftOptIns(
-    Stage === 'PROD'
+    Stage === "PROD"
       ? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
       : `${queueNamePrefix}/soft-opt-in-consent-setter-queue-CODE`,
     {
       identityId: user.userId,
-      eventType: 'Cancellation',
+      eventType: "Cancellation",
       productName: mapPlatformToSoftOptInProductName(platform),
       subscriptionId: subscriptionId,
-    }
+    },
   );
   console.log(`sent soft opt-in message for identityId ${user.userId}`);
 }
@@ -76,9 +76,9 @@ async function disableSoftOptIns(
 export async function handler(event: DynamoDBStreamEvent): Promise<any> {
   const ttlEvents = event.Records.filter((dynamoEvent) => {
     return (
-      dynamoEvent.eventName === 'REMOVE' &&
-      dynamoEvent.userIdentity?.type === 'Service' &&
-      dynamoEvent.userIdentity?.principalId === 'dynamodb.amazonaws.com' &&
+      dynamoEvent.eventName === "REMOVE" &&
+      dynamoEvent.userIdentity?.type === "Service" &&
+      dynamoEvent.userIdentity?.principalId === "dynamodb.amazonaws.com" &&
       dynamoEvent.dynamodb?.OldImage?.subscriptionId?.S
     );
   });
@@ -102,7 +102,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
     if (userSubscriptions.length === 0) {
       console.log(
-        `No user links to delete for subscriptionId: ${subscriptionId}`
+        `No user links to delete for subscriptionId: ${subscriptionId}`,
       );
     } else {
       rows += await deleteUserSubscription(userSubscriptions);
@@ -113,7 +113,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
         softOptInSuccessCount++;
       } catch (e) {
         handleSoftOptInsError(
-          `Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`
+          `Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`,
         );
       }
     }
@@ -122,11 +122,11 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
   }
 
   console.log(
-    `Processed ${records} records from dynamo stream to delete ${rows} rows`
+    `Processed ${records} records from dynamo stream to delete ${rows} rows`,
   );
 
   console.log(
-    `Processed ${records} records from dynamo stream to disable soft opt-ins for ${softOptInSuccessCount} users`
+    `Processed ${records} records from dynamo stream to disable soft opt-ins for ${softOptInSuccessCount} users`,
   );
 
   return {

@@ -1,18 +1,18 @@
-import 'source-map-support/register';
-import { s3, sqs } from '../utils/aws';
-import zlib from 'zlib';
-import { Stage } from '../utils/appIdentity';
-import { plusDays } from '../utils/dates';
+import "source-map-support/register";
+import { s3, sqs } from "../utils/aws";
+import zlib from "zlib";
+import { Stage } from "../utils/appIdentity";
+import { plusDays } from "../utils/dates";
 import {
   GetQueueAttributesRequest,
   Message,
   ReceiveMessageRequest,
-} from 'aws-sdk/clients/sqs';
+} from "aws-sdk/clients/sqs";
 
 async function recursivelyFetchSqsMessages(
   sqsUrl: string,
   remainingMessagesToFetch: number,
-  handleMsg: (message: Message) => void
+  handleMsg: (message: Message) => void,
 ): Promise<void> {
   if (remainingMessagesToFetch > 0) {
     const request: ReceiveMessageRequest = {
@@ -27,12 +27,12 @@ async function recursivelyFetchSqsMessages(
       return await recursivelyFetchSqsMessages(
         sqsUrl,
         remainingMessagesToFetch - sqsResp.Messages.length,
-        handleMsg
+        handleMsg,
       );
     }
   } else {
     console.log(
-      "Terminating processing early as we've reached the limit of messages to fetch"
+      "Terminating processing early as we've reached the limit of messages to fetch",
     );
   }
 }
@@ -49,7 +49,7 @@ function group<A>(arrayToGroup: A[], groupSize: number): A[][] {
 
 async function deleteAllSqsMessages(
   sqsUrl: string,
-  receiptHandleToDelete: string[]
+  receiptHandleToDelete: string[],
 ): Promise<void> {
   if (receiptHandleToDelete.length > 0) {
     const batches = group(receiptHandleToDelete, 10);
@@ -70,16 +70,16 @@ async function deleteAllSqsMessages(
 async function getNumberOfMessagesNotVisible(sqsUrl: string): Promise<number> {
   const request: GetQueueAttributesRequest = {
     QueueUrl: sqsUrl,
-    AttributeNames: ['ApproximateNumberOfMessagesNotVisible'],
+    AttributeNames: ["ApproximateNumberOfMessagesNotVisible"],
   };
   const sqsResponse = await sqs.getQueueAttributes(request).promise();
   if (sqsResponse.Attributes) {
     return parseInt(
-      sqsResponse.Attributes.ApproximateNumberOfMessagesNotVisible
+      sqsResponse.Attributes.ApproximateNumberOfMessagesNotVisible,
     );
   } else {
     throw new Error(
-      `Failed to retrieve number of messages not visible for ${sqsUrl}`
+      `Failed to retrieve number of messages not visible for ${sqsUrl}`,
     );
   }
 }
@@ -88,17 +88,17 @@ export async function handler(params: {
   date: string;
   maxMessagesToFetch?: number;
 }): Promise<any> {
-  const bucket = process.env['ExportBucket'];
-  if (!bucket) throw new Error('Variable ExportBucket must be set');
+  const bucket = process.env["ExportBucket"];
+  if (!bucket) throw new Error("Variable ExportBucket must be set");
 
-  const sqsUrl = process.env['SqsUrl'];
-  if (!sqsUrl) throw new Error('Variable SqsUrl must be set');
+  const sqsUrl = process.env["SqsUrl"];
+  if (!sqsUrl) throw new Error("Variable SqsUrl must be set");
 
   const numberOfMessagesNotVisible =
     await getNumberOfMessagesNotVisible(sqsUrl);
   if (numberOfMessagesNotVisible > 1) {
     throw new Error(
-      `Approximately ${numberOfMessagesNotVisible} messages are unavailable for processing. Something else is currently consuming messages from ${sqsUrl}`
+      `Approximately ${numberOfMessagesNotVisible} messages are unavailable for processing. Something else is currently consuming messages from ${sqsUrl}`,
     );
   }
 
@@ -108,14 +108,14 @@ export async function handler(params: {
 
   const yesterday =
     params.date ?? plusDays(new Date(), -1).toISOString().substr(0, 10);
-  const prefix = Stage === 'PROD' ? 'data' : 'code-data';
+  const prefix = Stage === "PROD" ? "data" : "code-data";
   const randomString = Math.random().toString(36).substring(10);
   const filename = `${prefix}/date=${yesterday}/${yesterday}-${randomString}.json.gz`;
   const managedUpload = s3.upload({
     Bucket: bucket,
     Key: filename,
     Body: zippedStream,
-    ACL: 'bucket-owner-full-control',
+    ACL: "bucket-owner-full-control",
   });
 
   const msgToDelete: string[] = [];
@@ -124,11 +124,11 @@ export async function handler(params: {
 
   function handleOneMessage(sqsMessage: Message): void {
     totalMsgCount++;
-    const parsedMessage = JSON.parse(sqsMessage.Body ?? '');
+    const parsedMessage = JSON.parse(sqsMessage.Body ?? "");
     const messageDate = parsedMessage.snapshotDate.substr(0, 10);
     if (messageDate == yesterday) {
       processedMsgCount++;
-      const message = JSON.stringify(parsedMessage) + '\n';
+      const message = JSON.stringify(parsedMessage) + "\n";
       zippedStream.write(message);
       if (sqsMessage.ReceiptHandle) msgToDelete.push(sqsMessage.ReceiptHandle);
     }
@@ -137,14 +137,14 @@ export async function handler(params: {
   await recursivelyFetchSqsMessages(
     sqsUrl,
     maxMessagesToFetch,
-    handleOneMessage
+    handleOneMessage,
   );
 
   zippedStream.end();
   await managedUpload.promise();
 
   console.log(
-    `Export succeeded, read ${totalMsgCount} records, processed ${processedMsgCount}`
+    `Export succeeded, read ${totalMsgCount} records, processed ${processedMsgCount}`,
   );
 
   await deleteAllSqsMessages(sqsUrl, msgToDelete);

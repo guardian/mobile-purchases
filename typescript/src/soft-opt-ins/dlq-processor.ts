@@ -1,6 +1,6 @@
-import { dynamoMapper, sendToSqs, sqs } from '../utils/aws';
-import { processAcquisition } from './processSubscription';
-import { SubscriptionEmpty, Subscription } from '../models/subscription';
+import { dynamoMapper, sendToSqs, sqs } from "../utils/aws";
+import { processAcquisition } from "./processSubscription";
+import { SubscriptionEmpty, Subscription } from "../models/subscription";
 
 interface MessageBody {
   identityId: string;
@@ -27,7 +27,7 @@ export async function handler(event: any): Promise<void> {
   const dlqUrl = process.env.DLQUrl;
 
   if (!dlqUrl) {
-    throw new Error('process.env.DLQUrl is undefined');
+    throw new Error("process.env.DLQUrl is undefined");
   }
 
   while (true) {
@@ -41,7 +41,7 @@ export async function handler(event: any): Promise<void> {
 
     // Check if there are any messages
     if (!data.Messages || data.Messages.length === 0) {
-      console.log('No messages to process');
+      console.log("No messages to process");
       break;
     }
 
@@ -50,14 +50,14 @@ export async function handler(event: any): Promise<void> {
       if (!message.Body) {
         // Should never happen
         throw new Error(
-          `Message ${message.MessageId} does not have a Body property`
+          `Message ${message.MessageId} does not have a Body property`,
         );
       }
 
       if (!message.ReceiptHandle) {
         // Should never happen
         throw new Error(
-          `Message ${message.MessageId} does not have a ReceiptHandle property`
+          `Message ${message.MessageId} does not have a ReceiptHandle property`,
         );
       }
 
@@ -67,7 +67,7 @@ export async function handler(event: any): Promise<void> {
         body = JSON.parse(message.Body);
       } catch (err) {
         throw new Error(
-          `JSON.parse() failed to parse Body of message ${message.MessageId}: ${err}`
+          `JSON.parse() failed to parse Body of message ${message.MessageId}: ${err}`,
         );
       }
 
@@ -75,14 +75,14 @@ export async function handler(event: any): Promise<void> {
 
       if (messageIsOneDayOld(timestamp)) {
         console.log(
-          `Message ${message.MessageId} is more than one day old. Deleting message from DLQ`
+          `Message ${message.MessageId} is more than one day old. Deleting message from DLQ`,
         );
         await deleteMessage(dlqUrl, message.ReceiptHandle);
         continue;
       }
 
       console.log(
-        `identityId: ${identityId}, subscriptionId: ${subscriptionId}, timestamp: ${timestamp}`
+        `identityId: ${identityId}, subscriptionId: ${subscriptionId}, timestamp: ${timestamp}`,
       );
 
       let subEmpty = new SubscriptionEmpty();
@@ -95,7 +95,7 @@ export async function handler(event: any): Promise<void> {
       } catch (error) {
         console.log(
           `Subscription ${subscriptionId} record not found in the subscriptions table. Error: `,
-          error
+          error,
         );
         continue;
       }

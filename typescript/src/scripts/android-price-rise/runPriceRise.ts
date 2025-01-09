@@ -8,36 +8,36 @@
  * Outputs to a CSV with a row per product_id + region.
  */
 
-import { RegionPriceMap, parsePriceRiseCsv } from './parsePriceRiseCsv';
-import { androidpublisher_v3 } from '@googleapis/androidpublisher';
-import fs from 'fs';
-import { getClient } from './googleClient';
-import { regionsThatAllowOptOut } from './getRegionsThatAllowOptOut';
+import { RegionPriceMap, parsePriceRiseCsv } from "./parsePriceRiseCsv";
+import { androidpublisher_v3 } from "@googleapis/androidpublisher";
+import fs from "fs";
+import { getClient } from "./googleClient";
+import { regionsThatAllowOptOut } from "./getRegionsThatAllowOptOut";
 
-const packageName = 'com.guardian';
+const packageName = "com.guardian";
 
 const filePath = process.env.FILE_PATH;
 if (!filePath) {
-  console.log('Missing FILE_PATH');
+  console.log("Missing FILE_PATH");
   process.exit(1);
 }
 
-const DRY_RUN = process.argv.includes('--dry-run');
-let writeStream = fs.createWriteStream('price-rise-output.csv');
+const DRY_RUN = process.argv.includes("--dry-run");
+let writeStream = fs.createWriteStream("price-rise-output.csv");
 writeStream.write(
-  'productId,regionCode,currency,oldPrice,newPrice,pcIncrease\n'
+  "productId,regionCode,currency,oldPrice,newPrice,pcIncrease\n",
 );
 if (DRY_RUN) {
-  console.log('*****DRY RUN*****');
+  console.log("*****DRY RUN*****");
 }
 
 const priceRiseData = parsePriceRiseCsv(filePath);
 
 const buildPrice = (
   currency: string,
-  price: number
+  price: number,
 ): androidpublisher_v3.Schema$Money => {
-  const [units, nanos] = price.toFixed(2).split('.');
+  const [units, nanos] = price.toFixed(2).split(".");
   return {
     currencyCode: currency,
     units: units,
@@ -52,21 +52,21 @@ const buildPrice = (
 const getCurrentBasePlan = (
   client: androidpublisher_v3.Androidpublisher,
   productId: string,
-  packageName: string
+  packageName: string,
 ): Promise<androidpublisher_v3.Schema$BasePlan> =>
   client.monetization.subscriptions
     .get({ packageName, productId })
     .then((resp) => {
       if ((resp.data.basePlans?.length ?? 0) > 1) {
         console.log(
-          `Base plan for ${productId} has ${resp.data.basePlans?.length} base plans`
+          `Base plan for ${productId} has ${resp.data.basePlans?.length} base plans`,
         );
       }
       const bp = resp.data.basePlans ? resp.data.basePlans[0] : undefined;
       if (bp) {
         return bp;
       } else {
-        return Promise.reject('No base plan found');
+        return Promise.reject("No base plan found");
       }
     });
 
@@ -74,7 +74,7 @@ const getCurrentBasePlan = (
 const updatePrices = (
   basePlan: androidpublisher_v3.Schema$BasePlan,
   googleRegionPriceMap: RegionPriceMap,
-  productId: string
+  productId: string,
 ): androidpublisher_v3.Schema$BasePlan => {
   const updatedRegionalConfigs = basePlan.regionalConfigs?.map(
     (regionalConfig) => {
@@ -84,7 +84,7 @@ const updatePrices = (
       ) {
         if (!regionsThatAllowOptOut.has(regionalConfig.regionCode)) {
           console.log(
-            `Skipping region that doesn't allow opt-outs: ${regionalConfig.regionCode}`
+            `Skipping region that doesn't allow opt-outs: ${regionalConfig.regionCode}`,
           );
           return regionalConfig;
         }
@@ -92,17 +92,17 @@ const updatePrices = (
         const priceDetails = googleRegionPriceMap[regionalConfig.regionCode];
         if (regionalConfig.price?.currencyCode !== priceDetails.currency) {
           console.log(
-            `Currency mismatch for ${productId} in ${regionalConfig.regionCode}: ${regionalConfig.price?.currencyCode} -> ${priceDetails.currency}`
+            `Currency mismatch for ${productId} in ${regionalConfig.regionCode}: ${regionalConfig.price?.currencyCode} -> ${priceDetails.currency}`,
           );
         }
         const currency =
           regionalConfig.price?.currencyCode ?? priceDetails.currency;
-        const currentPrice = `${regionalConfig.price?.units ?? 0}.${regionalConfig.price?.nanos?.toString().slice(0, 2) ?? '00'}`;
+        const currentPrice = `${regionalConfig.price?.units ?? 0}.${regionalConfig.price?.nanos?.toString().slice(0, 2) ?? "00"}`;
         const pcIncrease =
           (priceDetails.price - parseFloat(currentPrice)) /
           parseFloat(currentPrice);
         writeStream.write(
-          `${productId},${regionalConfig.regionCode},${currency},${currentPrice},${priceDetails.price},${pcIncrease}\n`
+          `${productId},${regionalConfig.regionCode},${currency},${currentPrice},${priceDetails.price},${pcIncrease}\n`,
         );
         return {
           ...regionalConfig,
@@ -112,7 +112,7 @@ const updatePrices = (
         // No mapping for this product_id/region, don't change it
         return regionalConfig;
       }
-    }
+    },
   );
   return {
     ...basePlan,
@@ -126,7 +126,7 @@ getClient()
       // For each product_id in priceRiseData, update the prices in each region
       Object.entries(priceRiseData).map(([productId, regionPriceMap]) => {
         console.log(
-          `Updating productId ${productId} in ${Object.keys(regionPriceMap).length} regions`
+          `Updating productId ${productId} in ${Object.keys(regionPriceMap).length} regions`,
         );
 
         return getCurrentBasePlan(client, productId, packageName)
@@ -139,8 +139,8 @@ getClient()
                 .patch({
                   productId,
                   packageName,
-                  'regionsVersion.version': '2022/02',
-                  updateMask: 'basePlans',
+                  "regionsVersion.version": "2022/02",
+                  updateMask: "basePlans",
                   requestBody: {
                     productId,
                     packageName,
@@ -148,15 +148,15 @@ getClient()
                   },
                 })
                 .then((response) => {
-                  console.log('Updated prices for', productId);
+                  console.log("Updated prices for", productId);
                 });
             }
           });
-      })
-    )
+      }),
+    ),
   )
   .catch((err) => {
-    console.log('Error:');
+    console.log("Error:");
     console.log(err);
   })
   .finally(() => {

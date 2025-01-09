@@ -2,9 +2,9 @@ import {
   hashKey,
   attribute,
   rangeKey,
-} from '@aws/dynamodb-data-mapper-annotations';
-import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
-import { App, Stage } from '../utils/appIdentity';
+} from "@aws/dynamodb-data-mapper-annotations";
+import { DynamoDbTable } from "@aws/dynamodb-data-mapper";
+import { App, Stage } from "../utils/appIdentity";
 
 export class UserSubscription {
   @hashKey()
@@ -19,7 +19,7 @@ export class UserSubscription {
   constructor(
     userId: string,
     subscriptionId: string,
-    creationTimestamp: string
+    creationTimestamp: string,
   ) {
     this.userId = userId;
     this.subscriptionId = subscriptionId;
@@ -37,6 +37,6 @@ export class UserSubscription {
 
 export class UserSubscriptionEmpty extends UserSubscription {
   constructor() {
-    super('', '', '');
+    super("", "", "");
   }
 }

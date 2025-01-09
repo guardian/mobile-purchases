@@ -1,7 +1,7 @@
-import { Option } from '../utils/option';
-import { PendingRenewalInfo } from '../services/appleValidateReceipts';
-import type { Result } from '@guardian/types';
-import { ok, err, ResultKind } from '@guardian/types';
+import { Option } from "../utils/option";
+import { PendingRenewalInfo } from "../services/appleValidateReceipts";
+import type { Result } from "@guardian/types";
+import { ok, err, ResultKind } from "@guardian/types";
 
 // this is the definition of a receipt as received by the server to server notification system.
 // Not to be confused with apple's receipt validation receipt info (although they do look similar, they are different)
@@ -58,11 +58,11 @@ export interface StatusUpdateNotification {
   expires_date_ms: any;
 }
 
-type binaryStatus = '0' | '1';
-type expirationIntent = '1' | '2' | '3' | '4' | '5';
+type binaryStatus = "0" | "1";
+type expirationIntent = "1" | "2" | "3" | "4" | "5";
 
 const isObject = (a: unknown): a is Record<string, unknown> =>
-  typeof a === 'object' && a !== null;
+  typeof a === "object" && a !== null;
 
 const parseArray =
   <A>(parseA: (a: unknown) => Result<string, A>) =>
@@ -86,22 +86,22 @@ const parseArray =
       return f([], array);
     }
 
-    return err('Is not an array');
+    return err("Is not an array");
   };
 
 const fieldAllowList = [
-  'environment',
-  'product_id',
-  'notification_type',
-  'auto_renew_status',
-  'status',
-  'purchase_date',
+  "environment",
+  "product_id",
+  "notification_type",
+  "auto_renew_status",
+  "status",
+  "purchase_date",
 ];
 
 function debugCleanPayload(
   data: unknown,
   depth: number = 4,
-  whitelisted: boolean = false
+  whitelisted: boolean = false,
 ): object | string {
   if (isObject(data) && depth > 0) {
     if (Array.isArray(data)) {
@@ -114,7 +114,7 @@ function debugCleanPayload(
         result[k] = debugCleanPayload(
           data[k],
           depth - 1,
-          fieldAllowList.includes(k)
+          fieldAllowList.includes(k),
         );
       return result;
     }
@@ -127,110 +127,110 @@ function debugLogPayload(data: unknown, maxDepth: number = 4) {
 }
 
 function parseAppleReceiptInfo(
-  payload: unknown
+  payload: unknown,
 ): Result<string, AppleReceiptInfo> {
   if (!isObject(payload)) {
     return err(
-      "The apple receipt info field that Apple gave us isn't an object"
+      "The apple receipt info field that Apple gave us isn't an object",
     );
   }
-  if (typeof payload.transaction_id !== 'string')
-    return err('missing field: transaction_id');
-  if (typeof payload.product_id !== 'string')
-    return err('missing field: product_id');
-  if (typeof payload.original_transaction_id !== 'string')
-    return err('missing field: original_transaction_id');
+  if (typeof payload.transaction_id !== "string")
+    return err("missing field: transaction_id");
+  if (typeof payload.product_id !== "string")
+    return err("missing field: product_id");
+  if (typeof payload.original_transaction_id !== "string")
+    return err("missing field: original_transaction_id");
   if (
-    typeof payload.item_id !== 'string' &&
-    typeof payload.item_id !== 'undefined'
+    typeof payload.item_id !== "string" &&
+    typeof payload.item_id !== "undefined"
   )
     return err(`incorrect optional field: item_id ${typeof payload.item_id}`);
   if (
-    typeof payload.app_item_id !== 'string' &&
-    typeof payload.app_item_id !== 'undefined'
+    typeof payload.app_item_id !== "string" &&
+    typeof payload.app_item_id !== "undefined"
   )
     return err(
-      `incorrect optional field: app_item_id ${typeof payload.app_item_id}`
+      `incorrect optional field: app_item_id ${typeof payload.app_item_id}`,
     );
   if (
-    typeof payload.web_order_line_item_id !== 'string' &&
-    typeof payload.web_order_line_item_id !== 'undefined'
+    typeof payload.web_order_line_item_id !== "string" &&
+    typeof payload.web_order_line_item_id !== "undefined"
   )
     return err(
-      `incorrect optional field: web_order_line_item_id ${typeof payload.web_order_line_item_id}`
+      `incorrect optional field: web_order_line_item_id ${typeof payload.web_order_line_item_id}`,
     );
   if (
-    typeof payload.unique_identifier !== 'string' &&
-    typeof payload.unique_identifier !== 'undefined'
+    typeof payload.unique_identifier !== "string" &&
+    typeof payload.unique_identifier !== "undefined"
   )
     return err(
-      `incorrect optional field: unique_identifier ${typeof payload.unique_identifier}`
+      `incorrect optional field: unique_identifier ${typeof payload.unique_identifier}`,
     );
   if (
-    typeof payload.unique_vendor_identifier !== 'string' &&
-    typeof payload.unique_vendor_identifier !== 'undefined'
+    typeof payload.unique_vendor_identifier !== "string" &&
+    typeof payload.unique_vendor_identifier !== "undefined"
   )
     return err(
-      `incorrect optional field: unique_vendor_identifier ${typeof payload.unique_vendor_identifier}`
+      `incorrect optional field: unique_vendor_identifier ${typeof payload.unique_vendor_identifier}`,
     );
-  if (typeof payload.quantity !== 'string')
-    return err('missing field: quantity');
-  if (typeof payload.purchase_date_ms !== 'string')
-    return err('missing field: purchase_date_ms');
-  if (typeof payload.original_purchase_date_ms !== 'string')
-    return err('missing field: original_purchase_date_ms');
+  if (typeof payload.quantity !== "string")
+    return err("missing field: quantity");
+  if (typeof payload.purchase_date_ms !== "string")
+    return err("missing field: purchase_date_ms");
+  if (typeof payload.original_purchase_date_ms !== "string")
+    return err("missing field: original_purchase_date_ms");
   if (
-    typeof payload.expires_date !== 'string' &&
-    typeof payload.expires_date !== 'undefined'
+    typeof payload.expires_date !== "string" &&
+    typeof payload.expires_date !== "undefined"
   )
     return err(
-      `incorrect optional field: expires_date ${typeof payload.expires_date}`
-    );
-  if (
-    typeof payload.expires_date_ms !== 'string' &&
-    typeof payload.expires_date_ms !== 'undefined'
-  )
-    return err(
-      `incorrect optional field: expires_date_ms ${typeof payload.expires_date_ms}`
+      `incorrect optional field: expires_date ${typeof payload.expires_date}`,
     );
   if (
-    typeof payload.is_in_intro_offer_period !== 'string' &&
-    typeof payload.is_in_intro_offer_period !== 'undefined'
+    typeof payload.expires_date_ms !== "string" &&
+    typeof payload.expires_date_ms !== "undefined"
   )
     return err(
-      `incorrect optional field: is_in_intro_offer_period ${typeof payload.is_in_intro_offer_period}`
+      `incorrect optional field: expires_date_ms ${typeof payload.expires_date_ms}`,
     );
-  if (typeof payload.is_trial_period !== 'string')
-    return err('missing field: is_trial_period');
-  if (typeof payload.bvrs !== 'string' && typeof payload.bvrs !== 'undefined')
+  if (
+    typeof payload.is_in_intro_offer_period !== "string" &&
+    typeof payload.is_in_intro_offer_period !== "undefined"
+  )
+    return err(
+      `incorrect optional field: is_in_intro_offer_period ${typeof payload.is_in_intro_offer_period}`,
+    );
+  if (typeof payload.is_trial_period !== "string")
+    return err("missing field: is_trial_period");
+  if (typeof payload.bvrs !== "string" && typeof payload.bvrs !== "undefined")
     return err(`incorrect optional field: bvrs ${typeof payload.bvrs}`);
   if (
-    typeof payload.version_external_identifier !== 'string' &&
-    typeof payload.version_external_identifier !== 'undefined'
+    typeof payload.version_external_identifier !== "string" &&
+    typeof payload.version_external_identifier !== "undefined"
   )
     return err(
-      `incorrect optional field: version_external_identifier ${typeof payload.version_external_identifier}`
+      `incorrect optional field: version_external_identifier ${typeof payload.version_external_identifier}`,
     );
   if (
-    typeof payload.promotional_offer_id !== 'string' &&
-    typeof payload.promotional_offer_id !== 'undefined'
+    typeof payload.promotional_offer_id !== "string" &&
+    typeof payload.promotional_offer_id !== "undefined"
   )
     return err(
-      `incorrect optional field: promotional_offer_id ${typeof payload.promotional_offer_id}`
+      `incorrect optional field: promotional_offer_id ${typeof payload.promotional_offer_id}`,
     );
   if (
-    typeof payload.offer_code_ref_name !== 'string' &&
-    typeof payload.offer_code_ref_name !== 'undefined'
+    typeof payload.offer_code_ref_name !== "string" &&
+    typeof payload.offer_code_ref_name !== "undefined"
   )
     return err(
-      `incorrect optional field: offer_code_ref_name ${typeof payload.offer_code_ref_name}`
+      `incorrect optional field: offer_code_ref_name ${typeof payload.offer_code_ref_name}`,
     );
   if (
-    typeof payload.app_account_token !== 'string' &&
-    typeof payload.app_account_token !== 'undefined'
+    typeof payload.app_account_token !== "string" &&
+    typeof payload.app_account_token !== "undefined"
   )
     return err(
-      `incorrect optional field: app_account_token ${typeof payload.app_account_token}`
+      `incorrect optional field: app_account_token ${typeof payload.app_account_token}`,
     );
 
   return ok({
@@ -258,7 +258,7 @@ function parseAppleReceiptInfo(
 }
 
 function parseBillingRetryPeriod(
-  status: unknown
+  status: unknown,
 ): Result<string, binaryStatus | undefined> {
   if (status === undefined) {
     return ok(undefined);
@@ -267,50 +267,50 @@ function parseBillingRetryPeriod(
 }
 
 function parseBinaryStatus(status: unknown): Result<string, binaryStatus> {
-  if (typeof status !== 'string') {
-    return err('Binary Status is not a string');
+  if (typeof status !== "string") {
+    return err("Binary Status is not a string");
   }
   switch (status) {
-    case '0':
-    case '1':
+    case "0":
+    case "1":
       return ok(status);
     default:
-      return err('Not a valid status');
+      return err("Not a valid status");
   }
 }
 
 function parseExpirationIntent(
-  status: unknown
+  status: unknown,
 ): Result<string, expirationIntent | undefined> {
   if (status === undefined) {
     return ok(undefined);
   }
-  if (typeof status !== 'string') {
-    return err('Expiration Intent is not a string');
+  if (typeof status !== "string") {
+    return err("Expiration Intent is not a string");
   }
   switch (status) {
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
+    case "1":
+    case "2":
+    case "3":
+    case "4":
+    case "5":
       return ok(status);
     default:
-      return err('Not a valid status');
+      return err("Not a valid status");
   }
 }
 
 function parsePendingRenewalInfo(
-  payload: unknown
+  payload: unknown,
 ): Result<string, PendingRenewalInfo> {
   if (!isObject(payload)) {
     return err(
-      "The apple pending renewal info field that Apple gave us isn't an object"
+      "The apple pending renewal info field that Apple gave us isn't an object",
     );
   }
   const autoRenewStatus = parseBinaryStatus(payload.auto_renew_status);
   const billingRetryPeriod = parseBillingRetryPeriod(
-    payload.is_in_billing_retry_period
+    payload.is_in_billing_retry_period,
   );
   const expirationIntent = parseExpirationIntent(payload.expiration_intent);
   if (autoRenewStatus.kind === ResultKind.Err) {
@@ -323,19 +323,19 @@ function parsePendingRenewalInfo(
     return expirationIntent;
   }
   if (
-    (typeof payload.auto_renew_product_id === 'string' ||
-      typeof payload.auto_renew_product_id === 'undefined') &&
+    (typeof payload.auto_renew_product_id === "string" ||
+      typeof payload.auto_renew_product_id === "undefined") &&
     autoRenewStatus.kind === ResultKind.Ok &&
     expirationIntent.kind === ResultKind.Ok &&
-    (typeof payload.grace_period_expires_date_ms === 'string' ||
-      typeof payload.grace_period_expires_date_ms === 'undefined') &&
+    (typeof payload.grace_period_expires_date_ms === "string" ||
+      typeof payload.grace_period_expires_date_ms === "undefined") &&
     billingRetryPeriod.kind === ResultKind.Ok &&
-    typeof payload.original_transaction_id === 'string' &&
-    typeof payload.product_id === 'string' &&
-    (typeof payload.price_consent_status === 'string' ||
-      typeof payload.price_consent_status === 'undefined') &&
-    (typeof payload.price_increase_status === 'string' ||
-      typeof payload.price_increase_status === 'undefined')
+    typeof payload.original_transaction_id === "string" &&
+    typeof payload.product_id === "string" &&
+    (typeof payload.price_consent_status === "string" ||
+      typeof payload.price_consent_status === "undefined") &&
+    (typeof payload.price_increase_status === "string" ||
+      typeof payload.price_increase_status === "undefined")
   ) {
     return ok({
       auto_renew_product_id: payload.auto_renew_product_id,
@@ -349,20 +349,20 @@ function parsePendingRenewalInfo(
       price_increase_status: payload.price_increase_status,
     });
   }
-  return err('Pending Renewal Info object from Apple cannot be parsed');
+  return err("Pending Renewal Info object from Apple cannot be parsed");
 }
 
 function parseUnifiedReceipt(
-  payload: unknown
+  payload: unknown,
 ): Result<string, UnifiedReceiptInfo> {
   if (!isObject(payload)) {
     return err("The unified receipt object that Apple gave us isn't an object");
   }
   const latestReceiptInfo = parseArray(parseAppleReceiptInfo)(
-    payload.latest_receipt_info
+    payload.latest_receipt_info,
   );
   const pendingRenewalInfo = parseArray(parsePendingRenewalInfo)(
-    payload.pending_renewal_info
+    payload.pending_renewal_info,
   );
   if (latestReceiptInfo.kind === ResultKind.Err) {
     return latestReceiptInfo;
@@ -371,12 +371,12 @@ function parseUnifiedReceipt(
     return pendingRenewalInfo;
   }
 
-  if (typeof payload.environment !== 'string')
-    return err('parseUnifiedReceipt: missing field: environment');
-  if (typeof payload.latest_receipt !== 'string')
-    return err('parseUnifiedReceipt: missing field: latest_receipt');
-  if (typeof payload.status !== 'number')
-    return err('parseUnifiedReceipt: missing field: status');
+  if (typeof payload.environment !== "string")
+    return err("parseUnifiedReceipt: missing field: environment");
+  if (typeof payload.latest_receipt !== "string")
+    return err("parseUnifiedReceipt: missing field: latest_receipt");
+  if (typeof payload.status !== "number")
+    return err("parseUnifiedReceipt: missing field: status");
 
   return ok({
     environment: payload.environment,
@@ -388,7 +388,7 @@ function parseUnifiedReceipt(
 }
 
 function parseNotification(
-  payload: unknown
+  payload: unknown,
 ): Result<string, StatusUpdateNotification> {
   if (!isObject(payload)) {
     return err("The notification from Apple didn't have any data we can parse");
@@ -400,7 +400,7 @@ function parseNotification(
   }
 
   const extractPromotionalOfferId = (
-    unifiedReceipt: UnifiedReceiptInfo
+    unifiedReceipt: UnifiedReceiptInfo,
   ): string | null => {
     if (unifiedReceipt.latest_receipt_info.length > 0) {
       return unifiedReceipt.latest_receipt_info[0].promotional_offer_id || null;
@@ -409,7 +409,7 @@ function parseNotification(
   };
 
   const extractPromotionalOfferName = (
-    unifiedReceipt: UnifiedReceiptInfo
+    unifiedReceipt: UnifiedReceiptInfo,
   ): string | null => {
     // essentially return the first product id and empty string if it could not be found
     // This should be corrected, but I cannot see a promotional offer name
@@ -425,13 +425,13 @@ function parseNotification(
     if (unifiedReceipt.latest_receipt_info.length > 0) {
       return unifiedReceipt.latest_receipt_info[0].product_id;
     }
-    return '';
+    return "";
   };
 
   const purchaseDateMs = (unifiedReceipt: UnifiedReceiptInfo): number => {
     if (unifiedReceipt.latest_receipt_info.length > 0) {
       return Number(
-        unifiedReceipt.latest_receipt_info[0].purchase_date_ms || '0'
+        unifiedReceipt.latest_receipt_info[0].purchase_date_ms || "0",
       );
     }
     return 0;
@@ -440,30 +440,30 @@ function parseNotification(
   const expiresDateMs = (unifiedReceipt: UnifiedReceiptInfo): number => {
     if (unifiedReceipt.latest_receipt_info.length > 0) {
       return Number(
-        unifiedReceipt.latest_receipt_info[0].purchase_date_ms || '0'
+        unifiedReceipt.latest_receipt_info[0].purchase_date_ms || "0",
       );
     }
     return 0;
   };
 
   if (
-    typeof payload.environment === 'string' &&
-    typeof payload.bid === 'string' &&
-    typeof payload.bvrs === 'string' &&
-    typeof payload.notification_type === 'string' &&
-    (typeof payload.original_transaction_id === 'string' ||
-      typeof payload.original_transaction_id === 'undefined' ||
-      typeof payload.original_transaction_id === 'number') &&
-    (typeof payload.cancellation_date === 'string' ||
-      typeof payload.cancellation_date === 'undefined') &&
-    (typeof payload.web_order_line_item_id === 'string' ||
-      typeof payload.web_order_line_item_id === 'undefined') &&
-    typeof payload.auto_renew_status === 'string' &&
-    (typeof payload.auto_renew_adam_id === 'string' ||
-      typeof payload.auto_renew_adam_id === 'undefined') &&
-    typeof payload.auto_renew_product_id === 'string' &&
-    (typeof payload.expiration_intent === 'string' ||
-      typeof payload.expiration_intent === 'undefined')
+    typeof payload.environment === "string" &&
+    typeof payload.bid === "string" &&
+    typeof payload.bvrs === "string" &&
+    typeof payload.notification_type === "string" &&
+    (typeof payload.original_transaction_id === "string" ||
+      typeof payload.original_transaction_id === "undefined" ||
+      typeof payload.original_transaction_id === "number") &&
+    (typeof payload.cancellation_date === "string" ||
+      typeof payload.cancellation_date === "undefined") &&
+    (typeof payload.web_order_line_item_id === "string" ||
+      typeof payload.web_order_line_item_id === "undefined") &&
+    typeof payload.auto_renew_status === "string" &&
+    (typeof payload.auto_renew_adam_id === "string" ||
+      typeof payload.auto_renew_adam_id === "undefined") &&
+    typeof payload.auto_renew_product_id === "string" &&
+    (typeof payload.expiration_intent === "string" ||
+      typeof payload.expiration_intent === "undefined")
   ) {
     return ok({
       environment: payload.environment,
@@ -471,7 +471,7 @@ function parseNotification(
       bvrs: payload.bvrs,
       notification_type: payload.notification_type,
       original_transaction_id:
-        typeof payload.original_transaction_id === 'number'
+        typeof payload.original_transaction_id === "number"
           ? payload.original_transaction_id.toString()
           : payload.original_transaction_id,
       cancellation_date: payload.cancellation_date,
@@ -488,27 +488,27 @@ function parseNotification(
       expires_date_ms: expiresDateMs(unifiedReceipt.value),
     });
   }
-  return err('Notification from Apple cannot be parsed');
+  return err("Notification from Apple cannot be parsed");
 }
 
 export function parsePayload(
-  body: Option<string>
+  body: Option<string>,
 ): Error | StatusUpdateNotification {
   try {
-    const notification: unknown = JSON.parse(body ?? '');
+    const notification: unknown = JSON.parse(body ?? "");
     const parsedNotification = parseNotification(notification);
     if (parsedNotification.kind === ResultKind.Ok) {
       console.log(`(ec0a5f83) ${body}`);
       return parsedNotification.value;
     }
     console.log(
-      `debugLogPayload (parse error: ${parsedNotification.err}): ${debugLogPayload(notification)}`
+      `debugLogPayload (parse error: ${parsedNotification.err}): ${debugLogPayload(notification)}`,
     );
     throw Error(
-      `The payload could not be parsed due to ${parsedNotification.err}`
+      `The payload could not be parsed due to ${parsedNotification.err}`,
     );
   } catch (e) {
-    console.log('Error during the parsing of the HTTP Payload body: ' + e);
+    console.log("Error during the parsing of the HTTP Payload body: " + e);
     return e as Error;
   }
 }

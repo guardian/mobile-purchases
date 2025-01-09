@@ -2,23 +2,23 @@ import {
   androidpublisher,
   androidpublisher_v3,
   auth,
-} from '@googleapis/androidpublisher';
-import SSM = require('aws-sdk/clients/ssm');
-import { GoogleAuth } from 'google-auth-library';
+} from "@googleapis/androidpublisher";
+import SSM = require("aws-sdk/clients/ssm");
+import { GoogleAuth } from "google-auth-library";
 
 export const ssm: SSM = new SSM({
-  region: 'eu-west-1',
+  region: "eu-west-1",
 });
 
 const getConfigValue = (): Promise<string> => {
   return ssm
     .getParameter({
-      Name: '/mobile-purchase/android-subscription/google.serviceAccountJson2',
+      Name: "/mobile-purchase/android-subscription/google.serviceAccountJson2",
       WithDecryption: true,
     })
     .promise()
     .then((result) => {
-      return result.Parameter?.Value ?? '{}';
+      return result.Parameter?.Value ?? "{}";
     });
 };
 
@@ -31,7 +31,7 @@ export const getClient =
       .then(async (serviceAccountJson) => {
         const jsonClient = new GoogleAuth({
           credentials: serviceAccountJson,
-          scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+          scopes: ["https://www.googleapis.com/auth/androidpublisher"],
         });
         const accessToken = await jsonClient.getAccessToken();
         const authClient = new auth.OAuth2({
@@ -39,7 +39,7 @@ export const getClient =
         });
 
         return androidpublisher({
-          version: 'v3',
+          version: "v3",
           auth: authClient,
         });
       });

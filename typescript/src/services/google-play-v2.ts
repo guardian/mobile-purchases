@@ -1,8 +1,8 @@
-import aws = require('../utils/aws');
-import S3 from 'aws-sdk/clients/s3';
-import { Stage } from '../utils/appIdentity';
-import { androidpublisher, auth } from '@googleapis/androidpublisher';
-import { mapAndroidProductId } from '../utils/mapAndroidProductId';
+import aws = require("../utils/aws");
+import S3 from "aws-sdk/clients/s3";
+import { Stage } from "../utils/appIdentity";
+import { androidpublisher, auth } from "@googleapis/androidpublisher";
+import { mapAndroidProductId } from "../utils/mapAndroidProductId";
 
 export type GoogleSubscription = {
   // Time at which the subscription was granted. Not set for pending subscriptions (subscription was created but awaiting payment during signup)
@@ -35,7 +35,7 @@ export type GoogleSubscription = {
 // 4. Applying heuristics to attempt to determine whether the subscription is currently beneffiting from a free trial (see detailed discussion below.)
 export async function fetchGoogleSubscriptionV2(
   purchaseToken: string,
-  packageName: string
+  packageName: string,
 ): Promise<GoogleSubscription> {
   try {
     const client = await initialiseAndroidPublisherClient();
@@ -50,7 +50,7 @@ export async function fetchGoogleSubscriptionV2(
     // one product.
     if (purchase.data.lineItems?.length != 1) {
       throw Error(
-        'The subscription purchase must refer to exactly one product'
+        "The subscription purchase must refer to exactly one product",
       );
     }
 
@@ -61,7 +61,7 @@ export async function fetchGoogleSubscriptionV2(
     const expiryTime = product.expiryTime;
 
     if (!expiryTime) {
-      throw Error('The subscription purchase does not have an expiry time');
+      throw Error("The subscription purchase does not have an expiry time");
     }
 
     const userCancellationTime =
@@ -74,13 +74,13 @@ export async function fetchGoogleSubscriptionV2(
 
     const productId = product.productId;
     if (!productId) {
-      throw Error('The product does not have an ID');
+      throw Error("The product does not have an ID");
     }
 
     const basePlanId = product.offerDetails?.basePlanId;
 
     if (!basePlanId) {
-      throw Error('Unable to determine the base plan for the product');
+      throw Error("Unable to determine the base plan for the product");
     }
 
     const subscription = await client.monetization.subscriptions.get({
@@ -89,11 +89,11 @@ export async function fetchGoogleSubscriptionV2(
     });
 
     const basePlan = subscription.data.basePlans?.find(
-      (x) => x.basePlanId == basePlanId
+      (x) => x.basePlanId == basePlanId,
     );
 
     if (!basePlan) {
-      throw Error('Unable to determine the base plan for the product');
+      throw Error("Unable to determine the base plan for the product");
     }
 
     const billingPeriodDuration =
@@ -102,7 +102,7 @@ export async function fetchGoogleSubscriptionV2(
 
     if (!billingPeriodDuration) {
       throw Error(
-        'Unable to determine a billing period duration for the base plan'
+        "Unable to determine a billing period duration for the base plan",
       );
     }
 
@@ -112,7 +112,7 @@ export async function fetchGoogleSubscriptionV2(
 
     if (!latestOrderId) {
       throw Error(
-        'An order ID is expected to be associated with the purchase, but was not present'
+        "An order ID is expected to be associated with the purchase, but was not present",
       );
     }
 
@@ -137,7 +137,7 @@ export async function fetchGoogleSubscriptionV2(
     if (error?.status == 400 || error?.status == 404 || error?.status == 410) {
       console.error(
         `fetchGoogleSubscriptionV2 error: invalid purchase token; subscription not found; or no such package name (status = ${error.status})`,
-        error
+        error,
       );
     } else {
       console.error(`fetchGoogleSubscriptionV2 error:`, error);
@@ -167,7 +167,7 @@ export async function fetchGoogleSubscriptionV2(
 // See: https://stackoverflow.com/a/76867605
 // See: https://developer.android.com/google/play/billing/compatibility (search in-page for "paymentState".)
 function isFreeTrial(offerId: string | null, latestOrderId: string): boolean {
-  return offerId !== null && !latestOrderId.includes('..');
+  return offerId !== null && !latestOrderId.includes("..");
 }
 
 function parseNullableDate(date: string | null): Date | null {
@@ -181,7 +181,7 @@ async function initialiseAndroidPublisherClient() {
     credentials: { access_token: accessToken.token },
   });
 
-  return androidpublisher({ version: 'v3', auth: authClient });
+  return androidpublisher({ version: "v3", auth: authClient });
 }
 
 interface AccessToken {
@@ -191,13 +191,13 @@ interface AccessToken {
 
 function getParams(stage: string): S3.Types.GetObjectRequest {
   return {
-    Bucket: 'gu-mobile-access-tokens',
+    Bucket: "gu-mobile-access-tokens",
     Key: `${stage}/google-play-developer-api/access_token.json`,
   };
 }
 
 function getAccessToken(
-  params: S3.Types.GetObjectRequest
+  params: S3.Types.GetObjectRequest,
 ): Promise<AccessToken> {
   return aws.s3
     .getObject(params)
@@ -206,7 +206,7 @@ function getAccessToken(
       if (s3OutPut.Body) {
         return JSON.parse(s3OutPut.Body.toString());
       } else {
-        throw Error('S3 output body was not defined');
+        throw Error("S3 output body was not defined");
       }
     })
     .catch((error) => {

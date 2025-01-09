@@ -1,35 +1,35 @@
-import { SQSEvent, SQSRecord } from 'aws-lambda';
-import { Subscription } from '../../models/subscription';
-import { ProcessingError } from '../../models/processingError';
-import { GracefulProcessingError } from '../../models/GracefulProcessingError';
-import { putSubscription } from '../../update-subs/updatesub';
+import { SQSEvent, SQSRecord } from "aws-lambda";
+import { Subscription } from "../../models/subscription";
+import { ProcessingError } from "../../models/processingError";
+import { GracefulProcessingError } from "../../models/GracefulProcessingError";
+import { putSubscription } from "../../update-subs/updatesub";
 import {
   GoogleSubscription,
   fetchGoogleSubscriptionV2,
-} from '../../services/google-play-v2';
-import { GoogleSubscriptionReference } from '../../models/subscriptionReference';
-import { googlePackageNameToPlatform } from '../../services/appToPlatform';
-import { dateToSecondTimestamp, thirtyMonths } from '../../utils/dates';
-import { getIdentityIdFromBraze } from '../../services/braze';
+} from "../../services/google-play-v2";
+import { GoogleSubscriptionReference } from "../../models/subscriptionReference";
+import { googlePackageNameToPlatform } from "../../services/appToPlatform";
+import { dateToSecondTimestamp, thirtyMonths } from "../../utils/dates";
+import { getIdentityIdFromBraze } from "../../services/braze";
 import {
   storeUserSubscriptionInDynamo,
   queueHistoricalSubscription,
-} from './common';
-import { UserSubscription } from '../../models/userSubscription';
+} from "./common";
+import { UserSubscription } from "../../models/userSubscription";
 import {
   fetchGoogleSubscription,
   GoogleResponseBody,
-} from '../../services/google-play';
-import { googleResponseBodyToSubscription } from '../../update-subs/google';
+} from "../../services/google-play";
+import { googleResponseBodyToSubscription } from "../../update-subs/google";
 
 const googleSubscriptionToSubscription = (
   purchaseToken: string,
   packageName: string,
-  googleSubscription: GoogleSubscription
+  googleSubscription: GoogleSubscription,
 ): Subscription => {
   return new Subscription(
     purchaseToken,
-    googleSubscription.startTime?.toISOString() ?? '',
+    googleSubscription.startTime?.toISOString() ?? "",
     googleSubscription.expiryTime.toISOString(),
     googleSubscription.userCancellationTime?.toISOString(),
     googleSubscription.autoRenewing,
@@ -40,7 +40,7 @@ const googleSubscriptionToSubscription = (
     googleSubscription,
     undefined,
     null,
-    dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime))
+    dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)),
   );
 };
 
@@ -48,35 +48,35 @@ export const buildHandler =
   (
     fetchSubscriptionDetails: (
       purchaseToken: string,
-      packageName: string
+      packageName: string,
     ) => Promise<GoogleSubscription>,
     fetchSubscriptionDetailsV1: (
       subscriptionId: string,
       purchaseToken: string,
-      packageName: string
+      packageName: string,
     ) => Promise<GoogleResponseBody | null>,
     putSubscription: (subscription: Subscription) => Promise<Subscription>,
     sendSubscriptionToHistoricalQueue: (
-      subscription: Subscription
+      subscription: Subscription,
     ) => Promise<void>,
     exchangeExternalIdForIdentityId: (externalId: string) => Promise<string>,
-    storeUserSubInDynamo: (userSub: UserSubscription) => Promise<void>
+    storeUserSubInDynamo: (userSub: UserSubscription) => Promise<void>,
   ) =>
   async (event: SQSEvent) => {
     const promises = event.Records.map(async (sqsRecord: SQSRecord) => {
       try {
         // TODO: parse this using zod to get validation
         const subRef = JSON.parse(
-          sqsRecord.body
+          sqsRecord.body,
         ) as GoogleSubscriptionReference;
         const subscriptionFromGoogle = await fetchSubscriptionDetails(
           subRef.purchaseToken,
-          subRef.packageName
+          subRef.packageName,
         );
         const subscription = googleSubscriptionToSubscription(
           subRef.purchaseToken,
           subRef.packageName,
-          subscriptionFromGoogle
+          subscriptionFromGoogle,
         );
         await putSubscription(subscription);
 
@@ -84,65 +84,65 @@ export const buildHandler =
         const googleResponseV1 = await fetchSubscriptionDetailsV1(
           subRef.subscriptionId,
           subRef.purchaseToken,
-          subRef.packageName
+          subRef.packageName,
         );
         const subscriptionV1 = googleResponseBodyToSubscription(
           subRef.purchaseToken,
           subRef.packageName,
           subRef.subscriptionId,
           subscriptionFromGoogle.billingPeriodDuration,
-          googleResponseV1
+          googleResponseV1,
         );
         await sendSubscriptionToHistoricalQueue(subscriptionV1);
 
         if (subscriptionFromGoogle.obfuscatedExternalAccountId) {
           const identityId = await exchangeExternalIdForIdentityId(
-            subscriptionFromGoogle.obfuscatedExternalAccountId
+            subscriptionFromGoogle.obfuscatedExternalAccountId,
           );
-          console.log('Successfully exchanged UUID for identity ID');
+          console.log("Successfully exchanged UUID for identity ID");
 
           const userSubscription = new UserSubscription(
             identityId,
             subscription.subscriptionId,
-            new Date().toISOString()
+            new Date().toISOString(),
           );
           await storeUserSubInDynamo(userSubscription);
 
           console.log(`Processed subscription: ${subscription.subscriptionId}`);
         } else {
           console.log(
-            `Subscription ${subscription.subscriptionId} does not contain an external account ID`
+            `Subscription ${subscription.subscriptionId} does not contain an external account ID`,
           );
         }
 
-        return 'OK';
+        return "OK";
       } catch (error) {
         if (error instanceof ProcessingError) {
-          console.error('Error processing the subscription update', error);
+          console.error("Error processing the subscription update", error);
 
           if (error.shouldRetry) {
-            console.error('Will throw an exception to retry this message');
+            console.error("Will throw an exception to retry this message");
             throw error;
           } else {
             console.error("The error wasn't retryable, giving up.");
-            return 'Error, giving up';
+            return "Error, giving up";
           }
         } else if (error instanceof GracefulProcessingError) {
           console.warn(
-            'Error processing the subscription update is being handled gracefully',
-            error
+            "Error processing the subscription update is being handled gracefully",
+            error,
           );
 
-          return 'OK';
+          return "OK";
         } else {
-          console.error('Unexpected error, will throw to retry: ', error);
+          console.error("Unexpected error, will throw to retry: ", error);
 
           throw error;
         }
       }
     });
 
-    return Promise.all(promises).then((_) => 'OK');
+    return Promise.all(promises).then((_) => "OK");
   };
 
 export const handler = buildHandler(
@@ -151,5 +151,5 @@ export const handler = buildHandler(
   putSubscription,
   queueHistoricalSubscription,
   getIdentityIdFromBraze,
-  storeUserSubscriptionInDynamo
+  storeUserSubscriptionInDynamo,
 );

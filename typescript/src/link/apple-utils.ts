@@ -1,5 +1,5 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { Platform } from '../models/platform';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { Platform } from "../models/platform";
 
 type AppleSubscription = {
   receipt: string;
@@ -22,19 +22,19 @@ function deduplicate<T, U>(list: T[], selector: (item: T) => U): T[] {
       agg.some((x) => selector(x) === selector(item))
         ? agg
         : agg.concat([item]),
-    []
+    [],
   );
 }
 
 export function parseAppleLinkPayload(
-  request: APIGatewayProxyEvent
+  request: APIGatewayProxyEvent,
 ): AppleLinkPayload {
-  const parsed = JSON.parse(request.body ?? '') as AppleLinkPayload;
+  const parsed = JSON.parse(request.body ?? "") as AppleLinkPayload;
   return {
     ...parsed,
     subscriptions: deduplicate(
       parsed.subscriptions,
-      (x) => x.originalTransactionId
+      (x) => x.originalTransactionId,
     ),
   };
 }

@@ -1,7 +1,7 @@
-import aws = require('../utils/aws');
-import S3 from 'aws-sdk/clients/s3';
-import { Stage } from '../utils/appIdentity';
-import { restClient } from '../utils/restClient';
+import aws = require("../utils/aws");
+import S3 from "aws-sdk/clients/s3";
+import { Stage } from "../utils/appIdentity";
+import { restClient } from "../utils/restClient";
 
 export const GOOGLE_PAYMENT_STATE = {
   PAYMENT_PENDING: 0,
@@ -17,13 +17,13 @@ export interface AccessToken {
 
 function getParams(stage: string): S3.Types.GetObjectRequest {
   return {
-    Bucket: 'gu-mobile-access-tokens',
+    Bucket: "gu-mobile-access-tokens",
     Key: `${stage}/google-play-developer-api/access_token.json`,
   };
 }
 
 function getAccessToken(
-  params: S3.Types.GetObjectRequest
+  params: S3.Types.GetObjectRequest,
 ): Promise<AccessToken> {
   return aws.s3
     .getObject(params)
@@ -32,7 +32,7 @@ function getAccessToken(
       if (s3OutPut.Body) {
         return JSON.parse(s3OutPut.Body.toString());
       } else {
-        throw Error('S3 output body was not defined');
+        throw Error("S3 output body was not defined");
       }
     })
     .catch((error) => {
@@ -44,7 +44,7 @@ function getAccessToken(
 function buildGoogleUrl(
   subscriptionId: string,
   purchaseToken: string,
-  packageName: string
+  packageName: string,
 ) {
   const baseUrl = `https://www.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions`;
   return `${baseUrl}/${subscriptionId}/tokens/${purchaseToken}`;
@@ -61,7 +61,7 @@ export interface GoogleResponseBody {
 export async function fetchGoogleSubscription(
   subscriptionId: string,
   purchaseToken: string,
-  packageName: string
+  packageName: string,
 ): Promise<GoogleResponseBody | null> {
   const url = buildGoogleUrl(subscriptionId, purchaseToken, packageName);
   const accessToken = await getAccessToken(getParams(Stage));

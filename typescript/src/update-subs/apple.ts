@@ -1,18 +1,18 @@
-import 'source-map-support/register';
-import { SQSEvent, SQSRecord } from 'aws-lambda';
-import { parseAndStoreSubscriptionUpdate } from './updatesub';
-import { Subscription } from '../models/subscription';
-import { dateToSecondTimestamp, thirtyMonths } from '../utils/dates';
-import { AppleSubscriptionReference } from '../models/subscriptionReference';
+import "source-map-support/register";
+import { SQSEvent, SQSRecord } from "aws-lambda";
+import { parseAndStoreSubscriptionUpdate } from "./updatesub";
+import { Subscription } from "../models/subscription";
+import { dateToSecondTimestamp, thirtyMonths } from "../utils/dates";
+import { AppleSubscriptionReference } from "../models/subscriptionReference";
 import {
   AppleValidationResponse,
   validateReceipt,
-} from '../services/appleValidateReceipts';
-import { appleBundleToPlatform } from '../services/appToPlatform';
-import { PRODUCT_BILLING_PERIOD } from '../services/productBillingPeriod';
+} from "../services/appleValidateReceipts";
+import { appleBundleToPlatform } from "../services/appToPlatform";
+import { PRODUCT_BILLING_PERIOD } from "../services/productBillingPeriod";
 
 export function toAppleSubscription(
-  response: AppleValidationResponse
+  response: AppleValidationResponse,
 ): Subscription {
   const latestReceiptInfo = response.latestReceiptInfo;
 
@@ -29,7 +29,7 @@ export function toAppleSubscription(
   let billingPeriod = PRODUCT_BILLING_PERIOD[latestReceiptInfo.productId];
   if (billingPeriod === undefined) {
     console.warn(
-      `Unable to get the billing period, unknown product ID ${latestReceiptInfo.productId}`
+      `Unable to get the billing period, unknown product ID ${latestReceiptInfo.productId}`,
     );
   }
 
@@ -46,25 +46,25 @@ export function toAppleSubscription(
     null,
     response.latestReceipt,
     response.originalResponse,
-    dateToSecondTimestamp(thirtyMonths(latestReceiptInfo.expiresDate))
+    dateToSecondTimestamp(thirtyMonths(latestReceiptInfo.expiresDate)),
   );
 }
 
 function sqsRecordToAppleSubscription(
-  record: SQSRecord
+  record: SQSRecord,
 ): Promise<Subscription[]> {
   const subRef = JSON.parse(record.body) as AppleSubscriptionReference;
 
   // sandboxRetry is set to false such that in production we don't store any sandbox receipt that would have snuck all the way here
   // In CODE or locally the default endpoint will be sanbox therefore no retry is necessary
   return validateReceipt(subRef.receipt, { sandboxRetry: false }).then((subs) =>
-    subs.map(toAppleSubscription)
+    subs.map(toAppleSubscription),
   ); // `subs` here is a AppleValidationResponse[]
 }
 
 export async function handler(event: SQSEvent): Promise<string> {
   const promises = event.Records.map((record) =>
-    parseAndStoreSubscriptionUpdate(record, sqsRecordToAppleSubscription)
+    parseAndStoreSubscriptionUpdate(record, sqsRecordToAppleSubscription),
   );
-  return Promise.all(promises).then((_) => 'OK');
+  return Promise.all(promises).then((_) => "OK");
 }

@@ -1,4 +1,4 @@
-import { Option } from './option';
+import { Option } from "./option";
 
 export function optionalMsToDate(ms: Option<string> | undefined): Option<Date> {
   if (ms) {
