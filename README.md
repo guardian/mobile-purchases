@@ -7,7 +7,7 @@ _IOS and Android receipt validation and purchase persistence_
  - The scala part of the project is considered "legacy". It's only kept for very old iOS devices and should be decommissioned once there's only a tiny amount of [traffic reaching the service](https://eu-west-1.console.aws.amazon.com/cloudwatch/home?region=eu-west-1#dashboards:name=MobilePurchases;start=P7D).
  - The Typescript part of the project contains the more modern approach to validating and storing mobile purchases.
  
-## Local Setup
+## Local Development
 
 ### Node
 
@@ -16,6 +16,10 @@ Make sure that you are using the Node version specified by the `.nvmrc` file. We
 1. Install `yarn`: `npm install -g yarn`
 2. Run `yarn` to install dependencies
 3. Run local tests: `yarn test`
+
+### Linting
+
+prettier is now used to provide consistent formatting. It is not yet mandatory, so doesn't yet exists as a pre-commit hook. To apply run `yarn lint` or `yarn lint-fix`.
 
 ### Data
 
