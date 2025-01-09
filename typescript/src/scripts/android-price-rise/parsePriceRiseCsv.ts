@@ -5,39 +5,39 @@ import fs from 'fs';
  */
 
 export type PriceAndCurrency = {
-    price: number;
-    currency: string;
+  price: number;
+  currency: string;
 };
 
 export type RegionPriceMap = Record<string, PriceAndCurrency>;
 
 export type PriceRise = {
-    [productId: string]: RegionPriceMap;
-}
+  [productId: string]: RegionPriceMap;
+};
 
 export const parsePriceRiseCsv = (filePath: string): PriceRise => {
-    const data = fs.readFileSync(filePath, 'utf8');
+  const data = fs.readFileSync(filePath, 'utf8');
 
-    const lines = data.split('\n');
+  const lines = data.split('\n');
 
-    const priceRiseData: PriceRise = {};
+  const priceRiseData: PriceRise = {};
 
-    lines.forEach((line) => {
-        if (line.trim() === '') {
-            return;
-        }
-        const [productId, region, currency, priceRaw] = line.split(',');
-        const price = parseFloat(priceRaw);
+  lines.forEach((line) => {
+    if (line.trim() === '') {
+      return;
+    }
+    const [productId, region, currency, priceRaw] = line.split(',');
+    const price = parseFloat(priceRaw);
 
-        if (!priceRiseData[productId]) {
-            priceRiseData[productId] = {};
-        }
+    if (!priceRiseData[productId]) {
+      priceRiseData[productId] = {};
+    }
 
-        priceRiseData[productId][region] = {
-            price,
-            currency,
-        };
-    });
+    priceRiseData[productId][region] = {
+      price,
+      currency,
+    };
+  });
 
-    return priceRiseData;
+  return priceRiseData;
 };

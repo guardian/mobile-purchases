@@ -8,7 +8,9 @@
     "build:dev": "webpack",
     "test": "jest",
     "test-lambda": "yarn build:dev && node ./tsc-target/test-launcher.js",
-    "android-price-rise": "AWS_PROFILE=mobile ts-node ./typescript/src/scripts/android-price-rise/runPriceRise.ts"
+    "android-price-rise": "AWS_PROFILE=mobile ts-node ./typescript/src/scripts/android-price-rise/runPriceRise.ts",
+    "lint": "npx prettier --check --config .prettierrc \"./typescript/src/**/*.ts\"",
+    "lint-fix": "prettier --write --config .prettierrc \"./typescript/src/**/*.ts\""
   },
   "repository": {
     "type": "git",
@@ -24,6 +26,7 @@
     "@types/jest": "^27.4.1",
     "@types/node-fetch": "^2.6.2",
     "jest": "^26.6.3",
+    "prettier": "^3.4.2",
     "ts-jest": "^26.5.6",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.4.0",
