@@ -5,7 +5,8 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "prettier"
+    "prettier",
+    "@guardian/eslint-config-typescript"
   ],
   "rules": {
     "prettier/prettier": "error",
