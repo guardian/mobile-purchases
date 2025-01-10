@@ -8,8 +8,6 @@
     "build:dev": "webpack",
     "test": "jest",
     "test-lambda": "yarn build:dev && node ./tsc-target/test-launcher.js",
-    "format": "npx prettier --check \"./typescript/**/*.ts\"",
-    "format-fix": "prettier --write \"./typescript/**/*.ts\"",
     "lint": "eslint ./typescript --ext .ts",
     "lint-fix": "eslint ./typescript --ext .ts --fix",
     "android-price-rise": "AWS_PROFILE=mobile ts-node ./typescript/src/scripts/android-price-rise/runPriceRise.ts"
