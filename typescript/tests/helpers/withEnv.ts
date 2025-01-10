@@ -1,8 +1,11 @@
-export const withEnv = async (env: Record<string, string>, callback: () => any) => {
-    const oldEnv = process.env;
-    process.env = env;
+export const withEnv = async (
+	env: Record<string, string>,
+	callback: () => any,
+) => {
+	const oldEnv = process.env;
+	process.env = env;
 
-    await callback();
+	await callback();
 
-    process.env = oldEnv;
-}
+	process.env = oldEnv;
+};
