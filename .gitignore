@@ -11,8 +11,9 @@ dist
 project/.bloop/
 project/metals.sbt
 .bsp/
-
+yarn-error.log
 .DS_Store
 .pnp.*
 .yarn
 metals.sbt
+
