@@ -101,7 +101,7 @@ const fieldAllowList = [
 function debugCleanPayload(
   data: unknown,
   depth = 4,
-  whitelisted = false,
+  isSafe = false,
 ): object | string {
   if (isObject(data) && depth > 0) {
     if (Array.isArray(data)) {
@@ -119,7 +119,7 @@ function debugCleanPayload(
       }
       return result;
     }
-  } else if (whitelisted) return `${data}`;
+  } else if (isSafe) return `${data}`;
   else return `<${typeof data}>`;
 }
 
