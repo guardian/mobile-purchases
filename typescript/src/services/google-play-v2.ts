@@ -1,30 +1,30 @@
-import aws = require('../utils/aws');
-import S3 from 'aws-sdk/clients/s3';
-import { Stage } from '../utils/appIdentity';
 import { androidpublisher, auth } from '@googleapis/androidpublisher';
+import type S3 from 'aws-sdk/clients/s3';
+import { Stage } from '../utils/appIdentity';
+import aws = require('../utils/aws');
 import { mapAndroidProductId } from '../utils/mapAndroidProductId';
 
 export type GoogleSubscription = {
-	// Time at which the subscription was granted. Not set for pending subscriptions (subscription was created but awaiting payment during signup)
-	startTime: Date | null;
-	// Time at which the subscription expired or will expire unless the access is extended (eg. renews)
-	expiryTime: Date;
-	// The time at which the subscription was canceled by the user. The user might still have access to the subscription after this time (defer to `expiryTime` above)
-	userCancellationTime: Date | null;
-	// If the subscription is currently set to auto-renew, e.g. the user has not canceled the subscription
-	autoRenewing: boolean;
-	// The purchased product ID (for example, 'guardian.subscription.annual.meteroffer'.) Note that this was previously referred to as the `subscriptionId`
-	productId: string;
-	// Subscription period, specified in ISO 8601 format (P1M, P6M, P1Y, etc.)
-	billingPeriodDuration: string;
-	// Whether the subscription is currently benefitting from a free trial
-	freeTrial: boolean;
-	// Whether the subscription was taken out as a test purchase
-	testPurchase: boolean;
-	// Obfuscated external account ID
-	obfuscatedExternalAccountId?: string;
-	// The raw response from Google
-	rawResponse: unknown;
+  // Time at which the subscription was granted. Not set for pending subscriptions (subscription was created but awaiting payment during signup)
+  startTime: Date | null;
+  // Time at which the subscription expired or will expire unless the access is extended (eg. renews)
+  expiryTime: Date;
+  // The time at which the subscription was canceled by the user. The user might still have access to the subscription after this time (defer to `expiryTime` above)
+  userCancellationTime: Date | null;
+  // If the subscription is currently set to auto-renew, e.g. the user has not canceled the subscription
+  autoRenewing: boolean;
+  // The purchased product ID (for example, 'guardian.subscription.annual.meteroffer'.) Note that this was previously referred to as the `subscriptionId`
+  productId: string;
+  // Subscription period, specified in ISO 8601 format (P1M, P6M, P1Y, etc.)
+  billingPeriodDuration: string;
+  // Whether the subscription is currently benefitting from a free trial
+  freeTrial: boolean;
+  // Whether the subscription was taken out as a test purchase
+  testPurchase: boolean;
+  // Obfuscated external account ID
+  obfuscatedExternalAccountId?: string;
+  // The raw response from Google
+  rawResponse: unknown;
 };
 
 // Given a `purchaseToken` and `packageName`, attempts to build a `GoogleSubscription` by:
@@ -34,116 +34,116 @@ export type GoogleSubscription = {
 //    https://developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions/get
 // 4. Applying heuristics to attempt to determine whether the subscription is currently beneffiting from a free trial (see detailed discussion below.)
 export async function fetchGoogleSubscriptionV2(
-	purchaseToken: string,
-	packageName: string,
+  purchaseToken: string,
+  packageName: string,
 ): Promise<GoogleSubscription> {
-	try {
-		const client = await initialiseAndroidPublisherClient();
+  try {
+    const client = await initialiseAndroidPublisherClient();
 
-		const purchase = await client.purchases.subscriptionsv2.get({
-			packageName,
-			token: purchaseToken,
-		});
+    const purchase = await client.purchases.subscriptionsv2.get({
+      packageName,
+      token: purchaseToken,
+    });
 
-		// A subscription purchase refers to one or many underlying products ("line items".) However, by convention (and by
-		// constraining/controling the UX within the app), we will always assume that a subscription purchase refers to exactly
-		// one product.
-		if (purchase.data.lineItems?.length != 1) {
-			throw Error(
-				'The subscription purchase must refer to exactly one product',
-			);
-		}
+    // A subscription purchase refers to one or many underlying products ("line items".) However, by convention (and by
+    // constraining/controling the UX within the app), we will always assume that a subscription purchase refers to exactly
+    // one product.
+    if (purchase.data.lineItems?.length != 1) {
+      throw Error(
+        'The subscription purchase must refer to exactly one product',
+      );
+    }
 
-		const product = purchase.data.lineItems[0];
+    const product = purchase.data.lineItems[0];
 
-		const startTime = purchase.data.startTime ?? null;
+    const startTime = purchase.data.startTime ?? null;
 
-		const expiryTime = product.expiryTime;
+    const expiryTime = product.expiryTime;
 
-		if (!expiryTime) {
-			throw Error('The subscription purchase does not have an expiry time');
-		}
+    if (!expiryTime) {
+      throw Error('The subscription purchase does not have an expiry time');
+    }
 
-		const userCancellationTime =
-			purchase.data.canceledStateContext?.userInitiatedCancellation
-				?.cancelTime ?? null;
+    const userCancellationTime =
+      purchase.data.canceledStateContext?.userInitiatedCancellation
+        ?.cancelTime ?? null;
 
-		const autoRenewing = product.autoRenewingPlan?.autoRenewEnabled ?? false;
+    const autoRenewing = product.autoRenewingPlan?.autoRenewEnabled ?? false;
 
-		const testPurchase = purchase.data?.testPurchase ? true : false;
+    const testPurchase = purchase.data.testPurchase ? true : false;
 
-		const productId = product.productId;
-		if (!productId) {
-			throw Error('The product does not have an ID');
-		}
+    const productId = product.productId;
+    if (!productId) {
+      throw Error('The product does not have an ID');
+    }
 
-		const basePlanId = product.offerDetails?.basePlanId;
+    const basePlanId = product.offerDetails?.basePlanId;
 
-		if (!basePlanId) {
-			throw Error('Unable to determine the base plan for the product');
-		}
+    if (!basePlanId) {
+      throw Error('Unable to determine the base plan for the product');
+    }
 
-		const subscription = await client.monetization.subscriptions.get({
-			packageName,
-			productId,
-		});
+    const subscription = await client.monetization.subscriptions.get({
+      packageName,
+      productId,
+    });
 
-		const basePlan = subscription.data.basePlans?.find(
-			(x) => x.basePlanId == basePlanId,
-		);
+    const basePlan = subscription.data.basePlans?.find(
+      (x) => x.basePlanId == basePlanId,
+    );
 
-		if (!basePlan) {
-			throw Error('Unable to determine the base plan for the product');
-		}
+    if (!basePlan) {
+      throw Error('Unable to determine the base plan for the product');
+    }
 
-		const billingPeriodDuration =
-			basePlan.autoRenewingBasePlanType?.billingPeriodDuration ??
-			basePlan.prepaidBasePlanType?.billingPeriodDuration;
+    const billingPeriodDuration =
+      basePlan.autoRenewingBasePlanType?.billingPeriodDuration ??
+      basePlan.prepaidBasePlanType?.billingPeriodDuration;
 
-		if (!billingPeriodDuration) {
-			throw Error(
-				'Unable to determine a billing period duration for the base plan',
-			);
-		}
+    if (!billingPeriodDuration) {
+      throw Error(
+        'Unable to determine a billing period duration for the base plan',
+      );
+    }
 
-		const offerId = product.offerDetails?.offerId ?? null;
+    const offerId = product.offerDetails?.offerId ?? null;
 
-		const latestOrderId = purchase.data.latestOrderId;
+    const latestOrderId = purchase.data.latestOrderId;
 
-		if (!latestOrderId) {
-			throw Error(
-				'An order ID is expected to be associated with the purchase, but was not present',
-			);
-		}
+    if (!latestOrderId) {
+      throw Error(
+        'An order ID is expected to be associated with the purchase, but was not present',
+      );
+    }
 
-		const obfuscatedExternalAccountId =
-			purchase.data.externalAccountIdentifiers?.obfuscatedExternalAccountId ??
-			undefined;
+    const obfuscatedExternalAccountId =
+      purchase.data.externalAccountIdentifiers?.obfuscatedExternalAccountId ??
+      undefined;
 
-		return {
-			startTime: parseNullableDate(startTime),
-			expiryTime: new Date(expiryTime),
-			userCancellationTime: parseNullableDate(userCancellationTime),
-			autoRenewing,
-			// Map the product_id for test Feast purchases for easy identification downstream
-			productId: mapAndroidProductId(productId, packageName, testPurchase),
-			billingPeriodDuration,
-			freeTrial: isFreeTrial(offerId, latestOrderId),
-			testPurchase,
-			obfuscatedExternalAccountId,
-			rawResponse: purchase.data,
-		};
-	} catch (error: any) {
-		if (error?.status == 400 || error?.status == 404 || error?.status == 410) {
-			console.error(
-				`fetchGoogleSubscriptionV2 error: invalid purchase token; subscription not found; or no such package name (status = ${error.status})`,
-				error,
-			);
-		} else {
-			console.error(`fetchGoogleSubscriptionV2 error:`, error);
-		}
-		throw error;
-	}
+    return {
+      startTime: parseNullableDate(startTime),
+      expiryTime: new Date(expiryTime),
+      userCancellationTime: parseNullableDate(userCancellationTime),
+      autoRenewing,
+      // Map the product_id for test Feast purchases for easy identification downstream
+      productId: mapAndroidProductId(productId, packageName, testPurchase),
+      billingPeriodDuration,
+      freeTrial: isFreeTrial(offerId, latestOrderId),
+      testPurchase,
+      obfuscatedExternalAccountId,
+      rawResponse: purchase.data,
+    };
+  } catch (error: any) {
+    if (error?.status == 400 || error?.status == 404 || error?.status == 410) {
+      console.error(
+        `fetchGoogleSubscriptionV2 error: invalid purchase token; subscription not found; or no such package name (status = ${error.status})`,
+        error,
+      );
+    } else {
+      console.error(`fetchGoogleSubscriptionV2 error:`, error);
+    }
+    throw error;
+  }
 }
 
 // Determining if a subscription currently benefits from a free trial is quite indirect in version 2 of the API, as compared
@@ -167,50 +167,50 @@ export async function fetchGoogleSubscriptionV2(
 // See: https://stackoverflow.com/a/76867605
 // See: https://developer.android.com/google/play/billing/compatibility (search in-page for "paymentState".)
 function isFreeTrial(offerId: string | null, latestOrderId: string): boolean {
-	return offerId !== null && !latestOrderId.includes('..');
+  return offerId !== null && !latestOrderId.includes('..');
 }
 
 function parseNullableDate(date: string | null): Date | null {
-	return date === null ? null : new Date(date);
+  return date === null ? null : new Date(date);
 }
 
 async function initialiseAndroidPublisherClient() {
-	const accessToken = await getAccessToken(getParams(Stage));
+  const accessToken = await getAccessToken(getParams(Stage));
 
-	const authClient = new auth.OAuth2({
-		credentials: { access_token: accessToken.token },
-	});
+  const authClient = new auth.OAuth2({
+    credentials: { access_token: accessToken.token },
+  });
 
-	return androidpublisher({ version: 'v3', auth: authClient });
+  return androidpublisher({ version: 'v3', auth: authClient });
 }
 
 interface AccessToken {
-	token: string;
-	date: Date;
+  token: string;
+  date: Date;
 }
 
 function getParams(stage: string): S3.Types.GetObjectRequest {
-	return {
-		Bucket: 'gu-mobile-access-tokens',
-		Key: `${stage}/google-play-developer-api/access_token.json`,
-	};
+  return {
+    Bucket: 'gu-mobile-access-tokens',
+    Key: `${stage}/google-play-developer-api/access_token.json`,
+  };
 }
 
 function getAccessToken(
-	params: S3.Types.GetObjectRequest,
+  params: S3.Types.GetObjectRequest,
 ): Promise<AccessToken> {
-	return aws.s3
-		.getObject(params)
-		.promise()
-		.then((s3OutPut) => {
-			if (s3OutPut.Body) {
-				return JSON.parse(s3OutPut.Body.toString());
-			} else {
-				throw Error('S3 output body was not defined');
-			}
-		})
-		.catch((error) => {
-			console.log(`Failed to get access token from S3 due to: ${error}`);
-			throw error;
-		});
+  return aws.s3
+    .getObject(params)
+    .promise()
+    .then((s3OutPut) => {
+      if (s3OutPut.Body) {
+        return JSON.parse(s3OutPut.Body.toString());
+      } else {
+        throw Error('S3 output body was not defined');
+      }
+    })
+    .catch((error) => {
+      console.log(`Failed to get access token from S3 due to: ${error}`);
+      throw error;
+    });
 }

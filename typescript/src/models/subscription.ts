@@ -1,91 +1,91 @@
-import { hashKey, attribute } from '@aws/dynamodb-data-mapper-annotations';
 import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
+import { attribute, hashKey } from '@aws/dynamodb-data-mapper-annotations';
 import { App, Stage } from '../utils/appIdentity';
 
 export class Subscription {
-	/*
+  /*
         Warning: The subscriptionId value, defined in this schema, is going to carry the purchase token (`purchaseToken`) 
         from a Google Play notification and not the value of the attribute `subscriptionId` of that notification.
 
         See the file: google-identifiers.md in the documentation folder for details.
     */
 
-	@hashKey()
-	subscriptionId: string;
+  @hashKey()
+  subscriptionId: string;
 
-	@attribute()
-	startTimestamp: string;
+  @attribute()
+  startTimestamp: string;
 
-	@attribute()
-	endTimestamp: string;
+  @attribute()
+  endTimestamp: string;
 
-	@attribute()
-	cancellationTimestamp?: string;
+  @attribute()
+  cancellationTimestamp?: string;
 
-	@attribute()
-	autoRenewing: boolean;
+  @attribute()
+  autoRenewing: boolean;
 
-	@attribute()
-	productId: string;
+  @attribute()
+  productId: string;
 
-	@attribute()
-	platform?: string;
+  @attribute()
+  platform?: string;
 
-	@attribute()
-	freeTrial?: boolean;
+  @attribute()
+  freeTrial?: boolean;
 
-	@attribute()
-	billingPeriod?: string;
+  @attribute()
+  billingPeriod?: string;
 
-	@attribute()
-	googlePayload?: any;
+  @attribute()
+  googlePayload?: any;
 
-	@attribute()
-	receipt?: string;
+  @attribute()
+  receipt?: string;
 
-	@attribute()
-	applePayload?: any;
+  @attribute()
+  applePayload?: any;
 
-	@attribute()
-	ttl?: number;
+  @attribute()
+  ttl?: number;
 
-	tableName: string;
+  tableName: string;
 
-	constructor(
-		subscriptionId: string,
-		startTimestamp: string,
-		endTimestamp: string,
-		cancellationTimestamp: string | undefined,
-		autoRenewing: boolean,
-		productId: string,
-		platform: string | undefined,
-		freeTrial: boolean | undefined,
-		billingPeriod: string | undefined,
-		googlePayload?: any,
-		receipt?: string,
-		applePayload?: any,
-		ttl?: number,
-		tableName: string = 'subscriptions',
-	) {
-		this.subscriptionId = subscriptionId;
-		this.startTimestamp = startTimestamp;
-		this.endTimestamp = endTimestamp;
-		this.cancellationTimestamp = cancellationTimestamp;
-		this.autoRenewing = autoRenewing;
-		this.productId = productId;
-		this.platform = platform;
-		this.freeTrial = freeTrial;
-		this.billingPeriod = billingPeriod;
-		this.googlePayload = googlePayload;
-		this.receipt = receipt;
-		this.applePayload = applePayload;
-		this.ttl = ttl;
-		this.tableName = tableName;
-	}
+  constructor(
+    subscriptionId: string,
+    startTimestamp: string,
+    endTimestamp: string,
+    cancellationTimestamp: string | undefined,
+    autoRenewing: boolean,
+    productId: string,
+    platform: string | undefined,
+    freeTrial: boolean | undefined,
+    billingPeriod: string | undefined,
+    googlePayload?: any,
+    receipt?: string,
+    applePayload?: any,
+    ttl?: number,
+    tableName = 'subscriptions',
+  ) {
+    this.subscriptionId = subscriptionId;
+    this.startTimestamp = startTimestamp;
+    this.endTimestamp = endTimestamp;
+    this.cancellationTimestamp = cancellationTimestamp;
+    this.autoRenewing = autoRenewing;
+    this.productId = productId;
+    this.platform = platform;
+    this.freeTrial = freeTrial;
+    this.billingPeriod = billingPeriod;
+    this.googlePayload = googlePayload;
+    this.receipt = receipt;
+    this.applePayload = applePayload;
+    this.ttl = ttl;
+    this.tableName = tableName;
+  }
 
-	get [DynamoDbTable]() {
-		return `${App}-${Stage}-${this.tableName}`;
-	}
+  get [DynamoDbTable]() {
+    return `${App}-${Stage}-${this.tableName}`;
+  }
 }
 
 // Note:
@@ -96,16 +96,16 @@ export class Subscription {
 //     Function dynamoMapper.get will return a Subscription object, not a SubscriptionEmpty object.
 
 export class SubscriptionEmpty extends Subscription {
-	constructor() {
-		super('', '', '', undefined, false, '', undefined, undefined, undefined);
-	}
+  constructor() {
+    super('', '', '', undefined, false, '', undefined, undefined, undefined);
+  }
 
-	setSubscriptionId(subscriptionId: string): SubscriptionEmpty {
-		this.subscriptionId = subscriptionId;
-		return this;
-	}
+  setSubscriptionId(subscriptionId: string): SubscriptionEmpty {
+    this.subscriptionId = subscriptionId;
+    return this;
+  }
 
-	get [DynamoDbTable]() {
-		return `${App}-${Stage}-${this.tableName}`;
-	}
+  get [DynamoDbTable]() {
+    return `${App}-${Stage}-${this.tableName}`;
+  }
 }

@@ -1,0 +1,23 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier",
+    "@guardian/eslint-config-typescript"
+  ],
+  "rules": {
+    "prettier/prettier": "error",
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/no-explicit-any": "off"
+  },
+  "ignorePatterns": ["cdk/**/*"],
+  "overrides": [
+    {
+      "files": ["typescript/**/*.{ts,tsx}"],
+      "excludedFiles": ["node_modules/**", "dist/**"]
+    }
+  ]
+}
