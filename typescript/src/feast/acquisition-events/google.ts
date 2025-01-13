@@ -134,6 +134,7 @@ const countryToCurrencyMap = {
   SA: 'SAR', // Saudi Arabia - Saudi Riyal
   RU: 'RUB', // Russia - Russian Ruble
   BZ: 'BZD', // Belize - Belize Dollar
+  IL: 'ILS', // Israel - Israeli Shekel
 };
 
 const countryToCurrency = (country: string): string => {
