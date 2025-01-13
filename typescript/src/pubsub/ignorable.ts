@@ -1,7 +1,7 @@
 export class Ignorable {
-	message: string;
+  message: string;
 
-	constructor(message: string) {
-		this.message = message;
-	}
+  constructor(message: string) {
+    this.message = message;
+  }
 }
