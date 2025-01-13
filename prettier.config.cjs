@@ -9,11 +9,8 @@ const departmentalPrettierConfig = require("@guardian/prettier");
  */
 const config = {
   ...departmentalPrettierConfig,
-
-  // Overwrite some properties defined in the departmental config to achieve a consistent style across this repository.
-  // See `.editorconfig` at the root of the repository.
   useTabs: false,
-  tabWidth: 2
+  tabWidth: 2,
 };
 
 module.exports = config;
