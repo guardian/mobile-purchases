@@ -155,6 +155,45 @@ Resources:
         - Key: App
           Value: mobile-purchases-feast-google-acquisition-events
 
+  FeastAcquisitionEventsRouterDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${App}-${Stage}-feast-acquisition-events-router-dlq
+      Tags:
+        - Key: gu:repo
+          Value: guardian/mobile-purchases
+        - Key: App
+          Value: !Ref App
+        - Key: Stack
+          Value: !Ref Stack
+        - Key: Stage
+          Value: !Ref Stage
+
+  FeastAcquisitionEventsRouterDlqDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled:
+        !FindInMap [ StageVariables, !Ref Stage, AlarmActionsEnabled ]
+      AlarmDescription: "Ensure that the feast acquisition events router dead letter queue is empty"
+      Namespace: "AWS/SQS"
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt "FeastAcquisitionEventsRouterDlq.QueueName"
+      Period: 60
+      Statistic: Sum
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-feast-acquisition-events-router
+
   FeastAcquisitionEventsLambdaServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -281,6 +320,7 @@ Resources:
           Stack: !Sub ${Stack}
           Stage: !Sub ${Stage}
           MobileAccountId: !Sub ${MobileAccountId}
+          DLQUrl: !Ref FeastAcquisitionEventsRouterDlq
       Description: A lambda triggered by DynamoDB input actions to identify Feast subscriptions and write to the corresponding queue.
       MemorySize: 512
       Timeout: 60
