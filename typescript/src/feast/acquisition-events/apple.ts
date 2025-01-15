@@ -40,6 +40,11 @@ interface AppleExtendedData {
   // "ANNUALLY"
 }
 
+interface AppleLatestReceiptInfoItem {
+  transaction_id: string;
+}
+type AppleLatestReceiptInfo = AppleLatestReceiptInfoItem[];
+
 const storefrontToCountryMap = {
   GBR: 'GB', // United Kingdom
   USA: 'US', // United States
@@ -161,22 +166,10 @@ const productIdToPaymentFrequency = (productId: string): string => {
   throw new Error(`[9f6fa4a0] productId ${productId} is not supported`);
 };
 
-const appleSubscriptionToExtendedData = async (
-  subscription: Subscription,
-): Promise<AppleExtendedData> => {
-  /*
-        This function takes a Subscription and return the extra data that is retrieved from the Apple API
-        at https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/{transactionId}
-    */
-
-  console.log(`[940dc079] ${new Date()}`);
-
-  const transactionId =
-    subscription.applePayload['latest_receipt_info'][0]['transaction_id']; // This extraction will be abstracted in a function in a coming refactoring
-  console.log(`[116fa7d4] transactionId: ${transactionId}`);
-
-  const url = `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${transactionId}`;
-  console.log(`[5330931d] url: ${url}`);
+const forgeStoreKitBearerToken = async (): Promise<string> => {
+  // ------------------------------------------------------------------------
+  // This process is described in storekit-signatures.md in the docs folder. |
+  // ------------------------------------------------------------------------
 
   // Generating the JWT token
   // https://developer.apple.com/documentation/appstoreserverapi/generating-json-web-tokens-for-api-requests
@@ -213,7 +206,34 @@ const appleSubscriptionToExtendedData = async (
 
   const token = jwt.sign(jwt_payload, privateKey1, {
     header: jwt_headers,
-  });
+  }) as string;
+
+  return token;
+};
+
+const appleSubscriptionToExtendedData = async (
+  subscription: Subscription,
+): Promise<AppleExtendedData> => {
+  /*
+        This function takes a Subscription and return the extra data that is retrieved from the Apple API
+        at https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/{transactionId}
+    */
+
+  console.log(`[940dc079] ${new Date()}`);
+
+  // This extraction will be abstracted in a function in a coming refactoring
+  const latest_receipt_info = subscription.applePayload?.latest_receipt_info as AppleLatestReceiptInfo;
+  if (latest_receipt_info.length === 0) {
+    throw new Error('[3b5a2b0d] latest_receipt_info is empty');
+  }
+  const transactionId = latest_receipt_info[0].transaction_id;
+
+  console.log(`[116fa7d4] transactionId: ${transactionId}`);
+
+  const url = `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${transactionId}`;
+  console.log(`[5330931d] url: ${url}`);
+
+  const token = await forgeStoreKitBearerToken();
 
   console.log(`[f1335718] ${token}`);
 
