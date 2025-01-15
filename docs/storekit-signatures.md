@@ -40,7 +40,7 @@ The header and payload of the JSON Web Token, as well as the signature process r
 - /mobile-purchases/PROD/mobile/feastAppleStoreKitConfigAppBunbleId
 - /mobile-purchases/PROD/mobile/feastAppleStoreKitConfigPrivateKey1
 
-Note that although the keys are specific to Feat acquisition, we have reused the same private key that we used for promotional offers.
+Note that although the keys are specific to Feast acquisition, we have reused the same private key that we used for promotional offers.
 
 Also note that there is not consistency in how the private key needs to be presented from one library to another, and in this case it needs to be given in this format
 
