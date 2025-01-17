@@ -10,3 +10,4 @@ mobile-purchases performs at least two primary functions.
 ### Additional Pieces
 
 - [Google subscriptions: Understanding subscription identifiers and purchase tokens](google-identifiers.md)
+- [Signing request to api.storekit.itunes.apple.com](storekit-signatures.md)
