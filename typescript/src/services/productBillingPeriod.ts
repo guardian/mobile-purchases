@@ -17,6 +17,7 @@ export const PRODUCT_BILLING_PERIOD: Record<string, string> = {
   'uk.co.guardian.gla.1month.2017Q2.variantA': 'P1M',
   'uk.co.guardian.gla.1month.2017Q2.variantB': 'P1M',
   'uk.co.guardian.gla.1month.2018April.withFreeTrial': 'P1M',
+  'uk.co.guardian.gla.1month.2018May.meteredoffer': 'P1M',
   'uk.co.guardian.gla.1month.2018May.withFreeTrial': 'P1M',
   'uk.co.guardian.gla.1month.2018May.stepUp': 'P1M',
   'uk.co.guardian.gla.6months': 'P6M',
