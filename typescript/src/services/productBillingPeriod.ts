@@ -48,4 +48,5 @@ export const PRODUCT_BILLING_PERIOD: Record<string, string> = {
 
   // guardian.subscription*
   'guardian.subscription.month.meteredoffer': 'P1M',
+  'guardian.subscription.annual.meteroffer': 'P1Y',
 };
