@@ -6,6 +6,7 @@ export const PRODUCT_BILLING_PERIOD: Record<string, string> = {
   'com.guardian.subscription.monthly.10': 'P1M',
   'com.guardian.subscription.monthly.11.freetrial': 'P1M',
   'com.guardian.subscription.annual.13': 'P1Y',
+  'com.guardian.subscription.annual.14.freetrial': 'P1Y',
 
   // uk.co.guardian.gia*
   'uk.co.guardian.gia.1month': 'P1M',
@@ -17,6 +18,7 @@ export const PRODUCT_BILLING_PERIOD: Record<string, string> = {
   'uk.co.guardian.gla.1month.2017Q2.variantA': 'P1M',
   'uk.co.guardian.gla.1month.2017Q2.variantB': 'P1M',
   'uk.co.guardian.gla.1month.2018April.withFreeTrial': 'P1M',
+  'uk.co.guardian.gla.1month.2018May.meteredoffer': 'P1M',
   'uk.co.guardian.gla.1month.2018May.withFreeTrial': 'P1M',
   'uk.co.guardian.gla.1month.2018May.stepUp': 'P1M',
   'uk.co.guardian.gla.6months': 'P6M',
@@ -46,4 +48,5 @@ export const PRODUCT_BILLING_PERIOD: Record<string, string> = {
 
   // guardian.subscription*
   'guardian.subscription.month.meteredoffer': 'P1M',
+  'guardian.subscription.annual.meteroffer': 'P1Y',
 };
