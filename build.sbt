@@ -12,7 +12,7 @@ val jacksonData: String = "2.15.0"
 
 val scalaRoot = file("scala")
 
-scalaVersion := "2.13.10"
+scalaVersion := "2.13.16"
 
 lazy val common = project.in(scalaRoot / "common")
   .disablePlugins(AssemblyPlugin)
