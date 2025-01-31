@@ -6,6 +6,16 @@ import { Region, Stage } from '../../utils/appIdentity';
 import { dynamoMapper, sendToSqs } from '../../utils/aws';
 import { plusDays } from '../../utils/dates';
 
+// TODO: do we need: writeToDLQ ? 
+const writeToDLQ = async (dlqUrl: string, subscriptionId: string, identityId: string) => {
+    try {
+        const timestamp = Date.now();
+        await sendToSqs(dlqUrl, {subscriptionId, identityId, timestamp});
+    } catch(e) {
+        console.error(`could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}. Error: `, e)
+    }
+}
+
 const isActiveSubscription = (
   currentTime: Date,
   subscription: Subscription,
