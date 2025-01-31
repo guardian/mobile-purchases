@@ -110,6 +110,11 @@ cf name     : FeastGoogleAcquisitionEventsQueue
 ### Apple Processing Lambda
 
 ```
+ssm parameters
+/mobile-purchases/PROD/mobile/feast.apple.password
+```
+
+```
 account              : mobile
 lambda function name : mobile-purchases-feast-apple-acquisition-events-PROD
 cf name              : FeastAppleAcquisitionEventsLambda
@@ -129,9 +134,10 @@ location             : typescript/src/feast/acquisition-events/router.ts
 
 ### Fact Acquisition API
 
+The fact Aquisition API's end point is documented here: [acquisition-events-api](https://github.com/guardian/support-frontend/tree/main/support-lambdas/acquisition-events-api#acquisition-events-api). Unlike other urls, for instance the storekit url, the fact acquisition url is hidden in Parameter Store.
+
 ```
 ssm parameters
-/mobile-purchases/PROD/mobile/feast.apple.password
 /mobile-purchases/PROD/mobile/acquisitionApiUrl
 /mobile-purchases/CODE/mobile/acquisitionApiUrl (not set up)
 ```
