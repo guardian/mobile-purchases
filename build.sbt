@@ -5,14 +5,14 @@ import scalariform.formatter.preferences._
 import scala.collection.immutable
 
 val testAndCompileDependencies: String = "test->test;compile->compile"
-val awsVersion: String = "1.11.375"
+val awsVersion: String = "1.12.780"
 val simpleConfigurationVersion: String = "1.6.2"
 
-val jacksonData: String = "2.15.0"
+val jacksonData: String = "2.18.2"
 
 val scalaRoot = file("scala")
 
-scalaVersion := "2.13.10"
+scalaVersion := "2.13.16"
 
 lazy val common = project.in(scalaRoot / "common")
   .disablePlugins(AssemblyPlugin)
@@ -54,7 +54,7 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
   val specsVersion: String = "4.19.2" // Not possible to upgrade to 5.*.* unless moving to Scala 3.
   val log4j2Version: String = "2.17.1"
-  val jacksonVersion: String = "2.15.0"
+  val jacksonVersion: String = "2.18.2"
   val upgradeTransitiveDependencies = Seq(
     "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
     "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
