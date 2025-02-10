@@ -832,8 +832,7 @@ Resources:
       Metrics:
         - Id: e1
           Label: Percentage of requests which result in a 5XX error
-          Expression: "FILL(100*(m1/m2),0)"
-          Period: 600
+          Expression: "100*(FILL(m1,0)/FILL(m2,1))"
         - Id: m1
           Label: Number of 5XX responses
           MetricStat:
@@ -918,8 +917,7 @@ Resources:
       Metrics:
         - Id: e1
           Label: Percentage of requests which result in a 5XX error
-          Expression: "FILL(100*(m1/m2),0)"
-          Period: 1200
+          Expression: "100*(FILL(m1,0)/FILL(m2,1))"
         - Id: m1
           Label: Number of 5XX responses
           MetricStat:
