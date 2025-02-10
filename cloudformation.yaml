@@ -832,7 +832,7 @@ Resources:
       Metrics:
         - Id: e1
           Label: Percentage of requests which result in a 5XX error
-          Expression: "100*(m1/m2)"
+          Expression: "FILL(100*(m1/m2),0)"
         - Id: m1
           Label: Number of 5XX responses
           MetricStat:
@@ -917,7 +917,7 @@ Resources:
       Metrics:
         - Id: e1
           Label: Percentage of requests which result in a 5XX error
-          Expression: "100*(m1/m2)"
+          Expression: "FILL(100*(m1/m2),0)"
         - Id: m1
           Label: Number of 5XX responses
           MetricStat:
