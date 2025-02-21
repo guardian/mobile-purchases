@@ -1,4 +1,4 @@
-'''
+"""
 cd adjust_report_etl
 
 python -m venv myenv
@@ -10,7 +10,7 @@ fivetran debug --configuration ./configuration/adjust_premium.json
 
 fivetran deploy --api-key xxx --destination GNM --connection adjust_feast --configuration ./configuration/adjust_feast.json
 fivetran deploy --api-key xxx --destination GNM --connection adjust_premium --configuration ./configuration/adjust_premium.json
-'''
+"""
 
 import csv
 import json
@@ -39,11 +39,13 @@ SKAD_REPORT_TABLE_NAME = "skad_report"
 SKAD_REPORT_METRICS = [
     "skad_installs",
     "skad_total_installs",
-    "network_ad_spend_skan",
     "valid_conversions",
-    "skad_ad_revenue_est",
-    "skad_ad_revenue_min",
-    "skad_ad_revenue_max",
+    "conversion_1",
+    "conversion_2",
+    "conversion_3",
+    "conversion_4",
+    "conversion_5",
+    "conversion_6",
 ]
 
 DIMENSIONS = [
@@ -124,11 +126,13 @@ def schema(configuration: dict):
                 # Metrics
                 "skad_installs": "INT",
                 "skad_total_installs": "INT",
-                "network_ad_spend_skan": "FLOAT",
                 "valid_conversions": "INT",
-                "skad_ad_revenue_est": "FLOAT",
-                "skad_ad_revenue_min": "FLOAT",
-                "skad_ad_revenue_max": "FLOAT",
+                "conversion_1": "INT",
+                "conversion_2": "INT",
+                "conversion_3": "INT",
+                "conversion_4": "INT",
+                "conversion_5": "INT",
+                "conversion_6": "INT",
             },
         },
     ]
@@ -272,11 +276,13 @@ def update(configuration: dict, state: dict):
                     # Metrics
                     "skad_installs": int(row["skad_installs"]),
                     "skad_total_installs": int(row["skad_total_installs"]),
-                    "network_ad_spend_skan": float(row["network_ad_spend_skan"]),
                     "valid_conversions": int(row["valid_conversions"]),
-                    "skad_ad_revenue_est": float(row["skad_ad_revenue_est"]),
-                    "skad_ad_revenue_min": float(row["skad_ad_revenue_min"]),
-                    "skad_ad_revenue_max": float(row["skad_ad_revenue_max"]),
+                    "conversion_1": int(row["conversion_1"]),
+                    "conversion_2": int(row["conversion_2"]),
+                    "conversion_3": int(row["conversion_3"]),
+                    "conversion_4": int(row["conversion_4"]),
+                    "conversion_5": int(row["conversion_5"]),
+                    "conversion_6": int(row["conversion_6"]),
                 },
             )
         log.info(f"Completed upserting {len(report_data)} rows to BigQuery.")
