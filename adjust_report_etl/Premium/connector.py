@@ -108,10 +108,10 @@ def update(configuration: dict, state: dict):
         log.info(f"Received response with status code: {response.status_code}")
         response.raise_for_status()
     except requests.exceptions.HTTPError as err:
-        log.error(f"HTTP error occurred: {err}")
-        log.error(f"Response content: {response.text}")
+        log.severe(f"HTTP error occurred: {err}")
+        log.severe(f"Response content: {response.text}")
     except Exception as err:
-        log.error(f"Other error occurred: {err}")
+        log.severe(f"Other error occurred: {err}")
 
     try:
         log.info("Processing Adjust data...")
@@ -154,10 +154,10 @@ def update(configuration: dict, state: dict):
         log.info(f"Completed upserting {len(report_data)} rows to BigQuery.")
         
     except json.JSONDecodeError as json_err:
-        log.error(f"JSON decoding error: {json_err}")
-        log.error(f"Raw response content: {response.text}")
+        log.severe(f"JSON decoding error: {json_err}")
+        log.severe(f"Raw response content: {response.text}")
     except Exception as err:
-        log.error(f"Other error occurred: {err}")
+        log.severe(f"Other error occurred: {err}")
 
 
 connector = Connector(update=update, schema=schema)

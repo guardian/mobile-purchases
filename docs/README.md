@@ -11,3 +11,4 @@ mobile-purchases performs at least two primary functions.
 
 - [Google subscriptions: Understanding subscription identifiers and purchase tokens](google-identifiers.md)
 - [Signing request to api.storekit.itunes.apple.com](storekit-signatures.md)
+- [The Feast Acquisition Pipeline](feast-acqusition-pipeline.md)

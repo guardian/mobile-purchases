@@ -135,6 +135,7 @@ const storefrontToCountryMap = {
   VAT: 'VA', // Vatican City
   HKG: 'HK', // Hong Kong
   JOR: 'JO', // Jordan
+  MDV: 'MV', // Maldives
 };
 
 const storefrontToCountry = (storefront: string): string => {
