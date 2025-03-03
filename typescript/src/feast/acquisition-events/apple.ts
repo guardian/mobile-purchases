@@ -136,6 +136,7 @@ const storefrontToCountryMap = {
   HKG: 'HK', // Hong Kong
   JOR: 'JO', // Jordan
   MDV: 'MV', // Maldives
+  TTO: 'TT', // Trinidad and Tobago
 };
 
 const storefrontToCountry = (storefront: string): string => {
