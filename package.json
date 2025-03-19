@@ -45,7 +45,7 @@
     "@aws/dynamodb-data-mapper": "^0.7.3",
     "@aws/dynamodb-data-mapper-annotations": "^0.7.3",
     "@aws/dynamodb-expressions": "^0.7.3",
-    "@googleapis/androidpublisher": "24.0.0",
+    "@googleapis/androidpublisher": "25.0.0",
     "@guardian/types": "^9.0.1",
     "@okta/jwt-verifier": "^4.0.1",
     "@types/aws-lambda": "8.10.147",

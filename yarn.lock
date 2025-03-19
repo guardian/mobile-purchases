@@ -402,10 +402,10 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.57.1.tgz#de633db3ec2ef6a3c89e2f19038063e8a122e2c2"
   integrity sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==
 
-"@googleapis/androidpublisher@24.0.0":
-  version "24.0.0"
-  resolved "https://registry.yarnpkg.com/@googleapis/androidpublisher/-/androidpublisher-24.0.0.tgz#f646d9fbc0366b4aabf6b390a6845cdd55e2b5cc"
-  integrity sha512-6cklS9lXK2S752TJSQfs0NVHkNGT3FFLzX3/94GGvwHMa/DNqBa/q3hQYo0Ic+WoRDCn0bIED+zyUoZQgsEuCg==
+"@googleapis/androidpublisher@25.0.0":
+  version "25.0.0"
+  resolved "https://registry.yarnpkg.com/@googleapis/androidpublisher/-/androidpublisher-25.0.0.tgz#602255eefb24fd33e782de8a280b8c9ebcf09dfd"
+  integrity sha512-I1yK+hWgzzvPPjYCYzlZfPuIhGu2JTNDXE+QaJf1/Wq5TIWsJQwVdlbCeYNvwEOGhuu+DGn21hRtWGk99+N/hw==
   dependencies:
     googleapis-common "^7.0.0"
 
