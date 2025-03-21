@@ -7,7 +7,7 @@ import { UserSubscription } from '../../models/userSubscription';
 import { validateReceipt } from '../../services/appleValidateReceipts';
 import { getIdentityIdFromBraze, IdentityIdFromBraze } from '../../services/braze';
 import { toAppleSubscription } from '../../update-subs/apple';
-import { dynamoMapper } from '../../utils/aws';
+import { dynamoMapper, putMetric } from '../../utils/aws';
 import {
   queueHistoricalSubscription as defaultSendSubscriptionToHistoricalQueue,
   storeUserSubscriptionInDynamo as defaultStoreUserSubscriptionInDynamo,
@@ -91,6 +91,8 @@ const processRecord = async (
           const now = new Date().toISOString();
           const linked = new UserSubscription(identityId, s.subscriptionId, now);
           await storeUserSubscriptionInDynamo(linked);
+        } else {
+          await putMetric('feast_apple_update_subs_missing_identity_id', 1);
         }
       } else {
         console.log(

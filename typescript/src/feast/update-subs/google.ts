@@ -17,6 +17,7 @@ import {
   queueHistoricalSubscription,
   storeUserSubscriptionInDynamo,
 } from './common';
+import { putMetric } from "../../utils/aws";
 
 const googleSubscriptionToSubscription = (
   purchaseToken: string,
@@ -106,6 +107,8 @@ export const buildHandler =
             await storeUserSubInDynamo(userSubscription);
 
             console.log(`Processed subscription: ${subscription.subscriptionId}`);
+          } else {
+            await putMetric('feast_google_update_subs_missing_identity_id', 1);
           }
         } else {
           console.log(
