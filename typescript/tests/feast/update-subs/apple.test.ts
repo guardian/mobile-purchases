@@ -200,10 +200,10 @@ const stubExchangeExternalIdForIdentityId = (externalId: string) => {
   );
 
   if (maybeMatchingSub) {
-    return Promise.resolve(
-      subscriptions.find((s) => s.subscription.appAccountToken == externalId)
-        ?.identityId!,
-    );
+    return Promise.resolve({
+      identityId: subscriptions.find((s) => s.subscription.appAccountToken == externalId)
+          ?.identityId!,
+    });
   }
 
   return Promise.reject(
