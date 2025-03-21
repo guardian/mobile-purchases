@@ -1,12 +1,11 @@
 import type { SQSEvent, SQSRecord } from 'aws-lambda';
 import { App } from '../../models/app';
 import { GracefulProcessingError } from '../../models/GracefulProcessingError';
-import { ProcessingError } from '../../models/processingError';
 import type { Subscription } from '../../models/subscription';
 import type { AppleSubscriptionReference } from '../../models/subscriptionReference';
 import { UserSubscription } from '../../models/userSubscription';
 import { validateReceipt } from '../../services/appleValidateReceipts';
-import { getIdentityIdFromBraze } from '../../services/braze';
+import { getIdentityIdFromBraze, IdentityIdFromBraze } from '../../services/braze';
 import { toAppleSubscription } from '../../update-subs/apple';
 import { dynamoMapper } from '../../utils/aws';
 import {
@@ -62,7 +61,7 @@ type FetchSubsFromApple = (
 ) => Promise<SubscriptionMaybeWithAppAccountToken[]>;
 type StoreSubInDynamo = (subscription: Subscription) => Promise<void>;
 type SendSubToHistoricalQueue = (subscription: Subscription) => Promise<void>;
-type ExchangeExternalIdForIdentityId = (externalId: string) => Promise<string>;
+type ExchangeExternalIdForIdentityId = (externalId: string) => Promise<IdentityIdFromBraze>;
 type StoreUserSubInDynamo = (
   userSubscription: UserSubscription,
 ) => Promise<void>;
@@ -85,12 +84,14 @@ const processRecord = async (
   await Promise.all(
     subscriptions.map(async (s) => {
       if (s.appAccountToken) {
-        const identityId = await exchangeExternalIdForIdentityId(
+        const { identityId } = await exchangeExternalIdForIdentityId(
           s.appAccountToken,
         );
-        const now = new Date().toISOString();
-        const linked = new UserSubscription(identityId, s.subscriptionId, now);
-        await storeUserSubscriptionInDynamo(linked);
+        if (identityId) {
+          const now = new Date().toISOString();
+          const linked = new UserSubscription(identityId, s.subscriptionId, now);
+          await storeUserSubscriptionInDynamo(linked);
+        }
       } else {
         console.log(
           `Subscription with receipt '${s.receipt}' did not have an 'appAccountToken'`,
