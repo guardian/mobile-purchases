@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import { getConfigValue } from '../utils/ssmConfig';
+import { putMetric } from "../utils/aws";
 
 function apiKeyForBraze(): Promise<string> {
   return getConfigValue<string>('braze-api-key');
@@ -37,6 +38,7 @@ export async function getIdentityIdFromBraze(
         return { identityId };
       }
       console.log(`Response from Braze for Braze ID '${externalId}' did not contain an identity_id`);
+      await putMetric('missing_identity_id_for_braze_user', 1);
       return {};
     } else {
       throw new Error(
