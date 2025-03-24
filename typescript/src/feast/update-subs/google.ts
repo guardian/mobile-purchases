@@ -5,7 +5,7 @@ import { Subscription } from '../../models/subscription';
 import type { GoogleSubscriptionReference } from '../../models/subscriptionReference';
 import { UserSubscription } from '../../models/userSubscription';
 import { googlePackageNameToPlatform } from '../../services/appToPlatform';
-import { getIdentityIdFromBraze } from '../../services/braze';
+import { getIdentityIdFromBraze, IdentityIdFromBraze } from '../../services/braze';
 import type { GoogleResponseBody } from '../../services/google-play';
 import { fetchGoogleSubscription } from '../../services/google-play';
 import { fetchGoogleSubscriptionV2 } from '../../services/google-play-v2';
@@ -17,6 +17,7 @@ import {
   queueHistoricalSubscription,
   storeUserSubscriptionInDynamo,
 } from './common';
+import { putMetric } from "../../utils/aws";
 
 const googleSubscriptionToSubscription = (
   purchaseToken: string,
@@ -55,7 +56,7 @@ export const buildHandler =
     sendSubscriptionToHistoricalQueue: (
       subscription: Subscription,
     ) => Promise<void>,
-    exchangeExternalIdForIdentityId: (externalId: string) => Promise<string>,
+    exchangeExternalIdForIdentityId: (externalId: string) => Promise<IdentityIdFromBraze>,
     storeUserSubInDynamo: (userSub: UserSubscription) => Promise<void>,
   ) =>
   async (event: SQSEvent) => {
@@ -92,19 +93,23 @@ export const buildHandler =
         await sendSubscriptionToHistoricalQueue(subscriptionV1);
 
         if (subscriptionFromGoogle.obfuscatedExternalAccountId) {
-          const identityId = await exchangeExternalIdForIdentityId(
+          const { identityId } = await exchangeExternalIdForIdentityId(
             subscriptionFromGoogle.obfuscatedExternalAccountId,
           );
-          console.log('Successfully exchanged UUID for identity ID');
+          if (identityId) {
+            console.log('Successfully exchanged UUID for identity ID');
 
-          const userSubscription = new UserSubscription(
-            identityId,
-            subscription.subscriptionId,
-            new Date().toISOString(),
-          );
-          await storeUserSubInDynamo(userSubscription);
+            const userSubscription = new UserSubscription(
+                identityId,
+                subscription.subscriptionId,
+                new Date().toISOString(),
+            );
+            await storeUserSubInDynamo(userSubscription);
 
-          console.log(`Processed subscription: ${subscription.subscriptionId}`);
+            console.log(`Processed subscription: ${subscription.subscriptionId}`);
+          } else {
+            await putMetric('feast_google_update_subs_missing_identity_id', 1);
+          }
         } else {
           console.log(
             `Subscription ${subscription.subscriptionId} does not contain an external account ID`,

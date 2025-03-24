@@ -78,7 +78,7 @@ describe('The Feast Android subscription updater', () => {
       (subscription: Subscription) => Promise.resolve(),
     );
     const mockExchangeUuid = jest.fn((uuid: string) =>
-      Promise.resolve(identityId),
+      Promise.resolve({ identityId }),
     );
     const mockStoreUserSubInDynamo = jest.fn((userSub: UserSubscription) =>
       Promise.resolve(undefined),
@@ -174,7 +174,7 @@ describe('The Feast Android subscription updater', () => {
       (subscription: Subscription) => Promise.resolve(),
     );
     const mockExchangeUuid = jest.fn((uuid: string) =>
-      Promise.resolve(identityId),
+      Promise.resolve({ identityId }),
     );
     const mockStoreUserSubInDynamo = jest.fn((userSub: UserSubscription) =>
       Promise.resolve(undefined),
