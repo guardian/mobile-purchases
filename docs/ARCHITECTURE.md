@@ -10,6 +10,13 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
 
 (Unless otherwise specified elements are in the mobile aws account)
 
+                                                                                                                                                        ------------------------
+                                                                                                                                                       | App Store & Play Store |
+                                                                                                                                                        ------------------------
+                                                                                                                                                                ^
+                                                                                                                                                                |
+                                                                                                                                                                | (fetch additional subscription data) 
+                                                                                                                                                                |
  ------------------------      HTTP via API Gateway        ----------------                         ------------                                         -----------------------------                        -----------------------------
 | App Store & Play Store | --------------------------->   | Pubsub Lambdas |      ---------------> | SQS Queues | --------------------------------------| Update subscription Lambdas | -------------------> | Dynamo Table: subscriptions |
  ------------------------                                  ----------------                         ------------                                         -----------------------------                        -----------------------------
@@ -17,22 +24,21 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
                                                           ( googlepubsub )                         ( google-subscriptions-to-fetch )                    ( google-subscriptions-to-fetch )
                                                           ( feastapplepubsub )                     ( feast-apple-subscriptions-to-fetch )               ( feast-apple-subscriptions-to-fetch )
                                                           ( feastgooglepubsub )                    ( feast-google-subscriptions-to-fetch )              ( feast-google-subscriptions-to-fetch )
-                                                                |                                        |                                                      |
-                                                                |                                        |                                                      |
-                                                                |                                        |                                                      |                   ----------------------------------
-                                                                |                                        |                                                       ----------------> | Dynamo table: user-subscriptions |
-                                                                |                                        |                                                         (feast only)     ----------------------------------
-                                                                |                                        |                                                      |
-                                                                |                                        |                                                      |
-                                                                v                                        |                                                      |                   ------------
-                                                 --------------------------------------                  |                                                       ----------------> | SQS Queues |
-                                                | Dynamo Table: subscription-events-v2 |                 |                                                         (feast only)     ------------
-                                                 --------------------------------------                  | (fetch additional subscription data)                                    ( apple-historical-subscriptions )
-                                                                                                         |                                                                         ( google-historical-subscriptions )
-                                                                                                         v
-                                                                                              ------------------------
-                                                                                             | App Store & Play Store |
-                                                                                              ------------------------
+                                                                |                                                                                               |
+                                                                |                                                                                               |
+                                                                |                                                                                               |                   ----------------------------------
+                                                                |                                                                                                ----------------> | Dynamo table: user-subscriptions |
+                                                                |                                                                                                  (feast only)     ----------------------------------
+                                                                |                                                                                               |
+                                                                |                                                                                               |
+                                                                v                                                                                               |                   ------------
+                                                 --------------------------------------                                                                          ----------------> | SQS Queues |
+                                                | Dynamo Table: subscription-events-v2 |                                                                           (feast only)     ------------
+                                                 --------------------------------------                                                                                            ( apple-historical-subscriptions )
+                                                                                                                                                                                   ( google-historical-subscriptions )
+                                                                                                         
+
+
 
 
 ```
