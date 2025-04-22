@@ -99,10 +99,10 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
             --------------------------------------------------------------------------                                  |
            |                                                                                                            |
            v                                                                                                            |
- -----------------------------          INSERT event                   ----------------------------------               |         -------------------
-| Dynamo table: subscriptions | ------------------------------------> | Lambda: soft-opt-in-acquisitions | --------------------> | SQS: braze-emails |
- -----------------------------                                         ----------------------------------                         -------------------
-                                                                                                                                  (membership account)
+ ----------------------------------          INSERT event                   ----------------------------------          |              -------------------
+| Dynamo table: user-subscriptions | ------------------------------------> | Lambda: soft-opt-in-acquisitions | --------------------> | SQS: braze-emails |
+ ----------------------------------                                         ----------------------------------                         -------------------
+                                                                                                                                      (membership account)
 
 ```
 
