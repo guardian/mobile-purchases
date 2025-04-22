@@ -1,6 +1,6 @@
 # Mobile Purchases
 
-_IOS and Android receipt validation and purchase persistence_
+The Mobile Purchases API System (MPAPI) is a collection of software functions that keep track of IAP purchases within the Live and Feast apps and surface information about these to other downstream systems.
 
 ## Structure of the project
 
