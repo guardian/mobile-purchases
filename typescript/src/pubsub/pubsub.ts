@@ -50,6 +50,7 @@ export async function parseStoreAndSend<Payload, SqsEvent, MetaData>(
     }
     if (request.queryStringParameters?.secret === secret) {
       const notification = parsePayload(request.body);
+      console.log(`[e13c6557] ${JSON.stringify(notification)}`);
       if (notification instanceof Error) {
         console.log('Parsing the payload failed: ', notification.message);
         return HTTPResponses.INVALID_REQUEST;
