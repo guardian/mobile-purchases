@@ -36,10 +36,11 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
                                                 | Dynamo Table: subscription-events-v2 |                                                                           (feast only)     ------------
                                                  --------------------------------------                                                                                            ( apple-historical-subscriptions )
                                                                                                                                                                                    ( google-historical-subscriptions )
-                                                                                                         
 
-
-
+applepubsub
+    - code: src/pubsub/apple.ts
+    - AWS function (s): mobile-purchases-applepubsub-PROD
+                      : mobile-purchases-applepubsub-CODE
 
 ```
 

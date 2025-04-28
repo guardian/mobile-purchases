@@ -418,7 +418,9 @@ function parseNotification(
     return err("The notification from Apple didn't have any data we can parse");
   }
 
+  console.log(`[cc92c1a6] ${JSON.stringify(payload)}`);
   const unifiedReceipt = parseUnifiedReceipt(payload.unified_receipt);
+  console.log(`[23666f1f] ${JSON.stringify(payload)}`);
   if (unifiedReceipt.kind === ResultKind.Err) {
     return unifiedReceipt;
   }
@@ -520,7 +522,9 @@ export function parsePayload(
 ): Error | StatusUpdateNotification {
   try {
     const notification: unknown = JSON.parse(body ?? '');
+    console.log(`[3fd06200] ${body}`);
     const parsedNotification = parseNotification(notification);
+    console.log(`[9fa7f297] ${body}`);
     if (parsedNotification.kind === ResultKind.Ok) {
       console.log(`(ec0a5f83) ${body}`);
       return parsedNotification.value;
