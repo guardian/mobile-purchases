@@ -131,7 +131,7 @@ The apps call endpoints to check the status of a subscription.
 
 ## Datalake export
 
-The subscriptions, subscription-events and user-subscriptions Dynamo tables are exported to the datalake. This is orchestrated by lambdas triggered on a cron schedule. Data is exported to s3 by the lambdas and then transferred to GCS and ingested into a table, scheduled by Airflow.
+The subscriptions, subscription-events-v2 and user-subscriptions Dynamo tables are exported to the datalake. This is orchestrated by lambdas triggered on a cron schedule. Data is exported to s3 by the lambdas and then transferred to GCS and ingested into a table, scheduled by Airflow.
 
 The update-subscriptions lambdas push onto an SQS queue for each change and this historical data is exported by lambdas.
 
@@ -148,9 +148,9 @@ The update-subscriptions lambdas push onto an SQS queue for each change and this
 | SQS: apple-historical-subscriptions | --------------> | Lambda: export-apple-historical-data | --------------| S3 |------------> | datalake.mobile_subscription_historical_apple |
  -------------------------------------                   --------------------------------------                 ----                -----------------------------------------------
 
- -----------------------------------                     ------------------------------------------             ----                -------------------------------------
-| Dynamo Table: subscription-events | ----------------> | Lambda: export-subscription-events-table | ----------| S3 |------------> | datalake.mobile_subscription_events |
- -----------------------------------                     ------------------------------------------             ----                -------------------------------------
+ --------------------------------------                  ------------------------------------------             ----                -------------------------------------
+| Dynamo Table: subscription-events-v2 |--------------> | Lambda: export-subscription-events-table | ----------| S3 |------------> | datalake.mobile_subscription_events |
+ --------------------------------------                  ------------------------------------------             ----                -------------------------------------
 
  -----------------------------                           --------------------------------------                 ----                -------------------------------
 | Dynamo Table: subscriptions | ----------------------> | Lambda: export-subscription-table-v2 | --------------| S3 |------------> | datalake.mobile_subscriptions |
