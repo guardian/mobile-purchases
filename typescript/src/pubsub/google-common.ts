@@ -147,10 +147,10 @@ export async function fetchMetadata(
   }
 }
 
-export function toDynamoEvent(
+export async function toDynamoEvent(
   notification: SubscriptionNotification,
   metaData?: GoogleSubscriptionMetaData,
-): SubscriptionEvent {
+): Promise<SubscriptionEvent> {
   const eventTime = optionalMsToDate(notification.eventTimeMillis);
   if (!eventTime) {
     // this is tested while parsing the payload in order to return HTTP 400 early.
@@ -186,6 +186,7 @@ export function toDynamoEvent(
     undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
     undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
     undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+    null,
   );
 }
 

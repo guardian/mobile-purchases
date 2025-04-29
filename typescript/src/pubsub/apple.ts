@@ -8,10 +8,12 @@ import { dateToSecondTimestamp, thirtyMonths } from '../utils/dates';
 import type { StatusUpdateNotification } from './apple-common';
 import { parsePayload } from './apple-common';
 import { parseStoreAndSend } from './pubsub';
+import { AppleStoreKitSubscriptionDataDerivationForExtra, transactionIdToAppleStoreKitSubscriptionDataDerivation2 } from '../services/api-storekit';
 
-export function toDynamoEvent(
+export async function toDynamoEvent(
   notification: StatusUpdateNotification,
-): SubscriptionEvent {
+  shouldBuildExtra: boolean,
+): Promise<SubscriptionEvent> {
   const now = new Date();
   const eventType = notification.notification_type;
   const receiptInfo = notification.unified_receipt.latest_receipt_info;
@@ -33,7 +35,7 @@ export function toDynamoEvent(
     );
   }
 
-  const sortByExpiryDate = receiptInfo.sort((receipt1, receipt2) => {
+  const receiptsInOrder = receiptInfo.sort((receipt1, receipt2) => {
     return (
       Number.parseInt(receipt2.purchase_date_ms) -
       Number.parseInt(receipt1.purchase_date_ms)
@@ -42,10 +44,10 @@ export function toDynamoEvent(
 
   // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
   const freeTrial =
-    sortByExpiryDate[0].is_trial_period === 'true' ||
-    sortByExpiryDate[0].is_in_intro_offer_period === 'true';
+    receiptsInOrder[0].is_trial_period === 'true' ||
+    receiptsInOrder[0].is_in_intro_offer_period === 'true';
 
-  // Preventin:g ERROR: Unable to process event[object Object] ValidationException: Item size has exceeded the maximum allowed size
+  // Preventing ERROR: Unable to process event[object Object] ValidationException: Item size has exceeded the maximum allowed size
   // Which for some reasons has only been observed in CODE
   if (
     Stage === 'CODE' &&
@@ -55,8 +57,20 @@ export function toDynamoEvent(
     notification.unified_receipt.latest_receipt = '';
   }
 
-  return new SubscriptionEvent(
-    sortByExpiryDate[0].original_transaction_id,
+  const original_transaction_id = receiptsInOrder[0].original_transaction_id;
+
+  const conditionallyBuildExtra = async (original_transaction_id: string, shouldBuildExtra: boolean): Promise<AppleStoreKitSubscriptionDataDerivationForExtra | null> => {
+    if (shouldBuildExtra) {
+      return await transactionIdToAppleStoreKitSubscriptionDataDerivation2(original_transaction_id);
+    } else {
+      return Promise.resolve(null);
+    }
+  }
+  
+  const extra = await conditionallyBuildExtra(original_transaction_id, shouldBuildExtra);
+
+  const subscriptionEvent = new SubscriptionEvent(
+    original_transaction_id,
     now.toISOString() + '|' + eventType,
     now.toISOString().substr(0, 10),
     now.toISOString(),
@@ -72,7 +86,10 @@ export function toDynamoEvent(
     notification.product_id, // SubscriptionEvent.product_id
     notification.purchase_date_ms, // SubscriptionEvent.purchase_date_ms
     notification.expires_date_ms, // SubscriptionEvent.expires_date_ms
+    extra,
   );
+
+  return Promise.resolve(subscriptionEvent);
 }
 
 export function toSqsSubReference(
@@ -104,7 +121,7 @@ export async function handler(
   return parseStoreAndSend(
     request,
     parsePayload,
-    toDynamoEvent,
+    (notification) => toDynamoEvent(notification, true),
     toSqsSubReference,
     () => Promise.resolve(undefined),
   );

@@ -151,6 +151,7 @@ describe('The Feast Google pubsub', () => {
         undefined,
         undefined,
         undefined,
+        null,
       );
 
     expect(result).toStrictEqual(HTTPResponses.OK);

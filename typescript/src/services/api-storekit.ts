@@ -46,6 +46,38 @@ export interface AppleStoreKitSubscriptionDataDerivationForFeastPipeline {
   // "ANNUALLY"
 }
 
+// AppleStoreKitSubscriptionDataDerivation1 is derived from AppleStoreKitSubscriptionData
+// Was originally introduced as part of adding an extra key to SubscriptionEvent and AppleSubscription
+// That are sent to the Lake.
+// The only difference with AppleStoreKitSubscriptionData is that for safety and forward compatibility
+// we introduce a guVersion, which is going to be incremented if there is any non backward compatible 
+// change in that structure. 
+export interface AppleStoreKitSubscriptionDataDerivationForExtra {
+  guVersion: "2025-04-29", // Doesn't matter what the value is as long as it's unambiguous, doesn't change, and if changing it increases.
+  transactionId: string,
+  originalTransactionId: string,
+  webOrderLineItemId: string,
+  bundleId: string,
+  productId: string,
+  subscriptionGroupIdentifier: string,
+  purchaseDate: number,
+  originalPurchaseDate: number,
+  expiresDate: number,
+  quantity: number,
+  type: string,
+  appAccountToken: string,
+  inAppOwnershipType: string,
+  signedDate: number,
+  offerType: number,
+  environment: string,
+  transactionReason: string,
+  storefront: string,
+  storefrontId: string,
+  price: number,
+  currency: string,
+  offerDiscountType: string
+}
+
 interface AppleLatestReceiptInfoItem {
   transaction_id: string;
 }
@@ -238,3 +270,14 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
     paymentFrequency,
   };
 };
+
+export const transactionIdToAppleStoreKitSubscriptionDataDerivation2 = async (transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra> => {
+  // This function builds a AppleStoreKitSubscriptionData, and just adds the guVersion key to make it a 
+  // AppleStoreKitSubscriptionDataDerivation2
+  const data1: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(transactionId);
+  const data2: AppleStoreKitSubscriptionDataDerivationForExtra = {
+    guVersion: "2025-04-29",
+    ...data1
+  }
+  return Promise.resolve(data2)
+}

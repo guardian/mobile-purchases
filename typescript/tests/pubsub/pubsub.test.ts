@@ -105,6 +105,7 @@ describe('The google pubsub', () => {
         undefined,
         undefined,
         undefined,
+        null,
       );
 
     const expectedSubscriptionReferenceInSqs = {
@@ -264,7 +265,9 @@ describe('The google pubsub', () => {
 });
 
 describe('The apple pubsub', () => {
+
   test('Should return HTTP 200 and store the correct data in dynamo', () => {
+
     process.env['Secret'] = 'MYSECRET';
     process.env['QueueUrl'] = '';
 
@@ -417,7 +420,7 @@ describe('The apple pubsub', () => {
     return parseStoreAndSend(
       input,
       parseApplePayload,
-      applePayloadToDynamo,
+      (notification) => applePayloadToDynamo(notification, false),
       toAppleSqsEvent,
       mockFetchMetadataFunction,
       mockStoreFunction,
