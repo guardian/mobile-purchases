@@ -14,12 +14,12 @@ import type {
   AcquisitionApiPayload,
   AcquisitionApiPayloadQueryParameter,
 } from './common';
-import { appleSubscriptionToAppleStoreKitSubscriptionDataDerivation1 } from '../../services/api-storekit';
+import { appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline } from '../../services/api-storekit';
 
 const appleSubscriptionToAcquisitionApiPayload = async (
   subscription: Subscription,
 ): Promise<AcquisitionApiPayload> => {
-  const extendedData = await appleSubscriptionToAppleStoreKitSubscriptionDataDerivation1(subscription);
+  const extendedData = await appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline(subscription);
 
   console.log(
     `[12901310] acquisition api payload: ${JSON.stringify(extendedData)}`,

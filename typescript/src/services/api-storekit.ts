@@ -33,7 +33,7 @@ export interface AppleStoreKitSubscriptionData {
 }
 
 // AppleStoreKitSubscriptionDataDerivation1 is derived from AppleStoreKitSubscriptionData
-export interface AppleStoreKitSubscriptionDataDerivation1 {
+export interface AppleStoreKitSubscriptionDataDerivationForFeastPipeline {
   transactionId: string;
   country: string; // country as two letter code
   currency: string; // currency as three letter code
@@ -174,9 +174,9 @@ const appleSubscriptionToOriginalTransactionId = (subscription: Subscription): s
   return transactionId;
 } 
 
-export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivation1 = async (
+export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline = async (
     subscription: Subscription,
-): Promise<AppleStoreKitSubscriptionDataDerivation1> => {
+): Promise<AppleStoreKitSubscriptionDataDerivationForFeastPipeline> => {
   /*
       This function takes a Subscription and returns a derivation of 
       the data that is retrieved from the Apple API
