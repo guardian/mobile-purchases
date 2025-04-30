@@ -258,11 +258,10 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
   };
 };
 
-export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra | null> => {
+export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (appBundleId: string, transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra | null> => {
   // This function builds a AppleStoreKitSubscriptionData, and just adds the guType key to make it a 
   // AppleStoreKitSubscriptionDataDerivationForExtra
 
-  const appBundleId = "uk.co.guardian.iphone2";
   const data1: AppleStoreKitSubscriptionData | null = await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
   if (data1 === null) {
     return Promise.resolve(null);

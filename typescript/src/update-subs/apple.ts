@@ -32,8 +32,9 @@ export async function toAppleSubscription(
     );
   }
 
+  const appBundleId = response.latestReceiptInfo.bundleId || "uk.co.guardian.iphone2";
   const originalTransactionId = latestReceiptInfo.originalTransactionId;
-  const extra1: AppleStoreKitSubscriptionDataDerivationForExtra | null = await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(originalTransactionId);
+  const extra1: AppleStoreKitSubscriptionDataDerivationForExtra | null = await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(appBundleId, originalTransactionId);
   const extra2 = JSON.stringify(extra1);
   console.log(`[bae41983] extra: ${extra2}`);
 

@@ -39,7 +39,7 @@ export interface UnifiedReceiptInfo {
 
 export interface StatusUpdateNotification {
   environment: string;
-  bid: string;
+  bid: string; // bundle Id
   bvrs: string;
   notification_type: string;
   password?: string;
