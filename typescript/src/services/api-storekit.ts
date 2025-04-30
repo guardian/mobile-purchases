@@ -53,7 +53,7 @@ export interface AppleStoreKitSubscriptionDataDerivationForFeastPipeline {
 // we introduce a guVersion, which is going to be incremented if there is any non backward compatible 
 // change in that structure. 
 export interface AppleStoreKitSubscriptionDataDerivationForExtra {
-  guVersion: "2025-04-29", // Doesn't matter what the value is as long as it's unambiguous, doesn't change, and if changing it increases.
+  guType: "apple-extra-2025-04-29",
   transactionId: string,
   originalTransactionId: string,
   webOrderLineItemId: string,
@@ -276,7 +276,7 @@ export const transactionIdToAppleStoreKitSubscriptionDataDerivation2 = async (tr
   // AppleStoreKitSubscriptionDataDerivation2
   const data1: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(transactionId);
   const data2: AppleStoreKitSubscriptionDataDerivationForExtra = {
-    guVersion: "2025-04-29",
+    guType: "apple-extra-2025-04-29",
     ...data1
   }
   return Promise.resolve(data2)
