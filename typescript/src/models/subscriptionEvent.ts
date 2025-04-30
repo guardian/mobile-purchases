@@ -60,7 +60,7 @@ export class SubscriptionEvent {
     product_id: any,
     purchase_date_ms: any,
     expires_date_ms: any,
-    extra: string| null,
+    extra: string | null,
   ) {
     this.subscriptionId = subscriptionId;
     this.timestampAndType = timestampAndType;
