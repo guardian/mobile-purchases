@@ -3,7 +3,7 @@ import { forgeStoreKitBearerToken } from './apple-json-web-tokens';
 import { productIdToPaymentFrequency, storefrontToCountry } from './apple-mappings';
 const jwt = require('jsonwebtoken');
 
-// AppleSubscriptionData is built from the answer from
+// AppleStoreKitSubscriptionData is built from the answer from
 // https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/{transactionId}
 // and contains information that are required to build an AcquisitionApiPayload
 
@@ -230,7 +230,7 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
           "offerDiscountType": "FREE_TRIAL"
       }
 
-      Sample of AppleStoreKitSubscriptionDataDerivationForExtra
+      Sample of AppleStoreKitSubscriptionDataDerivationForFeastPipeline
       {
           "transactionId": "2200001105",
           "productId": "uk.co.guardian.Feast.monthly",
@@ -248,7 +248,7 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
 };
 
 export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra> => {
-  // This function builds a AppleStoreKitSubscriptionData, and just adds the guVersion key to make it a 
+  // This function builds a AppleStoreKitSubscriptionData, and just adds the guType key to make it a 
   // AppleStoreKitSubscriptionDataDerivationForExtra
   const data1: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(transactionId);
   const data2: AppleStoreKitSubscriptionDataDerivationForExtra = {

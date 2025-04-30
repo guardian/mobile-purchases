@@ -42,6 +42,12 @@ applepubsub
     - AWS function (s): mobile-purchases-applepubsub-PROD
                       : mobile-purchases-applepubsub-CODE
 
+subscription-events-v2
+    - Dynamo table: mobile-purchases-PROD-subscription-events-v2
+
+subscriptions
+    - Dynamo table: mobile-purchases-PROD-subscriptions
+
 ```
 
 This pattern is repeated for the Apple and Google live apps, as well as Feast apps.
@@ -105,6 +111,9 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
  ----------------------------------                                         ----------------------------------                         -------------------
                                                                                                                                       (membership account)
 
+subscriptions
+    - Dynamo table: mobile-purchases-PROD-subscriptions
+
 ```
 
 
@@ -159,6 +168,12 @@ The update-subscriptions lambdas push onto an SQS queue for each change and this
  ----------------------------------                      -------------------------------------------            ----                ------------------------------------
 | Dynamo Table: user-subscriptions | -----------------> | Lambda: export-user-subscription-table-v2 | ---------| S3 |------------> | datalake.mobile_user_subscriptions |
  ----------------------------------                      -------------------------------------------            ----                ------------------------------------
+
+subscription-events-v2
+    - Dynamo table: mobile-purchases-PROD-subscription-events-v2
+
+subscriptions
+    - Dynamo table: mobile-purchases-PROD-subscriptions
 
 ```
 
