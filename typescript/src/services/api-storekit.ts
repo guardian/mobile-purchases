@@ -3,7 +3,7 @@ import { forgeStoreKitBearerToken } from './apple-json-web-tokens';
 import { productIdToPaymentFrequency, storefrontToCountry } from './apple-mappings';
 const jwt = require('jsonwebtoken');
 
-// AppleSubscriptionData is built from the answer from
+// AppleStoreKitSubscriptionData is built from the answer from
 // https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/{transactionId}
 // and contains information that are required to build an AcquisitionApiPayload
 
@@ -32,7 +32,7 @@ export interface AppleStoreKitSubscriptionData {
   offerDiscountType: string
 }
 
-// AppleStoreKitSubscriptionDataDerivation1 is derived from AppleStoreKitSubscriptionData
+// AppleStoreKitSubscriptionDataDerivationForFeastPipeline is derived from AppleStoreKitSubscriptionData
 export interface AppleStoreKitSubscriptionDataDerivationForFeastPipeline {
   transactionId: string;
   country: string; // country as two letter code
@@ -222,7 +222,7 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
           "offerDiscountType": "FREE_TRIAL"
       }
 
-      Sample of AppleStoreKitSubscriptionDataDerivation1 
+      Sample of AppleStoreKitSubscriptionDataDerivationForFeastPipeline
       {
           "transactionId": "2200001105",
           "productId": "uk.co.guardian.Feast.monthly",
