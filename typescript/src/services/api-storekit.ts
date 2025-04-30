@@ -52,31 +52,7 @@ export interface AppleStoreKitSubscriptionDataDerivationForFeastPipeline {
 // The only difference with AppleStoreKitSubscriptionData is that for safety and forward compatibility
 // we introduce a guVersion, which is going to be incremented if there is any non backward compatible 
 // change in that structure. 
-export interface AppleStoreKitSubscriptionDataDerivationForExtra {
-  guType: "apple-extra-2025-04-29",
-  transactionId: string,
-  originalTransactionId: string,
-  webOrderLineItemId: string,
-  bundleId: string,
-  productId: string,
-  subscriptionGroupIdentifier: string,
-  purchaseDate: number,
-  originalPurchaseDate: number,
-  expiresDate: number,
-  quantity: number,
-  type: string,
-  appAccountToken: string,
-  inAppOwnershipType: string,
-  signedDate: number,
-  offerType: number,
-  environment: string,
-  transactionReason: string,
-  storefront: string,
-  storefrontId: string,
-  price: number,
-  currency: string,
-  offerDiscountType: string
-}
+export type AppleStoreKitSubscriptionDataDerivationForExtra = AppleStoreKitSubscriptionData & {  guType: "apple-extra-2025-04-29" }
 
 interface AppleLatestReceiptInfoItem {
   transaction_id: string;
@@ -271,7 +247,7 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
   };
 };
 
-export const transactionIdToAppleStoreKitSubscriptionDataDerivation2 = async (transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra> => {
+export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra> => {
   // This function builds a AppleStoreKitSubscriptionData, and just adds the guVersion key to make it a 
   // AppleStoreKitSubscriptionDataDerivation2
   const data1: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(transactionId);

@@ -8,7 +8,7 @@ import { dateToSecondTimestamp, thirtyMonths } from '../utils/dates';
 import type { StatusUpdateNotification } from './apple-common';
 import { parsePayload } from './apple-common';
 import { parseStoreAndSend } from './pubsub';
-import { AppleStoreKitSubscriptionDataDerivationForExtra, transactionIdToAppleStoreKitSubscriptionDataDerivation2 } from '../services/api-storekit';
+import { AppleStoreKitSubscriptionDataDerivationForExtra, transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
 export async function toDynamoEvent(
   notification: StatusUpdateNotification,
@@ -61,7 +61,7 @@ export async function toDynamoEvent(
 
   const conditionallyBuildExtra = async (original_transaction_id: string, shouldBuildExtra: boolean): Promise<AppleStoreKitSubscriptionDataDerivationForExtra | null> => {
     if (shouldBuildExtra) {
-      return await transactionIdToAppleStoreKitSubscriptionDataDerivation2(original_transaction_id);
+      return await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(original_transaction_id);
     } else {
       return Promise.resolve(null);
     }
