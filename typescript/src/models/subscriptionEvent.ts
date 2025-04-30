@@ -41,7 +41,7 @@ export class SubscriptionEvent {
   @attribute()
   expires_date_ms: number;
   @attribute()
-  extra: AppleStoreKitSubscriptionDataDerivationForExtra | null;
+  extra: string | null;
 
   constructor(
     subscriptionId: string,
@@ -60,7 +60,7 @@ export class SubscriptionEvent {
     product_id: any,
     purchase_date_ms: any,
     expires_date_ms: any,
-    extra: AppleStoreKitSubscriptionDataDerivationForExtra | null,
+    extra: string| null,
   ) {
     this.subscriptionId = subscriptionId;
     this.timestampAndType = timestampAndType;

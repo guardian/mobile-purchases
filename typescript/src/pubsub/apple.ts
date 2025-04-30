@@ -67,7 +67,9 @@ export async function toDynamoEvent(
     }
   }
   
-  const extra = await conditionallyBuildExtra(original_transaction_id, shouldBuildExtra);
+  const extra1 = await conditionallyBuildExtra(original_transaction_id, shouldBuildExtra);
+  const extra2 = JSON.stringify(extra1);
+  console.log(`[0165ec6d] extra: ${extra2}`);
 
   const subscriptionEvent = new SubscriptionEvent(
     original_transaction_id,
@@ -86,7 +88,7 @@ export async function toDynamoEvent(
     notification.product_id, // SubscriptionEvent.product_id
     notification.purchase_date_ms, // SubscriptionEvent.purchase_date_ms
     notification.expires_date_ms, // SubscriptionEvent.expires_date_ms
-    extra,
+    extra2,
   );
 
   return Promise.resolve(subscriptionEvent);
