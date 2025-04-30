@@ -37,17 +37,19 @@ export const defaultFetchSubscriptionsFromApple = async (
     { sandboxRetry: false },
     App.Feast,
   );
-  return responses.map((response) => {
-    const subscription = toAppleSubscription(response);
-    if (response.latestReceiptInfo.appAccountToken) {
-      return withAppAccountToken(
-        subscription,
-        response.latestReceiptInfo.appAccountToken,
-      );
-    } else {
-      return subscription;
-    }
-  });
+  return Promise.all(
+    responses.map(async (response) => {
+      const subscription = await toAppleSubscription(response);
+      if (response.latestReceiptInfo.appAccountToken) {
+        return withAppAccountToken(
+          subscription,
+          response.latestReceiptInfo.appAccountToken,
+        );
+      } else {
+        return subscription;
+      }
+    }),
+  );
 };
 
 const defaultStoreSubscriptionInDynamo = (
