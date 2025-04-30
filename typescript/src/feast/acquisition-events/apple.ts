@@ -121,7 +121,7 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
   );
   const promises = appleValidationResponses.map(
     async (appleValidationResponse) => {
-      const appleSubscription: Subscription = toAppleSubscription(
+      const appleSubscription: Subscription = await toAppleSubscription(
         appleValidationResponse,
       );
       console.log(

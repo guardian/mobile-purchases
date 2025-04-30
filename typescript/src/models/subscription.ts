@@ -1,6 +1,7 @@
 import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
 import { attribute, hashKey } from '@aws/dynamodb-data-mapper-annotations';
 import { App, Stage } from '../utils/appIdentity';
+import { AppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
 export class Subscription {
   /*
@@ -49,6 +50,9 @@ export class Subscription {
   @attribute()
   ttl?: number;
 
+  @attribute()
+  extra: string | undefined;
+
   tableName: string;
 
   constructor(
@@ -65,6 +69,7 @@ export class Subscription {
     receipt?: string,
     applePayload?: any,
     ttl?: number,
+    extra?: string | undefined,
     tableName = 'subscriptions',
   ) {
     this.subscriptionId = subscriptionId;
@@ -80,6 +85,7 @@ export class Subscription {
     this.receipt = receipt;
     this.applePayload = applePayload;
     this.ttl = ttl;
+    this.extra = extra;
     this.tableName = tableName;
   }
 
@@ -97,7 +103,23 @@ export class Subscription {
 
 export class SubscriptionEmpty extends Subscription {
   constructor() {
-    super('', '', '', undefined, false, '', undefined, undefined, undefined);
+    super(
+        '', // subscriptionId
+        '', // startTimestamp
+        '', // endTimestamp
+        undefined, // cancellationTimestamp
+        false, // autoRenewing
+        '', // productId
+        undefined, // platform
+        undefined, // freeTrial
+        undefined, // billingPeriod
+        undefined, // googlePayload
+        undefined, // receipt
+        undefined, // applePayload
+        undefined, // ttl
+        undefined, // extra
+        '' , // tableName
+      );
   }
 
   setSubscriptionId(subscriptionId: string): SubscriptionEmpty {

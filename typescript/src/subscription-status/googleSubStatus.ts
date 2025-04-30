@@ -190,6 +190,7 @@ async function updateParallelTestTable(
       undefined,
       null,
       dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)),
+      undefined,
       'subscriptions-parallel-test',
     );
 
