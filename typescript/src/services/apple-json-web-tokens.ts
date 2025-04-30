@@ -1,7 +1,7 @@
 import { getConfigValue } from '../utils/ssmConfig';
 const jwt = require('jsonwebtoken');
 
-export const forgeStoreKitBearerToken = async (): Promise<string> => {
+export const forgeStoreKitBearerToken = async (appBundleId: string): Promise<string> => {
   // ------------------------------------------------------------------------
   // This process is described in storekit-signatures.md in the docs folder. |
   // ------------------------------------------------------------------------
@@ -16,9 +16,7 @@ export const forgeStoreKitBearerToken = async (): Promise<string> => {
   const audience = await getConfigValue<string>(
     'feastAppleStoreKitConfigAudience',
   );
-  const appBundleId = await getConfigValue<string>(
-    'feastAppleStoreKitConfigAppBunbleId',
-  );
+
   const privateKey1 = await getConfigValue<string>(
     'feastAppleStoreKitConfigPrivateKey1',
   );

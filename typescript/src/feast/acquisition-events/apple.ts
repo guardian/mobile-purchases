@@ -14,12 +14,17 @@ import type {
   AcquisitionApiPayload,
   AcquisitionApiPayloadQueryParameter,
 } from './common';
-import { appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline } from '../../services/api-storekit';
+import { AppleStoreKitSubscriptionDataDerivationForFeastPipeline, appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline } from '../../services/api-storekit';
 
 const appleSubscriptionToAcquisitionApiPayload = async (
   subscription: Subscription,
 ): Promise<AcquisitionApiPayload> => {
-  const extendedData = await appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline(subscription);
+  const extendedData: AppleStoreKitSubscriptionDataDerivationForFeastPipeline | null = await appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline(subscription);
+
+  if (extendedData === null) {
+    console.log(`[f57be98c] could not extract extendedData for subscription`);
+    throw new Error("[1504e11c] could not extract extendedData for subscription");
+  }
 
   console.log(
     `[12901310] acquisition api payload: ${JSON.stringify(extendedData)}`,

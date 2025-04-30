@@ -1,4 +1,5 @@
 import type { Subscription } from '../models/subscription';
+import { getConfigValue } from '../utils/ssmConfig';
 import { forgeStoreKitBearerToken } from './apple-json-web-tokens';
 import { productIdToPaymentFrequency, storefrontToCountry } from './apple-mappings';
 const jwt = require('jsonwebtoken');
@@ -59,13 +60,13 @@ interface AppleLatestReceiptInfoItem {
 }
 type AppleLatestReceiptInfo = AppleLatestReceiptInfoItem[];
 
-export const transactionIdToAppleStoreKitSubscriptionData = async (transactionId: string): Promise<AppleStoreKitSubscriptionData> => {
+export const transactionIdToAppleStoreKitSubscriptionData = async (appBundleId: string, transactionId: string): Promise<AppleStoreKitSubscriptionData | null> => {
   console.log(`[116fa7d4] transactionId: ${transactionId}`);
 
   const url = `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${transactionId}`;
   console.log(`[5330931d] url: ${url}`);
 
-  const token = await forgeStoreKitBearerToken();
+  const token = await forgeStoreKitBearerToken(appBundleId);
 
   console.log(`[f1335718] ${token}`);
 
@@ -86,6 +87,7 @@ export const transactionIdToAppleStoreKitSubscriptionData = async (transactionId
       json = await response.json();
     } else {
       console.error(`[661fe1aa] error: fetch failed: ${response.status}`);
+      return Promise.resolve(null);
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -93,6 +95,7 @@ export const transactionIdToAppleStoreKitSubscriptionData = async (transactionId
     } else {
       console.error(`[e9848cd6] error: fetch failed: ${JSON.stringify(error)}`);
     }
+    return Promise.resolve(null);
   }
 
   console.log(`[55ca8e2c] ${JSON.stringify(json)}`);
@@ -184,7 +187,7 @@ const appleSubscriptionToOriginalTransactionId = (subscription: Subscription): s
 
 export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline = async (
     subscription: Subscription,
-): Promise<AppleStoreKitSubscriptionDataDerivationForFeastPipeline> => {
+): Promise<AppleStoreKitSubscriptionDataDerivationForFeastPipeline | null> => {
   /*
       This function takes a Subscription and returns a derivation of 
       the data that is retrieved from the Apple API
@@ -195,7 +198,15 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
 
   const transactionId = appleSubscriptionToOriginalTransactionId(subscription);
 
-  const appleStoreKitSubscriptionData: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(transactionId);
+  const appBundleId = await getConfigValue<string>(
+    'feastAppleStoreKitConfigAppBunbleId',
+  );
+
+  const appleStoreKitSubscriptionData: AppleStoreKitSubscriptionData | null = await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
+
+  if (appleStoreKitSubscriptionData === null) {
+    return Promise.resolve(null);
+  }
 
   console.log(`[7f53de39] appleStoreKitSubscriptionData: ${JSON.stringify(appleStoreKitSubscriptionData)}`);
 
@@ -247,10 +258,15 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
   };
 };
 
-export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra> => {
+export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra | null> => {
   // This function builds a AppleStoreKitSubscriptionData, and just adds the guType key to make it a 
   // AppleStoreKitSubscriptionDataDerivationForExtra
-  const data1: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(transactionId);
+
+  const appBundleId = "uk.co.guardian.iphone2";
+  const data1: AppleStoreKitSubscriptionData | null = await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
+  if (data1 === null) {
+    return Promise.resolve(null);
+  }
   const data2: AppleStoreKitSubscriptionDataDerivationForExtra = {
     guType: "apple-extra-2025-04-29",
     ...data1

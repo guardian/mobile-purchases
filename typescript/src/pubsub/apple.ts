@@ -67,7 +67,7 @@ export async function toDynamoEvent(
     }
   }
   
-  const extra1 = await conditionallyBuildExtra(original_transaction_id, shouldBuildExtra);
+  const extra1: AppleStoreKitSubscriptionDataDerivationForExtra | null = await conditionallyBuildExtra(original_transaction_id, shouldBuildExtra);
   const extra2 = JSON.stringify(extra1);
   console.log(`[0165ec6d] extra: ${extra2}`);
 
