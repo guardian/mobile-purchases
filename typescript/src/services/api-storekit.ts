@@ -32,7 +32,7 @@ export interface AppleStoreKitSubscriptionData {
   offerDiscountType: string
 }
 
-// AppleStoreKitSubscriptionDataDerivation1 is derived from AppleStoreKitSubscriptionData
+// AppleStoreKitSubscriptionDataDerivationForFeastPipeline is derived from AppleStoreKitSubscriptionData
 export interface AppleStoreKitSubscriptionDataDerivationForFeastPipeline {
   transactionId: string;
   country: string; // country as two letter code
@@ -46,7 +46,7 @@ export interface AppleStoreKitSubscriptionDataDerivationForFeastPipeline {
   // "ANNUALLY"
 }
 
-// AppleStoreKitSubscriptionDataDerivation1 is derived from AppleStoreKitSubscriptionData
+// AppleStoreKitSubscriptionDataDerivationForExtra is derived from AppleStoreKitSubscriptionData
 // Was originally introduced as part of adding an extra key to SubscriptionEvent and AppleSubscription
 // That are sent to the Lake.
 // The only difference with AppleStoreKitSubscriptionData is that for safety and forward compatibility
@@ -230,7 +230,7 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
           "offerDiscountType": "FREE_TRIAL"
       }
 
-      Sample of AppleStoreKitSubscriptionDataDerivation1 
+      Sample of AppleStoreKitSubscriptionDataDerivationForExtra
       {
           "transactionId": "2200001105",
           "productId": "uk.co.guardian.Feast.monthly",
@@ -249,7 +249,7 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
 
 export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra> => {
   // This function builds a AppleStoreKitSubscriptionData, and just adds the guVersion key to make it a 
-  // AppleStoreKitSubscriptionDataDerivation2
+  // AppleStoreKitSubscriptionDataDerivationForExtra
   const data1: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(transactionId);
   const data2: AppleStoreKitSubscriptionDataDerivationForExtra = {
     guType: "apple-extra-2025-04-29",
