@@ -12,10 +12,15 @@ export const forgeStoreKitBearerToken = async (appBundleId: string): Promise<str
   const issuerId = await getConfigValue<string>(
     'feastAppleStoreKitConfigIssuerId',
   );
+  console.log(`[32ff1faa] issuerId: ${issuerId}`);
+
   const keyId = await getConfigValue<string>('feastAppleStoreKitConfigKeyId');
+  console.log(`[85c9b1e7] keyId: ${keyId}`);
+
   const audience = await getConfigValue<string>(
     'feastAppleStoreKitConfigAudience',
   );
+  console.log(`[8b3ae72e] audience: ${audience}`);
 
   const privateKey1 = await getConfigValue<string>(
     'feastAppleStoreKitConfigPrivateKey1',
