@@ -9,6 +9,8 @@ export const forgeStoreKitBearerToken = async (appBundleId: string): Promise<str
   // Generating the JWT token
   // https://developer.apple.com/documentation/appstoreserverapi/generating-json-web-tokens-for-api-requests
 
+  console.log(`[77bb28f7] collecting data from Parameter Store`);
+
   const issuerId = await getConfigValue<string>(
     'feastAppleStoreKitConfigIssuerId',
   );
