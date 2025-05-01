@@ -10,9 +10,9 @@ import { parsePayload } from './apple-common';
 import { parseStoreAndSend_v2 } from './pubsub';
 import { AppleStoreKitSubscriptionDataDerivationForExtra, transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
-export function toDynamoEvent(
+export async function toDynamoEvent_v2(
   notification: StatusUpdateNotification,
-): SubscriptionEvent {
+): Promise<SubscriptionEvent> {
   const now = new Date();
   const eventType = notification.notification_type;
   const receiptInfo = notification.unified_receipt.latest_receipt_info;
@@ -60,7 +60,7 @@ export function toDynamoEvent(
   const original_transaction_id = receiptsInOrder[0].original_transaction_id;
   const appBundleId = notification.bid;
 
-  return new SubscriptionEvent(
+  const subscription = new SubscriptionEvent(
     receiptsInOrder[0].original_transaction_id,
     now.toISOString() + '|' + eventType,
     now.toISOString().substr(0, 10),
@@ -79,6 +79,8 @@ export function toDynamoEvent(
     notification.expires_date_ms, // SubscriptionEvent.expires_date_ms
     '',
   );
+
+  return Promise.resolve(subscription);
 }
 
 export function toSqsSubReference(
@@ -110,7 +112,7 @@ export async function handler(
   return parseStoreAndSend_v2(
     request,
     parsePayload,
-    async (notification: StatusUpdateNotification) => toDynamoEvent(notification),
+    (notification: StatusUpdateNotification) => toDynamoEvent_v2(notification),
     toSqsSubReference,
     () => Promise.resolve(undefined),
   );

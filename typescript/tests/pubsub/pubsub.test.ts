@@ -1,7 +1,7 @@
 import { HTTPResponses } from '../../src/models/apiGatewayHttp';
 import { SubscriptionEvent } from '../../src/models/subscriptionEvent';
 import {
-  toDynamoEvent as applePayloadToDynamo,
+  toDynamoEvent_v2 as applePayloadToDynamo,
   toSqsSubReference as toAppleSqsEvent,
 } from '../../src/pubsub/apple';
 import type { StatusUpdateNotification } from '../../src/pubsub/apple-common';
@@ -418,7 +418,7 @@ describe('The apple pubsub', () => {
     return parseStoreAndSend_v2(
       input,
       parseApplePayload,
-      async (notification) => applePayloadToDynamo(notification),
+      (notification) => applePayloadToDynamo(notification),
       toAppleSqsEvent,
       mockFetchMetadataFunction,
       mockStoreFunction,
