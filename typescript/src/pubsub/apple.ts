@@ -68,9 +68,11 @@ export async function toDynamoEvent(
   }
   
   const appBundleId = notification.bid;
+  console.log(`[9b648812] appBundleId: ${appBundleId}`);
   const extra1: AppleStoreKitSubscriptionDataDerivationForExtra | null = await conditionallyBuildExtra(appBundleId, original_transaction_id, shouldBuildExtra);
+  console.log(`[5d661829] extra1: ${extra1}`);
   const extra2 = JSON.stringify(extra1);
-  console.log(`[0165ec6d] extra: ${extra2}`);
+  console.log(`[0165ec6d] extra2: ${extra2}`);
 
   const subscriptionEvent = new SubscriptionEvent(
     original_transaction_id,
