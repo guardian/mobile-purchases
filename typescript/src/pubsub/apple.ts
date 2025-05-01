@@ -10,6 +10,15 @@ import { parsePayload } from './apple-common';
 import { parseStoreAndSend } from './pubsub';
 import { AppleStoreKitSubscriptionDataDerivationForExtra, transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
+const conditionallyBuildExtra = async (appBundleId: string, original_transaction_id: string, shouldBuildExtra: boolean): Promise<AppleStoreKitSubscriptionDataDerivationForExtra | null> => {
+  console.log(`[fd84c952] appBundleId: ${appBundleId}, original_transaction_id: ${original_transaction_id}, shouldBuildExtra: ${shouldBuildExtra}`);
+  if (shouldBuildExtra) {
+    return await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(appBundleId, original_transaction_id);
+  } else {
+    return Promise.resolve(null);
+  }
+}
+
 export async function toDynamoEvent(
   notification: StatusUpdateNotification,
   shouldBuildExtra: boolean,
@@ -58,15 +67,6 @@ export async function toDynamoEvent(
   }
 
   const original_transaction_id = receiptsInOrder[0].original_transaction_id;
-
-  const conditionallyBuildExtra = async (appBundleId: string, original_transaction_id: string, shouldBuildExtra: boolean): Promise<AppleStoreKitSubscriptionDataDerivationForExtra | null> => {
-    console.log(`[fd84c952] appBundleId: ${appBundleId}, original_transaction_id: ${original_transaction_id}, shouldBuildExtra: ${shouldBuildExtra}`);
-    if (shouldBuildExtra) {
-      return await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(appBundleId, original_transaction_id);
-    } else {
-      return Promise.resolve(null);
-    }
-  }
   
   const appBundleId = notification.bid;
   console.log(`[9b648812] appBundleId: ${appBundleId}`);
