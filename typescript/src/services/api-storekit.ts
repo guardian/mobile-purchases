@@ -61,13 +61,12 @@ interface AppleLatestReceiptInfoItem {
 type AppleLatestReceiptInfo = AppleLatestReceiptInfoItem[];
 
 export const transactionIdToAppleStoreKitSubscriptionData = async (appBundleId: string, transactionId: string): Promise<AppleStoreKitSubscriptionData | null> => {
-  console.log(`[116fa7d4] transactionId: ${transactionId}`);
+  console.log(`[116fa7d4] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
 
   const url = `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${transactionId}`;
   console.log(`[5330931d] url: ${url}`);
 
   const token = await forgeStoreKitBearerToken(appBundleId);
-
   console.log(`[f1335718] ${token}`);
 
   const params = {

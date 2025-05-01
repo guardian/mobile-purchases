@@ -15,7 +15,9 @@ const defaultLogRequest = (request: APIGatewayProxyEvent): void =>
 const defaultStoreEventInDynamo = (
   event: StatusUpdateNotification,
 ): Promise<void> => {
+  console.log(`[286bdcb5] event: ${JSON.stringify(event)}`);
   const item = toDynamoEvent(event, true);
+  console.log(`[22227627] item: ${JSON.stringify(item)}`);
   return dynamoMapper.put({ item }).then((_) => undefined);
 };
 
