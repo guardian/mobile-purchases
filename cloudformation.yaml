@@ -457,6 +457,13 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParametersByPath
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
+
 
   GoogleLinkUserToSubLambda:
     Type: AWS::Serverless::Function
@@ -673,6 +680,12 @@ Resources:
         Stage: !Ref Stage
         Stack: !Ref Stack
         App: !Ref App
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParametersByPath
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
 
   GoogleSubscriptionsQueue:
     Type: AWS::SQS::Queue
