@@ -202,6 +202,8 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
     'feastAppleStoreKitConfigAppBunbleId',
   );
 
+  console.log(`[52c0e2ef] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
+
   const appleStoreKitSubscriptionData: AppleStoreKitSubscriptionData | null = await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
 
   if (appleStoreKitSubscriptionData === null) {
@@ -261,6 +263,8 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
 export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (appBundleId: string, transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra | null> => {
   // This function builds a AppleStoreKitSubscriptionData, and just adds the guType key to make it a 
   // AppleStoreKitSubscriptionDataDerivationForExtra
+
+  console.log(`[e2b0930d] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
 
   const data1: AppleStoreKitSubscriptionData | null = await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
   if (data1 === null) {
