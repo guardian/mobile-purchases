@@ -60,6 +60,7 @@ export async function toDynamoEvent(
   const original_transaction_id = receiptsInOrder[0].original_transaction_id;
 
   const conditionallyBuildExtra = async (appBundleId: string, original_transaction_id: string, shouldBuildExtra: boolean): Promise<AppleStoreKitSubscriptionDataDerivationForExtra | null> => {
+    console.log(`[fd84c952] appBundleId: ${appBundleId}, original_transaction_id: ${original_transaction_id}, shouldBuildExtra: ${shouldBuildExtra}`);
     if (shouldBuildExtra) {
       return await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(appBundleId, original_transaction_id);
     } else {
