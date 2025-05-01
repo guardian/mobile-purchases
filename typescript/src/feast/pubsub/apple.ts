@@ -18,6 +18,10 @@ const defaultStoreEventInDynamo = (
   console.log(`[286bdcb5] event: ${JSON.stringify(event)}`);
   const item = toDynamoEvent(event, true);
   console.log(`[22227627] item: ${JSON.stringify(item)}`);
+  if (JSON.stringify(item) === '{}') {
+    // Temporary measure while investigating permission problem
+    return Promise.resolve(undefined);
+  }
   return dynamoMapper.put({ item }).then((_) => undefined);
 };
 
