@@ -7,11 +7,11 @@ import {
 import type { StatusUpdateNotification } from '../../src/pubsub/apple-common';
 import { parsePayload as parseApplePayload } from '../../src/pubsub/apple-common';
 import {
-  toDynamoEvent as googlePayloadToDynamo,
+  toDynamoEvent_v2 as googlePayloadToDynamo,
   parsePayload as parseGooglePayload,
   toSqsSubReference as toGoogleSqsEvent,
 } from '../../src/pubsub/google-common';
-import { parseStoreAndSend } from '../../src/pubsub/pubsub';
+import { parseStoreAndSend_v2 } from '../../src/pubsub/pubsub';
 import Mock = jest.Mock;
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 
@@ -114,7 +114,7 @@ describe('The google pubsub', () => {
       subscriptionId: 'my.sku',
     };
 
-    return parseStoreAndSend(
+    return parseStoreAndSend_v2(
       input,
       parseGooglePayload,
       googlePayloadToDynamo,
@@ -183,7 +183,7 @@ describe('The google pubsub', () => {
       resource: '',
     };
 
-    const result = await parseStoreAndSend(
+    const result = await parseStoreAndSend_v2(
       input,
       parseGooglePayload,
       googlePayloadToDynamo,
@@ -250,7 +250,7 @@ describe('The google pubsub', () => {
       resource: '',
     };
 
-    const result = await parseStoreAndSend(
+    const result = await parseStoreAndSend_v2(
       input,
       parseGooglePayload,
       googlePayloadToDynamo,
@@ -415,10 +415,10 @@ describe('The apple pubsub', () => {
 
     const expectedSubscriptionReferenceInSqs = { receipt: 'TEST' };
 
-    return parseStoreAndSend(
+    return parseStoreAndSend_v2(
       input,
       parseApplePayload,
-      applePayloadToDynamo,
+      async (notification) => applePayloadToDynamo(notification),
       toAppleSqsEvent,
       mockFetchMetadataFunction,
       mockStoreFunction,

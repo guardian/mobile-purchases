@@ -7,7 +7,7 @@ import { Stage } from '../utils/appIdentity';
 import { dateToSecondTimestamp, thirtyMonths } from '../utils/dates';
 import type { StatusUpdateNotification } from './apple-common';
 import { parsePayload } from './apple-common';
-import { parseStoreAndSend } from './pubsub';
+import { parseStoreAndSend_v2 } from './pubsub';
 import { AppleStoreKitSubscriptionDataDerivationForExtra, transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
 export function toDynamoEvent(
@@ -107,10 +107,10 @@ export async function handler(
   request: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
   console.log(`[23ad7cb3] ${JSON.stringify(request)}`);
-  return parseStoreAndSend(
+  return parseStoreAndSend_v2(
     request,
     parsePayload,
-    toDynamoEvent,
+    async (notification: StatusUpdateNotification) => toDynamoEvent(notification),
     toSqsSubReference,
     () => Promise.resolve(undefined),
   );
