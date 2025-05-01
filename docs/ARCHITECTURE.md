@@ -42,6 +42,10 @@ applepubsub
     - AWS function (s): mobile-purchases-applepubsub-PROD
                       : mobile-purchases-applepubsub-CODE
 
+apple-subscriptions-to-fetch
+    - code: src/update-subs/apple.ts
+    - AWS function (s): mobile-purchases-apple-update-subscriptions-PROD
+
 subscription-events-v2
     - Dynamo table: mobile-purchases-PROD-subscription-events-v2
 

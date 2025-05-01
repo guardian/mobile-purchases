@@ -47,6 +47,15 @@ export interface AppleStoreKitSubscriptionDataDerivationForFeastPipeline {
   // "ANNUALLY"
 }
 
+// AppleStoreKitSubscriptionDataDerivationForExtra is derived from AppleStoreKitSubscriptionData
+// Was originally introduced as part of adding an extra key to SubscriptionEvent and AppleSubscription
+// That are sent to the Lake.
+// The only difference with AppleStoreKitSubscriptionData is that for safety and forward compatibility
+// we introduce a guVersion, which is going to be incremented if there is any non backward compatible
+// change in that structure.
+
+export type AppleStoreKitSubscriptionDataDerivationForExtra = AppleStoreKitSubscriptionData & {  guType: "apple-extra-2025-04-29" }
+
 interface AppleLatestReceiptInfoItem {
   transaction_id: string;
 }
@@ -245,3 +254,17 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
     paymentFrequency,
   };
 };
+
+export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (appBundleId: string, transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra> => {
+  // This function builds a AppleStoreKitSubscriptionData, and just adds the guType key to make it a
+  // AppleStoreKitSubscriptionDataDerivationForExtra
+
+  console.log(`[e2b0930d] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
+
+  const data1: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
+  const data2: AppleStoreKitSubscriptionDataDerivationForExtra = {
+    guType: "apple-extra-2025-04-29",
+    ...data1
+  }
+  return Promise.resolve(data2)
+}
