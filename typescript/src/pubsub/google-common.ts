@@ -186,6 +186,7 @@ export function toDynamoEvent(
     undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
     undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
     undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+    '', // extra
   );
 }
 
