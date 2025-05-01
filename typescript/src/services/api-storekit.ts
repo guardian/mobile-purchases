@@ -1,4 +1,5 @@
 import type { Subscription } from '../models/subscription';
+import { getConfigValue } from '../utils/ssmConfig';
 import { forgeStoreKitBearerToken } from './apple-json-web-tokens';
 import { productIdToPaymentFrequency, storefrontToCountry } from './apple-mappings';
 const jwt = require('jsonwebtoken');
@@ -51,13 +52,13 @@ interface AppleLatestReceiptInfoItem {
 }
 type AppleLatestReceiptInfo = AppleLatestReceiptInfoItem[];
 
-export const transactionIdToAppleStoreKitSubscriptionData = async (transactionId: string): Promise<AppleStoreKitSubscriptionData> => {
+export const transactionIdToAppleStoreKitSubscriptionData = async (appBundleId: string, transactionId: string): Promise<AppleStoreKitSubscriptionData> => {
   console.log(`[116fa7d4] transactionId: ${transactionId}`);
 
   const url = `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${transactionId}`;
   console.log(`[5330931d] url: ${url}`);
-
-  const token = await forgeStoreKitBearerToken();
+  
+  const token = await forgeStoreKitBearerToken(appBundleId);
 
   console.log(`[f1335718] ${token}`);
 
@@ -187,7 +188,13 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
 
   const transactionId = appleSubscriptionToOriginalTransactionId(subscription);
 
-  const appleStoreKitSubscriptionData: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(transactionId);
+  const appBundleId = await getConfigValue<string>(
+    'feastAppleStoreKitConfigAppBunbleId',
+  );
+
+  console.log(`[52c0e2ef] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
+
+  const appleStoreKitSubscriptionData: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
 
   console.log(`[7f53de39] appleStoreKitSubscriptionData: ${JSON.stringify(appleStoreKitSubscriptionData)}`);
 
