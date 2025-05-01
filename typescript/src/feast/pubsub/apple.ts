@@ -12,17 +12,18 @@ import { dynamoMapper, sendToSqs } from '../../utils/aws';
 const defaultLogRequest = (request: APIGatewayProxyEvent): void =>
   console.log(`[34ef7aa3] ${JSON.stringify(request)}`);
 
-const defaultStoreEventInDynamo = (
+const defaultStoreEventInDynamo = async (
   event: StatusUpdateNotification,
 ): Promise<void> => {
   console.log(`[286bdcb5] event: ${JSON.stringify(event)}`);
-  const item = toDynamoEvent(event, true);
+  const item = await toDynamoEvent(event, true);
   console.log(`[22227627] item: ${JSON.stringify(item)}`);
   if (JSON.stringify(item) === '{}') {
     // Temporary measure while investigating permission problem
     return Promise.resolve(undefined);
   }
-  return dynamoMapper.put({ item }).then((_) => undefined);
+  const _ = await dynamoMapper.put({ item });
+  return undefined;
 };
 
 export function buildHandler(
