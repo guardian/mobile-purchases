@@ -72,6 +72,7 @@ export function toDynamoEvent(
     notification.product_id, // SubscriptionEvent.product_id
     notification.purchase_date_ms, // SubscriptionEvent.purchase_date_ms
     notification.expires_date_ms, // SubscriptionEvent.expires_date_ms
+    '',
   );
 }
 

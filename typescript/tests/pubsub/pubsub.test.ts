@@ -105,6 +105,7 @@ describe('The google pubsub', () => {
         undefined,
         undefined,
         undefined,
+        '',
       );
 
     const expectedSubscriptionReferenceInSqs = {

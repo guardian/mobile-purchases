@@ -39,6 +39,8 @@ export class SubscriptionEvent {
   purchase_date_ms: number;
   @attribute()
   expires_date_ms: number;
+  @attribute()
+  extra: string;
 
   constructor(
     subscriptionId: string,
@@ -57,6 +59,7 @@ export class SubscriptionEvent {
     product_id: any,
     purchase_date_ms: any,
     expires_date_ms: any,
+    extra: string,
   ) {
     this.subscriptionId = subscriptionId;
     this.timestampAndType = timestampAndType;
@@ -74,6 +77,7 @@ export class SubscriptionEvent {
     this.product_id = product_id;
     this.purchase_date_ms = purchase_date_ms;
     this.expires_date_ms = expires_date_ms;
+    this.extra = extra;
   }
 
   get [DynamoDbTable]() {
@@ -83,6 +87,24 @@ export class SubscriptionEvent {
 
 export class SubscriptionEventEmpty extends SubscriptionEvent {
   constructor() {
-    super('', '', '', '', '', '', '', undefined, {}, {}, 0, '', '', '', 0, 0);
+    super(
+      '', // subscriptionId
+      '', // timestampAndType
+      '', // date
+      '', // timestamp
+      '', // eventType
+      '', // platform
+      '', // appId
+      undefined, // freeTrial
+      {}, // googlePayload
+      {}, // applePayload
+      0, // ttl
+      '', // promotional_offer_id
+      '', // promotional_offer_name
+      '', // product_id
+      0, // purchase_date_ms
+      0, // expires_date_ms
+      '' // extra
+    );
   }
 }
