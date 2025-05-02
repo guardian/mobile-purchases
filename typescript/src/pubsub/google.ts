@@ -6,12 +6,12 @@ import {
   toDynamoEvent_v2,
   toSqsSubReference,
 } from './google-common';
-import { parseStoreAndSend_v2 } from './pubsub';
+import { parseStoreAndSend_async } from './pubsub';
 
 export async function handler(
   request: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
-  return parseStoreAndSend_v2(
+  return parseStoreAndSend_async(
     request,
     parsePayload,
     toDynamoEvent_v2,
