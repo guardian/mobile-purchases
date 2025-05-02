@@ -10,7 +10,7 @@ import { dateToSecondTimestamp, thirtyMonths } from '../utils/dates';
 import { parseAndStoreSubscriptionUpdate } from './updatesub';
 import { transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
-export async function toAppleSubscription_v2(
+export async function toAppleSubscription_async(
   response: AppleValidationResponse,
 ): Promise<Subscription> {
   const latestReceiptInfo = response.latestReceiptInfo;
@@ -70,7 +70,7 @@ function sqsRecordToAppleSubscription(
   // sandboxRetry is set to false such that in production we don't store any sandbox receipt that would have snuck all the way here
   // In CODE or locally the default endpoint will be sanbox therefore no retry is necessary
   return validateReceipt(subRef.receipt, { sandboxRetry: false }).then(async (subs) =>
-    Promise.all(subs.map(toAppleSubscription_v2)),
+    Promise.all(subs.map(toAppleSubscription_async)),
   ); // `subs` here is a AppleValidationResponse[]
 }
 

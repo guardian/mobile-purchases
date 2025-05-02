@@ -6,7 +6,7 @@ import type { AppleSubscriptionReference } from '../../models/subscriptionRefere
 import { UserSubscription } from '../../models/userSubscription';
 import { validateReceipt } from '../../services/appleValidateReceipts';
 import { getIdentityIdFromBraze, IdentityIdFromBraze } from '../../services/braze';
-import { toAppleSubscription_v2 } from '../../update-subs/apple';
+import { toAppleSubscription_async } from '../../update-subs/apple';
 import { dynamoMapper, putMetric } from '../../utils/aws';
 import {
   queueHistoricalSubscription as defaultSendSubscriptionToHistoricalQueue,
@@ -39,7 +39,7 @@ export const defaultFetchSubscriptionsFromApple = async (
   );
   return Promise.all(
     responses.map(async (response) => {
-      const subscription = await toAppleSubscription_v2(response);
+      const subscription = await toAppleSubscription_async(response);
       if (response.latestReceiptInfo.appAccountToken) {
         return withAppAccountToken(
           subscription,
