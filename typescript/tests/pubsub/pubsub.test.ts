@@ -7,7 +7,7 @@ import {
 import type { StatusUpdateNotification } from '../../src/pubsub/apple-common';
 import { parsePayload as parseApplePayload } from '../../src/pubsub/apple-common';
 import {
-  toDynamoEvent_v2 as googlePayloadToDynamo,
+  toDynamoEvent_google_async as googlePayloadToDynamo,
   parsePayload as parseGooglePayload,
   toSqsSubReference as toGoogleSqsEvent,
 } from '../../src/pubsub/google-common';
