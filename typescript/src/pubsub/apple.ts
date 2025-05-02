@@ -7,12 +7,13 @@ import { Stage } from '../utils/appIdentity';
 import { dateToSecondTimestamp, thirtyMonths } from '../utils/dates';
 import type { StatusUpdateNotification } from './apple-common';
 import { parsePayload } from './apple-common';
-import { parseStoreAndSend } from './pubsub';
+import { parseStoreAndSend_async } from './pubsub';
 import { AppleStoreKitSubscriptionDataDerivationForExtra, transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
-export function toDynamoEvent(
+export async function toDynamoEvent_apple_async(
   notification: StatusUpdateNotification,
-): SubscriptionEvent {
+  useStoreKitForExtra: boolean
+): Promise<SubscriptionEvent> {
   const now = new Date();
   const eventType = notification.notification_type;
   const receiptInfo = notification.unified_receipt.latest_receipt_info;
@@ -56,11 +57,16 @@ export function toDynamoEvent(
     notification.unified_receipt.latest_receipt = '';
   }
 
-  // Defining the two variables we need to call for the extra data
-  const original_transaction_id = receiptsInOrder[0].original_transaction_id;
-  const appBundleId = notification.bid;
+  var extra = '';
+  if (useStoreKitForExtra) {
+    // Defining the two variables we need to call for the extra data
+    const original_transaction_id = receiptsInOrder[0].original_transaction_id;
+    const appBundleId = notification.bid;
+    const extra_object = await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(appBundleId, original_transaction_id); 
+    extra = JSON.stringify(extra_object);
+  }
 
-  return new SubscriptionEvent(
+  const subscription = new SubscriptionEvent(
     receiptsInOrder[0].original_transaction_id,
     now.toISOString() + '|' + eventType,
     now.toISOString().substr(0, 10),
@@ -77,8 +83,10 @@ export function toDynamoEvent(
     notification.product_id, // SubscriptionEvent.product_id
     notification.purchase_date_ms, // SubscriptionEvent.purchase_date_ms
     notification.expires_date_ms, // SubscriptionEvent.expires_date_ms
-    '',
+    extra,
   );
+
+  return Promise.resolve(subscription);
 }
 
 export function toSqsSubReference(
@@ -107,10 +115,10 @@ export async function handler(
   request: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
   console.log(`[23ad7cb3] ${JSON.stringify(request)}`);
-  return parseStoreAndSend(
+  return parseStoreAndSend_async(
     request,
     parsePayload,
-    toDynamoEvent,
+    (notification: StatusUpdateNotification) => toDynamoEvent_apple_async(notification, true),
     toSqsSubReference,
     () => Promise.resolve(undefined),
   );

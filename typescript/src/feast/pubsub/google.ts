@@ -12,7 +12,7 @@ import type {
 import {
   fetchMetadata as defaultFetchMetadata,
   parsePayload,
-  toDynamoEvent,
+  toDynamoEvent_google_async,
   toSqsSubReference,
 } from '../../pubsub/google-common';
 import { Ignorable } from '../../pubsub/ignorable';
@@ -60,7 +60,7 @@ export function buildHandler(
         }
 
         const metaData = await fetchMetadata(notification);
-        const dynamoEvent = toDynamoEvent(notification, metaData);
+        const dynamoEvent = await toDynamoEvent_google_async(notification, metaData);
 
         await Promise.all([
           sendMessageToSqs(queueUrl, androidSubscriptionReference),

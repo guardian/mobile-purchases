@@ -1,17 +1,17 @@
 import { HTTPResponses } from '../../src/models/apiGatewayHttp';
 import { SubscriptionEvent } from '../../src/models/subscriptionEvent';
 import {
-  toDynamoEvent as applePayloadToDynamo,
+  toDynamoEvent_apple_async as applePayloadToDynamo,
   toSqsSubReference as toAppleSqsEvent,
 } from '../../src/pubsub/apple';
 import type { StatusUpdateNotification } from '../../src/pubsub/apple-common';
 import { parsePayload as parseApplePayload } from '../../src/pubsub/apple-common';
 import {
-  toDynamoEvent as googlePayloadToDynamo,
+  toDynamoEvent_google_async as googlePayloadToDynamo,
   parsePayload as parseGooglePayload,
   toSqsSubReference as toGoogleSqsEvent,
 } from '../../src/pubsub/google-common';
-import { parseStoreAndSend } from '../../src/pubsub/pubsub';
+import { parseStoreAndSend_async } from '../../src/pubsub/pubsub';
 import Mock = jest.Mock;
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 
@@ -114,7 +114,7 @@ describe('The google pubsub', () => {
       subscriptionId: 'my.sku',
     };
 
-    return parseStoreAndSend(
+    return parseStoreAndSend_async(
       input,
       parseGooglePayload,
       googlePayloadToDynamo,
@@ -183,7 +183,7 @@ describe('The google pubsub', () => {
       resource: '',
     };
 
-    const result = await parseStoreAndSend(
+    const result = await parseStoreAndSend_async(
       input,
       parseGooglePayload,
       googlePayloadToDynamo,
@@ -250,7 +250,7 @@ describe('The google pubsub', () => {
       resource: '',
     };
 
-    const result = await parseStoreAndSend(
+    const result = await parseStoreAndSend_async(
       input,
       parseGooglePayload,
       googlePayloadToDynamo,
@@ -415,10 +415,10 @@ describe('The apple pubsub', () => {
 
     const expectedSubscriptionReferenceInSqs = { receipt: 'TEST' };
 
-    return parseStoreAndSend(
+    return parseStoreAndSend_async(
       input,
       parseApplePayload,
-      applePayloadToDynamo,
+      (notification) => applePayloadToDynamo(notification, false),
       toAppleSqsEvent,
       mockFetchMetadataFunction,
       mockStoreFunction,

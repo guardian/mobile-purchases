@@ -147,10 +147,10 @@ export async function fetchMetadata(
   }
 }
 
-export function toDynamoEvent(
+export async function toDynamoEvent_google_async(
   notification: SubscriptionNotification,
   metaData?: GoogleSubscriptionMetaData,
-): SubscriptionEvent {
+): Promise<SubscriptionEvent> {
   const eventTime = optionalMsToDate(notification.eventTimeMillis);
   if (!eventTime) {
     // this is tested while parsing the payload in order to return HTTP 400 early.
@@ -169,7 +169,7 @@ export function toDynamoEvent(
     console.warn(`Unknown package name ${notification.packageName}`);
   }
 
-  return new SubscriptionEvent(
+  const subscription = new SubscriptionEvent(
     notification.subscriptionNotification.purchaseToken,
     eventTimestamp + '|' + eventTypeString,
     date,
@@ -188,6 +188,8 @@ export function toDynamoEvent(
     undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
     '', // extra
   );
+
+  return Promise.resolve(subscription);
 }
 
 export function toSqsSubReference(

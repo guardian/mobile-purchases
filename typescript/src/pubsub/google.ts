@@ -3,18 +3,18 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {
   fetchMetadata,
   parsePayload,
-  toDynamoEvent,
+  toDynamoEvent_google_async,
   toSqsSubReference,
 } from './google-common';
-import { parseStoreAndSend } from './pubsub';
+import { parseStoreAndSend_async } from './pubsub';
 
 export async function handler(
   request: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> {
-  return parseStoreAndSend(
+  return parseStoreAndSend_async(
     request,
     parsePayload,
-    toDynamoEvent,
+    toDynamoEvent_google_async,
     toSqsSubReference,
     fetchMetadata,
   );
