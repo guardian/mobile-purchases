@@ -4,7 +4,7 @@ import type Sqs from 'aws-sdk/clients/sqs';
 import type { PromiseResult } from 'aws-sdk/lib/request';
 import { HTTPResponses } from '../../models/apiGatewayHttp';
 import type { AppleSubscriptionReference } from '../../models/subscriptionReference';
-import { toDynamoEvent_v4_apple, toSqsSubReference } from '../../pubsub/apple';
+import { toDynamoEvent_apple_async, toSqsSubReference } from '../../pubsub/apple';
 import type { StatusUpdateNotification } from '../../pubsub/apple-common';
 import { parsePayload } from '../../pubsub/apple-common';
 import { dynamoMapper, sendToSqs } from '../../utils/aws';
@@ -15,7 +15,7 @@ const defaultLogRequest = (request: APIGatewayProxyEvent): void =>
 const defaultStoreEventInDynamo = async (
   event: StatusUpdateNotification,
 ): Promise<void> => {
-  const item = await toDynamoEvent_v4_apple(event, true);
+  const item = await toDynamoEvent_apple_async(event, true);
   return dynamoMapper.put({ item }).then((_) => undefined);
 };
 

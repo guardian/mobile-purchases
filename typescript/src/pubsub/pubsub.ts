@@ -28,7 +28,7 @@ function storeInDynamoImpl(
   return dynamoMapper.put({ item: event }).then((result) => result.item);
 }
 
-export async function parseStoreAndSend_v2<Payload, SqsEvent, MetaData>(
+export async function parseStoreAndSend_async<Payload, SqsEvent, MetaData>(
   request: APIGatewayProxyEvent,
   parsePayload: (body: Option<string>) => Payload | Ignorable | Error,
   toDynamoEvent: (payload: Payload, metaData?: MetaData) => Promise<SubscriptionEvent>,

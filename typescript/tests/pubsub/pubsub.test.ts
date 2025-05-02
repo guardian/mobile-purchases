@@ -1,17 +1,17 @@
 import { HTTPResponses } from '../../src/models/apiGatewayHttp';
 import { SubscriptionEvent } from '../../src/models/subscriptionEvent';
 import {
-  toDynamoEvent_v4_apple as applePayloadToDynamo,
+  toDynamoEvent_apple_async as applePayloadToDynamo,
   toSqsSubReference as toAppleSqsEvent,
 } from '../../src/pubsub/apple';
 import type { StatusUpdateNotification } from '../../src/pubsub/apple-common';
 import { parsePayload as parseApplePayload } from '../../src/pubsub/apple-common';
 import {
-  toDynamoEvent_v2 as googlePayloadToDynamo,
+  toDynamoEvent_google_async as googlePayloadToDynamo,
   parsePayload as parseGooglePayload,
   toSqsSubReference as toGoogleSqsEvent,
 } from '../../src/pubsub/google-common';
-import { parseStoreAndSend_v2 } from '../../src/pubsub/pubsub';
+import { parseStoreAndSend_async } from '../../src/pubsub/pubsub';
 import Mock = jest.Mock;
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 
@@ -114,7 +114,7 @@ describe('The google pubsub', () => {
       subscriptionId: 'my.sku',
     };
 
-    return parseStoreAndSend_v2(
+    return parseStoreAndSend_async(
       input,
       parseGooglePayload,
       googlePayloadToDynamo,
@@ -183,7 +183,7 @@ describe('The google pubsub', () => {
       resource: '',
     };
 
-    const result = await parseStoreAndSend_v2(
+    const result = await parseStoreAndSend_async(
       input,
       parseGooglePayload,
       googlePayloadToDynamo,
@@ -250,7 +250,7 @@ describe('The google pubsub', () => {
       resource: '',
     };
 
-    const result = await parseStoreAndSend_v2(
+    const result = await parseStoreAndSend_async(
       input,
       parseGooglePayload,
       googlePayloadToDynamo,
@@ -415,7 +415,7 @@ describe('The apple pubsub', () => {
 
     const expectedSubscriptionReferenceInSqs = { receipt: 'TEST' };
 
-    return parseStoreAndSend_v2(
+    return parseStoreAndSend_async(
       input,
       parseApplePayload,
       (notification) => applePayloadToDynamo(notification, false),
