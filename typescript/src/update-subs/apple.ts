@@ -8,10 +8,11 @@ import { appleBundleToPlatform } from '../services/appToPlatform';
 import { PRODUCT_BILLING_PERIOD } from '../services/productBillingPeriod';
 import { dateToSecondTimestamp, thirtyMonths } from '../utils/dates';
 import { parseAndStoreSubscriptionUpdate } from './updatesub';
+import { transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
-export function toAppleSubscription(
+export async function toAppleSubscription_v2(
   response: AppleValidationResponse,
-): Subscription {
+): Promise<Subscription> {
   const latestReceiptInfo = response.latestReceiptInfo;
 
   let autoRenewStatus = false;
@@ -31,21 +32,34 @@ export function toAppleSubscription(
     );
   }
 
-  return new Subscription(
-    latestReceiptInfo.originalTransactionId,
-    latestReceiptInfo.originalPurchaseDate.toISOString(),
-    latestReceiptInfo.expiresDate.toISOString(),
-    cancellationDate,
-    autoRenewStatus,
-    latestReceiptInfo.productId,
-    appleBundleToPlatform(response.latestReceiptInfo.bundleId)?.toString(),
-    latestReceiptInfo.trialPeriod || latestReceiptInfo.inIntroOfferPeriod,
-    billingPeriod,
-    null,
-    response.latestReceipt,
-    response.originalResponse,
-    dateToSecondTimestamp(thirtyMonths(latestReceiptInfo.expiresDate)),
+  var extra = '';
+
+  // Defining the two variables we need to call for the extra data
+  const transaction_id: string = response.latestReceiptInfo.originalTransactionId;
+  const appBundleId: string | undefined = response.latestReceiptInfo.bundleId;
+  if (appBundleId !== undefined) {
+    const extra_object = await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(appBundleId, transaction_id); 
+    extra = JSON.stringify(extra_object);
+  }
+
+  const subscription =  new Subscription(
+    latestReceiptInfo.originalTransactionId, // subscriptionId
+    latestReceiptInfo.originalPurchaseDate.toISOString(), // startTimestamp
+    latestReceiptInfo.expiresDate.toISOString(), // endTimestamp
+    cancellationDate, // cancellationTimestamp
+    autoRenewStatus, // autoRenewing
+    latestReceiptInfo.productId, // productId
+    appleBundleToPlatform(response.latestReceiptInfo.bundleId)?.toString(), // platform
+    latestReceiptInfo.trialPeriod || latestReceiptInfo.inIntroOfferPeriod, // freeTrial
+    billingPeriod, // billingPeriod
+    null, // googlePayload
+    response.latestReceipt, // receipt
+    response.originalResponse, // applePayload
+    dateToSecondTimestamp(thirtyMonths(latestReceiptInfo.expiresDate)), // ttl
+    extra, // extra
   );
+
+  return Promise.resolve(subscription);
 }
 
 function sqsRecordToAppleSubscription(
@@ -55,8 +69,8 @@ function sqsRecordToAppleSubscription(
 
   // sandboxRetry is set to false such that in production we don't store any sandbox receipt that would have snuck all the way here
   // In CODE or locally the default endpoint will be sanbox therefore no retry is necessary
-  return validateReceipt(subRef.receipt, { sandboxRetry: false }).then((subs) =>
-    subs.map(toAppleSubscription),
+  return validateReceipt(subRef.receipt, { sandboxRetry: false }).then(async (subs) =>
+    Promise.all(subs.map(toAppleSubscription_v2)),
   ); // `subs` here is a AppleValidationResponse[]
 }
 

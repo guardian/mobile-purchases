@@ -8,7 +8,7 @@ import type {
   ValidationOptions,
 } from '../../services/appleValidateReceipts';
 import { validateReceipt } from '../../services/appleValidateReceipts';
-import { toAppleSubscription } from '../../update-subs/apple';
+import { toAppleSubscription_v2 } from '../../update-subs/apple';
 import { postPayloadToAcquisitionAPI } from './common';
 import type {
   AcquisitionApiPayload,
@@ -116,7 +116,7 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
   );
   const promises = appleValidationResponses.map(
     async (appleValidationResponse) => {
-      const appleSubscription: Subscription = toAppleSubscription(
+      const appleSubscription: Subscription = await toAppleSubscription_v2(
         appleValidationResponse,
       );
       console.log(
