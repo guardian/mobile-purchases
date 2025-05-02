@@ -8,6 +8,7 @@ import { dateToSecondTimestamp, thirtyMonths } from '../utils/dates';
 import type { StatusUpdateNotification } from './apple-common';
 import { parsePayload } from './apple-common';
 import { parseStoreAndSend } from './pubsub';
+import { AppleStoreKitSubscriptionDataDerivationForExtra, transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
 export function toDynamoEvent(
   notification: StatusUpdateNotification,
@@ -33,7 +34,7 @@ export function toDynamoEvent(
     );
   }
 
-  const sortByExpiryDate = receiptInfo.sort((receipt1, receipt2) => {
+  const receiptsInOrder = receiptInfo.sort((receipt1, receipt2) => {
     return (
       Number.parseInt(receipt2.purchase_date_ms) -
       Number.parseInt(receipt1.purchase_date_ms)
@@ -42,8 +43,8 @@ export function toDynamoEvent(
 
   // The Guardian's "free trial" period definition is slightly different from Apple, hence why we test for is_in_intro_offer_period
   const freeTrial =
-    sortByExpiryDate[0].is_trial_period === 'true' ||
-    sortByExpiryDate[0].is_in_intro_offer_period === 'true';
+    receiptsInOrder[0].is_trial_period === 'true' ||
+    receiptsInOrder[0].is_in_intro_offer_period === 'true';
 
   // Preventin:g ERROR: Unable to process event[object Object] ValidationException: Item size has exceeded the maximum allowed size
   // Which for some reasons has only been observed in CODE
@@ -55,8 +56,12 @@ export function toDynamoEvent(
     notification.unified_receipt.latest_receipt = '';
   }
 
+  // Defining the two variables we need to call for the extra data
+  const original_transaction_id = receiptsInOrder[0].original_transaction_id;
+  const appBundleId = notification.bid;
+
   return new SubscriptionEvent(
-    sortByExpiryDate[0].original_transaction_id,
+    receiptsInOrder[0].original_transaction_id,
     now.toISOString() + '|' + eventType,
     now.toISOString().substr(0, 10),
     now.toISOString(),
