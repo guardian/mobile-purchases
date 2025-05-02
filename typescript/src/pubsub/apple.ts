@@ -10,8 +10,9 @@ import { parsePayload } from './apple-common';
 import { parseStoreAndSend_v2 } from './pubsub';
 import { AppleStoreKitSubscriptionDataDerivationForExtra, transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
-export async function toDynamoEvent_v2(
+export async function toDynamoEvent_v4_apple(
   notification: StatusUpdateNotification,
+  useStoreKitForExtra: boolean
 ): Promise<SubscriptionEvent> {
   const now = new Date();
   const eventType = notification.notification_type;
@@ -56,9 +57,14 @@ export async function toDynamoEvent_v2(
     notification.unified_receipt.latest_receipt = '';
   }
 
-  // Defining the two variables we need to call for the extra data
-  const original_transaction_id = receiptsInOrder[0].original_transaction_id;
-  const appBundleId = notification.bid;
+  var extra = '';
+  if (useStoreKitForExtra) {
+    // Defining the two variables we need to call for the extra data
+    const original_transaction_id = receiptsInOrder[0].original_transaction_id;
+    const appBundleId = notification.bid;
+    const extra_object = await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(appBundleId, original_transaction_id); 
+    extra = JSON.stringify(extra_object);
+  }
 
   const subscription = new SubscriptionEvent(
     receiptsInOrder[0].original_transaction_id,
@@ -77,7 +83,7 @@ export async function toDynamoEvent_v2(
     notification.product_id, // SubscriptionEvent.product_id
     notification.purchase_date_ms, // SubscriptionEvent.purchase_date_ms
     notification.expires_date_ms, // SubscriptionEvent.expires_date_ms
-    '',
+    extra,
   );
 
   return Promise.resolve(subscription);
@@ -112,7 +118,7 @@ export async function handler(
   return parseStoreAndSend_v2(
     request,
     parsePayload,
-    (notification: StatusUpdateNotification) => toDynamoEvent_v2(notification),
+    (notification: StatusUpdateNotification) => toDynamoEvent_v4_apple(notification, true),
     toSqsSubReference,
     () => Promise.resolve(undefined),
   );
