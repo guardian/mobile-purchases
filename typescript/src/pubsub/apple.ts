@@ -10,7 +10,7 @@ import { parsePayload } from './apple-common';
 import { parseStoreAndSend_async } from './pubsub';
 import { AppleStoreKitSubscriptionDataDerivationForExtra, transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
-export async function toDynamoEvent_v4_apple(
+export async function toDynamoEvent_apple_async(
   notification: StatusUpdateNotification,
   useStoreKitForExtra: boolean
 ): Promise<SubscriptionEvent> {
@@ -118,7 +118,7 @@ export async function handler(
   return parseStoreAndSend_async(
     request,
     parsePayload,
-    (notification: StatusUpdateNotification) => toDynamoEvent_v4_apple(notification, true),
+    (notification: StatusUpdateNotification) => toDynamoEvent_apple_async(notification, true),
     toSqsSubReference,
     () => Promise.resolve(undefined),
   );

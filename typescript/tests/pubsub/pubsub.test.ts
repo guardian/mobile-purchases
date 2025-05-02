@@ -1,7 +1,7 @@
 import { HTTPResponses } from '../../src/models/apiGatewayHttp';
 import { SubscriptionEvent } from '../../src/models/subscriptionEvent';
 import {
-  toDynamoEvent_v4_apple as applePayloadToDynamo,
+  toDynamoEvent_apple_async as applePayloadToDynamo,
   toSqsSubReference as toAppleSqsEvent,
 } from '../../src/pubsub/apple';
 import type { StatusUpdateNotification } from '../../src/pubsub/apple-common';
