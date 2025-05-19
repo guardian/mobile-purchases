@@ -9,8 +9,7 @@
     "test": "jest",
     "test-lambda": "yarn build:dev && node ./tsc-target/test-launcher.js",
     "lint": "eslint ./typescript --ext .ts",
-    "lint-fix": "eslint ./typescript --ext .ts --fix",
-    "android-price-rise": "AWS_PROFILE=mobile ts-node ./typescript/src/scripts/android-price-rise/runPriceRise.ts"
+    "lint-fix": "eslint ./typescript --ext .ts --fix"
   },
   "repository": {
     "type": "git",
