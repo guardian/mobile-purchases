@@ -58,12 +58,16 @@ export async function toDynamoEvent_apple_async(
   }
 
   var extra = '';
+  console.log(`[f0736bbc] useStoreKitForExtra: ${useStoreKitForExtra}`);
   if (useStoreKitForExtra) {
     // Defining the two variables we need to call for the extra data
     const original_transaction_id = receiptsInOrder[0].original_transaction_id;
     const appBundleId = notification.bid;
     const extra_object = await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(appBundleId, original_transaction_id); 
     extra = JSON.stringify(extra_object);
+    console.log(`[8250388c] original_transaction_id: ${original_transaction_id}`);
+    console.log(`[6081748f] appBundleId: ${appBundleId}`);
+    console.log(`[ffa2b2a7] extra: ${extra}`);
   }
 
   const subscription = new SubscriptionEvent(
