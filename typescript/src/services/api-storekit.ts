@@ -9,42 +9,42 @@ const jwt = require('jsonwebtoken');
 // and contains information that are required to build an AcquisitionApiPayload
 
 export interface AppleStoreKitSubscriptionData {
-  transactionId: string,
-  originalTransactionId: string,
-  webOrderLineItemId: string,
-  bundleId: string,
-  productId: string,
-  subscriptionGroupIdentifier: string,
-  purchaseDate: number,
-  originalPurchaseDate: number,
-  expiresDate: number,
-  quantity: number,
-  type: string,
-  appAccountToken: string,
-  inAppOwnershipType: string,
-  signedDate: number,
-  offerType: number,
-  environment: string,
-  transactionReason: string,
-  storefront: string,
-  storefrontId: string,
-  price: number,
-  currency: string,
-  offerDiscountType: string
+    transactionId: string;
+    originalTransactionId: string;
+    webOrderLineItemId: string;
+    bundleId: string;
+    productId: string;
+    subscriptionGroupIdentifier: string;
+    purchaseDate: number;
+    originalPurchaseDate: number;
+    expiresDate: number;
+    quantity: number;
+    type: string;
+    appAccountToken: string;
+    inAppOwnershipType: string;
+    signedDate: number;
+    offerType: number;
+    environment: string;
+    transactionReason: string;
+    storefront: string;
+    storefrontId: string;
+    price: number;
+    currency: string;
+    offerDiscountType: string;
 }
 
 // AppleStoreKitSubscriptionDataDerivationForFeastPipeline is derived from AppleStoreKitSubscriptionData
 export interface AppleStoreKitSubscriptionDataDerivationForFeastPipeline {
-  transactionId: string;
-  country: string; // country as two letter code
-  currency: string; // currency as three letter code
-  paymentFrequency: string;
-  // Same values as AcquisitionApiPayload.paymentFrequency
-  // "ONE_OFF"
-  // "MONTHLY"
-  // "QUARTERLY"
-  // "SIX_MONTHLY"
-  // "ANNUALLY"
+    transactionId: string;
+    country: string; // country as two letter code
+    currency: string; // currency as three letter code
+    paymentFrequency: string;
+    // Same values as AcquisitionApiPayload.paymentFrequency
+    // "ONE_OFF"
+    // "MONTHLY"
+    // "QUARTERLY"
+    // "SIX_MONTHLY"
+    // "ANNUALLY"
 }
 
 // AppleStoreKitSubscriptionDataDerivationForExtra is derived from AppleStoreKitSubscriptionData
@@ -54,52 +54,57 @@ export interface AppleStoreKitSubscriptionDataDerivationForFeastPipeline {
 // we introduce a guVersion, which is going to be incremented if there is any non backward compatible
 // change in that structure.
 
-export type AppleStoreKitSubscriptionDataDerivationForExtra = AppleStoreKitSubscriptionData & {  guType: "apple-extra-2025-04-29" }
+export type AppleStoreKitSubscriptionDataDerivationForExtra = AppleStoreKitSubscriptionData & {
+    guType: 'apple-extra-2025-04-29';
+};
 
 interface AppleLatestReceiptInfoItem {
-  transaction_id: string;
+    transaction_id: string;
 }
 type AppleLatestReceiptInfo = AppleLatestReceiptInfoItem[];
 
-export const transactionIdToAppleStoreKitSubscriptionData = async (appBundleId: string, transactionId: string): Promise<AppleStoreKitSubscriptionData> => {
-  console.log(`[116fa7d4] transactionId: ${transactionId}`);
+export const transactionIdToAppleStoreKitSubscriptionData = async (
+    appBundleId: string,
+    transactionId: string,
+): Promise<AppleStoreKitSubscriptionData> => {
+    console.log(`[116fa7d4] transactionId: ${transactionId}`);
 
-  const url = `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${transactionId}`;
-  console.log(`[5330931d] url: ${url}`);
-  
-  const token = await forgeStoreKitBearerToken(appBundleId);
+    const url = `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${transactionId}`;
+    console.log(`[5330931d] url: ${url}`);
 
-  console.log(`[f1335718] ${token}`);
+    const token = await forgeStoreKitBearerToken(appBundleId);
 
-  const params = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  };
+    console.log(`[f1335718] ${token}`);
 
-  let json;
+    const params = {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    };
 
-  try {
-    console.log(`[0f984ea0] ${JSON.stringify(params)}`);
-    const response = await fetch(url, params);
-    if (response.ok) {
-      json = await response.json();
-    } else {
-      console.error(`[661fe1aa] error: fetch failed: ${response.status}`);
+    let json;
+
+    try {
+        console.log(`[0f984ea0] ${JSON.stringify(params)}`);
+        const response = await fetch(url, params);
+        if (response.ok) {
+            json = await response.json();
+        } else {
+            console.error(`[661fe1aa] error: fetch failed: ${response.status}`);
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error(`[c63b76d3] error: fetch failed: ${error.message}`);
+        } else {
+            console.error(`[e9848cd6] error: fetch failed: ${JSON.stringify(error)}`);
+        }
     }
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(`[c63b76d3] error: fetch failed: ${error.message}`);
-    } else {
-      console.error(`[e9848cd6] error: fetch failed: ${JSON.stringify(error)}`);
-    }
-  }
 
-  console.log(`[55ca8e2c] ${JSON.stringify(json)}`);
+    console.log(`[55ca8e2c] ${JSON.stringify(json)}`);
 
-  /*
+    /*
     {
         "environment": "Production",
         "bundleId": "uk.co.guardian.Feast",
@@ -114,37 +119,37 @@ export const transactionIdToAppleStoreKitSubscriptionData = async (appBundleId: 
                         "signedTransactionInfo": "eyJhbGciOeUJEWlhKMGF[removed]"
     */
 
-  // extracting signedTransactionInfo
-  // Currently doing it by hand but it will be validated with zod in a coming refactoring
+    // extracting signedTransactionInfo
+    // Currently doing it by hand but it will be validated with zod in a coming refactoring
 
-  const data = json.data;
-  if (data === undefined) {
-    throw new Error('[92d086b6] json.data is undefined');
-  }
-  if (data.length === 0) {
-    throw new Error('[2ee57da0] json.data is empty');
-  }
-  const item1 = data[0];
-  const lastTransactions = item1.lastTransactions;
-  if (lastTransactions === undefined) {
-    throw new Error('[553620b1] json.data[0].lastTransactions is undefined');
-  }
-  if (lastTransactions.length === 0) {
-    throw new Error('[2b6cd147] json.data[0].lastTransactions is empty');
-  }
-  const item2 = lastTransactions[0];
-  const signedTransactionInfo = item2.signedTransactionInfo;
-  if (signedTransactionInfo === undefined) {
-    throw new Error(
-      '[f147df3e] json.data[0].lastTransactions[0].signedTransactionInfo is undefined',
-    );
-  }
+    const data = json.data;
+    if (data === undefined) {
+        throw new Error('[92d086b6] json.data is undefined');
+    }
+    if (data.length === 0) {
+        throw new Error('[2ee57da0] json.data is empty');
+    }
+    const item1 = data[0];
+    const lastTransactions = item1.lastTransactions;
+    if (lastTransactions === undefined) {
+        throw new Error('[553620b1] json.data[0].lastTransactions is undefined');
+    }
+    if (lastTransactions.length === 0) {
+        throw new Error('[2b6cd147] json.data[0].lastTransactions is empty');
+    }
+    const item2 = lastTransactions[0];
+    const signedTransactionInfo = item2.signedTransactionInfo;
+    if (signedTransactionInfo === undefined) {
+        throw new Error(
+            '[f147df3e] json.data[0].lastTransactions[0].signedTransactionInfo is undefined',
+        );
+    }
 
-  console.log(`[c5dabbcc] ${signedTransactionInfo}`);
+    console.log(`[c5dabbcc] ${signedTransactionInfo}`);
 
-  const data1 = jwt.decode(signedTransactionInfo) as AppleStoreKitSubscriptionData;
+    const data1 = jwt.decode(signedTransactionInfo) as AppleStoreKitSubscriptionData;
 
-  /* 
+    /* 
   sanitized version:
   {
     "transactionId": "220002344001105",
@@ -172,46 +177,48 @@ export const transactionIdToAppleStoreKitSubscriptionData = async (appBundleId: 
   }
   */
 
-  return Promise.resolve(data1);
-}
+    return Promise.resolve(data1);
+};
 
 const appleSubscriptionToOriginalTransactionId = (subscription: Subscription): string => {
-  const latest_receipt_info = subscription.applePayload?.latest_receipt_info as AppleLatestReceiptInfo;
-  if (latest_receipt_info.length === 0) {
-    throw new Error('[3b5a2b0d] latest_receipt_info is empty');
-  }
-  const transactionId = latest_receipt_info[0].transaction_id;
-  return transactionId;
-} 
+    const latest_receipt_info = subscription.applePayload
+        ?.latest_receipt_info as AppleLatestReceiptInfo;
+    if (latest_receipt_info.length === 0) {
+        throw new Error('[3b5a2b0d] latest_receipt_info is empty');
+    }
+    const transactionId = latest_receipt_info[0].transaction_id;
+    return transactionId;
+};
 
 export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline = async (
     subscription: Subscription,
 ): Promise<AppleStoreKitSubscriptionDataDerivationForFeastPipeline> => {
-  /*
+    /*
       This function takes a Subscription and returns a derivation of 
       the data that is retrieved from the Apple API
       at https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/{transactionId}
   */
 
-  console.log(`[940dc079] ${new Date()}`);
+    console.log(`[940dc079] ${new Date()}`);
 
-  const transactionId = appleSubscriptionToOriginalTransactionId(subscription);
+    const transactionId = appleSubscriptionToOriginalTransactionId(subscription);
 
-  const appBundleId = await getConfigValue<string>(
-    'feastAppleStoreKitConfigAppBunbleId',
-  );
+    const appBundleId = await getConfigValue<string>('feastAppleStoreKitConfigAppBunbleId');
 
-  console.log(`[52c0e2ef] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
+    console.log(`[52c0e2ef] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
 
-  const appleStoreKitSubscriptionData: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
+    const appleStoreKitSubscriptionData: AppleStoreKitSubscriptionData =
+        await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
 
-  console.log(`[7f53de39] appleStoreKitSubscriptionData: ${JSON.stringify(appleStoreKitSubscriptionData)}`);
+    console.log(
+        `[7f53de39] appleStoreKitSubscriptionData: ${JSON.stringify(appleStoreKitSubscriptionData)}`,
+    );
 
-  const country = storefrontToCountry(appleStoreKitSubscriptionData.storefront);
-  const currency = appleStoreKitSubscriptionData.currency;
-  const paymentFrequency = productIdToPaymentFrequency(appleStoreKitSubscriptionData.productId);
+    const country = storefrontToCountry(appleStoreKitSubscriptionData.storefront);
+    const currency = appleStoreKitSubscriptionData.currency;
+    const paymentFrequency = productIdToPaymentFrequency(appleStoreKitSubscriptionData.productId);
 
-  /*
+    /*
       appleSubscriptionData (anonymized)
       {
           "transactionId": "2200001105",
@@ -247,24 +254,30 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
       }
   */
 
-  return {
-    transactionId,
-    country,
-    currency,
-    paymentFrequency,
-  };
+    return {
+        transactionId,
+        country,
+        currency,
+        paymentFrequency,
+    };
 };
 
-export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (appBundleId: string, transactionId: string): Promise<AppleStoreKitSubscriptionDataDerivationForExtra> => {
-  // This function builds a AppleStoreKitSubscriptionData, and just adds the guType key to make it a
-  // AppleStoreKitSubscriptionDataDerivationForExtra
+export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (
+    appBundleId: string,
+    transactionId: string,
+): Promise<AppleStoreKitSubscriptionDataDerivationForExtra> => {
+    // This function builds a AppleStoreKitSubscriptionData, and just adds the guType key to make it a
+    // AppleStoreKitSubscriptionDataDerivationForExtra
 
-  console.log(`[e2b0930d] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
+    console.log(`[e2b0930d] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
 
-  const data1: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
-  const data2: AppleStoreKitSubscriptionDataDerivationForExtra = {
-    guType: "apple-extra-2025-04-29",
-    ...data1
-  }
-  return Promise.resolve(data2)
-}
+    const data1: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(
+        appBundleId,
+        transactionId,
+    );
+    const data2: AppleStoreKitSubscriptionDataDerivationForExtra = {
+        guType: 'apple-extra-2025-04-29',
+        ...data1,
+    };
+    return Promise.resolve(data2);
+};

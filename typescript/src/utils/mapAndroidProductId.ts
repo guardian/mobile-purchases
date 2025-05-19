@@ -6,16 +6,13 @@ import { googlePackageNameToPlatform } from '../services/appToPlatform';
 // product_id is already distinct and there are mechanisms for filtering out in
 // the lake.
 export const mapAndroidProductId = (
-  productId: string,
-  packageName: string,
-  isTestPurchase: boolean,
+    productId: string,
+    packageName: string,
+    isTestPurchase: boolean,
 ): string => {
-  if (
-    isTestPurchase &&
-    googlePackageNameToPlatform(packageName) === Platform.AndroidFeast
-  ) {
-    return 'dev_testing_feast';
-  }
+    if (isTestPurchase && googlePackageNameToPlatform(packageName) === Platform.AndroidFeast) {
+        return 'dev_testing_feast';
+    }
 
-  return productId;
+    return productId;
 };

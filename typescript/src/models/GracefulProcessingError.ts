@@ -1,8 +1,8 @@
 export class GracefulProcessingError extends Error {
-  message: string;
+    message: string;
 
-  constructor(message: string, shouldRetry?: boolean) {
-    super(message);
-    this.message = message;
-  }
+    constructor(message: string, shouldRetry?: boolean) {
+        super(message);
+        this.message = message;
+    }
 }
