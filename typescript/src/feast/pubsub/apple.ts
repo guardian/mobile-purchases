@@ -10,65 +10,61 @@ import { parsePayload } from '../../pubsub/apple-common';
 import { dynamoMapper, sendToSqs } from '../../utils/aws';
 
 const defaultLogRequest = (request: APIGatewayProxyEvent): void =>
-  console.log(`[34ef7aa3] ${JSON.stringify(request)}`);
+    console.log(`[34ef7aa3] ${JSON.stringify(request)}`);
 
-const defaultStoreEventInDynamo = async (
-  event: StatusUpdateNotification,
-): Promise<void> => {
-  const item = await toDynamoEvent_apple_async(event, true);
-  return dynamoMapper.put({ item }).then((_) => undefined);
+const defaultStoreEventInDynamo = async (event: StatusUpdateNotification): Promise<void> => {
+    const item = await toDynamoEvent_apple_async(event, true);
+    return dynamoMapper.put({ item }).then((_) => undefined);
 };
 
 export function buildHandler(
-  sendMessageToSqs: (
-    queueUrl: string,
-    message: AppleSubscriptionReference,
-  ) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
-  storeEventInDynamo: (
-    event: StatusUpdateNotification,
-  ) => Promise<void> = defaultStoreEventInDynamo,
-  logRequest: (request: APIGatewayProxyEvent) => void = defaultLogRequest,
+    sendMessageToSqs: (
+        queueUrl: string,
+        message: AppleSubscriptionReference,
+    ) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
+    storeEventInDynamo: (
+        event: StatusUpdateNotification,
+    ) => Promise<void> = defaultStoreEventInDynamo,
+    logRequest: (request: APIGatewayProxyEvent) => void = defaultLogRequest,
 ): (request: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult> {
-  return async (request: APIGatewayProxyEvent) => {
-    const secret = process.env.Secret;
+    return async (request: APIGatewayProxyEvent) => {
+        const secret = process.env.Secret;
 
-    if (secret === undefined) {
-      console.error("PubSub secret in env is 'undefined'");
-      return HTTPResponses.INTERNAL_ERROR;
-    }
-
-    if (request.queryStringParameters?.secret === secret) {
-      logRequest(request);
-
-      const statusUpdateNotification = parsePayload(request.body);
-      if (statusUpdateNotification instanceof Error) {
-        return HTTPResponses.INVALID_REQUEST;
-      }
-
-      const appleSubscriptionReference = toSqsSubReference(
-        statusUpdateNotification,
-      );
-
-      try {
-        const queueUrl = process.env.QueueUrl;
-        if (queueUrl === undefined) {
-          throw new Error('No QueueUrl env parameter provided');
+        if (secret === undefined) {
+            console.error("PubSub secret in env is 'undefined'");
+            return HTTPResponses.INTERNAL_ERROR;
         }
 
-        await Promise.all([
-          sendMessageToSqs(queueUrl, appleSubscriptionReference),
-          storeEventInDynamo(statusUpdateNotification),
-        ]);
+        if (request.queryStringParameters?.secret === secret) {
+            logRequest(request);
 
-        return HTTPResponses.OK;
-      } catch (e) {
-        console.error('Internal server error', e);
-        return HTTPResponses.INTERNAL_ERROR;
-      }
-    } else {
-      return HTTPResponses.UNAUTHORISED;
-    }
-  };
+            const statusUpdateNotification = parsePayload(request.body);
+            if (statusUpdateNotification instanceof Error) {
+                return HTTPResponses.INVALID_REQUEST;
+            }
+
+            const appleSubscriptionReference = toSqsSubReference(statusUpdateNotification);
+
+            try {
+                const queueUrl = process.env.QueueUrl;
+                if (queueUrl === undefined) {
+                    throw new Error('No QueueUrl env parameter provided');
+                }
+
+                await Promise.all([
+                    sendMessageToSqs(queueUrl, appleSubscriptionReference),
+                    storeEventInDynamo(statusUpdateNotification),
+                ]);
+
+                return HTTPResponses.OK;
+            } catch (e) {
+                console.error('Internal server error', e);
+                return HTTPResponses.INTERNAL_ERROR;
+            }
+        } else {
+            return HTTPResponses.UNAUTHORISED;
+        }
+    };
 }
 
 export const handler = buildHandler();

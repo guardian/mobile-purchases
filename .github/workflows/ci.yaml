@@ -3,112 +3,112 @@ name: CI
 on: [push]
 
 jobs:
-  CI:
-    runs-on: ubuntu-latest
+    CI:
+        runs-on: ubuntu-latest
 
-    permissions:
-      id-token: write
-      contents: read
-      pull-requests: write #required by guardian/actions-riff-raff
+        permissions:
+            id-token: write
+            contents: read
+            pull-requests: write #required by guardian/actions-riff-raff
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: yarn
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: yarn
 
-      - name: Setup JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: corretto
-          java-version: 11
-          cache: sbt
+            - name: Setup JDK
+              uses: actions/setup-java@v4
+              with:
+                  distribution: corretto
+                  java-version: 11
+                  cache: sbt
 
-      - name: Setup Scala
-        uses: guardian/setup-scala@v1
+            - name: Setup Scala
+              uses: guardian/setup-scala@v1
 
-      - name: Test and Build TypeScript
-        run: ./build-tc.sh
+            - name: Test and Build TypeScript
+              run: ./build-tc.sh
 
-      - name: Test and Build Scala
-        run: sbt test assembly
+            - name: Test and Build Scala
+              run: sbt test assembly
 
-      - name: Generate CFN templates using GuCDK
-        run: bash ./script/cdk-synth.sh
+            - name: Generate CFN templates using GuCDK
+              run: bash ./script/cdk-synth.sh
 
-      - name: Upload to Riff-Raff
-        uses: guardian/actions-riff-raff@v4
-        with:
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
-          projectName: Mobile::mobile-purchases
-          buildNumberOffset: 2740
-          configPath: riff-raff.yaml
-          contentDirectories: |
-            mobile-purchases-feast-cloudformation:
-              - cdk/cdk.out/MobilePurchasesFeast-CODE.template.json
-              - cdk/cdk.out/MobilePurchasesFeast-PROD.template.json
-            mobile-purchases-cloudformation:
-              - cloudformation.yaml
-            mobile-purchases-dynamo-cloudformation:
-              - dynamo.cloudformation.yaml
-            mobile-purchases-exports-cloudformation:
-              - exports-cloudformation.yaml
-            mobile-purchases-google-oauth:
-              - scala/google-oauth/target/scala-2.12/mobile-purchases-google-oauth.jar
-            mobile-purchases-apple-fetch-offer-details:
-              - tsc-target/apple-fetch-offer-details.zip
-            mobile-purchases-apple-link-user-subscription:
-              - tsc-target/apple-link-user-subscription.zip
-            mobile-purchases-apple-pubsub:
-              - tsc-target/apple-pubsub.zip
-            mobile-purchases-apple-revalidate-receipts:
-              - tsc-target/apple-revalidate-receipts.zip
-            mobile-purchases-apple-subscription-status:
-              - tsc-target/apple-subscription-status.zip
-            mobile-purchases-apple-update-subscriptions:
-              - tsc-target/apple-update-subscriptions.zip
-            mobile-purchases-delete-user-subscription:
-              - tsc-target/delete-user-subscription.zip
-            mobile-purchases-export-historical-data:
-              - tsc-target/export-historical-data.zip
-            mobile-purchases-export-subscription-events-table:
-              - tsc-target/export-subscription-events-table.zip
-            mobile-purchases-export-subscription-table-v2:
-              - tsc-target/export-subscription-table-v2.zip
-            mobile-purchases-export-subscription-tables:
-              - tsc-target/export-subscription-tables.zip
-            mobile-purchases-google-link-user-subscription:
-              - tsc-target/google-link-user-subscription.zip
-            mobile-purchases-google-pubsub:
-              - tsc-target/google-pubsub.zip
-            mobile-purchases-google-subscription-status:
-              - tsc-target/google-subscription-status.zip
-            mobile-purchases-google-update-subscriptions:
-              - tsc-target/google-update-subscriptions.zip
-            mobile-purchases-soft-opt-in-acquisitions-dlq-processor:
-              - tsc-target/soft-opt-in-acquisitions-dlq-processor.zip
-            mobile-purchases-soft-opt-in-acquisitions:
-              - tsc-target/soft-opt-in-acquisitions.zip
-            mobile-purchases-user-subscriptions:
-              - tsc-target/user-subscriptions.zip
-            mobile-purchases-feast-apple-pubsub:
-              - tsc-target/feast-apple-pubsub.zip
-            mobile-purchases-feast-apple-update-subscriptions:
-              - tsc-target/feast-apple-update-subscriptions.zip
-            mobile-purchases-feast-google-pubsub:
-              - tsc-target/feast-google-pubsub.zip
-            mobile-purchases-feast-google-update-subscriptions:
-              - tsc-target/feast-google-update-subscriptions.zip
-            mobile-purchases-feast-acquisition-events-bus-cloudformation:
-              - feast-acquisition-events.cloudformation.yaml
-            mobile-purchases-feast-acquisition-events-router:
-              - tsc-target/feast-acquisition-events-router.zip
-            mobile-purchases-feast-apple-acquisition-events:
-              - tsc-target/feast-apple-acquisition-events.zip
-            mobile-purchases-feast-google-acquisition-events:
-              - tsc-target/feast-google-acquisition-events.zip
+            - name: Upload to Riff-Raff
+              uses: guardian/actions-riff-raff@v4
+              with:
+                  githubToken: ${{ secrets.GITHUB_TOKEN }}
+                  roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+                  projectName: Mobile::mobile-purchases
+                  buildNumberOffset: 2740
+                  configPath: riff-raff.yaml
+                  contentDirectories: |
+                      mobile-purchases-feast-cloudformation:
+                        - cdk/cdk.out/MobilePurchasesFeast-CODE.template.json
+                        - cdk/cdk.out/MobilePurchasesFeast-PROD.template.json
+                      mobile-purchases-cloudformation:
+                        - cloudformation.yaml
+                      mobile-purchases-dynamo-cloudformation:
+                        - dynamo.cloudformation.yaml
+                      mobile-purchases-exports-cloudformation:
+                        - exports-cloudformation.yaml
+                      mobile-purchases-google-oauth:
+                        - scala/google-oauth/target/scala-2.12/mobile-purchases-google-oauth.jar
+                      mobile-purchases-apple-fetch-offer-details:
+                        - tsc-target/apple-fetch-offer-details.zip
+                      mobile-purchases-apple-link-user-subscription:
+                        - tsc-target/apple-link-user-subscription.zip
+                      mobile-purchases-apple-pubsub:
+                        - tsc-target/apple-pubsub.zip
+                      mobile-purchases-apple-revalidate-receipts:
+                        - tsc-target/apple-revalidate-receipts.zip
+                      mobile-purchases-apple-subscription-status:
+                        - tsc-target/apple-subscription-status.zip
+                      mobile-purchases-apple-update-subscriptions:
+                        - tsc-target/apple-update-subscriptions.zip
+                      mobile-purchases-delete-user-subscription:
+                        - tsc-target/delete-user-subscription.zip
+                      mobile-purchases-export-historical-data:
+                        - tsc-target/export-historical-data.zip
+                      mobile-purchases-export-subscription-events-table:
+                        - tsc-target/export-subscription-events-table.zip
+                      mobile-purchases-export-subscription-table-v2:
+                        - tsc-target/export-subscription-table-v2.zip
+                      mobile-purchases-export-subscription-tables:
+                        - tsc-target/export-subscription-tables.zip
+                      mobile-purchases-google-link-user-subscription:
+                        - tsc-target/google-link-user-subscription.zip
+                      mobile-purchases-google-pubsub:
+                        - tsc-target/google-pubsub.zip
+                      mobile-purchases-google-subscription-status:
+                        - tsc-target/google-subscription-status.zip
+                      mobile-purchases-google-update-subscriptions:
+                        - tsc-target/google-update-subscriptions.zip
+                      mobile-purchases-soft-opt-in-acquisitions-dlq-processor:
+                        - tsc-target/soft-opt-in-acquisitions-dlq-processor.zip
+                      mobile-purchases-soft-opt-in-acquisitions:
+                        - tsc-target/soft-opt-in-acquisitions.zip
+                      mobile-purchases-user-subscriptions:
+                        - tsc-target/user-subscriptions.zip
+                      mobile-purchases-feast-apple-pubsub:
+                        - tsc-target/feast-apple-pubsub.zip
+                      mobile-purchases-feast-apple-update-subscriptions:
+                        - tsc-target/feast-apple-update-subscriptions.zip
+                      mobile-purchases-feast-google-pubsub:
+                        - tsc-target/feast-google-pubsub.zip
+                      mobile-purchases-feast-google-update-subscriptions:
+                        - tsc-target/feast-google-update-subscriptions.zip
+                      mobile-purchases-feast-acquisition-events-bus-cloudformation:
+                        - feast-acquisition-events.cloudformation.yaml
+                      mobile-purchases-feast-acquisition-events-router:
+                        - tsc-target/feast-acquisition-events-router.zip
+                      mobile-purchases-feast-apple-acquisition-events:
+                        - tsc-target/feast-apple-acquisition-events.zip
+                      mobile-purchases-feast-google-acquisition-events:
+                        - tsc-target/feast-google-acquisition-events.zip

@@ -9,6 +9,8 @@ yarn install
 
 yarn run clean
 
+yarn prettier:check
+
 yarn run test
 
 # Will place .js files in tsc-target
