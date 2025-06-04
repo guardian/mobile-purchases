@@ -1706,7 +1706,11 @@ Resources:
         - PolicyName: cloudwatch-list-tags
           PolicyDocument:
             Statement:
-              Effect: Allow
-              Action:
-                - cloudwatch:ListTagsForResource
-              Resource: "*"
+              - Effect: Allow
+                Action:
+                  - cloudwatch:ListTagsForResource
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - cloudwatch:DescribeAlarms
+                Resource: "*"
