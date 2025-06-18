@@ -122,6 +122,7 @@ const countryToCurrencyMap = {
     CL: 'CLP', // Chile - Chilean Peso
     CO: 'COP', // Colombia - Colombian Peso
     PE: 'PEN', // Peru - Peruvian Sol
+    TT: 'TTD', // Trinidad & Tobago
 
     // Oceania
     FJ: 'FJD', // Fiji - Fijian Dollar
