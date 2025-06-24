@@ -63,7 +63,7 @@ interface AppleLatestReceiptInfoItem {
 }
 type AppleLatestReceiptInfo = AppleLatestReceiptInfoItem[];
 
-export const transactionIdToAppleStoreKitSubscriptionData = async (
+const transactionIdToAppleStoreKitSubscriptionData = async (
     appBundleId: string,
     transactionId: string,
 ): Promise<AppleStoreKitSubscriptionData> => {
