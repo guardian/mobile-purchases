@@ -21,6 +21,8 @@ Make sure that you are using the Node version specified by the `.nvmrc` file. We
 
 eslint with prettier (including the guardian config) is now used to provide consistent formatting and linting. It is not yet mandatory, so doesn't yet exist as a pre-commit hook. To apply, run `yarn lint` or `yarn lint-fix`.
 
+Date: 26th June 2025. The above paragraph is actually not correct, we temporarily removed the linting because it wasn't not working. In the meantime do `yarn prettier:check` and `yarn prettier:fix`
+
 ### Data
 
 There are three Dynamo DB tables:

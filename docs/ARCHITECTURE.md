@@ -37,19 +37,23 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
                                                  --------------------------------------                                                                                            ( apple-historical-subscriptions )
                                                                                                                                                                                    ( google-historical-subscriptions )
 
-applepubsub
+queue: google-subscriptions-to-fetch
+    - SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch
+    - SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch-dlq
+
+lambda: applepubsub
     - code: src/pubsub/apple.ts
     - AWS function (s): mobile-purchases-applepubsub-PROD
                       : mobile-purchases-applepubsub-CODE
 
-apple-subscriptions-to-fetch
+lambda: apple-subscriptions-to-fetch
     - code: src/update-subs/apple.ts
     - AWS function (s): mobile-purchases-apple-update-subscriptions-PROD
 
-subscription-events-v2
+table: subscription-events-v2
     - Dynamo table: mobile-purchases-PROD-subscription-events-v2
 
-subscriptions
+table: subscriptions
     - Dynamo table: mobile-purchases-PROD-subscriptions
 
 ```
