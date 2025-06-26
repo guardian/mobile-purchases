@@ -99,9 +99,10 @@ export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscript
 }
 
 export async function handler(event: SQSEvent) {
-    const promises = event.Records.map((record) =>
-        parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse),
-    );
+    const promises = event.Records.map((record) => {
+        console.log(`[447bd6ea] event: ${JSON.stringify(record)}`);
+        return parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse);
+    });
 
     return Promise.all(promises).then((_) => 'OK');
 }
