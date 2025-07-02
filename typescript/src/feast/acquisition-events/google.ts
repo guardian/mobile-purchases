@@ -133,6 +133,7 @@ const countryToCurrencyMap = {
     RU: 'RUB', // Russia - Russian Ruble
     BZ: 'BZD', // Belize - Belize Dollar
     IL: 'ILS', // Israel - Israeli Shekel
+    KG: 'KGZ', // Kyrgyzstan
 };
 
 const countryToCurrency = (country: string): string => {
