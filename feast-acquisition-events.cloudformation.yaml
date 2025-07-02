@@ -61,6 +61,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${App}-${Stage}-feast-apple-acquisition-events-dlq
+      MessageRetentionPeriod: 1209600 # 14 days
       Tags:
         - Key: gu:repo
           Value: guardian/mobile-purchases
@@ -120,6 +121,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${App}-${Stage}-feast-google-acquisition-events-dlq
+      MessageRetentionPeriod: 1209600 # 14 days
       Tags:
         - Key: gu:repo
           Value: guardian/mobile-purchases
