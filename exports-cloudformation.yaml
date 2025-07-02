@@ -273,6 +273,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${App}-${Stage}-google-historical-subscriptions-dlq
+      MessageRetentionPeriod: 1209600 # 14 days
       KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: Stage
@@ -302,6 +303,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${App}-${Stage}-apple-historical-subscriptions-dlq
+      MessageRetentionPeriod: 1209600 # 14 days
       KmsMasterKeyId: alias/aws/sqs
       Tags:
         - Key: Stage
