@@ -134,6 +134,7 @@ const countryToCurrencyMap = {
     BZ: 'BZD', // Belize - Belize Dollar
     IL: 'ILS', // Israel - Israeli Shekel
     KG: 'KGS', // Kyrgyzstan - Kyrgystani Som
+    MU: 'MUR', // Republic of Mauritius  - Mauritian rupee
 };
 
 const countryToCurrency = (country: string): string => {
