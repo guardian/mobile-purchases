@@ -183,7 +183,7 @@ The update-subscriptions lambdas push onto an SQS queue for each change and this
 
 Dynamo tables:
     [01] mobile-purchases-PROD-subscription-events-v2
-    [02] Dynamo table: mobile-purchases-PROD-subscriptions
+    [02] mobile-purchases-PROD-subscriptions
 
 Lambda Functions:
     [03] mobile-purchases-export-google-historical-data-PROD
@@ -192,7 +192,7 @@ Lambda Functions:
     [06] mobile-purchases-export-subscription-table-v2-PROD
     [07] mobile-purchases-export-user-subscription-table-v2-PROD
 
-         mobile-purchases-export-subscription-table-PROD (failing run !)
+         mobile-purchases-export-subscription-table-PROD (replaced by v2 -- to be confirmed)
          mobile-purchases-export-user-subscription-table-PROD (in use ?)
 ```
 
