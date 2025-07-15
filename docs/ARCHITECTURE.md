@@ -161,31 +161,38 @@ The update-subscriptions lambdas push onto an SQS queue for each change and this
 
 (Unless otherwise specified elements are in the mobile aws account)
 
- --------------------------------------                  ---------------------------------------                ----                ------------------------------------------------
-| SQS: google-historical-subscriptions | -------------> | Lambda: export-google-historical-data | -------------| S3 |------------> | datalake.mobile_subscription_historical_google |
- --------------------------------------                  ---------------------------------------                ----                ------------------------------------------------
+ --------------------------------------                --------------------------------------------              ----              ------------------------------------------------
+| SQS: google-historical-subscriptions | -----------> | Lambda: export-google-historical-data [03] | -----------| S3 |----------> | datalake.mobile_subscription_historical_google |
+ --------------------------------------                --------------------------------------------              ----              ------------------------------------------------
 
- -------------------------------------                   --------------------------------------                 ----                -----------------------------------------------
-| SQS: apple-historical-subscriptions | --------------> | Lambda: export-apple-historical-data | --------------| S3 |------------> | datalake.mobile_subscription_historical_apple |
- -------------------------------------                   --------------------------------------                 ----                -----------------------------------------------
+ -------------------------------------                 -------------------------------------------               ----              -----------------------------------------------
+| SQS: apple-historical-subscriptions | ------------> | Lambda: export-apple-historical-data [04] | ------------| S3 |----------> | datalake.mobile_subscription_historical_apple |
+ -------------------------------------                 -------------------------------------------               ----              -----------------------------------------------
 
- --------------------------------------                  ------------------------------------------             ----                -------------------------------------
-| Dynamo Table: subscription-events-v2 |--------------> | Lambda: export-subscription-events-table | ----------| S3 |------------> | datalake.mobile_subscription_events |
- --------------------------------------                  ------------------------------------------             ----                -------------------------------------
+ -------------------------------------------           -----------------------------------------------           ----              -------------------------------------
+| Dynamo Table: subscription-events-v2 [01] |-------> | Lambda: export-subscription-events-table [05] | --------| S3 |----------> | datalake.mobile_subscription_events |
+ -------------------------------------------           -----------------------------------------------           ----              -------------------------------------
 
- -----------------------------                           --------------------------------------                 ----                -------------------------------
-| Dynamo Table: subscriptions | ----------------------> | Lambda: export-subscription-table-v2 | --------------| S3 |------------> | datalake.mobile_subscriptions |
- -----------------------------                           --------------------------------------                 ----                -------------------------------
+ ----------------------------------                    -------------------------------------------               ----              -------------------------------
+| Dynamo Table: subscriptions [02] | ---------------> | Lambda: export-subscription-table-v2 [06] | ------------| S3 |----------> | datalake.mobile_subscriptions |
+ ----------------------------------                    -------------------------------------------               ----              -------------------------------
 
- ----------------------------------                      -------------------------------------------            ----                ------------------------------------
-| Dynamo Table: user-subscriptions | -----------------> | Lambda: export-user-subscription-table-v2 | ---------| S3 |------------> | datalake.mobile_user_subscriptions |
- ----------------------------------                      -------------------------------------------            ----                ------------------------------------
+ ----------------------------------                    ------------------------------------------------          ----              ------------------------------------
+| Dynamo Table: user-subscriptions | ---------------> | Lambda: export-user-subscription-table-v2 [07] | -------| S3 |----------> | datalake.mobile_user_subscriptions |
+ ----------------------------------                    ------------------------------------------------          ----              ------------------------------------
 
-subscription-events-v2
-    - Dynamo table: mobile-purchases-PROD-subscription-events-v2
+Dynamo tables:
+    [01] mobile-purchases-PROD-subscription-events-v2
+    [02] mobile-purchases-PROD-subscriptions
 
-subscriptions
-    - Dynamo table: mobile-purchases-PROD-subscriptions
+Lambda Functions:
+    [03] mobile-purchases-export-google-historical-data-PROD
+    [04] mobile-purchases-export-apple-historical-data-PROD
+    [05] mobile-purchases-export-subscription-events-table-PROD
+    [06] mobile-purchases-export-subscription-table-v2-PROD
+    [07] mobile-purchases-export-user-subscription-table-v2-PROD
 
+         mobile-purchases-export-subscription-table-PROD (replaced by v2 -- to be confirmed)
+         mobile-purchases-export-user-subscription-table-PROD (in use ?)
 ```
 
