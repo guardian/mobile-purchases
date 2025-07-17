@@ -54,6 +54,14 @@ queue: google-subscriptions-to-fetch
     - SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch
     - SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch-dlq
 
+queue: feast-apple-subscriptions-to-fetch
+    - SQS queue: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch
+    - SQS queue: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch-dlq
+
+queue: feast-google-subscriptions-to-fetch
+    - SQS queue: mobile-purchases-PROD-feast-google-subscriptions-to-fetch
+    - SQS queue: mobile-purchases-PROD-feast-google-subscriptions-to-fetch-dlq
+
 table: subscription-events-v2
     - Dynamo table: mobile-purchases-PROD-subscription-events-v2
 
