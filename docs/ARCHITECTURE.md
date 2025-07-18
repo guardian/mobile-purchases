@@ -17,13 +17,13 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
                                                                                                                                                                 |
                                                                                                                                                                 | (fetch additional subscription data) 
                                                                                                                                                                 |
- ------------------------      HTTP via API Gateway        ----------------                         ------------                                         -----------------------------                        -----------------------------
-| App Store & Play Store | --------------------------->   | Pubsub Lambdas |      ---------------> | SQS Queues | --------------------------------------| Update subscription Lambdas | -------------------> | Dynamo Table: subscriptions |
- ------------------------                                  ----------------                         ------------                                         -----------------------------                        -----------------------------
-                                                          ( applepubsub )                          ( apple-subscriptions-to-fetch )                     ( apple-subscriptions-to-fetch )
-                                                          ( googlepubsub )                         ( google-subscriptions-to-fetch )                    ( google-subscriptions-to-fetch )
-                                                          ( feastapplepubsub )                     ( feast-apple-subscriptions-to-fetch )               ( feast-apple-subscriptions-to-fetch )
-                                                          ( feastgooglepubsub )                    ( feast-google-subscriptions-to-fetch )              ( feast-google-subscriptions-to-fetch )
+ ------------------------      HTTP via API Gateway        ----------------                         ------------                                         -----------------------------                        ----------------------------------
+| App Store & Play Store | --------------------------->   | Pubsub Lambdas |      ---------------> | SQS Queues | --------------------------------------| Update subscription Lambdas | -------------------> | Dynamo Table: subscriptions [08] |
+ ------------------------                                  ----------------                         ------------                                         -----------------------------                        ----------------------------------
+                                                          ( applepubsub )                          ( apple-subscriptions-to-fetch )                     ( apple-subscriptions-to-fetch [03] )
+                                                          ( googlepubsub )                         ( google-subscriptions-to-fetch [06] )               ( google-subscriptions-to-fetch [02] )
+                                                          ( feastapplepubsub )                     ( feast-apple-subscriptions-to-fetch [05] )          ( feast-apple-subscriptions-to-fetch )
+                                                          ( feastgooglepubsub )                    ( feast-google-subscriptions-to-fetch [04] )         ( feast-google-subscriptions-to-fetch [01] )
                                                                 |                                                                                               |
                                                                 |                                                                                               |
                                                                 |                                                                                               |                   ----------------------------------
@@ -32,41 +32,44 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
                                                                 |                                                                                               |
                                                                 |                                                                                               |
                                                                 v                                                                                               |                   ------------
-                                                 --------------------------------------                                                                          ----------------> | SQS Queues |
-                                                | Dynamo Table: subscription-events-v2 |                                                                           (feast only)     ------------
-                                                 --------------------------------------                                                                                            ( apple-historical-subscriptions )
+                                                 -------------------------------------------                                                                     ----------------> | SQS Queues |
+                                                | Dynamo Table: subscription-events-v2 [07] |                                                                      (feast only)     ------------
+                                                 -------------------------------------------                                                                                       ( apple-historical-subscriptions )
                                                                                                                                                                                    ( google-historical-subscriptions )
 
-lambda: applepubsub
-    - code: src/pubsub/apple.ts
-    - AWS function (s): mobile-purchases-applepubsub-PROD
+[09] lambda : applepubsub
+     code: src/pubsub/apple.ts
+     AWS function (s): mobile-purchases-applepubsub-PROD
                       : mobile-purchases-applepubsub-CODE
 
-lambda: apple-subscriptions-to-fetch
-    - code: src/update-subs/apple.ts
-    - AWS function (s): mobile-purchases-apple-update-subscriptions-PROD
+[06] queue : google-subscriptions-to-fetch
+     SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch
+     SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch-dlq
 
-lambda: google-subscriptions-to-fetch
-    - code: src/update-subs/google.ts
-    - AWS function (s): mobile-purchases-google-update-subscriptions-PROD
+[05] queue : feast-apple-subscriptions-to-fetch
+     SQS queue: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch
+     SQS queue: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch-dlq
 
-queue: google-subscriptions-to-fetch
-    - SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch
-    - SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch-dlq
+[04] queue : feast-google-subscriptions-to-fetch
+     SQS queue: mobile-purchases-PROD-feast-google-subscriptions-to-fetch
+     SQS queue: mobile-purchases-PROD-feast-google-subscriptions-to-fetch-dlq
 
-queue: feast-apple-subscriptions-to-fetch
-    - SQS queue: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch
-    - SQS queue: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch-dlq
+[03] lambda : apple-subscriptions-to-fetch
+     code: src/update-subs/apple.ts
+     AWS function (s): mobile-purchases-apple-update-subscriptions-PROD
 
-queue: feast-google-subscriptions-to-fetch
-    - SQS queue: mobile-purchases-PROD-feast-google-subscriptions-to-fetch
-    - SQS queue: mobile-purchases-PROD-feast-google-subscriptions-to-fetch-dlq
+[02] lambda : google-subscriptions-to-fetch
+     code: src/update-subs/google.ts
+     AWS function (s): mobile-purchases-google-update-subscriptions-PROD
 
-table: subscription-events-v2
-    - Dynamo table: mobile-purchases-PROD-subscription-events-v2
+[01] lambda :
+     AWS function: mobile-purchases-feast-google-update-subscriptions-PROD
 
-table: subscriptions
-    - Dynamo table: mobile-purchases-PROD-subscriptions
+[07] table : subscription-events-v2
+     Dynamo table: mobile-purchases-PROD-subscription-events-v2
+
+[08] table : subscriptions
+     Dynamo table: mobile-purchases-PROD-subscriptions
 
 ```
 
