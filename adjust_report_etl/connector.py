@@ -1,15 +1,4 @@
 """
-Fixed Fivetran Adjust Connector with Composite Key Strategy
-Addresses data mutability issues, particularly Apple Search Ads attribution delays (2-3 days)
-
-Key improvements:
-1. Composite key strategy using MD5 hash of multiple dimensions
-2. Proper UPSERT operations to update existing records when Adjust data changes
-3. Attribution status tracking to differentiate between final and pending attributions
-4. Enhanced backfill strategy with extended 14-day window for Apple Search Ads
-5. Special handling for Apple Search Ads with more frequent updates for recent data
-6. Deduplication within batches to prevent duplicate records
-
 cd adjust_report_etl
 
 python -m venv myenv
