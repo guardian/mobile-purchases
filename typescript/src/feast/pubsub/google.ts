@@ -58,7 +58,7 @@ export function buildHandler(
                 }
 
                 const metaData = await fetchMetadata(notification);
-                const dynamoEvent = await toDynamoEvent_google_async(notification, metaData);
+                const dynamoEvent = await toDynamoEvent_google_async(notification, false, metaData);
 
                 await Promise.all([
                     sendMessageToSqs(queueUrl, androidSubscriptionReference),
