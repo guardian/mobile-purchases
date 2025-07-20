@@ -122,7 +122,7 @@ const countryToCurrencyMap = {
     CL: 'CLP', // Chile - Chilean Peso
     CO: 'COP', // Colombia - Colombian Peso
     PE: 'PEN', // Peru - Peruvian Sol
-    TT: 'TTD', // Trinidad & Tobago
+    TT: 'TTD', // Trinidad & Tobago - Trinidad & Tobago Dollar
 
     // Oceania
     FJ: 'FJD', // Fiji - Fijian Dollar
@@ -134,7 +134,8 @@ const countryToCurrencyMap = {
     BZ: 'BZD', // Belize - Belize Dollar
     IL: 'ILS', // Israel - Israeli Shekel
     KG: 'KGS', // Kyrgyzstan - Kyrgystani Som
-    MU: 'MUR', // Republic of Mauritius  - Mauritian rupee
+    MU: 'MUR', // Republic of Mauritius - Mauritian rupee
+    NP: 'NPR', // Nepal - Nepalese Rupee
 };
 
 const countryToCurrency = (country: string): string => {
