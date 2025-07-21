@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { SubscriptionEvent } from '../models/subscriptionEvent';
 import type { GoogleSubscriptionReference } from '../models/subscriptionReference';
 import { googlePackageNameToPlatform } from '../services/appToPlatform';
+import { build_extra_string } from '../services/google-subscription-extra';
+import { Stage } from '../utils/appIdentity';
 import { fetchGoogleSubscription, GOOGLE_PAYMENT_STATE } from '../services/google-play';
 import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from '../utils/dates';
 import type { Option } from '../utils/option';
@@ -125,6 +127,7 @@ export async function fetchMetadata(
 
 export async function toDynamoEvent_google_async(
     notification: SubscriptionNotification,
+    shouldBuildExtra: boolean,
     metaData?: GoogleSubscriptionMetaData,
 ): Promise<SubscriptionEvent> {
     const eventTime = optionalMsToDate(notification.eventTimeMillis);
@@ -140,6 +143,13 @@ export async function toDynamoEvent_google_async(
     const platform = googlePackageNameToPlatform(notification.packageName)?.toString();
     if (!platform) {
         console.warn(`Unknown package name ${notification.packageName}`);
+    }
+
+    let extra = '';
+    console.log(`[8753e006] google pubsub, shouldBuildExtra: ${shouldBuildExtra}`);
+    if (shouldBuildExtra) {
+        extra = await build_extra_string(Stage);
+        console.log(`[a7beb002] ${extra}`);
     }
 
     const subscription = new SubscriptionEvent(

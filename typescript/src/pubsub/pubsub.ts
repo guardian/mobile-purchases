@@ -29,7 +29,11 @@ function storeInDynamoImpl(event: SubscriptionEvent): Promise<SubscriptionEvent>
 export async function parseStoreAndSend_async<Payload, SqsEvent, MetaData>(
     request: APIGatewayProxyEvent,
     parsePayload: (body: Option<string>) => Payload | Ignorable | Error,
-    toDynamoEvent: (payload: Payload, metaData?: MetaData) => Promise<SubscriptionEvent>,
+    toDynamoEvent: (
+        payload: Payload,
+        shouldBuildExtra: boolean,
+        metaData?: MetaData,
+    ) => Promise<SubscriptionEvent>,
     toSqsEvent: (payload: Payload) => SqsEvent,
     fetchMetadata: (payload: Payload) => Promise<MetaData | undefined>,
     storeInDynamo: (event: SubscriptionEvent) => Promise<SubscriptionEvent> = storeInDynamoImpl,
@@ -61,7 +65,7 @@ export async function parseStoreAndSend_async<Payload, SqsEvent, MetaData>(
             }
 
             const metaData = await fetchMetadata(notification);
-            const dynamoEvent = await toDynamoEvent(notification, metaData);
+            const dynamoEvent = await toDynamoEvent(notification, false, metaData);
             const dynamoPromise = storeInDynamo(dynamoEvent);
             const sqsEvent = toSqsEvent(notification);
             const sqsPromise = sendToSqsFunction(queueUrl, sqsEvent);
