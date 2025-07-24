@@ -136,6 +136,7 @@ const countryToCurrencyMap = {
     KG: 'KGS', // Kyrgyzstan - Kyrgystani Som
     MU: 'MUR', // Republic of Mauritius - Mauritian rupee
     NP: 'NPR', // Nepal - Nepalese Rupee
+    BH: 'BHD', // Bahrain - Bahraini Dinar
 };
 
 const countryToCurrency = (country: string): string => {
