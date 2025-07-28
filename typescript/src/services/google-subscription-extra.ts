@@ -38,8 +38,60 @@ export function getAccessToken(stage: string): Promise<AccessToken> {
         });
 }
 
+interface GoogleSubscription {
+    kind: string;
+    startTime: string;
+    regionCode: string;
+    subscriptionState: string;
+    latestOrderId: string;
+    acknowledgementState: string;
+}
+
+const extractGoogleSubscription = async (
+    accessToken: AccessToken,
+): Promise<GoogleSubscription | undefined> => {
+    console.log(`[e0b04200] query google api for subscription`);
+
+    // Sample data for the moment
+    const packageName = 'com.guardian';
+    const purchaseToken =
+        'kadmieppmanincgeejahkkbp.AO-J1OywsudKktRZAd2tqgY9rTw-FXFujNuNHTokG7bia7jqZEox_xAj7Jb0Y8b3uSoW2ewDhT6FMla_ExAtQObAmHo53tmIjw';
+
+    const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptionsv2/tokens/${purchaseToken}`;
+    console.log(`[26b172df] url: ${url}`);
+
+    const params = {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken.token}`,
+        },
+    };
+
+    let subscription;
+
+    try {
+        const response = await fetch(url, params);
+        if (response.ok) {
+            subscription = (await response.json()) as GoogleSubscription;
+        } else {
+            console.error(`[19e802a9] error: fetch failed: ${response.status}`);
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error(`[24c359f8] error: fetch failed: ${error.message}`);
+        } else {
+            console.error(`[34bff1ac] error: fetch failed: ${JSON.stringify(error)}`);
+        }
+    }
+
+    return Promise.resolve(subscription);
+};
+
 export async function build_extra_string(stage: string): Promise<string> {
-    const access_token: AccessToken = await getAccessToken(stage);
+    const accessToken: AccessToken = await getAccessToken(stage);
+    const subscription = await extractGoogleSubscription(accessToken);
+    console.log(`[26b172df] subscription: ${JSON.stringify(subscription)}`);
     const extra = `(work in progress)`;
     return Promise.resolve(extra);
 }
