@@ -26,11 +26,10 @@ export function getAccessToken(stage: string): Promise<AccessToken> {
         .getObject(params)
         .promise()
         .then((s3OutPut) => {
-            if (s3OutPut.Body) {
-                return JSON.parse(s3OutPut.Body.toString());
-            } else {
+            if (!s3OutPut.Body) {
                 throw Error('S3 output body was not defined');
             }
+            return JSON.parse(s3OutPut.Body.toString()) as AccessToken;
         })
         .catch((error) => {
             console.log(`Failed to get access token from S3 due to: ${error}`);
