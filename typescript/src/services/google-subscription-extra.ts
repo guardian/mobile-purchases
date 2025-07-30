@@ -46,6 +46,11 @@ interface GoogleSubscription {
     acknowledgementState: string;
 }
 
+interface GoogleSubscriptionProduct {
+    packageName: string;
+    productId: string;
+}
+
 const extractGoogleSubscription = async (
     accessToken: AccessToken,
 ): Promise<GoogleSubscription | undefined> => {
@@ -87,10 +92,52 @@ const extractGoogleSubscription = async (
     return Promise.resolve(subscription);
 };
 
+const extractGoogleSubscriptionProduct = async (
+    accessToken: AccessToken,
+): Promise<GoogleSubscriptionProduct | undefined> => {
+    console.log(`[f779539] query google api for subscription product`);
+
+    // Sample data for the moment
+    const packageName = 'com.guardian';
+    const productId = 'guardian.subscription.month.meteredoffer';
+
+    const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/subscriptions/${productId}`;
+    console.log(`[643eb5b5] url: ${url}`);
+
+    const params = {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken.token}`,
+        },
+    };
+
+    let subscriptionProduct;
+
+    try {
+        const response = await fetch(url, params);
+        if (response.ok) {
+            subscriptionProduct = (await response.json()) as GoogleSubscriptionProduct;
+        } else {
+            console.error(`[ce8c6f32] error: fetch failed: ${response.status}`);
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error(`[a726e01d] error: fetch failed: ${error.message}`);
+        } else {
+            console.error(`[a24ac23e] error: fetch failed: ${JSON.stringify(error)}`);
+        }
+    }
+
+    return Promise.resolve(subscriptionProduct);
+};
+
 export async function build_extra_string(stage: string): Promise<string> {
     const accessToken: AccessToken = await getAccessToken(stage);
     const subscription = await extractGoogleSubscription(accessToken);
     console.log(`[26b172df] subscription: ${JSON.stringify(subscription)}`);
+    const subscriptionProduct = await extractGoogleSubscriptionProduct(accessToken);
+    console.log(`[d9d390c4] subscription product: ${JSON.stringify(subscriptionProduct)}`);
     const extra = `(work in progress)`;
     return Promise.resolve(extra);
 }
