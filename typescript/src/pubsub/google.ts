@@ -1,5 +1,6 @@
 import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import type { GoogleSubscriptionMetaData, SubscriptionNotification } from './google-common';
 import {
     fetchMetadata,
     parsePayload,
@@ -12,7 +13,8 @@ export async function handler(request: APIGatewayProxyEvent): Promise<APIGateway
     return parseStoreAndSend_async(
         request,
         parsePayload,
-        toDynamoEvent_google_async,
+        (notification: SubscriptionNotification, metaData?: GoogleSubscriptionMetaData) =>
+            toDynamoEvent_google_async(notification, true, metaData),
         toSqsSubReference,
         fetchMetadata,
     );

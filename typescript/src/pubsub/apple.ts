@@ -2,16 +2,13 @@ import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { SubscriptionEvent } from '../models/subscriptionEvent';
 import type { AppleSubscriptionReference } from '../models/subscriptionReference';
+import { transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 import { appleBundleToPlatform } from '../services/appToPlatform';
 import { Stage } from '../utils/appIdentity';
 import { dateToSecondTimestamp, thirtyMonths } from '../utils/dates';
 import type { StatusUpdateNotification } from './apple-common';
 import { parsePayload } from './apple-common';
 import { parseStoreAndSend_async } from './pubsub';
-import {
-    AppleStoreKitSubscriptionDataDerivationForExtra,
-    transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra,
-} from '../services/api-storekit';
 
 export async function toDynamoEvent_apple_async(
     notification: StatusUpdateNotification,

@@ -6,6 +6,10 @@ import {
 } from '../../src/pubsub/apple';
 import type { StatusUpdateNotification } from '../../src/pubsub/apple-common';
 import { parsePayload as parseApplePayload } from '../../src/pubsub/apple-common';
+import type {
+    GoogleSubscriptionMetaData,
+    SubscriptionNotification,
+} from '../../src/pubsub/google-common';
 import {
     toDynamoEvent_google_async as googlePayloadToDynamo,
     parsePayload as parseGooglePayload,
@@ -112,7 +116,8 @@ describe('The google pubsub', () => {
         return parseStoreAndSend_async(
             input,
             parseGooglePayload,
-            googlePayloadToDynamo,
+            (notification: SubscriptionNotification, metaData?: GoogleSubscriptionMetaData) =>
+                googlePayloadToDynamo(notification, false, metaData),
             toGoogleSqsEvent,
             mockFetchMetadataFunction,
             mockStoreFunction,
@@ -175,7 +180,8 @@ describe('The google pubsub', () => {
         const result = await parseStoreAndSend_async(
             input,
             parseGooglePayload,
-            googlePayloadToDynamo,
+            (notification: SubscriptionNotification, metaData?: GoogleSubscriptionMetaData) =>
+                googlePayloadToDynamo(notification, false, metaData),
             toGoogleSqsEvent,
             mockFetchMetadataFunction,
             mockStoreFunction,
@@ -238,7 +244,8 @@ describe('The google pubsub', () => {
         const result = await parseStoreAndSend_async(
             input,
             parseGooglePayload,
-            googlePayloadToDynamo,
+            (notification: SubscriptionNotification, metaData?: GoogleSubscriptionMetaData) =>
+                googlePayloadToDynamo(notification, false, metaData),
             toGoogleSqsEvent,
             mockFetchMetadataFunction,
             mockStoreFunction,
