@@ -37,23 +37,162 @@ export function getAccessToken(stage: string): Promise<AccessToken> {
         });
 }
 
-interface GoogleSubscription {
+interface E1CommonPrice {
+    currencyCode: string;
+    units: string;
+    nanos: number;
+}
+
+/*
+line item example:
+    {
+        "productId": "guardian.subscription.month.meteredoffer",
+        "expiryTime": "2025-08-26T15:10:44.400Z",
+        "autoRenewingPlan": {
+            "autoRenewEnabled": true,
+            "recurringPrice": {
+                "currencyCode": "GBP",
+                "units": "11",
+                "nanos": 990000000
+            },
+            "priceChangeDetails": {
+                "newPrice": {
+                    "currencyCode": "GBP",
+                    "units": "11",
+                    "nanos": 990000000
+                },
+                "priceChangeMode": "OPT_OUT_PRICE_INCREASE",
+                "priceChangeState": "APPLIED"
+            }
+        },
+        "offerDetails": {
+            "basePlanId": "p1m",
+            "offerId": "offer1month"
+        },
+        "latestSuccessfulOrderId": "GPA.3386-9869-8781-40466..21"
+    }
+*/
+
+interface E1GoogleSubscriptionLineItemAutoRenewingPlan {
+    autoRenewEnabled: boolean;
+    recurringPrice: E1CommonPrice;
+    // priceChangeDetails // not modelled for the moment
+}
+
+interface E1GoogleSubscriptionLineItemOfferDetails {
+    basePlanId: string;
+    offerId: string;
+}
+
+interface E1GoogleSubscriptionLineItem {
+    productId: string;
+    expiryTime: string;
+    autoRenewingPlan: E1GoogleSubscriptionLineItemAutoRenewingPlan;
+    offerDetails: E1GoogleSubscriptionLineItemOfferDetails;
+    latestSuccessfulOrderId: string;
+}
+
+interface E1GoogleSubscription {
     kind: string;
     startTime: string;
     regionCode: string;
     subscriptionState: string;
     latestOrderId: string;
     acknowledgementState: string;
+    lineItems: E1GoogleSubscriptionLineItem[];
 }
 
-interface GoogleSubscriptionProduct {
+/*
+E1GoogleSubscriptionProduct example
+
+{
+  "packageName": "com.guardian",
+  "productId": "guardian.subscription.month.meteredoffer",
+  "basePlans": [
+    {
+      "basePlanId": "p1m",
+      "regionalConfigs": [
+        {
+          "regionCode": "AE",
+          "newSubscriberAvailability": true,
+          "price": {
+            "currencyCode": "AED",
+            "units": "47",
+            "nanos": 710000000
+          }
+        },
+        {
+          "regionCode": "AT",
+          "newSubscriberAvailability": true,
+          "price": {
+            "currencyCode": "EUR",
+            "units": "9",
+            "nanos": 990000000
+          }
+        },
+        (...)
+      ],
+      "state": "ACTIVE",
+      "autoRenewingBasePlanType": {
+        "billingPeriodDuration": "P1M",
+        "gracePeriodDuration": "P30D",
+        "resubscribeState": "RESUBSCRIBE_STATE_ACTIVE",
+        "prorationMode": "SUBSCRIPTION_PRORATION_MODE_CHARGE_ON_NEXT_BILLING_DATE",
+        "legacyCompatible": true,
+        "legacyCompatibleSubscriptionOfferId": "offer1month",
+        "accountHoldDuration": "P30D"
+      },
+      "otherRegionsConfig": {
+        "usdPrice": {
+          "currencyCode": "USD",
+          "units": "9",
+          "nanos": 940000000
+        },
+        "eurPrice": {
+          "currencyCode": "EUR",
+          "units": "9",
+          "nanos": 320000000
+        },
+        "newSubscriberAvailability": true
+      }
+    }
+  ],
+  "listings": [
+    {
+      "title": "£9.99/1-month (with offer)",
+      "languageCode": "en-GB"
+    }
+  ],
+  "taxAndComplianceSettings": {
+    "eeaWithdrawalRightType": "WITHDRAWAL_RIGHT_SERVICE"
+  }
+}
+*/
+
+interface E1GoogleSubscriptionProductBasePlanRegionalConfig {
+    regionCode: string;
+    newSubscriberAvailability: boolean;
+    price: E1CommonPrice;
+}
+interface E1GoogleSubscriptionProductBasePlan {
+    basePlanId: string;
+    regionalConfigs: E1GoogleSubscriptionProductBasePlanRegionalConfig[];
+    state: string;
+    // autoRenewingBasePlanType // not modelled for the moment
+    // otherRegionsConfig // not modelled for the moment
+}
+
+interface E1GoogleSubscriptionProduct {
     packageName: string;
     productId: string;
+    basePlans: E1GoogleSubscriptionProductBasePlan[];
+    // listings // not modelled for the moment
+    // taxAndComplianceSettings // not modelled for the moment
 }
 
 const extractGoogleSubscription = async (
     accessToken: AccessToken,
-): Promise<GoogleSubscription | undefined> => {
+): Promise<E1GoogleSubscription | undefined> => {
     console.log(`[e0b04200] query google api for subscription`);
 
     // Sample data for the moment
@@ -77,7 +216,7 @@ const extractGoogleSubscription = async (
     try {
         const response = await fetch(url, params);
         if (response.ok) {
-            subscription = (await response.json()) as GoogleSubscription;
+            subscription = (await response.json()) as E1GoogleSubscription;
         } else {
             console.error(`[19e802a9] error: fetch failed: ${response.status}`);
         }
@@ -94,7 +233,7 @@ const extractGoogleSubscription = async (
 
 const extractGoogleSubscriptionProduct = async (
     accessToken: AccessToken,
-): Promise<GoogleSubscriptionProduct | undefined> => {
+): Promise<E1GoogleSubscriptionProduct | undefined> => {
     console.log(`[f779539] query google api for subscription product`);
 
     // Sample data for the moment
@@ -117,7 +256,7 @@ const extractGoogleSubscriptionProduct = async (
     try {
         const response = await fetch(url, params);
         if (response.ok) {
-            subscriptionProduct = (await response.json()) as GoogleSubscriptionProduct;
+            subscriptionProduct = (await response.json()) as E1GoogleSubscriptionProduct;
         } else {
             console.error(`[ce8c6f32] error: fetch failed: ${response.status}`);
         }
@@ -132,12 +271,42 @@ const extractGoogleSubscriptionProduct = async (
     return Promise.resolve(subscriptionProduct);
 };
 
-export async function build_extra_string(stage: string): Promise<string> {
-    const accessToken: AccessToken = await getAccessToken(stage);
+interface E1Android {
+    guType: 'google-extra-2025-06-26';
+    subscription: E1GoogleSubscription;
+    offerTags: string[];
+}
+
+const extractOfferTagsFromSubscriptionProduct = (
+    subscriptionProduct: E1GoogleSubscriptionProduct | undefined,
+): string[] => {
+    // We are not performing the extraction for the moment while we are waiting for a confirmation of
+    // the location in the E1GoogleSubscriptionProduct
+    return [];
+};
+
+const buildExtraObject = async (accessToken: AccessToken): Promise<E1Android | undefined> => {
     const subscription = await extractGoogleSubscription(accessToken);
+    if (subscription === undefined) {
+        return Promise.resolve(undefined);
+    }
     console.log(`[26b172df] subscription: ${JSON.stringify(subscription)}`);
     const subscriptionProduct = await extractGoogleSubscriptionProduct(accessToken);
     console.log(`[d9d390c4] subscription product: ${JSON.stringify(subscriptionProduct)}`);
+    const offerTags = extractOfferTagsFromSubscriptionProduct(subscriptionProduct);
+    console.log(`[68041474] offer tags: ${JSON.stringify(offerTags)}`);
+    const extraObject: E1Android = {
+        guType: 'google-extra-2025-06-26',
+        subscription,
+        offerTags,
+    };
+    return Promise.resolve(extraObject);
+};
+
+export async function build_extra_string(stage: string): Promise<string> {
+    const accessToken: AccessToken = await getAccessToken(stage);
+    const extraObject = await buildExtraObject(accessToken);
+    console.log(`[6734a9c1] extra object: ${JSON.stringify(extraObject)}`);
     const extra = `(work in progress)`;
     return Promise.resolve(extra);
 }
