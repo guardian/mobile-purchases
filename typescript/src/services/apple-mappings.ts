@@ -91,6 +91,7 @@ const storefrontToCountryMap = {
     MDV: 'MV', // Maldives
     TTO: 'TT', // Trinidad and Tobago
     PAK: 'PK', // Pakistan
+    BHR: 'BH', // Bahrain
 };
 
 export const storefrontToCountry = (storefront: string): string => {
