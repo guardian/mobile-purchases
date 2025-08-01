@@ -192,13 +192,12 @@ interface E1GoogleSubscriptionProduct {
 
 const extractGoogleSubscription = async (
     accessToken: AccessToken,
+    purchaseToken: string,
 ): Promise<E1GoogleSubscription | undefined> => {
     console.log(`[e0b04200] query google api for subscription`);
 
     // Sample data for the moment
     const packageName = 'com.guardian';
-    const purchaseToken =
-        'kadmieppmanincgeejahkkbp.AO-J1OywsudKktRZAd2tqgY9rTw-FXFujNuNHTokG7bia7jqZEox_xAj7Jb0Y8b3uSoW2ewDhT6FMla_ExAtQObAmHo53tmIjw';
 
     const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptionsv2/tokens/${purchaseToken}`;
     console.log(`[26b172df] url: ${url}`);
@@ -285,8 +284,8 @@ const extractOfferTagsFromSubscriptionProduct = (
     return [];
 };
 
-const buildExtraObject = async (accessToken: AccessToken): Promise<E1Android | undefined> => {
-    const subscription = await extractGoogleSubscription(accessToken);
+const buildExtraObject = async (accessToken: AccessToken, purchaseToken: string): Promise<E1Android | undefined> => {
+    const subscription = await extractGoogleSubscription(accessToken, purchaseToken);
     if (subscription === undefined) {
         return Promise.resolve(undefined);
     }
@@ -303,9 +302,9 @@ const buildExtraObject = async (accessToken: AccessToken): Promise<E1Android | u
     return Promise.resolve(extraObject);
 };
 
-export async function build_extra_string(stage: string): Promise<string> {
+export async function build_extra_string(stage: string, purchaseToken: string): Promise<string> {
     const accessToken: AccessToken = await getAccessToken(stage);
-    const extraObject = await buildExtraObject(accessToken);
+    const extraObject = await buildExtraObject(accessToken, purchaseToken);
     console.log(`[6734a9c1] extra object: ${JSON.stringify(extraObject)}`);
     const extra = `(work in progress)`;
     return Promise.resolve(extra);

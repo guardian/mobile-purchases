@@ -148,7 +148,8 @@ export async function toDynamoEvent_google_async(
     let extra = '';
     console.log(`[8753e006] google pubsub, shouldBuildExtra: ${shouldBuildExtra}`);
     if (shouldBuildExtra) {
-        extra = await build_extra_string(Stage);
+        const purchaseToken = notification.subscriptionNotification.purchaseToken;
+        extra = await build_extra_string(Stage, purchaseToken);
         console.log(`[a7beb002] ${extra}`);
     }
 
