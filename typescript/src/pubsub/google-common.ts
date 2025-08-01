@@ -148,8 +148,20 @@ export async function toDynamoEvent_google_async(
     let extra = '';
     console.log(`[8753e006] google pubsub, shouldBuildExtra: ${shouldBuildExtra}`);
     if (shouldBuildExtra) {
-        extra = await build_extra_string(Stage);
+        const purchaseToken = notification.subscriptionNotification.purchaseToken;
+        const productId = notification.subscriptionNotification.subscriptionId; // [1]
+        extra = await build_extra_string(Stage, purchaseToken, productId);
         console.log(`[a7beb002] ${extra}`);
+
+        // [1]
+        // What is called `subscriptionId` in the notification is actually a productId.
+        // An example of notification is
+        // {
+        //     "packageName": "uk.co.guardian.feast",
+        //     "purchaseToken": "Example-kokmikjooafaEUsuLAO3RKjfwtmyQ",
+        //     "subscriptionId": "uk.co.guardian.feast.access"
+        //}
+        // See docs/google-identifiers.md for details
     }
 
     const subscription = new SubscriptionEvent(
