@@ -115,6 +115,7 @@ const countryToCurrencyMap = {
     EG: 'EGP', // Egypt - Egyptian Pound
     KE: 'KES', // Kenya - Kenyan Shilling
     ET: 'ETB', // Ethiopia - Ethiopian Birr
+    ZW: 'ZWG', // Zimbabwe, ZWG: The Zimbabwe Gold (ZiG; code: ZWG) is the official currency of Zimbabwe since 8 April 2024
 
     // Americas
     MX: 'MXN', // Mexico - Mexican Peso
