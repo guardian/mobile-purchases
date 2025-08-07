@@ -141,8 +141,9 @@ def schema(configuration: dict):
 def update(configuration: dict, state: dict):
     ADJUST_API_URL = "https://automate.adjust.com/reports-service/csv_report"
     AD_SPEND_MODE = "network"
-    end_date = datetime.now() - timedelta(days=3)
-    DATE_PERIOD = f"2023-04-01:{end_date.strftime('%Y-%m-%d')}"
+    end_date = datetime.now()
+    start_date = datetime.now() - timedelta(days=4)
+    DATE_PERIOD = f"{start_date.strftime('%Y-%m-%d')}:{end_date.strftime('%Y-%m-%d')}"
     API_KEY = configuration["API_KEY"]
     APP_TOKEN = configuration["APP_TOKEN"]
 
