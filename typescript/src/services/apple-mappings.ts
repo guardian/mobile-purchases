@@ -92,6 +92,7 @@ const storefrontToCountryMap = {
     TTO: 'TT', // Trinidad and Tobago
     PAK: 'PK', // Pakistan
     BHR: 'BH', // Bahrain
+    NPL: 'NP', // Nepal
 };
 
 export const storefrontToCountry = (storefront: string): string => {
