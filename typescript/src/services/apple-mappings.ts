@@ -93,6 +93,7 @@ const storefrontToCountryMap = {
     PAK: 'PK', // Pakistan
     BHR: 'BH', // Bahrain
     NPL: 'NP', // Nepal
+    CIV: 'CI', // Côte d'Ivoire
 };
 
 export const storefrontToCountry = (storefront: string): string => {
