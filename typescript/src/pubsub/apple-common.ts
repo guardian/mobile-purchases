@@ -413,7 +413,7 @@ function parseNotification(payload: unknown): Result<string, StatusUpdateNotific
 
     const expiresDateMs = (unifiedReceipt: UnifiedReceiptInfo): number => {
         if (unifiedReceipt.latest_receipt_info.length > 0) {
-            return Number(unifiedReceipt.latest_receipt_info[0].purchase_date_ms || '0');
+            return Number(unifiedReceipt.latest_receipt_info[0].expires_date_ms ?? '0');
         }
         return 0;
     };
