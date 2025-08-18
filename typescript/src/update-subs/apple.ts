@@ -28,7 +28,7 @@ export async function toAppleSubscription_async(
     const billingPeriod = PRODUCT_BILLING_PERIOD[latestReceiptInfo.productId];
     if (billingPeriod === undefined) {
         console.warn(
-            `Unable to get the billing period, unknown product ID ${latestReceiptInfo.productId}`,
+            `[b017bb0f] Unable to get the billing period, unknown product ID ${latestReceiptInfo.productId}`,
         );
     }
 

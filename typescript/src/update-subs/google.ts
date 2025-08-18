@@ -84,7 +84,7 @@ export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscript
     const billingPeriod = PRODUCT_BILLING_PERIOD[subscriptionReference.subscriptionId];
     if (billingPeriod === undefined) {
         console.warn(
-            `Unable to get the billing period, unknown google subscription ID ${subscriptionReference.subscriptionId}`,
+            `[593d026a] Unable to get the billing period, unknown google subscription ID ${subscriptionReference.subscriptionId}`,
         );
     }
 
