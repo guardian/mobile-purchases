@@ -2,6 +2,7 @@ import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { SubscriptionEvent } from '../models/subscriptionEvent';
 import type { AppleSubscriptionReference } from '../models/subscriptionReference';
+import type { AppleStoreKitSubscriptionData } from '../services/api-storekit';
 import { transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 import { appleBundleToPlatform } from '../services/appToPlatform';
 import { Stage } from '../utils/appIdentity';
@@ -55,14 +56,17 @@ export async function toDynamoEvent_apple_async(
         // Defining the two variables we need to call for the extra data
         const original_transaction_id = receiptsInOrder[0].original_transaction_id;
         const appBundleId = notification.bid;
-        const extra_object = await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(
-            appBundleId,
-            original_transaction_id,
-        );
-        extra = JSON.stringify(extra_object);
-        console.log(`[8250388c] original_transaction_id: ${original_transaction_id}`);
-        console.log(`[6081748f] appBundleId: ${appBundleId}`);
-        console.log(`[ffa2b2a7] extra: ${extra}`);
+        const extra_object: AppleStoreKitSubscriptionData | undefined =
+            await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(
+                appBundleId,
+                original_transaction_id,
+            );
+        if (extra_object !== undefined) {
+            extra = JSON.stringify(extra_object);
+            console.log(`[8250388c] original_transaction_id: ${original_transaction_id}`);
+            console.log(`[6081748f] appBundleId: ${appBundleId}`);
+            console.log(`[ffa2b2a7] extra: ${extra}`);
+        }
     }
 
     const subscription = new SubscriptionEvent(

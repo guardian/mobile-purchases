@@ -2,13 +2,14 @@ import 'source-map-support/register';
 import type { SQSEvent, SQSRecord } from 'aws-lambda';
 import { Subscription } from '../models/subscription';
 import type { AppleSubscriptionReference } from '../models/subscriptionReference';
+import type { AppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
+import { transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 import type { AppleValidationResponse } from '../services/appleValidateReceipts';
 import { validateReceipt } from '../services/appleValidateReceipts';
 import { appleBundleToPlatform } from '../services/appToPlatform';
 import { PRODUCT_BILLING_PERIOD } from '../services/productBillingPeriod';
 import { dateToSecondTimestamp, thirtyMonths } from '../utils/dates';
 import { parseAndStoreSubscriptionUpdate } from './updatesub';
-import { transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra } from '../services/api-storekit';
 
 export async function toAppleSubscription_async(
     response: AppleValidationResponse,
@@ -35,14 +36,21 @@ export async function toAppleSubscription_async(
     var extra = '';
 
     // Defining the two variables we need to call for the extra data
-    const transaction_id: string = response.latestReceiptInfo.originalTransactionId;
+    const transactionId: string = response.latestReceiptInfo.originalTransactionId;
     const appBundleId: string | undefined = response.latestReceiptInfo.bundleId;
     if (appBundleId !== undefined) {
-        const extra_object = await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(
-            appBundleId,
-            transaction_id,
-        );
-        extra = JSON.stringify(extra_object);
+        const extra_object: AppleStoreKitSubscriptionDataDerivationForExtra | undefined =
+            await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(
+                appBundleId,
+                transactionId,
+            );
+        if (extra_object) {
+            extra = JSON.stringify(extra_object);
+        } else {
+            console.log(
+                `[a6a1af71] could not retrieve data from AppleStoreKit; appBundleId: ${appBundleId}, transactionId: ${transactionId}`,
+            );
+        }
     }
 
     const subscription = new Subscription(

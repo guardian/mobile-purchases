@@ -66,7 +66,7 @@ type AppleLatestReceiptInfo = AppleLatestReceiptInfoItem[];
 const transactionIdToAppleStoreKitSubscriptionData = async (
     appBundleId: string,
     transactionId: string,
-): Promise<AppleStoreKitSubscriptionData> => {
+): Promise<AppleStoreKitSubscriptionData | undefined> => {
     console.log(`[116fa7d4] transactionId: ${transactionId}`);
 
     const url = `https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/${transactionId}`;
@@ -100,6 +100,7 @@ const transactionIdToAppleStoreKitSubscriptionData = async (
         } else {
             console.error(`[e9848cd6] error: fetch failed: ${JSON.stringify(error)}`);
         }
+        return Promise.resolve(undefined);
     }
 
     console.log(`[55ca8e2c] ${JSON.stringify(json)}`);
@@ -192,7 +193,7 @@ const appleSubscriptionToOriginalTransactionId = (subscription: Subscription): s
 
 export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline = async (
     subscription: Subscription,
-): Promise<AppleStoreKitSubscriptionDataDerivationForFeastPipeline> => {
+): Promise<AppleStoreKitSubscriptionDataDerivationForFeastPipeline | undefined> => {
     /*
       This function takes a Subscription and returns a derivation of 
       the data that is retrieved from the Apple API
@@ -207,8 +208,13 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
 
     console.log(`[52c0e2ef] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
 
-    const appleStoreKitSubscriptionData: AppleStoreKitSubscriptionData =
+    const appleStoreKitSubscriptionData: AppleStoreKitSubscriptionData | undefined =
         await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
+
+    if (appleStoreKitSubscriptionData === undefined) {
+        console.log(`[b52fe205] could not retrieve appleStoreKitSubscriptionData`);
+        return Promise.resolve(undefined);
+    }
 
     console.log(
         `[7f53de39] appleStoreKitSubscriptionData: ${JSON.stringify(appleStoreKitSubscriptionData)}`,
@@ -265,16 +271,21 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
 export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra = async (
     appBundleId: string,
     transactionId: string,
-): Promise<AppleStoreKitSubscriptionDataDerivationForExtra> => {
+): Promise<AppleStoreKitSubscriptionDataDerivationForExtra | undefined> => {
     // This function builds a AppleStoreKitSubscriptionData, and just adds the guType key to make it a
     // AppleStoreKitSubscriptionDataDerivationForExtra
 
     console.log(`[e2b0930d] appBundleId: ${appBundleId}, transactionId: ${transactionId}`);
 
-    const data1: AppleStoreKitSubscriptionData = await transactionIdToAppleStoreKitSubscriptionData(
-        appBundleId,
-        transactionId,
-    );
+    const data1: AppleStoreKitSubscriptionData | undefined =
+        await transactionIdToAppleStoreKitSubscriptionData(appBundleId, transactionId);
+    if (data1 === undefined) {
+        return Promise.resolve(undefined);
+    } else {
+        console.log(
+            `[f459032a] could not retrieve data from AppleStoreKit; appBundleId: ${appBundleId}, transactionId: ${transactionId}`,
+        );
+    }
     const data2: AppleStoreKitSubscriptionDataDerivationForExtra = {
         guType: 'apple-extra-2025-04-29',
         ...data1,
