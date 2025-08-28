@@ -2,6 +2,8 @@ import type { SQSEvent, SQSRecord } from 'aws-lambda';
 import fetch from 'node-fetch';
 import { App } from '../../models/app';
 import type { Subscription } from '../../models/subscription';
+import type { AppleStoreKitSubscriptionDataDerivationForFeastPipeline } from '../../services/api-storekit';
+import { appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline } from '../../services/api-storekit';
 import type {
     AppleValidationResponse,
     ValidationOptions,
@@ -10,15 +12,23 @@ import { validateReceipt } from '../../services/appleValidateReceipts';
 import { toAppleSubscription_async } from '../../update-subs/apple';
 import { postPayloadToAcquisitionAPI } from './common';
 import type { AcquisitionApiPayload, AcquisitionApiPayloadQueryParameter } from './common';
-import { appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline } from '../../services/api-storekit';
 
 const appleSubscriptionToAcquisitionApiPayload = async (
     subscription: Subscription,
 ): Promise<AcquisitionApiPayload> => {
-    const extendedData =
+    const extendedData: AppleStoreKitSubscriptionDataDerivationForFeastPipeline | undefined =
         await appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline(
             subscription,
         );
+
+    if (extendedData === undefined) {
+        console.error(
+            `[e88e8329] there was a problem while acquiring subscription data from Apple`,
+        );
+        throw new Error(
+            '[ae7b14ba] there was a problem while acquiring subscription data from Apple',
+        );
+    }
 
     console.log(`[12901310] acquisition api payload: ${JSON.stringify(extendedData)}`);
 
