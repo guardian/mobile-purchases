@@ -42,7 +42,7 @@
     "@aws/dynamodb-expressions": "^0.7.3",
     "@googleapis/androidpublisher": "27.0.0",
     "@guardian/types": "^9.0.1",
-    "@okta/jwt-verifier": "^4.0.1",
+    "@okta/jwt-verifier": "^4.0.2",
     "@types/aws-lambda": "8.10.152",
     "@types/node": "^24.3.0",
     "aws-sdk": "^2.1692.0",
