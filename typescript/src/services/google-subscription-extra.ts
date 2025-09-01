@@ -43,36 +43,6 @@ interface E1CommonPrice {
     nanos: number;
 }
 
-/*
-line item example:
-    {
-        "productId": "guardian.subscription.month.meteredoffer",
-        "expiryTime": "2025-08-26T15:10:44.400Z",
-        "autoRenewingPlan": {
-            "autoRenewEnabled": true,
-            "recurringPrice": {
-                "currencyCode": "GBP",
-                "units": "11",
-                "nanos": 990000000
-            },
-            "priceChangeDetails": {
-                "newPrice": {
-                    "currencyCode": "GBP",
-                    "units": "11",
-                    "nanos": 990000000
-                },
-                "priceChangeMode": "OPT_OUT_PRICE_INCREASE",
-                "priceChangeState": "APPLIED"
-            }
-        },
-        "offerDetails": {
-            "basePlanId": "p1m",
-            "offerId": "offer1month"
-        },
-        "latestSuccessfulOrderId": "GPA.3386-9869-8781-40466..21"
-    }
-*/
-
 interface E1GoogleSubscriptionLineItemAutoRenewingPlan {
     autoRenewEnabled: boolean;
     recurringPrice: E1CommonPrice;
@@ -101,74 +71,6 @@ interface E1GoogleSubscription {
     acknowledgementState: string;
     lineItems: E1GoogleSubscriptionLineItem[];
 }
-
-/*
-E1GoogleSubscriptionProduct example
-
-{
-  "packageName": "com.guardian",
-  "productId": "guardian.subscription.month.meteredoffer",
-  "basePlans": [
-    {
-      "basePlanId": "p1m",
-      "regionalConfigs": [
-        {
-          "regionCode": "AE",
-          "newSubscriberAvailability": true,
-          "price": {
-            "currencyCode": "AED",
-            "units": "47",
-            "nanos": 710000000
-          }
-        },
-        {
-          "regionCode": "AT",
-          "newSubscriberAvailability": true,
-          "price": {
-            "currencyCode": "EUR",
-            "units": "9",
-            "nanos": 990000000
-          }
-        },
-        (...)
-      ],
-      "state": "ACTIVE",
-      "autoRenewingBasePlanType": {
-        "billingPeriodDuration": "P1M",
-        "gracePeriodDuration": "P30D",
-        "resubscribeState": "RESUBSCRIBE_STATE_ACTIVE",
-        "prorationMode": "SUBSCRIPTION_PRORATION_MODE_CHARGE_ON_NEXT_BILLING_DATE",
-        "legacyCompatible": true,
-        "legacyCompatibleSubscriptionOfferId": "offer1month",
-        "accountHoldDuration": "P30D"
-      },
-      "otherRegionsConfig": {
-        "usdPrice": {
-          "currencyCode": "USD",
-          "units": "9",
-          "nanos": 940000000
-        },
-        "eurPrice": {
-          "currencyCode": "EUR",
-          "units": "9",
-          "nanos": 320000000
-        },
-        "newSubscriberAvailability": true
-      }
-    }
-  ],
-  "listings": [
-    {
-      "title": "£9.99/1-month (with offer)",
-      "languageCode": "en-GB"
-    }
-  ],
-  "taxAndComplianceSettings": {
-    "eeaWithdrawalRightType": "WITHDRAWAL_RIGHT_SERVICE"
-  }
-}
-*/
-
 interface E1GoogleSubscriptionProductBasePlanRegionalConfig {
     regionCode: string;
     newSubscriberAvailability: boolean;
@@ -179,14 +81,14 @@ interface E1GoogleSubscriptionProductBasePlan {
     regionalConfigs: E1GoogleSubscriptionProductBasePlanRegionalConfig[];
     state: string;
     // autoRenewingBasePlanType // not modelled for the moment
-    // otherRegionsConfig // not modelled for the moment
+    // otherRegionsConfig       // not modelled for the moment
 }
 
 interface E1GoogleSubscriptionProduct {
     packageName: string;
     productId: string;
     basePlans: E1GoogleSubscriptionProductBasePlan[];
-    // listings // not modelled for the moment
+    // listings                 // not modelled for the moment
     // taxAndComplianceSettings // not modelled for the moment
 }
 
@@ -239,7 +141,6 @@ const extractGoogleSubscriptionProduct = async (
     // Example of productId: 'guardian.subscription.month.meteredoffer'
     // See docs/google-identifiers.md for details
 
-    // Sample data for the moment
     const packageName = 'com.guardian';
 
     const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/subscriptions/${productId}`;
@@ -297,8 +198,120 @@ const buildExtraObject = async (
         return Promise.resolve(undefined);
     }
     console.log(`[26b172df] subscription: ${JSON.stringify(subscription)}`);
+    /*
+        {
+            "guType": "google-extra-2025-06-26",
+            "subscription": {
+                "kind": "androidpublisher#subscriptionPurchaseV2",
+                "startTime": "2020-10-17T11:29:43.457Z",
+                "regionCode": "DE",
+                "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE",
+                "latestOrderId": "GPA.3331-7311-8633-87504..58",
+                "acknowledgementState": "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+                "lineItems": [
+                    {
+                        "productId": "com.guardian.subscription.monthly.10",
+                        "expiryTime": "2025-09-24T13:29:26.306Z",
+                        "autoRenewingPlan": {
+                            "autoRenewEnabled": true,
+                            "recurringPrice": {
+                                "currencyCode": "EUR",
+                                "units": "6",
+                                "nanos": 990000000
+                            }
+                        },
+                        "offerDetails": {
+                            "basePlanId": "p1m",
+                            "offerId": "freetrial"
+                        },
+                        "latestSuccessfulOrderId": "GPA.3331-7311-8633-87504..58"
+                    }
+                ]
+            },
+            "offerTags": []
+        }
+    */
     const subscriptionProduct = await extractGoogleSubscriptionProduct(accessToken, productId);
     console.log(`[d9d390c4] subscription product: ${JSON.stringify(subscriptionProduct)}`);
+    /*
+        {
+            "packageName": "com.guardian",
+            "productId": "uk.co.guardian.subscription.3",
+            "basePlans": [
+                {
+                    "basePlanId": "p1m",
+                    "regionalConfigs": [
+                        {
+                            "regionCode": "AE",
+                            "newSubscriberAvailability": true,
+                            "price": {
+                                "currencyCode": "AED",
+                                "units": "22",
+                                "nanos": 930000000
+                            }
+                        },
+                        (...) # many instances
+                        {
+                            "regionCode": "ZM",
+                            "newSubscriberAvailability": true,
+                            "price": {
+                                "currencyCode": "USD",
+                                "units": "4",
+                                "nanos": 660000000
+                            }
+                        },
+                        {
+                            "regionCode": "ZW",
+                            "newSubscriberAvailability": true,
+                            "price": {
+                                "currencyCode": "USD",
+                                "units": "4",
+                                "nanos": 660000000
+                            }
+                        }
+                    ],
+                    "state": "ACTIVE",
+                    "autoRenewingBasePlanType": {
+                        "billingPeriodDuration": "P1M",
+                        "gracePeriodDuration": "P30D",
+                        "resubscribeState": "RESUBSCRIBE_STATE_ACTIVE",
+                        "prorationMode": "SUBSCRIPTION_PRORATION_MODE_CHARGE_ON_NEXT_BILLING_DATE",
+                        "legacyCompatible": true,
+                        "legacyCompatibleSubscriptionOfferId": "freetrial",
+                        "accountHoldDuration": "P30D"
+                    },
+                    "otherRegionsConfig": {
+                        "usdPrice": {
+                            "currencyCode": "USD",
+                            "units": "3",
+                            "nanos": 130000000
+                        },
+                        "eurPrice": {
+                            "currencyCode": "EUR",
+                            "units": "2",
+                            "nanos": 950000000
+                        },
+                        "newSubscriberAvailability": true
+                    }
+                }
+            ],
+            "listings": [
+                {
+                    "title": "Premium Tier Subscription",
+                    "languageCode": "en-GB",
+                    "description": "Premium Tier Subscription"
+                },
+                {
+                    "title": "Premium Tier Subscription",
+                    "languageCode": "en-US",
+                    "description": "Premium Tier Subscription"
+                }
+            ],
+            "taxAndComplianceSettings": {
+                "eeaWithdrawalRightType": "WITHDRAWAL_RIGHT_SERVICE"
+            }
+        }
+    */
     const offerTags = extractOfferTagsFromSubscriptionProduct(subscriptionProduct);
     console.log(`[68041474] offer tags: ${JSON.stringify(offerTags)}`);
     const extraObject: E1Android = {
