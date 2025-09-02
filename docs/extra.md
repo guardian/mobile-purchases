@@ -1,4 +1,3 @@
-
 ### Introducing the extra field
 
 The `extra` field [1], was introduced by Pascal in 2025 as a temporary measure to help Data Design get extra data about subscriptions without and before the project to redesign the entire system.
@@ -46,14 +45,13 @@ Example (anonymised)
 
 The data we get from the Apple API is the above object without the `guType` attribute. That attribute is added to the object we get from Apple to indicate that the object is companion of Apple subscription. The value is always "apple-extra-2025-04-29".
 
-
 ### The Google/Android extra field
 
 The extra object for Android is constructed in [google-subscription-extra.ts](https://github.com/guardian/mobile-purchases/blob/a67a7d2246342bb16d635ace4f407c66ea7d0b28/typescript/src/services/google-subscription-extra.ts)
 
 Unlike the extra object for Apple where we just call the API once and add the `guType` attribute to the object, for Google, it take more hoops.
 
-First we start with a purchase `purchaseToken` and a `productId`. And example is 
+First we start with a purchase `purchaseToken` and a `productId`. And example is
 
 - purchaseToken: "Example-kokmikjooafaEUsuLAO3RKjfwtmyQ",
 - productId: "uk.co.guardian.feast.access"
@@ -62,7 +60,125 @@ We also need an access token that is retrieved from S3. There is a process which
 
 Using the `purchaseToken` we retrieve a subscription (first call to the Google API). Using the subscription we retrieve a `subscriptionProduct` (second call to the Google API). Using the subscription product we determine the offer tags.
 
-The resulting extra object has the form 
+Subscription example:
+
+```
+{
+    "guType": "google-extra-2025-06-26",
+    "subscription": {
+        "kind": "androidpublisher#subscriptionPurchaseV2",
+        "startTime": "2020-10-17T11:29:43.457Z",
+        "regionCode": "DE",
+        "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE",
+        "latestOrderId": "GPA.3331-7311-8633-87504..58",
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+        "lineItems": [
+            {
+                "productId": "com.guardian.subscription.monthly.10",
+                "expiryTime": "2025-09-24T13:29:26.306Z",
+                "autoRenewingPlan": {
+                    "autoRenewEnabled": true,
+                    "recurringPrice": {
+                        "currencyCode": "EUR",
+                        "units": "6",
+                        "nanos": 990000000
+                    }
+                },
+                "offerDetails": {
+                    "basePlanId": "p1m",
+                    "offerId": "freetrial"
+                },
+                "latestSuccessfulOrderId": "GPA.3331-7311-8633-87504..58"
+            }
+        ]
+    },
+    "offerTags": []
+}
+```
+
+Subscription product example:
+
+```
+{
+    "packageName": "com.guardian",
+    "productId": "uk.co.guardian.subscription.3",
+    "basePlans": [
+        {
+            "basePlanId": "p1m",
+            "regionalConfigs": [
+                {
+                    "regionCode": "AE",
+                    "newSubscriberAvailability": true,
+                    "price": {
+                        "currencyCode": "AED",
+                        "units": "22",
+                        "nanos": 930000000
+                    }
+                },
+                (...) # many instances
+                {
+                    "regionCode": "ZM",
+                    "newSubscriberAvailability": true,
+                    "price": {
+                        "currencyCode": "USD",
+                        "units": "4",
+                        "nanos": 660000000
+                    }
+                },
+                {
+                    "regionCode": "ZW",
+                    "newSubscriberAvailability": true,
+                    "price": {
+                        "currencyCode": "USD",
+                        "units": "4",
+                        "nanos": 660000000
+                    }
+                }
+            ],
+            "state": "ACTIVE",
+            "autoRenewingBasePlanType": {
+                "billingPeriodDuration": "P1M",
+                "gracePeriodDuration": "P30D",
+                "resubscribeState": "RESUBSCRIBE_STATE_ACTIVE",
+                "prorationMode": "SUBSCRIPTION_PRORATION_MODE_CHARGE_ON_NEXT_BILLING_DATE",
+                "legacyCompatible": true,
+                "legacyCompatibleSubscriptionOfferId": "freetrial",
+                "accountHoldDuration": "P30D"
+            },
+            "otherRegionsConfig": {
+                "usdPrice": {
+                    "currencyCode": "USD",
+                    "units": "3",
+                    "nanos": 130000000
+                },
+                "eurPrice": {
+                    "currencyCode": "EUR",
+                    "units": "2",
+                    "nanos": 950000000
+                },
+                "newSubscriberAvailability": true
+            }
+        }
+    ],
+    "listings": [
+        {
+            "title": "Premium Tier Subscription",
+            "languageCode": "en-GB",
+            "description": "Premium Tier Subscription"
+        },
+        {
+            "title": "Premium Tier Subscription",
+            "languageCode": "en-US",
+            "description": "Premium Tier Subscription"
+        }
+    ],
+    "taxAndComplianceSettings": {
+        "eeaWithdrawalRightType": "WITHDRAWAL_RIGHT_SERVICE"
+    }
+}
+```
+
+The resulting extra object has the form
 
 ```
 {
