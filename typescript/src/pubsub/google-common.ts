@@ -150,7 +150,7 @@ export async function toDynamoEvent_google_async(
     if (shouldBuildExtra) {
         const purchaseToken = notification.subscriptionNotification.purchaseToken;
         const productId = notification.subscriptionNotification.subscriptionId; // [1]
-        extra = await build_extra_string(Stage, purchaseToken, productId);
+        extra = (await build_extra_string(Stage, purchaseToken, productId)) ?? '';
         console.log(`[a7beb002] ${extra}`);
 
         // [1]
@@ -181,7 +181,7 @@ export async function toDynamoEvent_google_async(
         undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
         undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
         undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-        '', // extra
+        extra, // extra
     );
 
     return Promise.resolve(subscription);
