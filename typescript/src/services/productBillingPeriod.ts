@@ -8,6 +8,7 @@ export const PRODUCT_BILLING_PERIOD: Record<string, string> = {
     'com.guardian.subscription.monthly.10.freetrial': 'P1M',
     'com.guardian.subscription.monthly.11.freetrial': 'P1M',
     'com.guardian.subscription.annual.13': 'P1Y',
+    'com.guardian.subscription.annual.13.freetrial': 'P1Y',
     'com.guardian.subscription.annual.14.freetrial': 'P1Y',
 
     // uk.co.guardian.gia*
