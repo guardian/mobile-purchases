@@ -1,4 +1,5 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
+import { Platform } from '../../src/models/platform';
 import { SubscriptionEmpty } from '../../src/models/subscription';
 import { handler } from '../../src/user/user';
 import { plusDays } from '../../src/utils/dates';
@@ -56,7 +57,7 @@ describe('The user subscriptions lambda', () => {
         });
         const sub = new SubscriptionEmpty();
         sub.subscriptionId = subscriptionId;
-        sub.platform = 'ios-feast';
+        sub.platform = Platform.IosFeast;
         sub.productId = 'product-id';
         sub.startTimestamp = new Date().toISOString();
         sub.endTimestamp = plusDays(new Date(), 35).toISOString();
@@ -75,6 +76,7 @@ describe('The user subscriptions lambda', () => {
         expect(data.subscriptions[0].subscriptionId).toEqual(subscriptionId);
         expect(data.subscriptions[0].valid).toEqual(true);
         expect(data.subscriptions[0].softOptInProductName).toEqual('FeastInAppPurchase');
+        expect(data.subscriptions[0].platform).toEqual(Platform.IosFeast);
     });
 });
 
