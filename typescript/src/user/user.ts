@@ -10,6 +10,7 @@ import type { UserIdResolution } from '../utils/guIdentityApi';
 import { getAuthToken, getUserId } from '../utils/guIdentityApi';
 import { mapPlatformToSoftOptInProductName } from '../utils/softOptIns';
 import { getConfigValue } from '../utils/ssmConfig';
+import { Platform } from '../models/platform';
 
 interface SubscriptionStatus {
     subscriptionId: string;
@@ -21,6 +22,7 @@ interface SubscriptionStatus {
     autoRenewing: boolean;
     productId: string;
     softOptInProductName: string;
+    platform?: Platform;
 }
 
 interface SubscriptionStatusResponse {
@@ -83,6 +85,7 @@ async function getSubscriptions(subscriptionIds: string[]): Promise<Subscription
             autoRenewing: sub.autoRenewing,
             productId: sub.productId,
             softOptInProductName: mapPlatformToSoftOptInProductName(sub.platform),
+            platform: sub.platform as Platform,
         };
     });
 
