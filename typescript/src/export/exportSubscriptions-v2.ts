@@ -19,6 +19,12 @@ export async function handler(): Promise<string> {
     const stage = process.env['Stage'];
     const className = process.env['ClassName'];
 
+    console.log(`[a057f375] bucket: ${bucket}`);
+    console.log(`[f1bfbfdf] s3BucketOwner: ${s3BucketOwner}`);
+    console.log(`[7b78c711] app: ${app}`);
+    console.log(`[3e33ed60] stage: ${stage}`);
+    console.log(`[7dfb97fc] className: ${className}`);
+
     if (!bucket) throw new Error('Variable ExportBucket must be set');
     if (!account) throw new Error('Variable AccountId must be set');
     if (!s3BucketOwner) throw new Error('Variable BucketOwner must be set');
@@ -29,18 +35,18 @@ export async function handler(): Promise<string> {
     let tableArn = null;
     switch (className) {
         case 'subscriptions':
-            console.log('Reading subscription from subscriptions');
+            console.log('[0ef553b7] reading subscription from subscriptions');
             tableArn = `arn:aws:dynamodb:eu-west-1:${account}:table/${app}-${stage}-${className}`;
             break;
         case 'user-subscriptions':
-            console.log('Reading user subscription from user subscription');
+            console.log('[88eff0ba] reading user subscription from user subscription');
             tableArn = `arn:aws:dynamodb:eu-west-1:${account}:table/${app}-${stage}-${className}`;
             break;
         default:
-            throw new Error(`Invalid ClassName value ${className}`);
+            throw new Error(`[7e03bfd5] invalid ClassName value ${className}`);
     }
 
-    if (!tableArn) throw new Error('Variable TableArn must be set');
+    if (!tableArn) throw new Error('[1c94600f] variable TableArn must be set');
 
     const params = {
         TableArn: tableArn,
@@ -54,10 +60,10 @@ export async function handler(): Promise<string> {
         .exportTableToPointInTime(params)
         .promise()
         .then((result) => {
-            console.log(`Exporting subscription data to ${bucket}`);
-            return `Dynamo export started, with status: ${result.ExportDescription?.ExportStatus}`;
+            console.log(`[89ba1cd3] exporting subscription data to ${bucket}`);
+            return `[0d1f18ab] dynamo export started, with status: ${result.ExportDescription?.ExportStatus}`;
         })
         .catch((err) => {
-            throw new Error('Failed to start dynamo export');
+            throw new Error('[4f4acf88] Failed to start dynamo export');
         });
 }
