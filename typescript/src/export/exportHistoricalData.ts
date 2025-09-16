@@ -95,9 +95,13 @@ export async function handler(params: { date: string; maxMessagesToFetch?: numbe
     const maxMessagesToFetch = params.maxMessagesToFetch ?? Number.MAX_VALUE;
 
     const yesterday = params.date ?? plusDays(new Date(), -1).toISOString().substr(0, 10);
+    console.log(`[4a949499] yesterday: ${yesterday}`);
+
     const prefix = Stage === 'PROD' ? 'data' : 'code-data';
     const randomString = Math.random().toString(36).substring(10);
     const filename = `${prefix}/date=${yesterday}/${yesterday}-${randomString}.json.gz`;
+    console.log(`[b3e0e9c1] filename: ${filename}`);
+
     const managedUpload = s3.upload({
         Bucket: bucket,
         Key: filename,
@@ -126,10 +130,12 @@ export async function handler(params: { date: string; maxMessagesToFetch?: numbe
     zippedStream.end();
     await managedUpload.promise();
 
-    console.log(`Export succeeded, read ${totalMsgCount} records, processed ${processedMsgCount}`);
+    console.log(
+        `[bd9ba1a3] export succeeded, read ${totalMsgCount} records, processed ${processedMsgCount}`,
+    );
 
     await deleteAllSqsMessages(sqsUrl, msgToDelete);
-    console.log(`Deleted ${msgToDelete.length} messages from the SQS queue`);
+    console.log(`[fe786204] deleted ${msgToDelete.length} messages from the SQS queue`);
 
     return {
         date: yesterday,

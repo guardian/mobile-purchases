@@ -22,9 +22,13 @@ interface ManualBackfillEvent {
 
 export async function handler(event?: ManualBackfillEvent): Promise<any> {
     const bucket = process.env['ExportBucket'];
+    console.log(`[ca76728f] starting export with bucket: ${bucket}`);
+
     if (!bucket) throw new Error('Variable ExportBucket must be set');
 
     let yesterday = plusDays(new Date(), -1).toISOString().substr(0, 10);
+    console.log(`[c882b045] yesterday: ${yesterday}`);
+
     if (event && event.date) {
         yesterday = event.date;
     }
@@ -41,6 +45,8 @@ export async function handler(event?: ManualBackfillEvent): Promise<any> {
 
     const prefix = Stage === 'PROD' ? 'data' : 'code-data';
     const filename = `${prefix}/date=${yesterday}/${yesterday}.json.gz`;
+    console.log(`[b6640f04] filename: ${filename}`);
+
     const managedUpload = s3.upload({
         Bucket: bucket,
         Key: filename,
@@ -50,7 +56,7 @@ export async function handler(event?: ManualBackfillEvent): Promise<any> {
 
     await managedUpload.promise();
 
-    console.log(`Export succeeded, read ${stream.recordCount()} records`);
+    console.log(`[5a02d341] export succeeded, read ${stream.recordCount()} records`);
 
     return { recordCount: stream.recordCount() };
 }
