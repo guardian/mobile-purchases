@@ -1,6 +1,6 @@
 # Architecture
 
-This service is a set of AWS lambdas, triggered by an API Gateway, SQS queues or Dynamo events. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services. 
+This service is a set of AWS lambdas, triggered by an API Gateway, SQS queues or Dynamo events. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services.
 
 ## Pubsub
 
@@ -15,7 +15,7 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
                                                                                                                                                         ------------------------
                                                                                                                                                                 ^
                                                                                                                                                                 |
-                                                                                                                                                                | (fetch additional subscription data) 
+                                                                                                                                                                | (fetch additional subscription data)
                                                                                                                                                                 |
  ------------------------      HTTP via API Gateway        ----------------                         ------------                                         -----------------------------                        ----------------------------------
 | App Store & Play Store | --------------------------->   | Pubsub Lambdas |      ---------------> | SQS Queues | --------------------------------------| Update subscription Lambdas | -------------------> | Dynamo Table: subscriptions [08] |
@@ -36,7 +36,7 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
                                                 | Dynamo Table: subscription-events-v2 [07] |                                                                      (feast only)     ------------
                                                 |               [extra]                     |                                                                                  ( apple-historical-subscriptions )
                                                  -------------------------------------------                                                                                   ( google-historical-subscriptions )
-                                                                                                                                                                                   
+
 
 [09] lambda : applepubsub
      code: src/pubsub/apple.ts
@@ -96,7 +96,6 @@ In addition to writing to the subscriptions Dynamo table, the Feast lambdas also
 
 The mobile apps link an In App Purchase with a Guardian user by calling the link endpoints. The user must be signed in for this to happen. For the live apps this is the only way users are linked to subscriptions. For Feast, this endpoint is _sometimes_ called as there are cases where the linking cannot happen using the receipt data (e.g. promo codes on iOS).
 
-
 ```
 
 (Unless otherwise specified elements are in the mobile aws account)
@@ -117,7 +116,6 @@ The mobile apps link an In App Purchase with a Guardian user by calling the link
                                   (apple-link-user-subscription)
 
 ```
-
 
 In some cases the subscription is queued for processing by pushing to the subscriptions-to-fetch SQS queues.
 
@@ -150,7 +148,6 @@ subscriptions
 
 ```
 
-
 ## Subscription status endpoints
 
 The apps call endpoints to check the status of a subscription.
@@ -168,7 +165,6 @@ The apps call endpoints to check the status of a subscription.
  ---------------                   ------------------------------------                         -----------------
 
 ```
-
 
 **Note:** Tokens for the Play Store are refreshed on a schedule by the mobile-purchases-googleoauth lambda and accessed from an s3 bucket.
 
@@ -217,4 +213,3 @@ Lambda Functions:
          mobile-purchases-export-subscription-table-PROD (replaced by v2 -- to be confirmed)
          mobile-purchases-export-user-subscription-table-PROD (in use ?)
 ```
-
