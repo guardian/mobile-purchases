@@ -184,6 +184,9 @@ const extractGoogleSubscriptionProduct = async (
 
 interface E1Android {
     guType: 'google-extra-2025-06-26';
+    packageName: string;
+    purchaseToken: string;
+    productId: string;
     subscription: E1GoogleSubscription;
     offerTags: string[];
 }
@@ -212,6 +215,9 @@ const buildExtraObject = async (
     console.log(`[68041474] offer tags: ${JSON.stringify(offerTags)}`);
     const extraObject: E1Android = {
         guType: 'google-extra-2025-06-26',
+        packageName: 'com.guardian',
+        purchaseToken,
+        productId,
         subscription,
         offerTags,
     };
