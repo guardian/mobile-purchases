@@ -19,7 +19,7 @@ deployments:
 
   mobile-purchases-cloudformation:
     type: cloud-formation
-    dependencies: [ mmobile-purchases-dynamo-cloudformation ]
+    dependencies: [ mobile-purchases-dynamo-cloudformation ]
     parameters:
       templatePath: cloudformation.yaml
 
