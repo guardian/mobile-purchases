@@ -172,7 +172,7 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       StreamSpecification:
-        StreamViewType: NEW_IMAGE
+        StreamViewType: NEW_AND_OLD_IMAGES
       GlobalSecondaryIndexes:
         - IndexName: subscriptionId-userId
           KeySchema:
@@ -204,9 +204,3 @@ Outputs:
     Value: !GetAtt UserSubscriptionTable.StreamArn
     Export:
       Name: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
-
-  UserSubscriptionTableStreamArn:
-    Description: The ARN of the dynamo DB stream
-    Value: !GetAtt UserSubscriptionTable.StreamArn
-    Export:
-      Name: !Sub ${App}-${Stage}-user-subscriptions-table-stream-arn
