@@ -1482,7 +1482,7 @@ Resources:
           Type: DynamoDB
           Properties:
             Stream:
-              Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+              Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-table-stream-arn
             StartingPosition: LATEST
             MaximumRecordAgeInSeconds: 28800
       Tags:
@@ -1532,7 +1532,7 @@ Resources:
                 - "dynamodb:DescribeStream"
                 - "dynamodb:ListStreams"
               Resource:
-                - Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+                - Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-table-stream-arn
         - Statement:
             - Effect: Allow
               Action:

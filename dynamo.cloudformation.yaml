@@ -203,4 +203,4 @@ Outputs:
     Description: The ARN of the dynamo DB stream
     Value: !GetAtt UserSubscriptionTable.StreamArn
     Export:
-      Name: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+      Name: !Sub ${App}-${Stage}-user-subscriptions-table-stream-arn
