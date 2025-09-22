@@ -51,48 +51,54 @@ The extra object for Android is constructed in [google-subscription-extra.ts](ht
 
 Unlike the extra object for Apple where we just call the API once and add the `guType` attribute to the object, for Google, it take more hoops.
 
-First we start with a purchase `purchaseToken` and a `productId`. And example is
+First we start with a `packageName`, a purchase `purchaseToken` and a `productId`. And example is
 
+- packageName: "com.guardian"
 - purchaseToken: "Example-kokmikjooafaEUsuLAO3RKjfwtmyQ",
 - productId: "uk.co.guardian.feast.access"
 
 We also need an access token that is retrieved from S3. There is a process which generates the access token and drops it to S3.
 
-Using the `purchaseToken` we retrieve a subscription (first call to the Google API). Using the subscription we retrieve a `subscriptionProduct` (second call to the Google API). Using the subscription product we determine the offer tags.
+Using the `packageName` and the `purchaseToken` we retrieve a subscription (first call to the Google API). Using the subscription we retrieve a `subscriptionProduct` (second call to the Google API). Using the subscription product we determine the offer tags.
 
 Subscription example:
 
 ```
 {
-    "guType": "google-extra-2025-06-26",
-    "subscription": {
-        "kind": "androidpublisher#subscriptionPurchaseV2",
-        "startTime": "2020-10-17T11:29:43.457Z",
-        "regionCode": "DE",
-        "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE",
-        "latestOrderId": "GPA.3331-7311-8633-87504..58",
-        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
-        "lineItems": [
-            {
-                "productId": "com.guardian.subscription.monthly.10",
-                "expiryTime": "2025-09-24T13:29:26.306Z",
-                "autoRenewingPlan": {
-                    "autoRenewEnabled": true,
-                    "recurringPrice": {
-                        "currencyCode": "EUR",
-                        "units": "6",
-                        "nanos": 990000000
-                    }
-                },
-                "offerDetails": {
-                    "basePlanId": "p1m",
-                    "offerId": "freetrial"
-                },
-                "latestSuccessfulOrderId": "GPA.3331-7311-8633-87504..58"
-            }
-        ]
-    },
-    "offerTags": []
+  "kind": "androidpublisher#subscriptionPurchaseV2",
+  "startTime": "2023-09-26T15:11:54.434Z",
+  "regionCode": "GB",
+  "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE",
+  "latestOrderId": "GPA.3386-9869-8781-40466..22",
+  "acknowledgementState": "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+  "lineItems": [
+    {
+      "productId": "guardian.subscription.month.meteredoffer",
+      "expiryTime": "2025-09-26T15:10:44.400Z",
+      "autoRenewingPlan": {
+        "autoRenewEnabled": true,
+        "recurringPrice": {
+          "currencyCode": "GBP",
+          "units": "11",
+          "nanos": 990000000
+        },
+        "priceChangeDetails": {
+          "newPrice": {
+            "currencyCode": "GBP",
+            "units": "11",
+            "nanos": 990000000
+          },
+          "priceChangeMode": "OPT_OUT_PRICE_INCREASE",
+          "priceChangeState": "APPLIED"
+        }
+      },
+      "offerDetails": {
+        "basePlanId": "p1m",
+        "offerId": "offer1month"
+      },
+      "latestSuccessfulOrderId": "GPA.3386-9869-8781-40466..22"
+    }
+  ]
 }
 ```
 
@@ -183,6 +189,9 @@ The resulting extra object has the form
 ```
 {
     guType: "google-extra-2025-06-26",
+    packageName,
+    purchaseToken,
+    productId,
     subscription,
     offerTags,
 }
@@ -193,6 +202,9 @@ Alike the Apple extra object, the Google/Android extra object has a an extra att
 ```
 {
     "guType": "google-extra-2025-06-26",
+    "packageName": "com.guardian",
+    "purchaseToken": "kadmieppmanincgeejahkkbp.5de44e89-065b-4eba-9e59-bf655048ed09",
+    "productId": "guardian.subscription.month.meteredoffer",
     "subscription": {
         "kind": "androidpublisher#subscriptionPurchaseV2",
         "startTime": "2020-10-17T11:29:43.457Z",
