@@ -194,6 +194,7 @@ Resources:
 
   UserSubscriptionTableStreamSSM:
     Type: AWS::SSM::Parameter
+    DependsOn: UserSubscriptionTable
     Properties:
       Name: !Sub /${App}/${Stage}/user-subscriptions-stream-arn
       Type: String
