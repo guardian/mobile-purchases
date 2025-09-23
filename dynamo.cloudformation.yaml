@@ -198,7 +198,7 @@ Resources:
     Properties:
       Name: !Sub /${App}/${Stage}/user-subscriptions-stream-arn
       Type: String
-      Value: !GetAtt UserSubscriptionsTable.StreamArn
+      Value: !GetAtt UserSubscriptionTable.StreamArn
       Description: The ARN of the dynamo DB stream, saved to SSM Parameter Store
 
 Outputs:
