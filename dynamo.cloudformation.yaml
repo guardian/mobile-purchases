@@ -206,9 +206,10 @@ Outputs:
       Name: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
 
   UserSubscriptionTableStreamSSM:
-    Description: The ARN of the dynamo DB stream, saved to SSM Parameter Store
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub /${App}/${Stage}/user-subscriptions-stream-arn
       Type: String
       Value: !GetAtt UserSubscriptionsTable.StreamArn
+      Description: The ARN of the dynamo DB stream, saved to SSM Parameter Store
+
