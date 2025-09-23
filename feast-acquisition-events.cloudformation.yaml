@@ -24,6 +24,9 @@ Parameters:
   AlarmTopic:
     Description: The ARN of the SNS topic to send all the cloudwatch alarms to
     Type: String
+  UserSubscriptionsStreamArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: !Sub /${App}/${Stage}/user-subscriptions-stream-arn
 
 Mappings:
   StageVariables:
@@ -290,8 +293,7 @@ Resources:
         Schedule:
           Type: DynamoDB
           Properties:
-            Stream:
-              Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+            Stream: !Ref UserSubscriptionsStreamArn
             StartingPosition: LATEST
             MaximumRetryAttempts: 10
       Tags:
@@ -319,8 +321,7 @@ Resources:
                 - "dynamodb:GetShardIterator"
                 - "dynamodb:DescribeStream"
                 - "dynamodb:ListStreams"
-              Resource:
-                - Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+              Resource: !Ref UserSubscriptionsStreamArn
         - Statement:
             - Effect: Allow
               Action:
