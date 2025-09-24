@@ -172,7 +172,7 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       StreamSpecification:
-        StreamViewType: NEW_IMAGE
+        StreamViewType: NEW_AND_OLD_IMAGES
       GlobalSecondaryIndexes:
         - IndexName: subscriptionId-userId
           KeySchema:
