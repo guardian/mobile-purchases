@@ -192,6 +192,15 @@ Resources:
         - Key: devx-backup-enabled
           Value: true
 
+  UserSubscriptionTableStreamSSM:
+    Type: AWS::SSM::Parameter
+    DependsOn: UserSubscriptionTable
+    Properties:
+      Name: !Sub /${App}/${Stage}/user-subscriptions-stream-arn
+      Type: String
+      Value: !GetAtt UserSubscriptionTable.StreamArn
+      Description: The ARN of the dynamo DB stream, saved to SSM Parameter Store
+
 Outputs:
   SubscriptionTableStream:
     Description: The ARN of the dynamo DB stream
@@ -204,3 +213,4 @@ Outputs:
     Value: !GetAtt UserSubscriptionTable.StreamArn
     Export:
       Name: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+

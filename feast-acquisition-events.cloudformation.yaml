@@ -290,8 +290,7 @@ Resources:
         Schedule:
           Type: DynamoDB
           Properties:
-            Stream:
-              Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+            Stream: !Sub "{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}"
             StartingPosition: LATEST
             MaximumRetryAttempts: 10
       Tags:
@@ -319,8 +318,7 @@ Resources:
                 - "dynamodb:GetShardIterator"
                 - "dynamodb:DescribeStream"
                 - "dynamodb:ListStreams"
-              Resource:
-                - Fn::ImportValue: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
+              Resource: !Sub "{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}"
         - Statement:
             - Effect: Allow
               Action:

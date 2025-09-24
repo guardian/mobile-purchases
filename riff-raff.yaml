@@ -19,6 +19,7 @@ deployments:
 
   mobile-purchases-cloudformation:
     type: cloud-formation
+    dependencies: [ mobile-purchases-dynamo-cloudformation ]
     parameters:
       templatePath: cloudformation.yaml
 
@@ -30,7 +31,6 @@ deployments:
       appendStageToCloudFormationStackName: true
       cloudFormationStackByTags: false
       prependStackToCloudFormationStackName: false
-    dependencies: [mobile-purchases-cloudformation]
 
   mobile-purchases-feast-apple-pubsub:
     template: lambda
@@ -177,6 +177,7 @@ deployments:
 
   mobile-purchases-feast-acquisition-events-bus-cloudformation:
     type: cloud-formation
+    dependencies: [mobile-purchases-dynamo-cloudformation]
     parameters:
       templatePath: feast-acquisition-events.cloudformation.yaml
       cloudFormationStackByTags: false
