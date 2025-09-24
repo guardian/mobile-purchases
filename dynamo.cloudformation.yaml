@@ -210,7 +210,7 @@ Outputs:
 
   UserSubscriptionTableStream:
     Description: The ARN of the dynamo DB stream
-    Value: arn:aws:dynamodb:eu-west-1:201359054765:table/mobile-purchases-CODE-user-subscriptions/stream/2023-03-30T18:27:02.325
+    Value: !GetAtt UserSubscriptionTable.StreamArn
     Export:
       Name: !Sub ${App}-${Stage}-user-subscriptions-stream-arn
 
