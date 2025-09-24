@@ -268,7 +268,7 @@ Resources:
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
 
-  FeastAcquisitionEventsRouterTriggeredLambda:
+  FeastAcquisitionEventsRouterLambda:
     Type: AWS::Serverless::Function
     Properties:
       Handler: feast-acquisition-events-router.handler
@@ -287,7 +287,7 @@ Resources:
       MemorySize: 512
       Timeout: 60
       Events:
-        Schedule:
+        DynamoDBStreamTrigger:
           Type: DynamoDB
           Properties:
             Stream: !Sub "{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}"
@@ -318,6 +318,7 @@ Resources:
                 - "dynamodb:GetShardIterator"
                 - "dynamodb:DescribeStream"
                 - "dynamodb:ListStreams"
+                - "dynamodb:Query"
               Resource: !Sub "{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}"
         - Statement:
             - Effect: Allow

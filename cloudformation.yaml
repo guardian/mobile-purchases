@@ -1459,7 +1459,7 @@ Resources:
       QueueName: !Sub ${App}-soft-opt-in-acquisitions-DLQ-${Stage}
       MessageRetentionPeriod: 1209600 # 14 days
 
-  SoftOptInAcquisitionsTriggeredLambda:
+  SoftOptInAcquisitionsLambda:
     Type: AWS::Serverless::Function
     Properties:
       Handler: soft-opt-in-acquisitions.handler
@@ -1478,7 +1478,7 @@ Resources:
       MemorySize: 512
       Timeout: 60
       Events:
-        Schedule:
+        DynamoDBStreamTrigger:
           Type: DynamoDB
           Properties:
             Stream: !Sub "{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}"
@@ -1530,6 +1530,7 @@ Resources:
                 - "dynamodb:GetShardIterator"
                 - "dynamodb:DescribeStream"
                 - "dynamodb:ListStreams"
+                - "dynamodb:Query"
               Resource: !Sub "{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}"
         - Statement:
             - Effect: Allow
