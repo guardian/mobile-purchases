@@ -268,7 +268,7 @@ Resources:
       Roles:
         - !Ref FeastAcquisitionEventsLambdaServiceRole
 
-  FeastAcquisitionEventsRouterLambda:
+  FeastAcquisitionEventsRouterTriggeredLambda:
     Type: AWS::Serverless::Function
     Properties:
       Handler: feast-acquisition-events-router.handler
