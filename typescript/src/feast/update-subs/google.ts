@@ -148,4 +148,5 @@ export const handler = buildHandler(
     queueHistoricalSubscription,
     getIdentityIdFromBraze,
     storeUserSubscriptionInDynamo,
+    true,
 );

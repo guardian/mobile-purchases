@@ -45,6 +45,8 @@ export const googleResponseBodyToSubscription = async (
     var extra = '';
 
     if (shouldBuildExtra) {
+        // Guarded by `shouldBuildExtra` because we do not want this to run from the automated tests
+
         const productId = subscriptionId; // [1]
         extra = (await build_extra_string(Stage, packageName, purchaseToken, productId)) ?? '';
         console.log(`[df099cfb] ${extra}`);
@@ -74,7 +76,7 @@ export const googleResponseBodyToSubscription = async (
         undefined,
         null,
         dateToSecondTimestamp(thirtyMonths(expiryDate)),
-        extra, // extra
+        extra, // extra metadata
     );
 
     return Promise.resolve(subscription);
