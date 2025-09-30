@@ -15,6 +15,7 @@ export const googleResponseBodyToSubscription = (
     packageName: string,
     subscriptionId: string,
     billingPeriod: string,
+    shouldBuildExtra: boolean,
     googleResponse: GoogleResponseBody | null,
 ): Subscription => {
     if (!googleResponse) {
@@ -38,6 +39,15 @@ export const googleResponseBodyToSubscription = (
     }
 
     const freeTrial = googleResponse.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL;
+
+    var extra = ''; // same pattern as we are using for the iOS extra
+
+    if (shouldBuildExtra) {
+        // Placeholder for calling the library for building the extra object
+        // It's guarded by `shouldBuildExtra` because we do not want this to run from the automated tests
+        extra = ''; // will be updated
+    }
+
     return new Subscription(
         purchaseToken,
         startDate.toISOString(),
@@ -52,10 +62,14 @@ export const googleResponseBodyToSubscription = (
         undefined,
         null,
         dateToSecondTimestamp(thirtyMonths(expiryDate)),
+        extra, // extra metadata
     );
 };
 
-export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> {
+export async function getGoogleSubResponse(
+    record: SQSRecord,
+    shouldBuildExtra: boolean,
+): Promise<Subscription[]> {
     const subscriptionReference = JSON.parse(record.body) as GoogleSubscriptionReference;
 
     let response;
@@ -93,6 +107,7 @@ export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscript
         subscriptionReference.packageName,
         subscriptionReference.subscriptionId,
         billingPeriod,
+        shouldBuildExtra,
         response,
     );
     return [subscription];
@@ -101,7 +116,9 @@ export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscript
 export async function handler(event: SQSEvent) {
     const promises = event.Records.map((record) => {
         console.log(`[447bd6ea] event: ${JSON.stringify(record)}`);
-        return parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse);
+        return parseAndStoreSubscriptionUpdate(record, (record) =>
+            getGoogleSubResponse(record, true),
+        );
     });
 
     return Promise.all(promises).then((_) => 'OK');

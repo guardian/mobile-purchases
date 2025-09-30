@@ -4,16 +4,16 @@ The `extra` field [1], was introduced by Pascal in 2025 as a temporary measure t
 
 The two tables that have received an extra field are
 
-- mobile-purchases-PROD-subscription-events-v2
 - mobile-purchases-PROD-subscriptions
+- mobile-purchases-PROD-subscription-events-v2
 
 The extra field add data to both Apple and Android subscriptions, both using the `extra` field but the object being added is different between the two platforms.
 
 [1] Ok, ok, by now I can see it might now have been the absolute best name.
 
-### The Apple extra field
+### The Apple/iOS extra field
 
-The apple extra object is retreived from Apple using the [api-storekit.ts](https://github.com/guardian/mobile-purchases/blob/a67a7d2246342bb16d635ace4f407c66ea7d0b28/typescript/src/services/api-storekit.ts)
+The apple extra object is retrieved from Apple using the [api-storekit.ts](https://github.com/guardian/mobile-purchases/blob/a67a7d2246342bb16d635ace4f407c66ea7d0b28/typescript/src/services/api-storekit.ts)
 
 Example (anonymised)
 
