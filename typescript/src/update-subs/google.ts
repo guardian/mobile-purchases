@@ -10,14 +10,14 @@ import { PRODUCT_BILLING_PERIOD } from '../services/productBillingPeriod';
 import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from '../utils/dates';
 import { parseAndStoreSubscriptionUpdate } from './updatesub';
 
-export const googleResponseBodyToSubscription = (
+export const googleResponseBodyToSubscription = async (
     purchaseToken: string,
     packageName: string,
     subscriptionId: string,
     billingPeriod: string,
     shouldBuildExtra: boolean,
     googleResponse: GoogleResponseBody | null,
-): Subscription => {
+): Promise<Subscription> => {
     if (!googleResponse) {
         throw new ProcessingError('There was no data in the response from google', true);
     }
@@ -45,10 +45,10 @@ export const googleResponseBodyToSubscription = (
     if (shouldBuildExtra) {
         // Placeholder for calling the library for building the extra object
         // It's guarded by `shouldBuildExtra` because we do not want this to run from the automated tests
-        extra = ''; // will be updated
+        extra = ''; // will be updated with an async call to `build_extra_string`.
     }
 
-    return new Subscription(
+    const subscription = new Subscription(
         purchaseToken,
         startDate.toISOString(),
         expiryDate.toISOString(),
@@ -64,6 +64,8 @@ export const googleResponseBodyToSubscription = (
         dateToSecondTimestamp(thirtyMonths(expiryDate)),
         extra, // extra metadata
     );
+
+    return Promise.resolve(subscription);
 };
 
 export async function getGoogleSubResponse(
@@ -102,7 +104,7 @@ export async function getGoogleSubResponse(
         );
     }
 
-    const subscription = googleResponseBodyToSubscription(
+    const subscription = await googleResponseBodyToSubscription(
         subscriptionReference.purchaseToken,
         subscriptionReference.packageName,
         subscriptionReference.subscriptionId,

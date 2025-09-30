@@ -77,7 +77,7 @@ export const buildHandler =
                     subRef.purchaseToken,
                     subRef.packageName,
                 );
-                const subscriptionV1 = googleResponseBodyToSubscription(
+                const subscriptionV1 = await googleResponseBodyToSubscription(
                     subRef.purchaseToken,
                     subRef.packageName,
                     subRef.subscriptionId,
