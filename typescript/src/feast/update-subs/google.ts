@@ -53,6 +53,7 @@ export const buildHandler =
         sendSubscriptionToHistoricalQueue: (subscription: Subscription) => Promise<void>,
         exchangeExternalIdForIdentityId: (externalId: string) => Promise<IdentityIdFromBraze>,
         storeUserSubInDynamo: (userSub: UserSubscription) => Promise<void>,
+        shouldBuildExtra: boolean = false,
     ) =>
     async (event: SQSEvent) => {
         const promises = event.Records.map(async (sqsRecord: SQSRecord) => {
@@ -76,11 +77,12 @@ export const buildHandler =
                     subRef.purchaseToken,
                     subRef.packageName,
                 );
-                const subscriptionV1 = googleResponseBodyToSubscription(
+                const subscriptionV1 = await googleResponseBodyToSubscription(
                     subRef.purchaseToken,
                     subRef.packageName,
                     subRef.subscriptionId,
                     subscriptionFromGoogle.billingPeriodDuration,
+                    shouldBuildExtra,
                     googleResponseV1,
                 );
                 await sendSubscriptionToHistoricalQueue(subscriptionV1);

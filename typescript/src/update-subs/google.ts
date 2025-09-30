@@ -6,17 +6,20 @@ import type { GoogleSubscriptionReference } from '../models/subscriptionReferenc
 import { googlePackageNameToPlatform } from '../services/appToPlatform';
 import type { GoogleResponseBody } from '../services/google-play';
 import { fetchGoogleSubscription, GOOGLE_PAYMENT_STATE } from '../services/google-play';
+import { build_extra_string } from '../services/google-subscription-extra';
 import { PRODUCT_BILLING_PERIOD } from '../services/productBillingPeriod';
+import { Stage } from '../utils/appIdentity';
 import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from '../utils/dates';
 import { parseAndStoreSubscriptionUpdate } from './updatesub';
 
-export const googleResponseBodyToSubscription = (
+export const googleResponseBodyToSubscription = async (
     purchaseToken: string,
     packageName: string,
     subscriptionId: string,
     billingPeriod: string,
+    shouldBuildExtra: boolean,
     googleResponse: GoogleResponseBody | null,
-): Subscription => {
+): Promise<Subscription> => {
     if (!googleResponse) {
         throw new ProcessingError('There was no data in the response from google', true);
     }
@@ -38,7 +41,26 @@ export const googleResponseBodyToSubscription = (
     }
 
     const freeTrial = googleResponse.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL;
-    return new Subscription(
+
+    var extra = '';
+
+    if (shouldBuildExtra) {
+        const productId = subscriptionId; // [1]
+        extra = (await build_extra_string(Stage, packageName, purchaseToken, productId)) ?? '';
+        console.log(`[df099cfb] ${extra}`);
+
+        // [1]
+        // What is called `subscriptionId` in the notification is actually a productId.
+        // An example of notification is
+        // {
+        //     "packageName": "uk.co.guardian.feast",
+        //     "purchaseToken": "Example-kokmikjooafaEUsuLAO3RKjfwtmyQ",
+        //     "subscriptionId": "uk.co.guardian.feast.access"
+        //}
+        // See docs/google-identifiers.md for details
+    }
+
+    const subscription = new Subscription(
         purchaseToken,
         startDate.toISOString(),
         expiryDate.toISOString(),
@@ -52,10 +74,16 @@ export const googleResponseBodyToSubscription = (
         undefined,
         null,
         dateToSecondTimestamp(thirtyMonths(expiryDate)),
+        extra, // extra
     );
+
+    return Promise.resolve(subscription);
 };
 
-export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscription[]> {
+export async function getGoogleSubResponse(
+    record: SQSRecord,
+    shouldBuildExtra: boolean,
+): Promise<Subscription[]> {
     const subscriptionReference = JSON.parse(record.body) as GoogleSubscriptionReference;
 
     let response;
@@ -88,11 +116,12 @@ export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscript
         );
     }
 
-    const subscription = googleResponseBodyToSubscription(
+    const subscription = await googleResponseBodyToSubscription(
         subscriptionReference.purchaseToken,
         subscriptionReference.packageName,
         subscriptionReference.subscriptionId,
         billingPeriod,
+        shouldBuildExtra,
         response,
     );
     return [subscription];
@@ -101,7 +130,9 @@ export async function getGoogleSubResponse(record: SQSRecord): Promise<Subscript
 export async function handler(event: SQSEvent) {
     const promises = event.Records.map((record) => {
         console.log(`[447bd6ea] event: ${JSON.stringify(record)}`);
-        return parseAndStoreSubscriptionUpdate(record, getGoogleSubResponse);
+        return parseAndStoreSubscriptionUpdate(record, (record) =>
+            getGoogleSubResponse(record, true),
+        );
     });
 
     return Promise.all(promises).then((_) => 'OK');
