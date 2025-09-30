@@ -5,16 +5,17 @@ import { Subscription } from '../../models/subscription';
 import type { GoogleSubscriptionReference } from '../../models/subscriptionReference';
 import { UserSubscription } from '../../models/userSubscription';
 import { googlePackageNameToPlatform } from '../../services/appToPlatform';
-import { getIdentityIdFromBraze, IdentityIdFromBraze } from '../../services/braze';
+import type { IdentityIdFromBraze } from '../../services/braze';
+import { getIdentityIdFromBraze } from '../../services/braze';
 import type { GoogleResponseBody } from '../../services/google-play';
 import { fetchGoogleSubscription } from '../../services/google-play';
 import { fetchGoogleSubscriptionV2 } from '../../services/google-play-v2';
 import type { GoogleSubscription } from '../../services/google-play-v2';
 import { googleResponseBodyToSubscription } from '../../update-subs/google';
 import { putSubscription } from '../../update-subs/updatesub';
+import { putMetric } from '../../utils/aws';
 import { dateToSecondTimestamp, thirtyMonths } from '../../utils/dates';
 import { queueHistoricalSubscription, storeUserSubscriptionInDynamo } from './common';
-import { putMetric } from '../../utils/aws';
 
 const googleSubscriptionToSubscription = (
     purchaseToken: string,

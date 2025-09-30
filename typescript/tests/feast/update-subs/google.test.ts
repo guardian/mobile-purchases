@@ -45,6 +45,7 @@ describe('The Feast Android subscription updater', () => {
             paymentState: 1 as 0 | 1 | 2 | 3,
             userCancellationTimeMillis: '',
         };
+        const extra = undefined;
         const subscription = new Subscription(
             purchaseToken,
             startTime.toISOString(), // start date
@@ -59,6 +60,7 @@ describe('The Feast Android subscription updater', () => {
             undefined, // receipt
             null, // apple payload
             dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)), // ttl
+            extra,
         );
         const identityId = '123456';
         const mockFetchSubscriptionsFromGoogle = jest.fn(() => Promise.resolve(googleSubscription));

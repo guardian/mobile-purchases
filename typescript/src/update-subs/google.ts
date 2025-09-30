@@ -6,7 +6,9 @@ import type { GoogleSubscriptionReference } from '../models/subscriptionReferenc
 import { googlePackageNameToPlatform } from '../services/appToPlatform';
 import type { GoogleResponseBody } from '../services/google-play';
 import { fetchGoogleSubscription, GOOGLE_PAYMENT_STATE } from '../services/google-play';
+import { build_extra_string } from '../services/google-subscription-extra';
 import { PRODUCT_BILLING_PERIOD } from '../services/productBillingPeriod';
+import { Stage } from '../utils/appIdentity';
 import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from '../utils/dates';
 import { parseAndStoreSubscriptionUpdate } from './updatesub';
 
@@ -40,12 +42,24 @@ export const googleResponseBodyToSubscription = async (
 
     const freeTrial = googleResponse.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL;
 
-    var extra = ''; // same pattern as we are using for the iOS extra
+    var extra = '';
 
     if (shouldBuildExtra) {
-        // Placeholder for calling the library for building the extra object
-        // It's guarded by `shouldBuildExtra` because we do not want this to run from the automated tests
-        extra = ''; // will be updated with an async call to `build_extra_string`.
+        // Guarded by `shouldBuildExtra` because we do not want this to run from the automated tests
+
+        const productId = subscriptionId; // [1]
+        extra = (await build_extra_string(Stage, packageName, purchaseToken, productId)) ?? '';
+        console.log(`[df099cfb] ${extra}`);
+
+        // [1]
+        // What is called `subscriptionId` in the notification is actually a productId.
+        // An example of notification is
+        // {
+        //     "packageName": "uk.co.guardian.feast",
+        //     "purchaseToken": "Example-kokmikjooafaEUsuLAO3RKjfwtmyQ",
+        //     "subscriptionId": "uk.co.guardian.feast.access"
+        //}
+        // See docs/google-identifiers.md for details
     }
 
     const subscription = new Subscription(
