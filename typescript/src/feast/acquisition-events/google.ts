@@ -143,6 +143,7 @@ const countryToCurrencyMap = {
     MU: 'MUR', // Republic of Mauritius - Mauritian rupee
     NP: 'NPR', // Nepal - Nepalese Rupee
     BH: 'BHD', // Bahrain - Bahraini Dinar
+    MV: 'MVR', // the Maldives - Maldivian rufiyaa
 };
 
 const countryToCurrency = (country: string): string => {
@@ -151,7 +152,7 @@ const countryToCurrency = (country: string): string => {
         return countryToCurrencyMap[country as keyof typeof countryToCurrencyMap];
     }
     // Throwing an error here is not ideal, but it will do for the moment...
-    throw new Error(`[acba643d] Country ${country} is not supported`);
+    throw new Error(`[acba643d] (countryToCurrencyMap) country ${country} is not supported`);
 };
 
 const basePlanIdToPaymentFrequencyMap = {
