@@ -253,3 +253,6 @@ In order not to leave holes in the tables for those subscriptions (this was part
     "productId": "guardian.subscription.month.meteredoffer",
 }
 ```
+
+Note the dedicated `guType`: "google-expired-2025-10-04"
+ 
