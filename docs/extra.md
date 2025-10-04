@@ -247,12 +247,12 @@ In order not to leave holes in the tables for those subscriptions (this was part
 
 ```
 {
-    "guType": "google-expired-2025-10-04",
+    "guType": "google-expired-4b7df973",
     "packageName": "com.guardian",
     "purchaseToken": "kadmieppmanincgeejahkkbp.5de44e89-065b-4eba-9e59-bf655048ed09",
     "productId": "guardian.subscription.month.meteredoffer",
 }
 ```
 
-Note the dedicated `guType`: "google-expired-2025-10-04"
+Note the dedicated `guType`: "google-expired-4b7df973"
  
