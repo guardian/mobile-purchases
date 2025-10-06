@@ -235,3 +235,24 @@ Alike the Apple extra object, the Google/Android extra object has a an extra att
     "offerTags": []
 }
 ```
+
+### The Google/Android extra field (expired subscription)
+
+It is not always possible to build a `google-extra-2025-06-26` for an expired google subscription. For expired subscriptions we sometimes get the following error messages from Google
+
+- "The subscription purchase is no longer available for query because it has been expired for too long."
+- "The purchase token is no longer valid."
+
+In order not to leave holes in the tables for those subscriptions (this was particularly relevant when backfilling) we have a special extra object for expired android subscriptions.
+
+```
+{
+    "guType": "google-expired-4b7df973",
+    "packageName": "com.guardian",
+    "purchaseToken": "kadmieppmanincgeejahkkbp.5de44e89-065b-4eba-9e59-bf655048ed09",
+    "productId": "guardian.subscription.month.meteredoffer",
+}
+```
+
+Note the dedicated `guType`: "google-expired-4b7df973"
+ 
