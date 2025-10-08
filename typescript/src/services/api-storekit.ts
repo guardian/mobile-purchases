@@ -93,6 +93,7 @@ const transactionIdToAppleStoreKitSubscriptionData = async (
             json = await response.json();
         } else {
             console.error(`[661fe1aa] error: fetch failed: ${response.status}`);
+            return Promise.resolve(undefined);
         }
     } catch (error) {
         if (error instanceof Error) {
