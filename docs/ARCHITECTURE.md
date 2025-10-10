@@ -156,13 +156,17 @@ The apps call endpoints to check the status of a subscription.
 
 (Unless otherwise specified elements are in the mobile aws account)
 
- ---------------                   ------------------------------------                         -------------------
-| Mobile Device | --------------> | Lambda: google-subscription-status | --------------------> | Google Play Store |
- ---------------                   ------------------------------------                         -------------------
+ ---------------                   -----------------------------------------                   -------------------
+| Mobile Device | --------------> | Lambda: google-subscription-status [02] | --------------> | Google Play Store |
+ ---------------                   -----------------------------------------                   -------------------
 
- ---------------                   ------------------------------------                         -----------------
-| Mobile Device | --------------> | Lambda: apple-subscription-status  | --------------------> | Apple App Store |
- ---------------                   ------------------------------------                         -----------------
+ ---------------                   ----------------------------------------                    -----------------
+| Mobile Device | --------------> | Lambda: apple-subscription-status [01] | ---------------> | Apple App Store |
+ ---------------                   ----------------------------------------                    -----------------
+
+[01] lambda function: mobile-purchases-google-subscription-status-PROD
+
+[02] lambda function: mobile-purchases-apple-subscription-status-PROD
 
 ```
 
