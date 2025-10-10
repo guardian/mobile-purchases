@@ -144,7 +144,7 @@ function checkResponseStatus(
         throw new ProcessingError(`Invalid receipt, got status ${response.status}`);
     }
     if (!response.latest_receipt_info && !response.latest_expired_receipt_info) {
-        console.error(`No receipt info`);
+        console.error(`[a67e1349] No receipt info`);
         throw new ProcessingError(`Invalid validation response, no receipt info`);
     }
     return response;
@@ -199,7 +199,7 @@ export function toSensiblePayloadFormat(
                 return [response.latest_expired_receipt_info];
             } else {
                 // should be impossible as this will be caught by checkResponseStatus
-                console.error(`No receipt info`);
+                console.error(`[de3b8fba] No receipt info`);
                 throw new ProcessingError(`Invalid validation response, no receipt info`);
             }
         }
