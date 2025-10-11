@@ -45,6 +45,29 @@ Example (anonymised)
 
 The data we get from the Apple API is the above object without the `guType` attribute. That attribute is added to the object we get from Apple to indicate that the object is companion of Apple subscription. The value is always "apple-extra-2025-04-29".
 
+### The Apple/iOS extra field (missing subscription data)
+
+It is not always possible to build a `apple-extra-2025-04-29` because in rare occasions the apple API replies
+
+```
+{
+  "errorCode": 4040010,
+  "errorMessage": "Transaction id not found."
+}
+```
+
+For those we have the following dedicated object
+
+```
+{
+    "guType": "apple-missing-5cea592e",
+    "originalTransactionId": "180001049822339",
+    "bundleId": "uk.co.guardian.iphone2",
+}
+```
+
+Note the dedicated `guType`: "apple-missing-5cea592e"
+
 ### The Google/Android extra field
 
 The extra object for Android is constructed in [google-subscription-extra.ts](https://github.com/guardian/mobile-purchases/blob/a67a7d2246342bb16d635ace4f407c66ea7d0b28/typescript/src/services/google-subscription-extra.ts)
@@ -255,4 +278,3 @@ In order not to leave holes in the tables for those subscriptions (this was part
 ```
 
 Note the dedicated `guType`: "google-expired-4b7df973"
- 
