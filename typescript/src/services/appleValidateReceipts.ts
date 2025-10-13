@@ -285,7 +285,10 @@ export function validateReceipt(
 ): Promise<AppleValidationResponse[]> {
     return callValidateReceipt(receipt, app)
         .then((response) => response.readBody())
-        .then((body) => JSON.parse(body))
+        .then((body) => {
+            console.log(`[ea7a6f4c] ${body}`);
+            return JSON.parse(body);
+        })
         .then((body) => body as AppleValidationServerResponse)
         .then((parsedResponse) => retryInSandboxIfNecessary(parsedResponse, receipt, options))
         .then(checkResponseStatus)
