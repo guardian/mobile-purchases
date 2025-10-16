@@ -206,6 +206,50 @@ Resources:
     Properties:
       Name: !Sub mobile-purchases2-${Stage}
 
+  ForwardMobilePurchasesDynamoStreamsRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub forward-mobile-purchases-dynamo-streams-${Stage}-invoke
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/forward-mobile-purchases-dynamo-streams-${Stage}
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Policies:
+        - PolicyName: put-events-to-target-bus
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: events:PutEvents
+                Resource:
+                  Fn::Sub: arn:${AWS::Partition}:events:${AWS::Region}:865473395570:event-bus/mobile-purchases-dynamo-stream-${Stage}
+
+  ForwardMobilePurchasesDynamoStreamsRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: forward-mobile-purchases-dynamo-streams-${Stage}
+      EventPattern: '{"detail":{"eventSource":["aws:dynamodb"]}}'
+      State: ENABLED
+      Description: ''
+      EventBusName: mobile-purchases-${Stage}
+      Targets:
+        - Id: Idb64f5b91-7ca5-4652-80c6-09288a132741
+          Arn:
+            Fn::Sub: >-
+              arn:${AWS::Partition}:events:${AWS::Region}:865473395570:event-bus/mobile-purchases-dynamo-stream-${Stage}
+          RoleArn: >- 
+              ForwardMobilePurchasesDynamoStreamsRuleRole.Arn
+  Parameters: { }
+
+
   MobilePurchasesPipeRole:
     Type: AWS::IAM::Role
     Properties:
