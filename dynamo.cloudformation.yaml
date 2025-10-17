@@ -204,7 +204,27 @@ Resources:
   MobilePurchasesEventBus:
     Type: AWS::Events::EventBus
     Properties:
-      Name: !Sub mobile-purchases2-${Stage}
+      Name: !Sub mobile-purchases-${Stage}
+
+  MobilePurchasesEventLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/events/mobile-purchases-dynamo-event-bus-${Stage}
+      RetentionInDays: 14
+
+  MobilePurchasesEventLoggingRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub mobile-purchases-log-${Stage}
+      Description: Logs all events on the mobile-purchases bus to CloudWatch Logs
+      EventBusName: !Ref MobilePurchasesEventBus
+      EventPattern:
+        source:
+          - prefix: ""
+      State: ENABLED
+      Targets:
+        - Id: mobile-purchases-bus-logs
+          Arn: !GetAtt MobilePurchasesEventLogGroup.Arn
 
   ForwardMobilePurchasesDynamoStreamsRuleRole:
     Type: AWS::IAM::Role
@@ -218,37 +238,37 @@ Resources:
               Service: events.amazonaws.com
             Action: sts:AssumeRole
             Condition:
-              ArnLike:
-                aws:SourceArn: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/forward-mobile-purchases-dynamo-streams-${Stage}
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
+                aws:SourceArn: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/mobile-purchases-${Stage}/forward-mobile-purchases-dynamo-streams-${Stage}
       Policies:
-        - PolicyName: put-events-to-target-bus
+        - PolicyName: put-events-to-membership-bus
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - Effect: Allow
-                Action: events:PutEvents
+              - Sid: ActionsForResource
+                Effect: Allow
+                Action:
+                  - events:PutEvents
                 Resource:
-                  Fn::Sub: arn:${AWS::Partition}:events:${AWS::Region}:865473395570:event-bus/mobile-purchases-dynamo-stream-${Stage}
+                  - !Sub arn:${AWS::Partition}:events:${AWS::Region}:865473395570:event-bus/mobile-purchases-dynamo-stream-${Stage}
 
   ForwardMobilePurchasesDynamoStreamsRule:
     Type: AWS::Events::Rule
+    DependsOn:
+      - ForwardMobilePurchasesDynamoStreamsRuleRole
     Properties:
-      Name: forward-mobile-purchases-dynamo-streams-${Stage}
-      EventPattern: '{"detail":{"eventSource":["aws:dynamodb"]}}'
+      Name: !Sub forward-mobile-purchases-dynamo-streams-${Stage}
+      EventBusName: !Ref MobilePurchasesEventBus
+      EventPattern:
+        detail:
+          eventSource:
+            - aws:dynamodb
       State: ENABLED
-      Description: ''
-      EventBusName: mobile-purchases-${Stage}
       Targets:
-        - Id: Idb64f5b91-7ca5-4652-80c6-09288a132741
-          Arn:
-            Fn::Sub: >-
-              arn:${AWS::Partition}:events:${AWS::Region}:865473395570:event-bus/mobile-purchases-dynamo-stream-${Stage}
-          RoleArn: >- 
-              ForwardMobilePurchasesDynamoStreamsRuleRole.Arn
-  Parameters: { }
-
+        - Id: forward-to-mobile-purchases-bus
+          Arn: !Sub arn:${AWS::Partition}:events:${AWS::Region}:865473395570:event-bus/mobile-purchases-dynamo-stream-${Stage}
+          RoleArn: !GetAtt ForwardMobilePurchasesDynamoStreamsRuleRole.Arn
 
   MobilePurchasesPipeRole:
     Type: AWS::IAM::Role
@@ -280,7 +300,7 @@ Resources:
   MobilePurchasesUserSubsPipe:
     Type: AWS::Pipes::Pipe
     Properties:
-      Name: !Sub mobile-purchases2-${Stage}
+      Name: !Sub mobile-purchases-${Stage}
       RoleArn: !GetAtt MobilePurchasesPipeRole.Arn
       Source: !GetAtt UserSubscriptionTable.StreamArn
       SourceParameters:
@@ -299,5 +319,3 @@ Outputs:
     Value: !GetAtt SubscriptionTable.StreamArn
     Export:
       Name: !Sub ${App}-${Stage}-subscriptions-stream-arn
-
-
