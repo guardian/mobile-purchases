@@ -1,5 +1,5 @@
 
-# The Feast Acqusition Pipeline
+# The Feast Acquisition Pipeline
 
 [The Guardian Feast app (recipes)](https://www.theguardian.com/help/insideguardian/2024/apr/17/introducing-the-feast-app), can be accessed using a user's Guardian account (this can be an existing account or an account created on the fly when login to the app for the first time), and then allows users to take a Feast subscription, directly from the app.
 

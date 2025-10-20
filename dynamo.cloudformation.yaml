@@ -201,6 +201,118 @@ Resources:
       Value: !GetAtt UserSubscriptionTable.StreamArn
       Description: The ARN of the dynamo DB stream, saved to SSM Parameter Store
 
+  MobilePurchasesEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub mobile-purchases-${Stage}
+
+  MobilePurchasesEventLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/events/mobile-purchases-dynamo-event-bus-${Stage}
+      RetentionInDays: 14
+
+  MobilePurchasesEventLoggingRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub mobile-purchases-log-${Stage}
+      Description: Logs all events on the mobile-purchases bus to CloudWatch Logs
+      EventBusName: !Ref MobilePurchasesEventBus
+      EventPattern:
+        source:
+          - prefix: ""
+      State: ENABLED
+      Targets:
+        - Id: mobile-purchases-bus-logs
+          Arn: !GetAtt MobilePurchasesEventLogGroup.Arn
+
+  ForwardMobilePurchasesDynamoStreamsRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub forward-mobile-purchases-dynamo-streams-${Stage}-invoke
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+                aws:SourceArn: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/mobile-purchases-${Stage}/forward-mobile-purchases-dynamo-streams-${Stage}
+      Policies:
+        - PolicyName: put-events-to-membership-bus
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: ActionsForResource
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource:
+                  - !Sub arn:${AWS::Partition}:events:${AWS::Region}:865473395570:event-bus/mobile-purchases-dynamo-stream-${Stage}
+
+  ForwardMobilePurchasesDynamoStreamsRule:
+    Type: AWS::Events::Rule
+    DependsOn:
+      - ForwardMobilePurchasesDynamoStreamsRuleRole
+    Properties:
+      Name: !Sub forward-mobile-purchases-dynamo-streams-${Stage}
+      EventBusName: !Ref MobilePurchasesEventBus
+      EventPattern:
+        detail:
+          eventSource:
+            - aws:dynamodb
+      State: ENABLED
+      Targets:
+        - Id: forward-to-mobile-purchases-bus
+          Arn: !Sub arn:${AWS::Partition}:events:${AWS::Region}:865473395570:event-bus/mobile-purchases-dynamo-stream-${Stage}
+          RoleArn: !GetAtt ForwardMobilePurchasesDynamoStreamsRuleRole.Arn
+
+  MobilePurchasesPipeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: pipes.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: mobile-purchases-pipe-inline
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:ListStreams
+                Resource: !GetAtt UserSubscriptionTable.StreamArn
+              - Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: !GetAtt MobilePurchasesEventBus.Arn
+
+  MobilePurchasesUserSubsPipe:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      Name: !Sub mobile-purchases-${Stage}
+      RoleArn: !GetAtt MobilePurchasesPipeRole.Arn
+      Source: !GetAtt UserSubscriptionTable.StreamArn
+      SourceParameters:
+        DynamoDBStreamParameters:
+          StartingPosition: LATEST
+      Target: !GetAtt MobilePurchasesEventBus.Arn
+      TargetParameters:
+        EventBridgeEventBusParameters:
+          DetailType: user-subscription-change
+          Source: mobile.purchases.user-subscriptions
+      DesiredState: RUNNING
+
 Outputs:
   SubscriptionTableStream:
     Description: The ARN of the dynamo DB stream
