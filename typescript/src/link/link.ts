@@ -81,6 +81,7 @@ export async function parseAndStoreLink<A, B>(
     toSqsPayload: (payload: A) => SubscriptionCheckData[],
 ): Promise<APIGatewayProxyResult> {
     try {
+        console.log(`Input to link lambda is ${httpRequest}`);
         if (httpRequest.headers && getAuthToken(httpRequest.headers)) {
             const payload: A = parsePayload(httpRequest);
             const resolution: UserIdResolution = await getUserId(httpRequest.headers);
