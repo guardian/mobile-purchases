@@ -121,6 +121,7 @@ const countryToCurrencyMap = {
     // the bigquery-acquisitions-publisher, expect the old currency Zimbabwe Dollar
     // https://github.com/guardian/support-frontend/blob/7bb6458a3cda69b70f8d3e46ac6b95814891216d/support-lambdas/bigquery-acquisitions-publisher/typescript/currencySchema.ts#L163
     CD: 'CDF', // Democratic Republic of the Congo - Congolese franc
+    UG: 'UGX', // Republic of Uganda - Ugandan shilling
 
     // Americas
     MX: 'MXN', // Mexico - Mexican Peso
