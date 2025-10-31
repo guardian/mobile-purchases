@@ -472,10 +472,10 @@
   dependencies:
     googleapis-common "^7.0.0"
 
-"@guardian/eslint-config@^11.0.0":
-  version "11.0.0"
-  resolved "https://registry.yarnpkg.com/@guardian/eslint-config/-/eslint-config-11.0.0.tgz#5f1847213efa37dc2b90525ffbea6f7bfad06fb1"
-  integrity sha512-+3wY4kWT+y1ghH2hmsXqNBfp7UOjafKzRWQoTabHxaqwMcpdiAdxAMJhpx27lk4BRdjiMOglir9oE07u4mDYtQ==
+"@guardian/eslint-config@^12.0.1":
+  version "12.0.1"
+  resolved "https://registry.yarnpkg.com/@guardian/eslint-config/-/eslint-config-12.0.1.tgz#d7fc37d31cdfcb82d62e013295ecba873aa729ab"
+  integrity sha512-MS2+FSkcd9RncOZH2vLfZCoRsVywBHNZvit4E48+LRBG5J9mS+fqECoHAorqTKZpRRN/QszUhhs9YgKHn57rIg==
   dependencies:
     "@eslint-community/eslint-plugin-eslint-comments" "4.4.1"
     "@eslint/js" "9.19.0"
