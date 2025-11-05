@@ -1,8 +1,9 @@
 import sbt.{Def, project}
 import sbtassembly.MergeStrategy
-import scalariform.formatter.preferences._
 
 import scala.collection.immutable
+
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" % "scala-xml" % VersionScheme.Always
 
 val testAndCompileDependencies: String = "test->test;compile->compile"
 val awsVersion: String = "1.12.780"
@@ -63,10 +64,6 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
     "org.apache.logging.log4j" % "log4j-api" % log4j2Version
   )
   List(
-    scalariformPreferences := scalariformPreferences.value
-      .setPreference(AlignSingleLineCaseStatements, true)
-      .setPreference(DoubleIndentConstructorArguments, true)
-      .setPreference(DanglingCloseParenthesis, Preserve),
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     Test / scalacOptions ++= Seq("-Yrangepos"),
     libraryDependencies ++= Seq(
