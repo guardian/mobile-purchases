@@ -12,7 +12,7 @@ val jacksonData: String = "2.18.2"
 
 val scalaRoot = file("scala")
 
-val awsVersion2x: String = "2.37.0"
+val awsVersion2: String = "2.37.0"
 
 scalaVersion := "2.13.16"
 
@@ -58,12 +58,12 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
   val log4j2Version: String = "2.17.1"
   val jacksonVersion: String = "2.18.2"
   val upgradeTransitiveDependencies = Seq(
-    "software.amazon.awssdk" % "s3" % awsVersion2x,
-    "software.amazon.awssdk" % "ec2" % awsVersion2x,
-    "software.amazon.awssdk" % "dynamodb" % awsVersion2x,
-    "software.amazon.awssdk" % "cloudwatch" % awsVersion2x,
-    "software.amazon.awssdk" % "core" % awsVersion2x,
-    "software.amazon.awssdk" % "lambda" % awsVersion2x,
+    "software.amazon.awssdk" % "s3" % awsVersion2,
+    "software.amazon.awssdk" % "ec2" % awsVersion2,
+    "software.amazon.awssdk" % "dynamodb" % awsVersion2,
+    "software.amazon.awssdk" % "cloudwatch" % awsVersion2,
+    "software.amazon.awssdk" % "core" % awsVersion2,
+    "software.amazon.awssdk" % "lambda" % awsVersion2,
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion,
     "org.apache.logging.log4j" % "log4j-api" % log4j2Version
   )
