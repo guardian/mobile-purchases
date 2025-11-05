@@ -78,11 +78,11 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: CloudWatchAsyncClien
       val request = PutMetricDataRequest
         .builder()
         .namespace(s"mobile-purchases/$stage/$lambdaname")
-        .metricData(bufferOfMetrics) // <- Java List directly
+        .metricData(bufferOfMetrics)
         .build()
 
       val javaFuture: CompletableFuture[PutMetricDataResponse] = cw.putMetricData(request)
-      Some(javaFuture.toScala) // Using toScala from FutureConverters
+      Some(javaFuture.toScala)
     } else {
       None
     }
