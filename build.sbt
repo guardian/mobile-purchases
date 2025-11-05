@@ -57,7 +57,7 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
   val specsVersion: String = "4.19.2" // Not possible to upgrade to 5.*.* unless moving to Scala 3.
   val log4j2Version: String = "2.17.1"
   val jacksonVersion: String = "2.18.2"
-  val upgradeTransitiveDependencies = Seq(
+  val dependencies = Seq(
     "software.amazon.awssdk" % "s3" % awsVersion2,
     "software.amazon.awssdk" % "ec2" % awsVersion2,
     "software.amazon.awssdk" % "dynamodb" % awsVersion2,
@@ -81,7 +81,7 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
       "org.specs2" %% "specs2-scalacheck" % specsVersion % "test",
       "org.specs2" %% "specs2-mock" % specsVersion % "test"
     ),
-    libraryDependencies ++= upgradeTransitiveDependencies,
+    libraryDependencies ++= dependencies,
     name := s"mobile-purchases-$module",
     organization := "com.gu",
     description := "Validate Receipts",
