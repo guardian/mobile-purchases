@@ -67,7 +67,6 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion,
     "org.apache.logging.log4j" % "log4j-api" % log4j2Version
   )
-
   List(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     Test / scalacOptions ++= Seq("-Yrangepos"),
