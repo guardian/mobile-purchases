@@ -1,16 +1,16 @@
 package com.gu.mobilepurchases.googleoauth.lambda
 
-import java.io.{ ByteArrayInputStream, InputStream, OutputStream }
+import java.io.{ByteArrayInputStream, InputStream, OutputStream}
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.PutObjectResult
-import com.google.auth.oauth2.{ AccessToken, GoogleCredentials }
-import com.gu.conf.{ ConfigurationLoader, SSMConfigurationLocation }
-import com.gu.{ AppIdentity, AwsIdentity }
+import com.google.auth.oauth2.{AccessToken, GoogleCredentials}
+import com.gu.conf.{ConfigurationLoader, SSMConfigurationLocation}
+import com.gu.{AppIdentity, AwsIdentity}
 import com.typesafe.config.Config
 import org.apache.logging.log4j.LogManager
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 object GoogleOAuth {
 
@@ -45,9 +45,10 @@ object GoogleOAuth {
   def fetchConfiguration(): Config = {
     val credentialsProvider = DefaultCredentialsProvider.create()
     AppIdentity.whoAmI(defaultAppName = "google-oauth-lambda", credentialsProvider) match {
-      case Success(identity) => ConfigurationLoader.load(identity, credentialsProvider) {
-        case AwsIdentity(_, _, stage, _) => SSMConfigurationLocation(s"/mobile-purchases/$stage/google-oauth-lambda", "eu-west-1")
-      }
+      case Success(identity) =>
+        ConfigurationLoader.load(identity, credentialsProvider) { case AwsIdentity(_, _, stage, _) =>
+          SSMConfigurationLocation(s"/mobile-purchases/$stage/google-oauth-lambda", "eu-west-1")
+        }
       case Failure(cause) => throw new Exception(s"Could not fetch configuration, cause: ${cause.getMessage}")
     }
   }
@@ -62,7 +63,8 @@ object S3Uploader {
 
   val s3Client = AmazonS3ClientBuilder.defaultClient()
 
-  def accessTokenAsJsonString(accessToken: AccessToken): String = s"""{"token":"${accessToken.getTokenValue}","expiry":"${accessToken.getExpirationTime}"}"""
+  def accessTokenAsJsonString(accessToken: AccessToken): String =
+    s"""{"token":"${accessToken.getTokenValue}","expiry":"${accessToken.getExpirationTime}"}"""
 
   def uploadTokenToS3(accessToken: AccessToken): Try[PutObjectResult] = Try {
     s3Client.putObject(
