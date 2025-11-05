@@ -17,14 +17,11 @@ object CloudWatchImplSpec extends SpecificationFeatures with Mockito {
 
   def mockSuccessfullySendMetrics(assertPutMetricDataRequest: PutMetricDataRequest => Unit): CloudWatchAsyncClient = {
     val cloudWatchClient = mock[CloudWatchAsyncClient]
-
-    // Capture argument and respond with a completed future
     cloudWatchClient.putMetricData(any[PutMetricDataRequest]()) answers { request: Any =>
       val req = request.asInstanceOf[PutMetricDataRequest]
       assertPutMetricDataRequest(req)
       CompletableFuture.completedFuture(PutMetricDataResponse.builder().build())
     }
-
     cloudWatchClient
   }
 }
