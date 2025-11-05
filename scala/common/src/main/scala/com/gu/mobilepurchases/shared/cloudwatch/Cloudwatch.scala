@@ -2,17 +2,20 @@ package com.gu.mobilepurchases.shared.cloudwatch
 
 import java.time.{Duration, Instant}
 import java.util
-import java.util.Date
-import java.util.concurrent.{ConcurrentLinkedQueue, TimeUnit}
-
-import com.amazonaws.handlers.AsyncHandler
-import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync
-import com.amazonaws.services.cloudwatch.model.{MetricDatum, PutMetricDataRequest, PutMetricDataResult, StandardUnit}
+import java.util.concurrent.{CompletableFuture, ConcurrentLinkedQueue}
+import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
+import software.amazon.awssdk.services.cloudwatch.model.{
+  MetricDatum,
+  PutMetricDataRequest,
+  PutMetricDataResponse,
+  StandardUnit
+}
+import scala.compat.java8.FutureConverters._
 import com.gu.mobilepurchases.shared.external.Parallelism
 import org.apache.logging.log4j.{LogManager, Logger}
-
 import scala.annotation.tailrec
-import scala.concurrent.{Await, ExecutionContext, Future, Promise, duration}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
 
 trait CloudWatchMetrics {
   def queueMetric(
@@ -34,67 +37,64 @@ trait CloudWatchPublisher {
 trait CloudWatch extends CloudWatchMetrics with CloudWatchPublisher
 
 sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Instant = Instant.now()) {
-  def succeed = cloudWatch.queueMetric(
+  def succeed: Boolean = cloudWatch.queueMetric(
     s"$metricName-success",
     Duration.between(start, Instant.now()).toMillis.toDouble,
-    StandardUnit.Milliseconds,
+    StandardUnit.MILLISECONDS,
     start
   )
-  def fail = cloudWatch.queueMetric(
+
+  def fail: Boolean = cloudWatch.queueMetric(
     s"$metricName-fail",
     Duration.between(start, Instant.now()).toMillis.toDouble,
-    StandardUnit.Milliseconds,
+    StandardUnit.MILLISECONDS,
     start
   )
-
 }
 
-class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsync) extends CloudWatch {
+class CloudWatchImpl(stage: String, lambdaname: String, cw: CloudWatchAsyncClient) extends CloudWatch {
 
   private val logger: Logger = LogManager.getLogger(classOf[CloudWatchImpl])
   implicit private val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   private val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
 
   def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Boolean = {
-
     queue.add(
-      new MetricDatum()
-        .withTimestamp(Date.from(instant))
-        .withMetricName(metricName)
-        .withUnit(standardUnit)
-        .withValue(value)
+      MetricDatum
+        .builder()
+        .metricName(metricName)
+        .timestamp(instant)
+        .unit(standardUnit)
+        .value(value)
+        .build()
     )
+    true
   }
 
-  def sendABatch(bufferOfMetrics: util.ArrayList[MetricDatum]): Option[Future[PutMetricDataResult]] = {
-
+  private def sendABatch(
+      bufferOfMetrics: util.ArrayList[MetricDatum]
+  ): Option[Future[PutMetricDataResponse]] = {
     if (!bufferOfMetrics.isEmpty) {
-      val request: PutMetricDataRequest = new PutMetricDataRequest()
-        .withNamespace(s"mobile-purchases/$stage/$lambdaname")
-        .withMetricData(bufferOfMetrics)
-      val promise: Promise[PutMetricDataResult] = Promise[PutMetricDataResult]()
-      val value: AsyncHandler[PutMetricDataRequest, PutMetricDataResult] =
-        new AsyncHandler[PutMetricDataRequest, PutMetricDataResult] {
-          override def onError(exception: Exception): Unit = promise.failure(exception)
-          override def onSuccess(request: PutMetricDataRequest, result: PutMetricDataResult): Unit = {
-            promise.success(result)
-          }
-        }
-      cw.putMetricDataAsync(request, value)
-      Some(promise.future)
+      val request = PutMetricDataRequest
+        .builder()
+        .namespace(s"mobile-purchases/$stage/$lambdaname")
+        .metricData(bufferOfMetrics) // <- Java List directly
+        .build()
+
+      val javaFuture: CompletableFuture[PutMetricDataResponse] = cw.putMetricData(request)
+      Some(javaFuture.toScala) // Using toScala from FutureConverters
     } else {
       None
     }
-
   }
 
   @tailrec
-  final def sendMetricsSoFar(
+  private final def sendMetricsSoFar(
       queue: ConcurrentLinkedQueue[MetricDatum],
       bufferOfMetrics: util.ArrayList[MetricDatum],
-      eventuallySentSoFar: Seq[Option[Future[PutMetricDataResult]]]
-  ): Seq[Option[Future[PutMetricDataResult]]] = {
-    val current: MetricDatum = queue.poll()
+      eventuallySentSoFar: Seq[Option[Future[PutMetricDataResponse]]]
+  ): Seq[Option[Future[PutMetricDataResponse]]] = {
+    val current = queue.poll()
     if (current == null) {
       eventuallySentSoFar :+ sendABatch(bufferOfMetrics)
     } else {
@@ -108,14 +108,23 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: AmazonCloudWatchAsyn
   }
 
   def sendMetricsSoFar(): Unit = {
-    val eventualSeq: Future[Seq[PutMetricDataResult]] =
-      Future.sequence(sendMetricsSoFar(queue, new util.ArrayList[MetricDatum](), Seq()).flatten)
-    Await.ready(eventualSeq, duration.Duration(30, TimeUnit.SECONDS))
+    val batchFutures = sendMetricsSoFar(queue, new util.ArrayList[MetricDatum](), Seq())
+
+    // Extract and flatten the futures
+    val futures: Seq[Future[PutMetricDataResponse]] = batchFutures.collect { case Some(future) =>
+      future
+    }
+
+    // Wait for all batches to complete
+    if (futures.nonEmpty) {
+      val allBatches = Future.sequence(futures)
+      Await.result(allBatches, 30.seconds)
+    }
   }
 
   def startTimer(metricName: String): Timer = new Timer(metricName, this)
 
   def meterHttpStatusResponses(metricPrefix: String, code: Int): Unit =
-    queueMetric(s"$metricPrefix-${code / 100}xx", 1, StandardUnit.Count)
+    queueMetric(s"$metricPrefix-${code / 100}xx", 1, StandardUnit.COUNT)
 
 }

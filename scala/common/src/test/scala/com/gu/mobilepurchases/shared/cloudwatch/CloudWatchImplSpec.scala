@@ -1,88 +1,91 @@
 package com.gu.mobilepurchases.shared.cloudwatch
 
-import java.util
 import java.util.concurrent.CompletableFuture
-
-import com.amazonaws.handlers.AsyncHandler
-import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync
-import com.amazonaws.services.cloudwatch.model.{ MetricDatum, PutMetricDataRequest, PutMetricDataResult, StandardUnit }
 import org.mockito.ArgumentCaptor
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.mutable.SpecificationFeatures
+import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
+import software.amazon.awssdk.services.cloudwatch.model.{MetricDatum, PutMetricDataRequest, PutMetricDataResponse, StandardUnit}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
+import org.mockito.ArgumentMatchers.any
 
 object CloudWatchImplSpec extends SpecificationFeatures with Mockito {
-  def mockSuccessfullySendMetrics(assertPutMetricDataRequest: (PutMetricDataRequest => Unit)): AmazonCloudWatchAsync = {
-    val amazonCloudWatch: AmazonCloudWatchAsync = mock[AmazonCloudWatchAsync]
-    val requestCaptor: ArgumentCaptor[PutMetricDataRequest] = ArgumentCaptor.forClass(classOf[PutMetricDataRequest])
-    val asyncCaptor: ArgumentCaptor[AsyncHandler[PutMetricDataRequest, PutMetricDataResult]] = ArgumentCaptor.forClass(classOf[AsyncHandler[PutMetricDataRequest, PutMetricDataResult]])
-    val putMetricDataResult: PutMetricDataResult = mock[PutMetricDataResult]
-    amazonCloudWatch.putMetricDataAsync(requestCaptor.capture(), asyncCaptor.capture()) responds {
-      case (_: Any) => {
-        val request: PutMetricDataRequest = requestCaptor.getValue
-        asyncCaptor.getValue.onSuccess(request, putMetricDataResult)
-        assertPutMetricDataRequest(request)
-        CompletableFuture.completedFuture(putMetricDataResult)
-      }
+  implicit val ec: ExecutionContext = ExecutionContext.global
+
+  def mockSuccessfullySendMetrics(assertPutMetricDataRequest: PutMetricDataRequest => Unit): CloudWatchAsyncClient = {
+    val cloudWatchClient = mock[CloudWatchAsyncClient]
+
+    // Capture argument and respond with a completed future
+    cloudWatchClient.putMetricData(any[PutMetricDataRequest]()) answers { request: Any =>
+      val req = request.asInstanceOf[PutMetricDataRequest]
+      assertPutMetricDataRequest(req)
+      CompletableFuture.completedFuture(PutMetricDataResponse.builder().build())
     }
-    amazonCloudWatch
+
+    cloudWatchClient
   }
 }
 
 class CloudWatchImplSpec extends Specification with Mockito {
+
+  implicit val ec: ExecutionContext = ExecutionContext.global
+
   "CloudWatchImpl" should {
-    "Sends basic metric" in {
 
-      def assertPutMetricDataRequest(request: PutMetricDataRequest): Unit = {
-        val metricData: util.List[MetricDatum] = request.getMetricData
-        metricData.size() must beEqualTo(1)
-        val datum: MetricDatum = metricData.get(0)
-        datum.getMetricName must beEqualTo("basic-metric")
-        datum.getUnit must beEqualTo(StandardUnit.Count.toString)
-        datum.getValue.doubleValue() must beEqualTo(1d)
+    "send basic metric" in {
+      def assertRequest(request: PutMetricDataRequest): Unit = {
+        val datum: MetricDatum = request.metricData().iterator().next()
+        datum.metricName() must beEqualTo("basic-metric")
+        datum.unit() must beEqualTo(StandardUnit.COUNT)
+        datum.value().doubleValue() must beEqualTo(1d)
       }
-      val amazonCloudWatch: AmazonCloudWatchAsync = CloudWatchImplSpec.mockSuccessfullySendMetrics(assertPutMetricDataRequest)
-      val cloudWatchImpl: CloudWatchImpl = new CloudWatchImpl("Stage", "LambdaName", amazonCloudWatch)
 
-      cloudWatchImpl.queueMetric("basic-metric", 1, StandardUnit.Count)
-      cloudWatchImpl.sendMetricsSoFar()
-      there was one(amazonCloudWatch).putMetricDataAsync(any[PutMetricDataRequest](), any[AsyncHandler[PutMetricDataRequest, PutMetricDataResult]]())
+      val client = CloudWatchImplSpec.mockSuccessfullySendMetrics(assertRequest)
+      val cloudWatch = new CloudWatchImpl("Stage", "LambdaName", client)
+
+      cloudWatch.queueMetric("basic-metric", 1, StandardUnit.COUNT)
+      cloudWatch.sendMetricsSoFar()
+
+      there was one(client).putMetricData(any[PutMetricDataRequest]())
     }
-    "Meter Http" in {
-      def assertPutMetricDataRequest(putMetricDataRequest: PutMetricDataRequest): Unit = {
-        val metricData: util.List[MetricDatum] = putMetricDataRequest.getMetricData
-        metricData.size() must beEqualTo(1)
-        val datum: MetricDatum = metricData.get(0)
-        datum.getMetricName must beEqualTo("http-3xx")
-        datum.getUnit must beEqualTo(StandardUnit.Count.toString)
-        datum.getValue.doubleValue() must beEqualTo(1d)
 
+    "meter HTTP responses" in {
+      def assertRequest(request: PutMetricDataRequest): Unit = {
+        val datum: MetricDatum = request.metricData().iterator().next()
+        datum.metricName() must beEqualTo("http-3xx")
+        datum.unit() must beEqualTo(StandardUnit.COUNT)
+        datum.value().doubleValue() must beEqualTo(1d)
       }
-      val amazonCloudWatch: AmazonCloudWatchAsync = CloudWatchImplSpec.mockSuccessfullySendMetrics(assertPutMetricDataRequest)
-      val cloudWatchImpl: CloudWatchImpl = new CloudWatchImpl("Stage", "LambdaName", amazonCloudWatch)
 
-      cloudWatchImpl.meterHttpStatusResponses("http", 303)
-      cloudWatchImpl.sendMetricsSoFar()
-      there was one(amazonCloudWatch).putMetricDataAsync(any[PutMetricDataRequest](), any[AsyncHandler[PutMetricDataRequest, PutMetricDataResult]]())
+      val client = CloudWatchImplSpec.mockSuccessfullySendMetrics(assertRequest)
+      val cloudWatch = new CloudWatchImpl("Stage", "LambdaName", client)
+
+      cloudWatch.meterHttpStatusResponses("http", 303)
+      cloudWatch.sendMetricsSoFar()
+
+      there was one(client).putMetricData(any[PutMetricDataRequest]())
     }
-    "Timer" in {
-      def assertPutMetricDataRequest(putMetricDataRequest: PutMetricDataRequest): Unit = {
-        val metricData: util.List[MetricDatum] = putMetricDataRequest.getMetricData
-        metricData.size() must beEqualTo(1)
-        val datum: MetricDatum = metricData.get(0)
-        datum.getMetricName must beEqualTo("Timer-success")
 
-        datum.getUnit must beEqualTo(StandardUnit.Milliseconds.toString)
-        datum.getValue.doubleValue() must be_>(1d)
+    "timer metrics" in {
+      def assertRequest(request: PutMetricDataRequest): Unit = {
+        val datum: MetricDatum = request.metricData().iterator().next()
+        datum.metricName() must beEqualTo("Timer-success")
+        datum.unit() must beEqualTo(StandardUnit.MILLISECONDS)
+        datum.value().doubleValue() must be_>(1d)
       }
-      val amazonCloudWatch: AmazonCloudWatchAsync = CloudWatchImplSpec.mockSuccessfullySendMetrics(assertPutMetricDataRequest)
-      val cloudWatchImpl: CloudWatchImpl = new CloudWatchImpl("stage", "lambdaname", amazonCloudWatch)
 
-      val timer: Timer = cloudWatchImpl.startTimer("Timer")
+      val client = CloudWatchImplSpec.mockSuccessfullySendMetrics(assertRequest)
+      val cloudWatch = new CloudWatchImpl("Stage", "LambdaName", client)
+
+      val timer = cloudWatch.startTimer("Timer")
       Thread.sleep(250)
       timer.succeed
-      cloudWatchImpl.sendMetricsSoFar()
-      there was one(amazonCloudWatch).putMetricDataAsync(any[PutMetricDataRequest](), any[AsyncHandler[PutMetricDataRequest, PutMetricDataResult]]())
+      cloudWatch.sendMetricsSoFar()
+
+      there was one(client).putMetricData(any[PutMetricDataRequest]())
     }
 
   }

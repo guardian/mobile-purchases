@@ -6,12 +6,13 @@ import scala.collection.immutable
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" % "scala-xml" % VersionScheme.Always
 
 val testAndCompileDependencies: String = "test->test;compile->compile"
-val awsVersion: String = "1.12.780"
 val simpleConfigurationVersion: String = "1.6.2"
 
 val jacksonData: String = "2.18.2"
 
 val scalaRoot = file("scala")
+
+val awsVersion2x: String = "2.37.0"
 
 scalaVersion := "2.13.16"
 
@@ -57,20 +58,22 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
   val log4j2Version: String = "2.17.1"
   val jacksonVersion: String = "2.18.2"
   val upgradeTransitiveDependencies = Seq(
-    "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
-    "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
-    "com.amazonaws" % "aws-java-sdk-core" % awsVersion,
+    "software.amazon.awssdk" % "s3" % awsVersion2x,
+    "software.amazon.awssdk" % "ec2" % awsVersion2x,
+    "software.amazon.awssdk" % "dynamodb" % awsVersion2x,
+    "software.amazon.awssdk" % "cloudwatch" % awsVersion2x,
+    "software.amazon.awssdk" % "core" % awsVersion2x,
+    "software.amazon.awssdk" % "lambda" % awsVersion2x,
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion,
     "org.apache.logging.log4j" % "log4j-api" % log4j2Version
   )
+
   List(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     Test / scalacOptions ++= Seq("-Yrangepos"),
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.6",
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
-      "com.amazonaws" % "aws-lambda-java-log4j2" % "1.5.0",
-      "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
       "org.scanamo" %% "scanamo" % "1.0.0-M23",
