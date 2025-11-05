@@ -108,18 +108,7 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: CloudWatchAsyncClien
   }
 
   def sendMetricsSoFar(): Unit = {
-    val batchFutures = sendMetricsSoFar(queue, new util.ArrayList[MetricDatum](), Seq())
-
-    // Extract and flatten the futures
-    val futures: Seq[Future[PutMetricDataResponse]] = batchFutures.collect { case Some(future) =>
-      future
-    }
-
-    // Wait for all batches to complete
-    if (futures.nonEmpty) {
-      val allBatches = Future.sequence(futures)
-      Await.result(allBatches, 30.seconds)
-    }
+    Await.result(Future.sequence(sendMetricsSoFar(queue, new util.ArrayList[MetricDatum](), Seq()).flatten), 30.seconds)
   }
 
   def startTimer(metricName: String): Timer = new Timer(metricName, this)
