@@ -43,13 +43,6 @@ sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Ins
     StandardUnit.MILLISECONDS,
     start
   )
-
-  def fail: Boolean = cloudWatch.queueMetric(
-    s"$metricName-fail",
-    Duration.between(start, Instant.now()).toMillis.toDouble,
-    StandardUnit.MILLISECONDS,
-    start
-  )
 }
 
 class CloudWatchImpl(stage: String, lambdaname: String, cw: CloudWatchAsyncClient) extends CloudWatch {
