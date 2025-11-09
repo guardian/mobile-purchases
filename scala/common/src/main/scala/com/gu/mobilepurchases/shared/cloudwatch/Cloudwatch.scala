@@ -23,7 +23,7 @@ trait CloudWatchMetrics {
       value: Double,
       standardUnit: StandardUnit,
       instant: Instant = Instant.now()
-  ): Boolean
+  ): Unit
 
   def startTimer(metricName: String): Timer
 
@@ -37,7 +37,7 @@ trait CloudWatchPublisher {
 trait CloudWatch extends CloudWatchMetrics with CloudWatchPublisher
 
 sealed class Timer(metricName: String, cloudWatch: CloudWatchMetrics, start: Instant = Instant.now()) {
-  def succeed: Boolean = cloudWatch.queueMetric(
+  def succeed(): Unit = cloudWatch.queueMetric(
     s"$metricName-success",
     Duration.between(start, Instant.now()).toMillis.toDouble,
     StandardUnit.MILLISECONDS,
@@ -51,7 +51,7 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: CloudWatchAsyncClien
   implicit private val ec: ExecutionContext = Parallelism.largeGlobalExecutionContext
   private val queue: ConcurrentLinkedQueue[MetricDatum] = new ConcurrentLinkedQueue[MetricDatum]()
 
-  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Boolean = {
+  def queueMetric(metricName: String, value: Double, standardUnit: StandardUnit, instant: Instant): Unit = {
     queue.add(
       MetricDatum
         .builder()
@@ -61,7 +61,7 @@ class CloudWatchImpl(stage: String, lambdaname: String, cw: CloudWatchAsyncClien
         .value(value)
         .build()
     )
-    true
+    ()
   }
 
   private def sendABatch(
