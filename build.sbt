@@ -58,8 +58,7 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
   val log4j2Version: String = "2.17.1"
   val jacksonVersion: String = "2.18.2"
   val dependencies = Seq(
-    "software.amazon.awssdk" % "dynamodb" % awsVersion2,
-    "software.amazon.awssdk" % "cloudwatch" % awsVersion2,
+
     "software.amazon.awssdk" % "core" % awsVersion2,
     "software.amazon.awssdk" % "lambda" % awsVersion2,
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion,
@@ -71,6 +70,8 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
     libraryDependencies ++= Seq(
       "software.amazon.awssdk" % "s3" % awsVersion2,
       "software.amazon.awssdk" % "ec2" % awsVersion2,
+      "software.amazon.awssdk" % "dynamodb" % awsVersion2,
+      "software.amazon.awssdk" % "cloudwatch" % awsVersion2,
       "commons-io" % "commons-io" % "2.6",
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
