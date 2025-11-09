@@ -1,16 +1,12 @@
 package com.gu.mobilepurchases.shared.cloudwatch
 
 import java.util.concurrent.CompletableFuture
-import org.mockito.ArgumentCaptor
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.mutable.SpecificationFeatures
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient
 import software.amazon.awssdk.services.cloudwatch.model.{MetricDatum, PutMetricDataRequest, PutMetricDataResponse, StandardUnit}
 import scala.concurrent.ExecutionContext
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
-import org.mockito.ArgumentMatchers.any
 
 object CloudWatchImplSpec extends SpecificationFeatures with Mockito {
   implicit val ec: ExecutionContext = ExecutionContext.global
