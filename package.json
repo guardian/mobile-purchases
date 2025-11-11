@@ -44,7 +44,7 @@
     "@guardian/types": "^9.0.1",
     "@okta/jwt-verifier": "^4.0.2",
     "@types/aws-lambda": "8.10.157",
-    "@types/node": "^24.9.2",
+    "@types/node": "^24.10.0",
     "aws-sdk": "^2.1692.0",
     "jsonwebtoken": "^9.0.2",
     "node-fetch": "2.6.7",
