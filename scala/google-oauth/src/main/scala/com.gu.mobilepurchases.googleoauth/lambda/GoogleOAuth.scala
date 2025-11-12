@@ -1,20 +1,22 @@
 package com.gu.mobilepurchases.googleoauth.lambda
 
 import java.io.{ByteArrayInputStream, InputStream, OutputStream}
+import java.nio.charset.StandardCharsets
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
+import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.{PutObjectRequest, PutObjectResponse}
 import com.amazonaws.services.lambda.runtime.Context
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.s3.model.PutObjectResult
 import com.google.auth.oauth2.{AccessToken, GoogleCredentials}
 import com.gu.conf.{ConfigurationLoader, SSMConfigurationLocation}
 import com.gu.{AppIdentity, AwsIdentity}
 import com.typesafe.config.Config
 import org.apache.logging.log4j.LogManager
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import scala.util.{Failure, Success, Try}
 
 object GoogleOAuth {
 
-  val logger = LogManager.getLogger
+  private val logger = LogManager.getLogger
 
   def accessToken(): Unit = {
 
@@ -31,7 +33,6 @@ object GoogleOAuth {
         throw error
       }
     }
-
   }
 
   def refreshToken: Try[AccessToken] = Try {
@@ -43,7 +44,7 @@ object GoogleOAuth {
   }
 
   def fetchConfiguration(): Config = {
-    val credentialsProvider = DefaultCredentialsProvider.create()
+    val credentialsProvider = DefaultCredentialsProvider.builder().build()
     AppIdentity.whoAmI(defaultAppName = "google-oauth-lambda", credentialsProvider) match {
       case Success(identity) =>
         ConfigurationLoader.load(identity, credentialsProvider) { case AwsIdentity(_, _, stage, _) =>
@@ -61,17 +62,23 @@ object GoogleOAuth {
 
 object S3Uploader {
 
-  val s3Client = AmazonS3ClientBuilder.defaultClient()
+  private val s3Client: S3Client = S3Client.builder().build()
 
   def accessTokenAsJsonString(accessToken: AccessToken): String =
     s"""{"token":"${accessToken.getTokenValue}","expiry":"${accessToken.getExpirationTime}"}"""
 
-  def uploadTokenToS3(accessToken: AccessToken): Try[PutObjectResult] = Try {
-    s3Client.putObject(
-      "gu-mobile-access-tokens",
-      s"${System.getenv("Stage")}/google-play-developer-api/access_token.json",
-      accessTokenAsJsonString(accessToken)
-    )
+  def uploadTokenToS3(accessToken: AccessToken): Try[PutObjectResponse] = Try {
+    val bucket = "gu-mobile-access-tokens"
+    val key = s"${System.getenv("Stage")}/google-play-developer-api/access_token.json"
+    val content = accessTokenAsJsonString(accessToken)
+
+    val request = PutObjectRequest
+      .builder()
+      .bucket(bucket)
+      .key(key)
+      .build()
+
+    s3Client.putObject(request,  RequestBody.fromString(content))
   }
 
 }
