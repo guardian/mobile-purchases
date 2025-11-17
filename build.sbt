@@ -6,12 +6,13 @@ import scala.collection.immutable
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" % "scala-xml" % VersionScheme.Always
 
 val testAndCompileDependencies: String = "test->test;compile->compile"
-val awsVersion: String = "1.12.780"
 val simpleConfigurationVersion: String = "1.6.2"
 
 val jacksonData: String = "2.18.2"
 
 val scalaRoot = file("scala")
+
+val awsVersion2: String = "2.37.0"
 
 scalaVersion := "2.13.16"
 
@@ -56,30 +57,28 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
   val specsVersion: String = "4.19.2" // Not possible to upgrade to 5.*.* unless moving to Scala 3.
   val log4j2Version: String = "2.17.1"
   val jacksonVersion: String = "2.18.2"
-  val upgradeTransitiveDependencies = Seq(
-    "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
-    "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
-    "com.amazonaws" % "aws-java-sdk-core" % awsVersion,
-    "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion,
-    "org.apache.logging.log4j" % "log4j-api" % log4j2Version
-  )
   List(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
     Test / scalacOptions ++= Seq("-Yrangepos"),
     libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "s3" % awsVersion2,
+      "software.amazon.awssdk" % "ec2" % awsVersion2,
+      "software.amazon.awssdk" % "dynamodb" % awsVersion2,
+      "software.amazon.awssdk" % "cloudwatch" % awsVersion2,
+      "software.amazon.awssdk" % "core" % awsVersion2,
+      "software.amazon.awssdk" % "lambda" % awsVersion2,
       "commons-io" % "commons-io" % "2.6",
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
-      "com.amazonaws" % "aws-lambda-java-log4j2" % "1.5.0",
-      "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
+      "org.apache.logging.log4j" % "log4j-api" % log4j2Version,
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
+      "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion,
       "org.scanamo" %% "scanamo" % "1.0.0-M23",
       "com.gu" %% "simple-configuration-core" % simpleConfigurationVersion,
       "org.specs2" %% "specs2-core" % specsVersion % "test",
       "org.specs2" %% "specs2-scalacheck" % specsVersion % "test",
       "org.specs2" %% "specs2-mock" % specsVersion % "test"
     ),
-    libraryDependencies ++= upgradeTransitiveDependencies,
     name := s"mobile-purchases-$module",
     organization := "com.gu",
     description := "Validate Receipts",

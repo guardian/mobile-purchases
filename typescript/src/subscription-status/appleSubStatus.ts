@@ -73,7 +73,9 @@ function logClientServerStatusDiff(
 export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     let payload: AppleLinkPayload;
     try {
+        console.log(`[6bfd5d4e] httpRequest.body`, httpRequest.body);
         payload = JSON.parse(httpRequest.body ?? '') as AppleLinkPayload;
+        console.log(`[918daf29] httpRequest.body`, JSON.stringify(payload));
     } catch (e) {
         return HTTPResponses.INVALID_REQUEST;
     }
@@ -93,7 +95,7 @@ export async function handler(httpRequest: APIGatewayProxyEvent): Promise<APIGat
         const responsePayload = JSON.stringify(calculatedResponse);
         return { statusCode: 200, body: responsePayload };
     } catch (e) {
-        console.log(`Unable to validate receipt(s)`, e);
+        console.log(`[88b416ca] unable to validate receipt(s)`, e);
         return HTTPResponses.INTERNAL_ERROR;
     }
 }
