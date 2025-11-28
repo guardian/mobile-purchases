@@ -9,7 +9,7 @@ The two tables that have received an extra field are
 
 The extra field add data to both Apple and Android subscriptions, both using the `extra` field but the object being added is different between the two platforms.
 
-[1] Ok, ok, by now I can see it might now have been the absolute best name.
+[1] Ok, ok, by now I can see that might not have been the absolute best name.
 
 ### The Apple/iOS extra field
 
