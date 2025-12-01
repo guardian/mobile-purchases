@@ -71,32 +71,6 @@ interface E1GoogleSubscription {
     acknowledgementState: string;
     lineItems: E1GoogleSubscriptionLineItem[];
 }
-interface E1GoogleSubscriptionProductBasePlanRegionalConfig {
-    regionCode: string;
-    newSubscriberAvailability: boolean;
-    price: E1CommonPrice;
-}
-interface E1GoogleSubscriptionProductBasePlan {
-    basePlanId: string;
-    regionalConfigs: E1GoogleSubscriptionProductBasePlanRegionalConfig[];
-    state: string;
-    // autoRenewingBasePlanType // not modelled for the moment
-    // otherRegionsConfig       // not modelled for the moment
-}
-
-interface E1GoogleSubscriptionListingItem {
-    title: string;
-    languageCode: string;
-    description: string;
-}
-
-interface E1GoogleSubscriptionProduct {
-    packageName: string;
-    productId: string;
-    basePlans: E1GoogleSubscriptionProductBasePlan[];
-    listings: E1GoogleSubscriptionListingItem[];
-    // taxAndComplianceSettings // not modelled
-}
 
 const extractGoogleSubscription = async (
     accessToken: AccessToken,
@@ -137,48 +111,6 @@ const extractGoogleSubscription = async (
     return Promise.resolve(subscription);
 };
 
-const extractGoogleSubscriptionProduct = async (
-    accessToken: AccessToken,
-    packageName: string,
-    productId: string,
-): Promise<E1GoogleSubscriptionProduct | undefined> => {
-    console.log(`[f779539] query google api for subscription product`);
-
-    // Example of productId: 'guardian.subscription.month.meteredoffer'
-    // See docs/google-identifiers.md for details
-
-    const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/subscriptions/${productId}`;
-    console.log(`[643eb5b5] url: ${url}`);
-
-    const params = {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken.token}`,
-        },
-    };
-
-    let subscriptionProduct;
-
-    try {
-        const response = await fetch(url, params);
-        if (response.ok) {
-            subscriptionProduct = (await response.json()) as E1GoogleSubscriptionProduct;
-        } else {
-            console.error(`[ce8c6f32] error: fetch failed: ${response.status}`);
-        }
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error(`[a726e01d] error: fetch failed: ${error.message}`);
-        } else {
-            console.error(`[a24ac23e] error: fetch failed: ${JSON.stringify(error)}`);
-        }
-        throw error; // <-- rethrow the original error
-    }
-
-    return Promise.resolve(subscriptionProduct);
-};
-
 interface E1Android {
     guType: 'google-extra-2025-06-26';
     packageName: string;
@@ -205,12 +137,6 @@ const buildExtraObject = async (
         return Promise.resolve(undefined);
     }
     console.log(`[26b172df] subscription: ${JSON.stringify(subscription)}`);
-    const subscriptionProduct = await extractGoogleSubscriptionProduct(
-        accessToken,
-        packageName,
-        productId,
-    );
-    console.log(`[d9d390c4] subscription product: ${JSON.stringify(subscriptionProduct)}`);
     const offerTags = extractOfferTagsFromSubscription(subscription);
     console.log(`[68041474] offer tags: ${JSON.stringify(offerTags)}`);
     const extraObject: E1Android = {
