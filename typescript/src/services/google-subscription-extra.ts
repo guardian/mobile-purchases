@@ -188,12 +188,10 @@ interface E1Android {
     offerTags: string[];
 }
 
-const extractOfferTagsFromSubscriptionProduct = (
-    subscriptionProduct: E1GoogleSubscriptionProduct | undefined,
-): string[] => {
-    // We are not performing the extraction for the moment while we are waiting for a confirmation of
-    // the location in the E1GoogleSubscriptionProduct
-    return [];
+const extractOfferTagsFromSubscription = (subscription: E1GoogleSubscription): string[] => {
+    return subscription.lineItems.map((lineItem) => {
+        return lineItem.offerDetails.offerId;
+    });
 };
 
 const buildExtraObject = async (
@@ -213,7 +211,7 @@ const buildExtraObject = async (
         productId,
     );
     console.log(`[d9d390c4] subscription product: ${JSON.stringify(subscriptionProduct)}`);
-    const offerTags = extractOfferTagsFromSubscriptionProduct(subscriptionProduct);
+    const offerTags = extractOfferTagsFromSubscription(subscription);
     console.log(`[68041474] offer tags: ${JSON.stringify(offerTags)}`);
     const extraObject: E1Android = {
         guType: 'google-extra-2025-06-26',
