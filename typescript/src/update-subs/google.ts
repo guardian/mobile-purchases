@@ -6,7 +6,8 @@ import type { GoogleSubscriptionReference } from '../models/subscriptionReferenc
 import { googlePackageNameToPlatform } from '../services/appToPlatform';
 import type { GoogleResponseBody } from '../services/google-play';
 import { fetchGoogleSubscription, GOOGLE_PAYMENT_STATE } from '../services/google-play';
-import { build_extra_string } from '../services/google-subscription-extra';
+import type { GoogleExtraDataExtended } from '../services/google-subscription-extra';
+import { extraction } from '../services/google-subscription-extra';
 import { PRODUCT_BILLING_PERIOD } from '../services/productBillingPeriod';
 import { Stage } from '../utils/appIdentity';
 import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from '../utils/dates';
@@ -42,15 +43,13 @@ export const googleResponseBodyToSubscription = async (
 
     const freeTrial = googleResponse.paymentState === GOOGLE_PAYMENT_STATE.FREE_TRIAL;
 
-    var extra = '';
+    // We are instantiating one value, which is going to be set if we manage to construct a extra object
+    let extra = '';
 
     if (shouldBuildExtra) {
         // Guarded by `shouldBuildExtra` because we do not want this to run from the automated tests
 
         const productId = subscriptionId; // [1]
-        extra = (await build_extra_string(Stage, packageName, purchaseToken, productId)) ?? '';
-        console.log(`[df099cfb] ${extra}`);
-
         // [1]
         // What is called `subscriptionId` in the notification is actually a productId.
         // An example of notification is
@@ -60,6 +59,18 @@ export const googleResponseBodyToSubscription = async (
         //     "subscriptionId": "uk.co.guardian.feast.access"
         //}
         // See docs/google-identifiers.md for details
+
+        const data: GoogleExtraDataExtended | undefined = await extraction(
+            Stage,
+            packageName,
+            purchaseToken,
+            productId,
+        );
+
+        if (data !== undefined) {
+            extra = JSON.stringify(data.extra);
+            console.log(`[df099cfb] ${extra}`);
+        }
     }
 
     const subscription = new Subscription(
