@@ -126,6 +126,14 @@ const extractOfferTagsFromSubscription = (subscription: E1GoogleSubscription): s
     });
 };
 
+const extractFirstOfferTagFromSubscription = (
+    subscription: E1GoogleSubscription,
+): string | undefined => {
+    // Although the return an offerId, the naming of the function reflect the fact that
+    // offerIds are also known as "offer tags" in the context of the extra object
+    return subscription.lineItems[0]?.offerDetails?.offerId;
+};
+
 const buildExtraObject = async (
     accessToken: AccessToken,
     packageName: string,
@@ -150,22 +158,47 @@ const buildExtraObject = async (
     return Promise.resolve(extraObject);
 };
 
-export async function build_extra_string(
+export interface GoogleExtraDataExtended {
+    extra: E1Android;
+    offer_id: string | null;
+}
+
+export async function extraction(
     stage: string,
     packageName: string,
     purchaseToken: string,
     productId: string,
-): Promise<string | undefined> {
+): Promise<GoogleExtraDataExtended | undefined> {
     const accessToken: AccessToken = await getAccessToken(stage);
     try {
+        const googleSubscription = await extractGoogleSubscription(
+            accessToken,
+            packageName,
+            purchaseToken,
+        );
+        if (googleSubscription === undefined) {
+            console.log(`[3c0a9db2] could not determine the google subscription`);
+            // And here we short circuit the entire process and just return undefined since not being to
+            // determine the google subscription means that computing the extra object itself won't work.
+            return Promise.resolve(undefined);
+        }
         const extraObject = await buildExtraObject(
             accessToken,
             packageName,
             purchaseToken,
             productId,
         );
+        if (extraObject === undefined) {
+            console.log(`[0aa19ce0] could not determine extra object`);
+            return Promise.resolve(undefined);
+        }
         console.log(`[6734a9c1] extra object: ${JSON.stringify(extraObject)}`);
-        return Promise.resolve(JSON.stringify(extraObject));
+        const offer_id = extractFirstOfferTagFromSubscription(googleSubscription) ?? null;
+        const answer = {
+            extra: extraObject,
+            offer_id,
+        };
+        return Promise.resolve(answer);
     } catch (error) {
         if (error instanceof Error) {
             console.error(`[dab24062] error: building failed: ${error.message}`);

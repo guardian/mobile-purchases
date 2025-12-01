@@ -3,9 +3,10 @@ import { z } from 'zod';
 import { SubscriptionEvent } from '../models/subscriptionEvent';
 import type { GoogleSubscriptionReference } from '../models/subscriptionReference';
 import { googlePackageNameToPlatform } from '../services/appToPlatform';
-import { build_extra_string } from '../services/google-subscription-extra';
-import { Stage } from '../utils/appIdentity';
 import { fetchGoogleSubscription, GOOGLE_PAYMENT_STATE } from '../services/google-play';
+import type { GoogleExtraDataExtended } from '../services/google-subscription-extra';
+import { extraction } from '../services/google-subscription-extra';
+import { Stage } from '../utils/appIdentity';
 import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from '../utils/dates';
 import type { Option } from '../utils/option';
 import { Ignorable } from './ignorable';
@@ -157,13 +158,26 @@ export async function toDynamoEvent_google_async(
     //}
     // See docs/google-identifiers.md for details
 
+    // We are instantiating two values, which are going to be set if we manage to construct a extra object
     let extra = '';
+    let promotional_offer_id = null;
+
     console.log(`[8753e006] google pubsub, shouldBuildExtra: ${shouldBuildExtra}`);
     if (shouldBuildExtra) {
         const packageName = notification.packageName;
         const purchaseToken = notification.subscriptionNotification.purchaseToken;
-        extra = (await build_extra_string(Stage, packageName, purchaseToken, productId)) ?? '';
-        console.log(`[a7beb002] ${extra}`);
+        const data: GoogleExtraDataExtended | undefined = await extraction(
+            Stage,
+            packageName,
+            purchaseToken,
+            productId,
+        );
+        if (data !== undefined) {
+            extra = JSON.stringify(data.extra);
+            console.log(`[a7beb002] extra ${extra}`);
+            promotional_offer_id = data.offer_id;
+            console.log(`[682a94e9] promotional_offer_id: ${promotional_offer_id}`);
+        }
     }
 
     const subscription = new SubscriptionEvent(
@@ -178,7 +192,7 @@ export async function toDynamoEvent_google_async(
         notification, // googlePayload
         null, // applePayload
         dateToSecondTimestamp(thirtyMonths(eventTime)), // ttl
-        null, // promotional_offer_id ; string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        promotional_offer_id, // promotional_offer_id ; string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
         null, // promotional_offer_name ; string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
         productId, // product_id ; any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
         undefined, // purchase_date_ms ; any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
