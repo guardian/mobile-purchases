@@ -20,7 +20,7 @@ import Mock = jest.Mock;
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 
 describe('The google pubsub', () => {
-    test('Should return HTTP 200 and store the correct data in dynamo', () => {
+    test('Should return HTTP 200 and store the correct data in dynamo (1)', () => {
         process.env['Secret'] = 'MYSECRET';
         process.env['QueueUrl'] = '';
 
@@ -78,14 +78,14 @@ describe('The google pubsub', () => {
         };
 
         const expectedSubscriptionEventInDynamo: SubscriptionEvent = new SubscriptionEvent(
-            'PURCHASE_TOKEN',
-            '2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED',
-            '2017-08-21',
-            '2017-08-21T21:06:06.168Z',
-            'SUBSCRIPTION_PURCHASED',
-            'android',
-            'com.guardian.debug',
-            true,
+            'PURCHASE_TOKEN', // subscriptionId
+            '2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED', // timestampAndType
+            '2017-08-21', // date
+            '2017-08-21T21:06:06.168Z', // timestamp
+            'SUBSCRIPTION_PURCHASED', // eventType
+            'android', // platform
+            'com.guardian.debug', // appId
+            true, // freeTrial
             {
                 eventTimeMillis: '1503349566168',
                 packageName: 'com.guardian.debug',
@@ -96,15 +96,15 @@ describe('The google pubsub', () => {
                     version: '1.0',
                 },
                 version: '1.0',
-            },
-            null,
-            1582319167,
-            null,
-            null,
-            undefined,
-            undefined,
-            undefined,
-            '',
+            }, // googlePayload
+            null, // applePayload
+            1582319167, // ttl
+            null, // promotional_offer_id
+            null, // promotional_offer_name
+            'my.sku', // product_id
+            undefined, // purchase_date_ms
+            undefined, // expires_date_ms
+            '', // extra
         );
 
         const expectedSubscriptionReferenceInSqs = {
@@ -257,7 +257,7 @@ describe('The google pubsub', () => {
 });
 
 describe('The apple pubsub', () => {
-    test('Should return HTTP 200 and store the correct data in dynamo', () => {
+    test('Should return HTTP 200 and store the correct data in dynamo (2)', () => {
         process.env['Secret'] = 'MYSECRET';
         process.env['QueueUrl'] = '';
 

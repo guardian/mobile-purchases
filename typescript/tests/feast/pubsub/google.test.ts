@@ -118,14 +118,14 @@ describe('The Feast Google pubsub', () => {
 
         const result = await handler(input);
         const expectedSubscriptionEventInDynamo: SubscriptionEvent = new SubscriptionEvent(
-            'PURCHASE_TOKEN',
-            '2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED',
-            '2017-08-21',
-            '2017-08-21T21:06:06.168Z',
-            'SUBSCRIPTION_PURCHASED',
-            'android-feast',
-            'uk.co.guardian.feast',
-            true,
+            'PURCHASE_TOKEN', // subscriptionId
+            '2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED', // timestampAndType
+            '2017-08-21', // date
+            '2017-08-21T21:06:06.168Z', // timestamp
+            'SUBSCRIPTION_PURCHASED', // eventType
+            'android-feast', // platform
+            'uk.co.guardian.feast', // appId
+            true, // freeTrial
             {
                 eventTimeMillis: '1503349566168',
                 packageName: 'uk.co.guardian.feast',
@@ -136,15 +136,15 @@ describe('The Feast Google pubsub', () => {
                     version: '1.0',
                 },
                 version: '1.0',
-            },
-            null,
-            1582319167,
-            null,
-            null,
-            undefined,
-            undefined,
-            undefined,
-            '',
+            }, // googlePayload
+            null, // applePayload
+            1582319167, // ttl
+            null, // promotional_offer_id
+            null, // promotional_offer_name
+            'uk.co.guardian.feast.access.test', // product_id
+            undefined, // purchase_date_ms
+            undefined, // expires_date_ms
+            '', // extra
         );
 
         expect(result).toStrictEqual(HTTPResponses.OK);

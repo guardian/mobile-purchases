@@ -145,43 +145,44 @@ export async function toDynamoEvent_google_async(
         console.warn(`Unknown package name ${notification.packageName}`);
     }
 
+    const productId = notification.subscriptionNotification.subscriptionId; // [1]
+
+    // [1]
+    // What is called `subscriptionId` in the notification is actually a productId.
+    // An example of notification is
+    // {
+    //     "packageName": "uk.co.guardian.feast",
+    //     "purchaseToken": "Example-kokmikjooafaEUsuLAO3RKjfwtmyQ",
+    //     "subscriptionId": "uk.co.guardian.feast.access"
+    //}
+    // See docs/google-identifiers.md for details
+
     let extra = '';
     console.log(`[8753e006] google pubsub, shouldBuildExtra: ${shouldBuildExtra}`);
     if (shouldBuildExtra) {
         const packageName = notification.packageName;
         const purchaseToken = notification.subscriptionNotification.purchaseToken;
-        const productId = notification.subscriptionNotification.subscriptionId; // [1]
         extra = (await build_extra_string(Stage, packageName, purchaseToken, productId)) ?? '';
         console.log(`[a7beb002] ${extra}`);
-
-        // [1]
-        // What is called `subscriptionId` in the notification is actually a productId.
-        // An example of notification is
-        // {
-        //     "packageName": "uk.co.guardian.feast",
-        //     "purchaseToken": "Example-kokmikjooafaEUsuLAO3RKjfwtmyQ",
-        //     "subscriptionId": "uk.co.guardian.feast.access"
-        //}
-        // See docs/google-identifiers.md for details
     }
 
     const subscription = new SubscriptionEvent(
-        notification.subscriptionNotification.purchaseToken,
-        eventTimestamp + '|' + eventTypeString,
-        date,
-        eventTimestamp,
-        eventTypeString,
-        platform ?? 'unknown',
-        notification.packageName,
-        metaData?.freeTrial,
-        notification,
-        null,
-        dateToSecondTimestamp(thirtyMonths(eventTime)),
-        null, // string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-        null, // string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-        undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-        undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-        undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        notification.subscriptionNotification.purchaseToken, // subscriptionId
+        eventTimestamp + '|' + eventTypeString, // timestampAndType
+        date, // date
+        eventTimestamp, // timestamp
+        eventTypeString, // eventType
+        platform ?? 'unknown', // platform
+        notification.packageName, // appId
+        metaData?.freeTrial, // freeTrial
+        notification, // googlePayload
+        null, // applePayload
+        dateToSecondTimestamp(thirtyMonths(eventTime)), // ttl
+        null, // promotional_offer_id ; string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        null, // promotional_offer_name ; string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        productId, // product_id ; any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        undefined, // purchase_date_ms ; any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        undefined, // expires_date_ms ; any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
         extra, // extra
     );
 
