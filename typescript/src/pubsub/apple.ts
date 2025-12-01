@@ -70,22 +70,22 @@ export async function toDynamoEvent_apple_async(
     }
 
     const subscription = new SubscriptionEvent(
-        receiptsInOrder[0].original_transaction_id,
-        now.toISOString() + '|' + eventType,
-        now.toISOString().substr(0, 10),
-        now.toISOString(),
-        eventType,
-        platform ?? 'unknown',
-        notification.bid,
-        freeTrial,
-        null,
+        receiptsInOrder[0].original_transaction_id, // subscriptionId
+        now.toISOString() + '|' + eventType, // timestampAndType
+        now.toISOString().substr(0, 10), // date
+        now.toISOString(), // timestamp
+        eventType, // eventType
+        platform ?? 'unknown', // platform
+        notification.bid, // appId
+        freeTrial, // freeTrial
+        null, // googlePayload
         notification, // applePayload
-        dateToSecondTimestamp(thirtyMonths(now)),
-        notification.promotional_offer_id, // SubscriptionEvent.promotional_offer_id
-        notification.promotional_offer_name, // SubscriptionEvent.promotional_offer_name
-        notification.product_id, // SubscriptionEvent.product_id
-        notification.purchase_date_ms, // SubscriptionEvent.purchase_date_ms
-        notification.expires_date_ms, // SubscriptionEvent.expires_date_ms
+        dateToSecondTimestamp(thirtyMonths(now)), // ttl
+        notification.promotional_offer_id, // promotional_offer_id ; SubscriptionEvent.promotional_offer_id
+        notification.promotional_offer_name, // promotional_offer_name ; SubscriptionEvent.promotional_offer_name
+        notification.product_id, // product_id ; SubscriptionEvent.product_id
+        notification.purchase_date_ms, // purchase_date_ms ; SubscriptionEvent.purchase_date_ms
+        notification.expires_date_ms, // expires_date_ms ; SubscriptionEvent.expires_date_ms
         extra,
     );
 

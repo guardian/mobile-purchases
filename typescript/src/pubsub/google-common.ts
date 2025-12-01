@@ -166,22 +166,22 @@ export async function toDynamoEvent_google_async(
     }
 
     const subscription = new SubscriptionEvent(
-        notification.subscriptionNotification.purchaseToken,
-        eventTimestamp + '|' + eventTypeString,
-        date,
-        eventTimestamp,
-        eventTypeString,
-        platform ?? 'unknown',
-        notification.packageName,
-        metaData?.freeTrial,
-        notification,
-        null,
-        dateToSecondTimestamp(thirtyMonths(eventTime)),
-        null, // string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-        null, // string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-        undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-        undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
-        undefined, // any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        notification.subscriptionNotification.purchaseToken, // subscriptionId
+        eventTimestamp + '|' + eventTypeString, // timestampAndType
+        date, // date
+        eventTimestamp, // timestamp
+        eventTypeString, // eventType
+        platform ?? 'unknown', // platform
+        notification.packageName, // appId
+        metaData?.freeTrial, // freeTrial
+        notification, // googlePayload
+        null, // applePayload
+        dateToSecondTimestamp(thirtyMonths(eventTime)), // ttl
+        null, // promotional_offer_id ; string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        null, // promotional_offer_name ; string | null ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        undefined, // product_id ; any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        undefined, // purchase_date_ms ; any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
+        undefined, // expires_date_ms ; any ; Introduced during the Apple extension of SubscriptionEvent [2023-11-03]
         extra, // extra
     );
 
