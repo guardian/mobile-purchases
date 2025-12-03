@@ -95,6 +95,7 @@ const storefrontToCountryMap = {
     NPL: 'NP', // Nepal
     CIV: 'CI', // Côte d'Ivoire
     KHM: 'KH', // Kingdom of Cambodia
+    CYM: 'KY', // Cayman Islands
 };
 
 export const storefrontToCountry = (storefront: string): string => {
