@@ -104,7 +104,7 @@ jest.mock('aws-sdk/lib/core', () => {
 describe('messageIsOneDayOld() function', () => {
     beforeEach(() => {
         // Set the current time to a fixed date (2023-03-14)
-        jest.useFakeTimers('modern');
+        jest.useFakeTimers();
         jest.setSystemTime(new Date('2023-03-14'));
     });
 
@@ -132,7 +132,7 @@ describe('handler', () => {
         jest.clearAllMocks();
 
         // Set the current time to a fixed date (2023-03-14)
-        jest.useFakeTimers('modern');
+        jest.useFakeTimers();
         jest.setSystemTime(new Date('2023-03-14'));
     });
 

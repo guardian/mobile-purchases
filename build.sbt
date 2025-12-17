@@ -67,7 +67,7 @@ def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
       "software.amazon.awssdk" % "cloudwatch" % awsVersion2,
       "software.amazon.awssdk" % "core" % awsVersion2,
       "software.amazon.awssdk" % "lambda" % awsVersion2,
-      "commons-io" % "commons-io" % "2.6",
+      "commons-io" % "commons-io" % "2.18.0",
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4j2Version,
       "org.apache.logging.log4j" % "log4j-api" % log4j2Version,
