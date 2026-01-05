@@ -29,6 +29,7 @@ export const PRODUCT_BILLING_PERIOD: Record<string, string> = {
     'uk.co.guardian.gla.12months.2018Dec.withFreeTrial': 'P1Y',
     'uk.co.guardian.gla.12months.2018Dec.stepUp': 'P1Y',
     'uk.co.guardian.gla.12months.2023Mar.metered': 'P1Y',
+    'uk.co.guardian.gla.12months.2023Mar.promo': 'P1Y',
 
     // uk.co.guardian.subscription*
     'uk.co.guardian.subscription': 'P1M',
