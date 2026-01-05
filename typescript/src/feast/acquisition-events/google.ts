@@ -130,6 +130,7 @@ const countryToCurrencyMap = {
     CO: 'COP', // Colombia - Colombian Peso
     PE: 'PEN', // Peru - Peruvian Sol
     TT: 'TTD', // Trinidad & Tobago - Trinidad & Tobago Dollar
+    VI: 'USD', // United States Virgin Islands - United States Dollar
 
     // Oceania
     FJ: 'FJD', // Fiji - Fijian Dollar
