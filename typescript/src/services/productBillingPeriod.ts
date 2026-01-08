@@ -24,12 +24,17 @@ export const PRODUCT_BILLING_PERIOD: Record<string, string> = {
     'uk.co.guardian.gla.1month.2018May.meteredoffer': 'P1M',
     'uk.co.guardian.gla.1month.2018May.withFreeTrial': 'P1M',
     'uk.co.guardian.gla.1month.2018May.stepUp': 'P1M',
+    'uk.co.guardian.gla.1month.Jan2025': 'P1M',
+    'uk.co.guardian.gla.1month.Promo2025': 'P1M',
+    'uk.co.guardian.gla.1month.2023Mar.promo': 'P1M',
     'uk.co.guardian.gla.6months': 'P6M',
     'uk.co.guardian.gla.6months.2018May.withFreeTrial': 'P6M',
     'uk.co.guardian.gla.12months.2018Dec.withFreeTrial': 'P1Y',
     'uk.co.guardian.gla.12months.2018Dec.stepUp': 'P1Y',
+    'uk.co.guardian.gla.12months.2018Dec.meteredoffer': 'P1Y',
     'uk.co.guardian.gla.12months.2023Mar.metered': 'P1Y',
     'uk.co.guardian.gla.12months.2023Mar.promo': 'P1Y',
+    'uk.co.guardian.gla.1year.Jan2025': 'P1Y',
 
     // uk.co.guardian.subscription*
     'uk.co.guardian.subscription': 'P1M',
