@@ -96,6 +96,7 @@ const storefrontToCountryMap = {
     CIV: 'CI', // Côte d'Ivoire
     KHM: 'KH', // Kingdom of Cambodia
     CYM: 'KY', // Cayman Islands
+    KAZ: 'KZ', // Kazakhstan
 };
 
 export const storefrontToCountry = (storefront: string): string => {
