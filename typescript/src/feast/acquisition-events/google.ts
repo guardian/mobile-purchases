@@ -146,6 +146,7 @@ const countryToCurrencyMap = {
     NP: 'NPR', // Nepal - Nepalese Rupee
     BH: 'BHD', // Bahrain - Bahraini Dinar
     MV: 'MVR', // the Maldives - Maldivian rufiyaa
+    GH: 'GHS', // Ghana - Ghanaian Cedi
 };
 
 const countryToCurrency = (country: string): string => {
