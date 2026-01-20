@@ -99,6 +99,156 @@ const storefrontToCountryMap = {
     KAZ: 'KZ', // Kazakhstan
     PRY: 'PY', // Paraguay
     CRI: 'CR', // Costa Rica
+    AFG: 'AF', // Afghanistan
+    DZA: 'DZ', // Algeria
+    ASM: 'AS', // American Samoa
+    AGO: 'AO', // Angola
+    AIA: 'AI', // Anguilla
+    ATA: 'AQ', // Antarctica
+    ATG: 'AG', // Antigua and Barbuda
+    ARM: 'AM', // Armenia
+    ABW: 'AW', // Aruba
+    AZE: 'AZ', // Azerbaijan
+    BHS: 'BS', // Bahamas (the)
+    BGD: 'BD', // Bangladesh
+    BRB: 'BB', // Barbados
+    BLZ: 'BZ', // Belize
+    BEN: 'BJ', // Benin
+    BMU: 'BM', // Bermuda
+    BTN: 'BT', // Bhutan
+    BOL: 'BO', // Bolivia (Plurinational State of)
+    BES: 'BQ', // Bonaire, Sint Eustatius and Saba
+    BWA: 'BW', // Botswana
+    BVT: 'BV', // Bouvet Island
+    IOT: 'IO', // British Indian Ocean Territory (the)
+    BRN: 'BN', // Brunei Darussalam
+    BFA: 'BF', // Burkina Faso
+    BDI: 'BI', // Burundi
+    CPV: 'CV', // Cabo Verde
+    CMR: 'CM', // Cameroon
+    CAF: 'CF', // Central African Republic (the)
+    TCD: 'TD', // Chad
+    CXR: 'CX', // Christmas Island
+    CCK: 'CC', // Cocos (Keeling) Islands (the)
+    COM: 'KM', // Comoros (the)
+    COD: 'CD', // Congo (the Democratic Republic of the)
+    COG: 'CG', // Congo (the)
+    COK: 'CK', // Cook Islands (the)
+    CUB: 'CU', // Cuba
+    CUW: 'CW', // Curaçao
+    DJI: 'DJ', // Djibouti
+    DMA: 'DM', // Dominica
+    DOM: 'DO', // Dominican Republic (the)
+    SLV: 'SV', // El Salvador
+    GNQ: 'GQ', // Equatorial Guinea
+    ERI: 'ER', // Eritrea
+    SWZ: 'SZ', // Eswatini
+    FLK: 'FK', // Falkland Islands (the) [Malvinas]
+    FRO: 'FO', // Faroe Islands (the)
+    FJI: 'FJ', // Fiji
+    GUF: 'GF', // French Guiana
+    PYF: 'PF', // French Polynesia
+    ATF: 'TF', // French Southern Territories (the)
+    GAB: 'GA', // Gabon
+    GMB: 'GM', // Gambia (the)
+    GEO: 'GE', // Georgia
+    GIB: 'GI', // Gibraltar
+    GRL: 'GL', // Greenland
+    GRD: 'GD', // Grenada
+    GLP: 'GP', // Guadeloupe
+    GUM: 'GU', // Guam
+    GTM: 'GT', // Guatemala
+    GGY: 'GG', // Guernsey
+    GIN: 'GN', // Guinea
+    GNB: 'GW', // Guinea-Bissau
+    GUY: 'GY', // Guyana
+    HTI: 'HT', // Haiti
+    HMD: 'HM', // Heard Island and McDonald Islands
+    HND: 'HN', // Honduras
+    IRN: 'IR', // Iran (Islamic Republic of)
+    IRQ: 'IQ', // Iraq
+    IMN: 'IM', // Isle of Man
+    JEY: 'JE', // Jersey
+    KIR: 'KI', // Kiribati
+    PRK: 'KP', // Korea (the Democratic People's Republic of)
+    KGZ: 'KG', // Kyrgyzstan
+    LAO: 'LA', // Lao People's Democratic Republic (the)
+    LBN: 'LB', // Lebanon
+    LSO: 'LS', // Lesotho
+    LBR: 'LR', // Liberia
+    LBY: 'LY', // Libya
+    MAC: 'MO', // Macao
+    MDG: 'MG', // Madagascar
+    MWI: 'MW', // Malawi
+    MLI: 'ML', // Mali
+    MHL: 'MH', // Marshall Islands (the)
+    MTQ: 'MQ', // Martinique
+    MRT: 'MR', // Mauritania
+    MUS: 'MU', // Mauritius
+    MYT: 'YT', // Mayotte
+    FSM: 'FM', // Micronesia (Federated States of)
+    MDA: 'MD', // Moldova (the Republic of)
+    MNG: 'MN', // Mongolia
+    MSR: 'MS', // Montserrat
+    MOZ: 'MZ', // Mozambique
+    MMR: 'MM', // Myanmar
+    NAM: 'NA', // Namibia
+    NRU: 'NR', // Nauru
+    NCL: 'NC', // New Caledonia
+    NIC: 'NI', // Nicaragua
+    NER: 'NE', // Niger (the)
+    NIU: 'NU', // Niue
+    NFK: 'NF', // Norfolk Island
+    MNP: 'MP', // Northern Mariana Islands (the)
+    PLW: 'PW', // Palau
+    PSE: 'PS', // Palestine, State of
+    PNG: 'PG', // Papua New Guinea
+    PCN: 'PN', // Pitcairn
+    PRI: 'PR', // Puerto Rico
+    RWA: 'RW', // Rwanda
+    REU: 'RE', // Réunion
+    BLM: 'BL', // Saint Barthélemy
+    SHN: 'SH', // Saint Helena, Ascension and Tristan da Cunha
+    KNA: 'KN', // Saint Kitts and Nevis
+    LCA: 'LC', // Saint Lucia
+    MAF: 'MF', // Saint Martin (French part)
+    SPM: 'PM', // Saint Pierre and Miquelon
+    VCT: 'VC', // Saint Vincent and the Grenadines
+    WSM: 'WS', // Samoa
+    STP: 'ST', // Sao Tome and Principe
+    SEN: 'SN', // Senegal
+    SYC: 'SC', // Seychelles
+    SLE: 'SL', // Sierra Leone
+    SXM: 'SX', // Sint Maarten (Dutch part)
+    SLB: 'SB', // Solomon Islands
+    SOM: 'SO', // Somalia
+    SGS: 'GS', // South Georgia and the South Sandwich Islands
+    SSD: 'SS', // South Sudan
+    LKA: 'LK', // Sri Lanka
+    SDN: 'SD', // Sudan (the)
+    SUR: 'SR', // Suriname
+    SJM: 'SJ', // Svalbard and Jan Mayen
+    SYR: 'SY', // Syrian Arab Republic
+    TWN: 'TW', // Taiwan (Province of China)
+    TJK: 'TJ', // Tajikistan
+    TLS: 'TL', // Timor-Leste
+    TGO: 'TG', // Togo
+    TKL: 'TK', // Tokelau
+    TON: 'TO', // Tonga
+    TKM: 'TM', // Turkmenistan
+    TCA: 'TC', // Turks and Caicos Islands (the)
+    TUV: 'TV', // Tuvalu
+    UMI: 'UM', // United States Minor Outlying Islands (the)
+    UZB: 'UZ', // Uzbekistan
+    VUT: 'VU', // Vanuatu
+    VGB: 'VG', // Virgin Islands (British)
+    VIR: 'VI', // Virgin Islands (U.S.)
+    WLF: 'WF', // Wallis and Futuna
+    ESH: 'EH', // Western Sahara
+    YEM: 'YE', // Yemen
+    ZMB: 'ZM', // Zambia
+    ZWE: 'ZW', // Zimbabwe
+    ALA: 'AX', // Åland Islands
 };
 
 export const storefrontToCountry = (storefront: string): string => {
