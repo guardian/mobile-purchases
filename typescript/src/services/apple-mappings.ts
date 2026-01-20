@@ -98,6 +98,7 @@ const storefrontToCountryMap = {
     CYM: 'KY', // Cayman Islands
     KAZ: 'KZ', // Kazakhstan
     PRY: 'PY', // Paraguay
+    CRI: 'CR', // Costa Rica
 };
 
 export const storefrontToCountry = (storefront: string): string => {
