@@ -1718,3 +1718,7 @@ Resources:
                 Action:
                   - cloudwatch:DescribeAlarms
                 Resource: "*"
+              - Effect: Allow
+                Action:
+                  - cloudwatch:DescribeAlarmHistory
+                Resource: "*"
