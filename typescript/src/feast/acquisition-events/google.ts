@@ -147,6 +147,7 @@ const countryToCurrencyMap = {
     BH: 'BHD', // Bahrain - Bahraini Dinar
     MV: 'MVR', // the Maldives - Maldivian rufiyaa
     GH: 'GHS', // Ghana - Ghanaian Cedi
+    JM: 'JMD', // Jamaica - Jamaican dollar
 };
 
 const countryToCurrency = (country: string): string => {
