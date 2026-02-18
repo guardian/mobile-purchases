@@ -93,7 +93,7 @@ export async function handler(event: any): Promise<void> {
                 subscriptionRecord = await dynamoMapper.get(subEmpty);
             } catch (error) {
                 console.log(
-                    `Subscription ${subscriptionId} record not found in the subscriptions table. Error: `,
+                    `[5410a826] Subscription ${subscriptionId} record not found in the subscriptions table. Error: `,
                     error,
                 );
                 continue;

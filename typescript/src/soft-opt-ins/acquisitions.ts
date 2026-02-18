@@ -38,7 +38,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
                 subscriptionRecord = await dynamoMapper.get(itemToQuery);
             } catch (error) {
                 console.log(
-                    `Subscription ${subscriptionId} record not found in the subscriptions table. Error: `,
+                    `[e5201022] Subscription ${subscriptionId} record not found in the subscriptions table. Error: `,
                     error,
                 );
 
