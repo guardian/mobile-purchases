@@ -23,7 +23,7 @@
   "private": true,
   "devDependencies": {
     "@guardian/eslint-config": "^13.0.3",
-    "@guardian/prettier": "^9.0.0",
+    "@guardian/prettier": "^10.0.0",
     "@types/jest": "^29.5.14",
     "@types/node-fetch": "^2.6.2",
     "eslint": "^9.39.1",
