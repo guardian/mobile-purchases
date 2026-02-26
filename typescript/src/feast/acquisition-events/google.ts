@@ -148,6 +148,7 @@ const countryToCurrencyMap = {
     MV: 'MVR', // the Maldives - Maldivian rufiyaa
     GH: 'GHS', // Ghana - Ghanaian Cedi
     JM: 'JMD', // Jamaica - Jamaican dollar
+    PR: 'USD', // Puerto Rico - United States Dollar
 };
 
 const countryToCurrency = (country: string): string => {
