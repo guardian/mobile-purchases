@@ -22,7 +22,7 @@
   "homepage": "https://github.com/guardian/mobile-purchases#readme",
   "private": true,
   "devDependencies": {
-    "@guardian/eslint-config": "^13.0.5",
+    "@guardian/eslint-config": "^14.0.0",
     "@guardian/prettier": "^10.0.0",
     "@types/jest": "^29.5.14",
     "@types/node-fetch": "^2.6.2",
