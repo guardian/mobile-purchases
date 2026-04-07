@@ -1203,10 +1203,10 @@
   dependencies:
     tslib "^2.4.0"
 
-"@types/aws-lambda@8.10.159":
-  version "8.10.159"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.159.tgz#0ab559f4519e42732a393b28c21564da9763c5aa"
-  integrity sha512-SAP22WSGNN12OQ8PlCzGzRCZ7QDCwI85dQZbmpz7+mAk+L7j+wI7qnvmdKh+o7A5LaOp6QnOZ2NJphAZQTTHQg==
+"@types/aws-lambda@8.10.161":
+  version "8.10.161"
+  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.161.tgz#36d95723ec46d3d555bf0684f83cf4d4369a28ad"
+  integrity sha512-rUYdp+MQwSFocxIOcSsYSF3YYYC/uUpMbCY/mbO21vGqfrEYvNSoPyKYDj6RhXXpPfS0KstW9RwG3qXh9sL7FQ==
 
 "@types/babel__core@^7.1.14":
   version "7.20.5"
