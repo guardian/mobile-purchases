@@ -22,7 +22,7 @@ Make sure that you are using the Node version specified by the `.nvmrc` file. We
 We have the commands 
 - `yarn lint:check`
 - `yarn lint:fix`
-- `yrn format:check`
+- `yarn format:check`
 - `yarn format:fix`
 
 ### Data
