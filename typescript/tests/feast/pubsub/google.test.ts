@@ -2,7 +2,6 @@ import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { buildHandler } from '../../../src/feast/pubsub/google';
 import { HTTPResponses } from '../../../src/models/apiGatewayHttp';
 import { SubscriptionEvent } from '../../../src/models/subscriptionEvent';
-import Mock = jest.Mock;
 import type { GoogleSubscriptionReference } from '../../../src/models/subscriptionReference';
 
 const buildApiGatewayEvent = (secret: string): APIGatewayProxyEvent => {
@@ -59,10 +58,10 @@ describe('The Feast Google pubsub', () => {
 
         const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> =>
             Promise.resolve();
-        const mockSqsFunction: Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn(
+        const mockSqsFunction: jest.Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn(
             (queueurl, event) => Promise.resolve({}),
         );
-        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
+        const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn((event) =>
             Promise.resolve({ freeTrial: true }),
         );
         const handler = buildHandler(
@@ -82,10 +81,10 @@ describe('The Feast Google pubsub', () => {
 
         const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> =>
             Promise.resolve();
-        const mockSqsFunction: Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn(
+        const mockSqsFunction: jest.Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn(
             (queueurl, event) => Promise.resolve({}),
         );
-        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
+        const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn((event) =>
             Promise.resolve({ freeTrial: true }),
         );
         const handler = buildHandler(
@@ -103,11 +102,11 @@ describe('The Feast Google pubsub', () => {
         const correctSecret = 'test_secret';
         const input = buildApiGatewayEvent(correctSecret);
 
-        const mockSqsFunction: Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn(
+        const mockSqsFunction: jest.Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn(
             (queueurl, event) => Promise.resolve({}),
         );
         const storeEventInDynamoMock = jest.fn(() => Promise.resolve());
-        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
+        const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn((event) =>
             Promise.resolve({ freeTrial: true }),
         );
         const handler = buildHandler(
@@ -163,10 +162,10 @@ describe('The Feast Google pubsub', () => {
 
         const noOpStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> =>
             Promise.resolve();
-        const mockSqsFunction: Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn(
+        const mockSqsFunction: jest.Mock<Promise<any>, [string, GoogleSubscriptionReference]> = jest.fn(
             (queueurl, event) => Promise.resolve({}),
         );
-        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
+        const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn((event) =>
             Promise.resolve({ freeTrial: true }),
         );
         const handler = buildHandler(

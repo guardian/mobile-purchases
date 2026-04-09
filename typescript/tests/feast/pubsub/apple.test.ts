@@ -1,6 +1,5 @@
 import type { StatusUpdateNotification } from '../../../src/pubsub/apple-common';
 import { parsePayload } from '../../../src/pubsub/apple-common';
-import type { Mock } from 'jest-mock';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { buildHandler } from '../../../src/feast/pubsub/apple';
 import { HTTPResponses } from '../../../src/models/apiGatewayHttp';
