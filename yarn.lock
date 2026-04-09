@@ -5696,16 +5696,16 @@ typed-array-length@^1.0.7:
     possible-typed-array-names "^1.0.0"
     reflect.getprototypeof "^1.0.6"
 
-typed-rest-client@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-2.2.0.tgz#da0727e408849bdb69820d86ee664afca34777a3"
-  integrity sha512-/e2Rk9g20N0r44kaQLb3v6QGuryOD8SPb53t43Y5kqXXA+SqWuU7zLiMxetw61jNn/JFrxTdr5nPDhGY/eTNhQ==
+typed-rest-client@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-2.3.0.tgz#6012b882e6cdbd1b0e0b60407f7d4e3fa5498a1d"
+  integrity sha512-FfBj5tjviexjIus3La4n4s9i+f81Zj7HU+lUlQWK219HMRfmzLsbIf4PZF2+X6EouJKyuANpvvef5VrUWM4AFw==
   dependencies:
     des.js "^1.1.0"
     js-md4 "^0.3.2"
     qs "^6.14.1"
     tunnel "0.0.6"
-    underscore "^1.12.1"
+    underscore "^1.13.8"
 
 typescript-eslint@8.57.1:
   version "8.57.1"
@@ -5737,7 +5737,7 @@ unbox-primitive@^1.1.0:
     has-symbols "^1.1.0"
     which-boxed-primitive "^1.1.1"
 
-underscore@^1.12.1:
+underscore@^1.13.8:
   version "1.13.8"
   resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.13.8.tgz#a93a21186c049dbf0e847496dba72b7bd8c1e92b"
   integrity sha512-DXtD3ZtEQzc7M8m4cXotyHR+FAS18C64asBYY5vqZexfYryNNnDc02W4hKg3rdQuqOYas1jkseX0+nZXjTXnvQ==
