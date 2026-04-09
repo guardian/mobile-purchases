@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals';
 import { mapAndroidProductId } from '../../src/utils/mapAndroidProductId';
 
 describe('mapAndroidProductId', () => {
