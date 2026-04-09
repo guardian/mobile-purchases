@@ -178,6 +178,6 @@ describe('The Feast Android subscription updater', () => {
         expect(mockStoreSubscriptionInDynamo.mock.calls.length).toEqual(1);
         expect(mockStoreSubscriptionInDynamo).toHaveBeenCalledWith(subscription);
         expect(mockSendSubscriptionToHistoricalQueue.mock.calls.length).toEqual(1);
-        expect(mockStoreUserSubInDynamo).toBeCalledTimes(0);
+        expect(mockStoreUserSubInDynamo).toHaveBeenCalledTimes(0);
     });
 });

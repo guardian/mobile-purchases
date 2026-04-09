@@ -83,7 +83,7 @@ describe('isPostAcquisition() function', () => {
     beforeEach(() => {
         // Set the current time to a fixed date (2023-03-14)
         jest.useFakeTimers();
-        jest.setSystemTime(new Date('2023-03-14'));
+        jest.setSystemTime(new Date('2023-03-14').getTime()); // or 1678780800000
     });
 
     afterEach(() => {
@@ -111,7 +111,7 @@ describe('handler', () => {
 
         // Set the current time to a fixed date (2023-03-14)
         jest.useFakeTimers();
-        jest.setSystemTime(new Date('2023-03-14'));
+        jest.setSystemTime(new Date('2023-03-14').getTime()); // or 1678780800000
     });
 
     afterEach(() => {
