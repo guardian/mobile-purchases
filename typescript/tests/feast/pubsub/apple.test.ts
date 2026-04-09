@@ -1,3 +1,4 @@
+import '@jest/globals';
 import type { StatusUpdateNotification } from '../../../src/pubsub/apple-common';
 import { parsePayload } from '../../../src/pubsub/apple-common';
 import type { APIGatewayProxyEvent } from 'aws-lambda';

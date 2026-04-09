@@ -1,4 +1,5 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
+import { expect, test, describe } from '@jest/globals';
 import { parseAppleLinkPayload } from '../../src/link/apple-utils';
 
 describe('The apple link service', () => {
