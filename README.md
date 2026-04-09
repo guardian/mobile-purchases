@@ -20,12 +20,10 @@ Make sure that you are using the Node version specified by the `.nvmrc` file. We
 ### Linting
 
 We have the commands 
-- `yarn lint`
+- `yarn lint:check`
 - `yarn lint:fix`
-- `yrn format`
+- `yrn format:check`
 - `yarn format:fix`
-
-
 
 ### Data
 
