@@ -2,6 +2,8 @@ import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
 import { handler } from '../../src/link/deleteLink';
 import { UserSubscriptionEmpty } from '../../src/models/userSubscription';
 
+import { expect, describe, it, beforeEach, afterEach } from '@jest/globals';
+
 jest.mock('@aws/dynamodb-data-mapper', () => {
     const actualDataMapper = jest.requireActual('@aws/dynamodb-data-mapper');
 
