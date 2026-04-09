@@ -1,3 +1,5 @@
+import '@jest/globals';
+import { expect } from '@jest/globals';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { Platform } from '../../src/models/platform';
 import { SubscriptionEmpty } from '../../src/models/subscription';

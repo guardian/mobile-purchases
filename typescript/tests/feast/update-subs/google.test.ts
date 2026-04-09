@@ -65,7 +65,7 @@ describe('The Feast Android subscription updater', () => {
         );
         const identityId = '123456';
         const mockFetchSubscriptionsFromGoogle = jest.fn(
-            (purchaseToken: string, packageName: string) => Promise.resolve(googleSubscription)
+            (purchaseToken: string, packageName: string) => Promise.resolve(googleSubscription),
         );
         const mockFetchSubscriptionsFromGoogleV1 = jest.fn(() => Promise.resolve(googleResponseV1));
         const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) =>
@@ -154,7 +154,7 @@ describe('The Feast Android subscription updater', () => {
         );
         const identityId = '123456';
         const mockFetchSubscriptionsFromGoogle = jest.fn(
-            (purchaseToken: string, packageName: string) => Promise.resolve(googleSubscription)
+            (purchaseToken: string, packageName: string) => Promise.resolve(googleSubscription),
         );
         const mockFetchSubscriptionsFromGoogleV1 = jest.fn(() => Promise.resolve(googleResponseV1));
         const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) =>

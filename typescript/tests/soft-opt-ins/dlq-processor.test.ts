@@ -2,6 +2,7 @@ import SQS from 'aws-sdk/clients/sqs';
 import { SubscriptionEmpty } from '../../src/models/subscription';
 import { handler, messageIsOneDayOld } from '../../src/soft-opt-ins/dlq-processor';
 import { processAcquisition } from '../../src/soft-opt-ins/processSubscription';
+import { expect } from '@jest/globals';
 
 jest.mock('../../src/soft-opt-ins/processSubscription', () => ({
     processAcquisition: jest.fn(() => Promise.resolve(true)),
@@ -42,6 +43,7 @@ const fetch = require('node-fetch');
 jest.mock('node-fetch');
 
 jest.mock('../../src/utils/guIdentityApi');
+jest.mock('@jest/globals');
 jest.mock('aws-sdk/clients/ssm', () => jest.fn());
 jest.mock('aws-sdk/clients/cloudwatch', () => jest.fn());
 

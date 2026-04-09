@@ -1,3 +1,4 @@
+import { expect, describe, it } from '@jest/globals';
 import type { SQSEvent, SQSRecord } from 'aws-lambda';
 
 const sqsRecord: SQSRecord = {

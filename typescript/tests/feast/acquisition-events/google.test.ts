@@ -1,4 +1,5 @@
 import type { SQSEvent, SQSRecord } from 'aws-lambda';
+import { expect, describe, it } from '@jest/globals';
 import { handler } from '../../../src/feast/acquisition-events/apple';
 
 const sqsRecord: SQSRecord = {
