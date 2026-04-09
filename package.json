@@ -8,10 +8,11 @@
     "build:dev": "webpack",
     "test": "jest",
     "test-lambda": "yarn build:dev && node ./tsc-target/test-launcher.js",
-    "lint:check": "eslint typescript --ext .ts",
-    "lint:fix": "eslint typescript --ext .ts --fix",
+    "lint:check": "eslint typescript",
+    "lint:fix": "eslint typescript --fix",
     "format:check": "prettier --check typescript",
-    "format:fix": "prettier --write typescript"
+    "format:fix": "prettier --write typescript",
+    "validate": "yarn lint:check && yarn format:check"
   },
   "repository": {
     "type": "git",
@@ -24,12 +25,15 @@
   "homepage": "https://github.com/guardian/mobile-purchases#readme",
   "private": true,
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@guardian/eslint-config": "^14.0.1",
+    "@guardian/prettier": "^10.0.0",
     "@types/eslint-scope": "^9.1.0",
     "@types/jest": "^30.0.0",
     "@types/node-fetch": "^2.6.2",
     "@typescript-eslint/eslint-plugin": "^8.58.1",
     "@typescript-eslint/parser": "^8.58.1",
-    "eslint": "^10.2.0",
+    "eslint": "8.57.0",
     "jest": "^30.3.0",
     "prettier": "^3.8.1",
     "ts-jest": "^29.2.5",
