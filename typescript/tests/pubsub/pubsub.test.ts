@@ -16,7 +16,6 @@ import {
     toSqsSubReference as toGoogleSqsEvent,
 } from '../../src/pubsub/google-common';
 import { parseStoreAndSend_async } from '../../src/pubsub/pubsub';
-import Mock = jest.Mock;
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 
 describe('The google pubsub', () => {
@@ -24,15 +23,15 @@ describe('The google pubsub', () => {
         process.env['Secret'] = 'MYSECRET';
         process.env['QueueUrl'] = '';
 
-        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(
+        const mockStoreFunction: jest.Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(
             (event) => Promise.resolve(event),
         );
 
-        const mockSqsFunction: Mock<Promise<any>, [string, { purchaseToken: string }]> = jest.fn(
+        const mockSqsFunction: jest.Mock<Promise<any>, [string, { purchaseToken: string }]> = jest.fn(
             (queurl, event) => Promise.resolve({}),
         );
 
-        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
+        const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn((event) =>
             Promise.resolve({ freeTrial: true }),
         );
 
@@ -140,13 +139,13 @@ describe('The google pubsub', () => {
     it('returns a 400 response if the payload parsing fails', async () => {
         process.env['Secret'] = 'MYSECRET';
         process.env['QueueUrl'] = '';
-        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(
+        const mockStoreFunction: jest.Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(
             (event) => Promise.resolve(event),
         );
-        const mockSqsFunction: Mock<Promise<any>, [string, { purchaseToken: string }]> = jest.fn(
+        const mockSqsFunction: jest.Mock<Promise<any>, [string, { purchaseToken: string }]> = jest.fn(
             (queurl, event) => Promise.resolve({}),
         );
-        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
+        const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn((event) =>
             Promise.resolve({ freeTrial: true }),
         );
         const receivedEvent = { foo: 'bar' };
@@ -194,13 +193,13 @@ describe('The google pubsub', () => {
     it('returns a 200 response but does not do anything with a voided purchase notification', async () => {
         process.env['Secret'] = 'MYSECRET';
         process.env['QueueUrl'] = '';
-        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(
+        const mockStoreFunction: jest.Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(
             (event) => Promise.resolve(event),
         );
-        const mockSqsFunction: Mock<Promise<any>, [string, { purchaseToken: string }]> = jest.fn(
+        const mockSqsFunction: jest.Mock<Promise<any>, [string, { purchaseToken: string }]> = jest.fn(
             (queurl, event) => Promise.resolve({}),
         );
-        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
+        const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn((event) =>
             Promise.resolve({ freeTrial: true }),
         );
         const receivedEvent = {
@@ -261,15 +260,15 @@ describe('The apple pubsub', () => {
         process.env['Secret'] = 'MYSECRET';
         process.env['QueueUrl'] = '';
 
-        const mockStoreFunction: Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(
+        const mockStoreFunction: jest.Mock<Promise<SubscriptionEvent>, [SubscriptionEvent]> = jest.fn(
             (event) => Promise.resolve(event),
         );
 
-        const mockSqsFunction: Mock<Promise<any>, [string, { receipt: string }]> = jest.fn(
+        const mockSqsFunction: jest.Mock<Promise<any>, [string, { receipt: string }]> = jest.fn(
             (queueurl, event) => Promise.resolve({}),
         );
 
-        const mockFetchMetadataFunction: Mock<Promise<any>> = jest.fn((event) =>
+        const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn((event) =>
             Promise.resolve({ undefined }),
         );
 
