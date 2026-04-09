@@ -3,24 +3,24 @@ import { attribute, hashKey, rangeKey } from '@aws/dynamodb-data-mapper-annotati
 import { App, Stage } from '../utils/appIdentity';
 
 export class UserSubscription {
-    @hashKey()
-    userId: string;
+  @hashKey()
+  userId: string;
 
-    @rangeKey()
-    subscriptionId: string;
+  @rangeKey()
+  subscriptionId: string;
 
-    @attribute()
-    creationTimestamp: string;
+  @attribute()
+  creationTimestamp: string;
 
-    constructor(userId: string, subscriptionId: string, creationTimestamp: string) {
-        this.userId = userId;
-        this.subscriptionId = subscriptionId;
-        this.creationTimestamp = creationTimestamp;
-    }
+  constructor(userId: string, subscriptionId: string, creationTimestamp: string) {
+    this.userId = userId;
+    this.subscriptionId = subscriptionId;
+    this.creationTimestamp = creationTimestamp;
+  }
 
-    get [DynamoDbTable]() {
-        return `${App}-${Stage}-user-subscriptions`;
-    }
+  get [DynamoDbTable]() {
+    return `${App}-${Stage}-user-subscriptions`;
+  }
 }
 
 // Note:
@@ -28,7 +28,7 @@ export class UserSubscription {
 //   It's not meant to stand in places where we a UserSubscription would suffice.
 
 export class UserSubscriptionEmpty extends UserSubscription {
-    constructor() {
-        super('', '', '');
-    }
+  constructor() {
+    super('', '', '');
+  }
 }
