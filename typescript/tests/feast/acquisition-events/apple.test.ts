@@ -1,6 +1,5 @@
-import exp from 'constants';
+import { expect, describe, it } from '@jest/globals';
 import type { SQSEvent, SQSRecord } from 'aws-lambda';
-import { handler } from '../../../src/feast/acquisition-events/apple';
 
 const sqsRecord: SQSRecord = {
     messageId: '48501d06-2c1d-4e06-80b9-7617cd9df313',

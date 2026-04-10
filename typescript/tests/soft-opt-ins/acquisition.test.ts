@@ -1,6 +1,7 @@
 import type { DynamoDBStreamEvent } from 'aws-lambda';
+import { expect } from '@jest/globals';
 import { Platform } from '../../src/models/platform';
-import { Subscription, SubscriptionEmpty } from '../../src/models/subscription';
+import { SubscriptionEmpty } from '../../src/models/subscription';
 import { handler } from '../../src/soft-opt-ins/acquisitions';
 import { isPostAcquisition } from '../../src/soft-opt-ins/processSubscription';
 

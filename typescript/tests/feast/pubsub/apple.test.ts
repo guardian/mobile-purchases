@@ -1,10 +1,11 @@
+import '@jest/globals';
 import type { StatusUpdateNotification } from '../../../src/pubsub/apple-common';
 import { parsePayload } from '../../../src/pubsub/apple-common';
-import Mock = jest.Mock;
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { buildHandler } from '../../../src/feast/pubsub/apple';
 import { HTTPResponses } from '../../../src/models/apiGatewayHttp';
 import type { AppleSubscriptionReference } from '../../../src/models/subscriptionReference';
+import { expect } from '@jest/globals';
 
 const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
     const body: StatusUpdateNotification = {
@@ -85,9 +86,10 @@ beforeEach(() => {
 
 describe('The Feast Apple pubsub', () => {
     it('Should return HTTP 200 and publish the event to SQS', async () => {
-        const mockSqsFunction: Mock<Promise<any>, [string, AppleSubscriptionReference]> = jest.fn(
-            (queueurl, event) => Promise.resolve({}),
-        );
+        const mockSqsFunction: jest.Mock<
+            Promise<any>,
+            [string, AppleSubscriptionReference]
+        > = jest.fn((queueurl, event) => Promise.resolve({}));
         const input = buildApiGatewayEvent();
         const expectedSubscriptionReferenceInSqs = { receipt: 'TEST' };
 
@@ -104,9 +106,10 @@ describe('The Feast Apple pubsub', () => {
     });
 
     it('Should return HTTP 401 if secret is invalid', async () => {
-        const mockSqsFunction: Mock<Promise<any>, [string, AppleSubscriptionReference]> = jest.fn(
-            (queueurl, event) => Promise.resolve({}),
-        );
+        const mockSqsFunction: jest.Mock<
+            Promise<any>,
+            [string, AppleSubscriptionReference]
+        > = jest.fn((queueurl, event) => Promise.resolve({}));
         const input = buildApiGatewayEvent();
         input.queryStringParameters = {};
 
@@ -122,11 +125,12 @@ describe('The Feast Apple pubsub', () => {
 
     it('invokes the method to add the event to the Dynamo table', async () => {
         const input = buildApiGatewayEvent();
-        const sendMessageToSqs: Mock<Promise<any>, [string, AppleSubscriptionReference]> = jest.fn(
-            (queueurl, event) => Promise.resolve({}),
-        );
+        const sendMessageToSqs: jest.Mock<
+            Promise<any>,
+            [string, AppleSubscriptionReference]
+        > = jest.fn((queueurl, event) => Promise.resolve({}));
         const noOpLogger = (request: APIGatewayProxyEvent): void => {};
-        const storeEventInDynamoMock = jest.fn(() => Promise.resolve());
+        const storeEventInDynamoMock = jest.fn((parsedPayload: any) => Promise.resolve());
         const handler = buildHandler(sendMessageToSqs, storeEventInDynamoMock, noOpLogger);
 
         const result = await handler(input);

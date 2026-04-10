@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals';
 import { buildHandler } from '../../../src/feast/update-subs/google';
 import { Subscription } from '../../../src/models/subscription';
 import type { UserSubscription } from '../../../src/models/userSubscription';
@@ -63,7 +64,9 @@ describe('The Feast Android subscription updater', () => {
             extra,
         );
         const identityId = '123456';
-        const mockFetchSubscriptionsFromGoogle = jest.fn(() => Promise.resolve(googleSubscription));
+        const mockFetchSubscriptionsFromGoogle = jest.fn(
+            (purchaseToken: string, packageName: string) => Promise.resolve(googleSubscription),
+        );
         const mockFetchSubscriptionsFromGoogleV1 = jest.fn(() => Promise.resolve(googleResponseV1));
         const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) =>
             Promise.resolve(subscription),
@@ -150,7 +153,9 @@ describe('The Feast Android subscription updater', () => {
             dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)), // ttl
         );
         const identityId = '123456';
-        const mockFetchSubscriptionsFromGoogle = jest.fn(() => Promise.resolve(googleSubscription));
+        const mockFetchSubscriptionsFromGoogle = jest.fn(
+            (purchaseToken: string, packageName: string) => Promise.resolve(googleSubscription),
+        );
         const mockFetchSubscriptionsFromGoogleV1 = jest.fn(() => Promise.resolve(googleResponseV1));
         const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) =>
             Promise.resolve(subscription),
