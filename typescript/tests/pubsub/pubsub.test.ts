@@ -20,7 +20,24 @@ import { parseStoreAndSend_async } from '../../src/pubsub/pubsub';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { SendMessageResult } from 'aws-sdk/clients/sqs';
 import { PromiseResult } from 'aws-sdk/lib/request';
-import type { AWSError } from 'aws-sdk';
+
+type GooglePayload = {
+	version: string;
+	packageName: string;
+	eventTimeMillis: string;
+	subscriptionNotification?: {
+		version: string;
+		notificationType: number;
+		purchaseToken: string;
+		subscriptionId: string;
+	};
+	voidedPurchaseNotification?: {
+		purchaseToken: string;
+		orderId: string;
+		productType: number;
+		refundType: number;
+	};
+};
 
 describe('The google pubsub', () => {
 	test('Should return HTTP 200 and store the correct data in dynamo (1)', () => {
@@ -41,7 +58,7 @@ describe('The google pubsub', () => {
 				),
 		);
 
-		const mockFetchMetadataFunction = jest.fn((_event: any) =>
+		const mockGoogleFetchMetadataFunction = jest.fn((_event: GooglePayload) =>
 			Promise.resolve({ freeTrial: true }),
 		);
 
@@ -133,7 +150,7 @@ describe('The google pubsub', () => {
 				metaData?: GoogleSubscriptionMetaData,
 			) => googlePayloadToDynamo(notification, false, metaData),
 			toGoogleSqsEvent,
-			mockFetchMetadataFunction,
+			mockGoogleFetchMetadataFunction,
 			mockStoreFunction,
 			mockSqsFunction,
 		).then((result) => {
@@ -146,8 +163,8 @@ describe('The google pubsub', () => {
 			expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(
 				expectedSubscriptionReferenceInSqs,
 			);
-			expect(mockFetchMetadataFunction.mock.calls.length).toEqual(1);
-			expect(mockFetchMetadataFunction.mock.calls[0][0]).toStrictEqual(
+			expect(mockGoogleFetchMetadataFunction.mock.calls.length).toEqual(1);
+			expect(mockGoogleFetchMetadataFunction.mock.calls[0][0]).toStrictEqual(
 				receivedEvent,
 			);
 		});
@@ -169,7 +186,7 @@ describe('The google pubsub', () => {
 					>,
 				),
 		);
-		const mockFetchMetadataFunction = jest.fn((_event: any) =>
+		const mockGoogleFetchMetadataFunction = jest.fn((_event: GooglePayload) =>
 			Promise.resolve({ freeTrial: true }),
 		);
 
@@ -198,7 +215,7 @@ describe('The google pubsub', () => {
 			path: '',
 			pathParameters: {},
 			multiValueQueryStringParameters: {},
-			// @ts-expect-error
+			// @ts-expect-error // keeping the test fixtures small
 			requestContext: null,
 			resource: '',
 		};
@@ -211,7 +228,7 @@ describe('The google pubsub', () => {
 				metaData?: GoogleSubscriptionMetaData,
 			) => googlePayloadToDynamo(notification, false, metaData),
 			toGoogleSqsEvent,
-			mockFetchMetadataFunction,
+			mockGoogleFetchMetadataFunction,
 			mockStoreFunction,
 			mockSqsFunction,
 		);
@@ -235,7 +252,7 @@ describe('The google pubsub', () => {
 					>,
 				),
 		);
-		const mockFetchMetadataFunction = jest.fn((_event: any) =>
+		const mockGoogleFetchMetadataFunction = jest.fn((_event: GooglePayload) =>
 			Promise.resolve({ freeTrial: true }),
 		);
 
@@ -274,7 +291,7 @@ describe('The google pubsub', () => {
 			path: '',
 			pathParameters: {},
 			multiValueQueryStringParameters: {},
-			// @ts-expect-error
+			// @ts-expect-error // keeping the test fixtures small
 			requestContext: null,
 			resource: '',
 		};
@@ -287,7 +304,7 @@ describe('The google pubsub', () => {
 				metaData?: GoogleSubscriptionMetaData,
 			) => googlePayloadToDynamo(notification, false, metaData),
 			toGoogleSqsEvent,
-			mockFetchMetadataFunction,
+			mockGoogleFetchMetadataFunction,
 			mockStoreFunction,
 			mockSqsFunction,
 		);
@@ -313,8 +330,8 @@ describe('The apple pubsub', () => {
 					>,
 				),
 		);
-		const mockFetchMetadataFunction = jest.fn((_event: any) =>
-			Promise.resolve(undefined),
+		const mockAppleFetchMetadataFunction = jest.fn(
+			(_event: StatusUpdateNotification) => Promise.resolve(undefined),
 		);
 
 		const body: StatusUpdateNotification = {
@@ -389,7 +406,7 @@ describe('The apple pubsub', () => {
 			resource: '',
 		};
 
-		const expectedSubscriptionEventInDynamo: any = {
+		const expectedSubscriptionEventInDynamo: Partial<SubscriptionEvent> = {
 			subscriptionId: 'TEST',
 			eventType: 'INITIAL_BUY',
 			platform: 'ios',
@@ -454,7 +471,7 @@ describe('The apple pubsub', () => {
 			parseApplePayload,
 			(notification) => applePayloadToDynamo(notification, false),
 			toAppleSqsEvent,
-			mockFetchMetadataFunction,
+			mockAppleFetchMetadataFunction,
 			mockStoreFunction,
 			mockSqsFunction,
 		).then((result) => {
@@ -467,7 +484,7 @@ describe('The apple pubsub', () => {
 			expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(
 				expectedSubscriptionReferenceInSqs,
 			);
-			expect(mockFetchMetadataFunction.mock.calls.length).toEqual(1);
+			expect(mockAppleFetchMetadataFunction.mock.calls.length).toEqual(1);
 		});
 	});
 });
