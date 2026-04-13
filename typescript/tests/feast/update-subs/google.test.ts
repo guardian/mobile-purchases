@@ -1,4 +1,4 @@
-import { expect } from '@jest/globals';
+import { expect, jest, beforeEach, describe, it } from '@jest/globals';
 import { buildHandler } from '../../../src/feast/update-subs/google';
 import { Subscription } from '../../../src/models/subscription';
 import type { UserSubscription } from '../../../src/models/userSubscription';
@@ -69,7 +69,7 @@ describe('The Feast Android subscription updater', () => {
 		);
 		const identityId = '123456';
 		const mockFetchSubscriptionsFromGoogle = jest.fn(
-			(purchaseToken: string, packageName: string) =>
+			(_purchaseToken: string, _packageName: string) =>
 				Promise.resolve(googleSubscription),
 		);
 		const mockFetchSubscriptionsFromGoogleV1 = jest.fn(() =>
@@ -79,12 +79,12 @@ describe('The Feast Android subscription updater', () => {
 			(subscription: Subscription) => Promise.resolve(subscription),
 		);
 		const mockSendSubscriptionToHistoricalQueue = jest.fn(
-			(subscription: Subscription) => Promise.resolve(),
+			(_subscription: Subscription) => Promise.resolve(),
 		);
-		const mockExchangeUuid = jest.fn((uuid: string) =>
+		const mockExchangeUuid = jest.fn((_uuid: string) =>
 			Promise.resolve({ identityId }),
 		);
-		const mockStoreUserSubInDynamo = jest.fn((userSub: UserSubscription) =>
+		const mockStoreUserSubInDynamo = jest.fn((_userSub: UserSubscription) =>
 			Promise.resolve(undefined),
 		);
 		const handler = buildHandler(
@@ -166,7 +166,7 @@ describe('The Feast Android subscription updater', () => {
 		);
 		const identityId = '123456';
 		const mockFetchSubscriptionsFromGoogle = jest.fn(
-			(purchaseToken: string, packageName: string) =>
+			(_purchaseToken: string, _packageName: string) =>
 				Promise.resolve(googleSubscription),
 		);
 		const mockFetchSubscriptionsFromGoogleV1 = jest.fn(() =>
@@ -176,12 +176,12 @@ describe('The Feast Android subscription updater', () => {
 			(subscription: Subscription) => Promise.resolve(subscription),
 		);
 		const mockSendSubscriptionToHistoricalQueue = jest.fn(
-			(subscription: Subscription) => Promise.resolve(),
+			(_subscription: Subscription) => Promise.resolve(),
 		);
-		const mockExchangeUuid = jest.fn((uuid: string) =>
+		const mockExchangeUuid = jest.fn((_uuid: string) =>
 			Promise.resolve({ identityId }),
 		);
-		const mockStoreUserSubInDynamo = jest.fn((userSub: UserSubscription) =>
+		const mockStoreUserSubInDynamo = jest.fn((_userSub: UserSubscription) =>
 			Promise.resolve(undefined),
 		);
 		const handler = buildHandler(
