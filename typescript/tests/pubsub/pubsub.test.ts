@@ -1,4 +1,4 @@
-import { expect, test, describe, it } from '@jest/globals';
+import { expect, test, describe, it, jest } from '@jest/globals';
 import { HTTPResponses } from '../../src/models/apiGatewayHttp';
 import { SubscriptionEvent } from '../../src/models/subscriptionEvent';
 import {
@@ -18,24 +18,31 @@ import {
 } from '../../src/pubsub/google-common';
 import { parseStoreAndSend_async } from '../../src/pubsub/pubsub';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
+import { SendMessageResult } from 'aws-sdk/clients/sqs';
+import { PromiseResult } from 'aws-sdk/lib/request';
+import type { AWSError } from 'aws-sdk';
 
 describe('The google pubsub', () => {
 	test('Should return HTTP 200 and store the correct data in dynamo (1)', () => {
 		process.env['Secret'] = 'MYSECRET';
 		process.env['QueueUrl'] = '';
 
-		const mockStoreFunction: jest.Mock<
-			Promise<SubscriptionEvent>,
-			[SubscriptionEvent]
-		> = jest.fn((event) => Promise.resolve(event));
+		const mockStoreFunction = jest.fn((event: SubscriptionEvent) =>
+			Promise.resolve(event),
+		);
 
-		const mockSqsFunction: jest.Mock<
-			Promise<any>,
-			[string, { purchaseToken: string }]
-		> = jest.fn((queurl, event) => Promise.resolve({}));
+		const mockSqsFunction = jest.fn(
+			(_queueUrl: string, _event: { purchaseToken: string }) =>
+				Promise.resolve(
+					{} as unknown as PromiseResult<
+						SendMessageResult,
+						import('aws-sdk').AWSError
+					>,
+				),
+		);
 
-		const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn(
-			(event) => Promise.resolve({ freeTrial: true }),
+		const mockFetchMetadataFunction = jest.fn((_event: any) =>
+			Promise.resolve({ freeTrial: true }),
 		);
 
 		const receivedEvent = {
@@ -76,7 +83,7 @@ describe('The google pubsub', () => {
 			path: '',
 			pathParameters: {},
 			multiValueQueryStringParameters: {},
-			// @ts-expect-error
+			// @ts-expect-error // keeping test fixtures small
 			requestContext: null,
 			resource: '',
 		};
@@ -149,17 +156,23 @@ describe('The google pubsub', () => {
 	it('returns a 400 response if the payload parsing fails', async () => {
 		process.env['Secret'] = 'MYSECRET';
 		process.env['QueueUrl'] = '';
-		const mockStoreFunction: jest.Mock<
-			Promise<SubscriptionEvent>,
-			[SubscriptionEvent]
-		> = jest.fn((event) => Promise.resolve(event));
-		const mockSqsFunction: jest.Mock<
-			Promise<any>,
-			[string, { purchaseToken: string }]
-		> = jest.fn((queurl, event) => Promise.resolve({}));
-		const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn(
-			(event) => Promise.resolve({ freeTrial: true }),
+
+		const mockStoreFunction = jest.fn((event: SubscriptionEvent) =>
+			Promise.resolve(event),
 		);
+		const mockSqsFunction = jest.fn(
+			(_queueUrl: string, _event: { purchaseToken: string }) =>
+				Promise.resolve(
+					{} as unknown as PromiseResult<
+						SendMessageResult,
+						import('aws-sdk').AWSError
+					>,
+				),
+		);
+		const mockFetchMetadataFunction = jest.fn((_event: any) =>
+			Promise.resolve({ freeTrial: true }),
+		);
+
 		const receivedEvent = { foo: 'bar' };
 		const encodedEvent = Buffer.from(JSON.stringify(receivedEvent)).toString(
 			'base64',
@@ -209,17 +222,23 @@ describe('The google pubsub', () => {
 	it('returns a 200 response but does not do anything with a voided purchase notification', async () => {
 		process.env['Secret'] = 'MYSECRET';
 		process.env['QueueUrl'] = '';
-		const mockStoreFunction: jest.Mock<
-			Promise<SubscriptionEvent>,
-			[SubscriptionEvent]
-		> = jest.fn((event) => Promise.resolve(event));
-		const mockSqsFunction: jest.Mock<
-			Promise<any>,
-			[string, { purchaseToken: string }]
-		> = jest.fn((queurl, event) => Promise.resolve({}));
-		const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn(
-			(event) => Promise.resolve({ freeTrial: true }),
+
+		const mockStoreFunction = jest.fn((event: SubscriptionEvent) =>
+			Promise.resolve(event),
 		);
+		const mockSqsFunction = jest.fn(
+			(_queueUrl: string, _event: { purchaseToken: string }) =>
+				Promise.resolve(
+					{} as unknown as PromiseResult<
+						SendMessageResult,
+						import('aws-sdk').AWSError
+					>,
+				),
+		);
+		const mockFetchMetadataFunction = jest.fn((_event: any) =>
+			Promise.resolve({ freeTrial: true }),
+		);
+
 		const receivedEvent = {
 			version: '1.0',
 			packageName: 'com.guardian.debug',
@@ -282,18 +301,20 @@ describe('The apple pubsub', () => {
 		process.env['Secret'] = 'MYSECRET';
 		process.env['QueueUrl'] = '';
 
-		const mockStoreFunction: jest.Mock<
-			Promise<SubscriptionEvent>,
-			[SubscriptionEvent]
-		> = jest.fn((event) => Promise.resolve(event));
-
-		const mockSqsFunction: jest.Mock<
-			Promise<any>,
-			[string, { receipt: string }]
-		> = jest.fn((queueurl, event) => Promise.resolve({}));
-
-		const mockFetchMetadataFunction: jest.Mock<Promise<any>> = jest.fn(
-			(event) => Promise.resolve({ undefined }),
+		const mockStoreFunction = jest.fn((event: SubscriptionEvent) =>
+			Promise.resolve(event),
+		);
+		const mockSqsFunction = jest.fn(
+			(_queueUrl: string, _event: { receipt: string }) =>
+				Promise.resolve(
+					{} as unknown as PromiseResult<
+						SendMessageResult,
+						import('aws-sdk').AWSError
+					>,
+				),
+		);
+		const mockFetchMetadataFunction = jest.fn((_event: any) =>
+			Promise.resolve(undefined),
 		);
 
 		const body: StatusUpdateNotification = {
@@ -363,7 +384,7 @@ describe('The apple pubsub', () => {
 			path: '',
 			pathParameters: {},
 			multiValueQueryStringParameters: {},
-			// @ts-expect-error
+			// @ts-expect-error // keeping test fixtures small
 			requestContext: null,
 			resource: '',
 		};
