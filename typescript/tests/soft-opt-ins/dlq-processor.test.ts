@@ -1,4 +1,3 @@
-import SQS from 'aws-sdk/clients/sqs';
 import { SubscriptionEmpty } from '../../src/models/subscription';
 import {
 	handler,
@@ -226,7 +225,6 @@ describe('handler', () => {
 		const mockProcessAcquisition = processAcquisition as jest.Mock;
 		mockProcessAcquisition.mockResolvedValue(true as never);
 
-		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
 		const mockSQS = new mockedSQS.default();
 
 		const sub = new SubscriptionEmpty();
