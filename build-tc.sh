@@ -9,7 +9,7 @@ yarn install
 
 yarn run clean
 
-yarn prettier:check
+yarn format:check
 
 yarn run test
 
