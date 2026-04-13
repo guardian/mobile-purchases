@@ -1,12 +1,20 @@
 import '@jest/globals';
-import { expect } from '@jest/globals';
+import { jest, expect, describe, it } from '@jest/globals';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { Platform } from '../../src/models/platform';
 import { SubscriptionEmpty } from '../../src/models/subscription';
 import { handler } from '../../src/user/user';
 import { plusDays } from '../../src/utils/dates';
+import * as dynamodbMapper from '@aws/dynamodb-data-mapper';
 
 const TEST_SECRET = 'test_secret';
+
+const mockedDynamoDBMapper = dynamodbMapper as unknown as {
+	DataMapper: new () => { query: jest.Mock; batchGet: jest.Mock };
+	setMockQuery: <T>(fn: (params: T) => AsyncIterable<T>) => void;
+	setMockBatchGet: <T>(fn: (params: T) => AsyncIterable<T>) => void;
+};
+
 jest.mock('../../src/utils/ssmConfig', () => {
 	return {
 		getConfigValue: () => Promise.resolve(TEST_SECRET),
@@ -19,45 +27,46 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
 	const queryFn = jest.fn();
 	const batchGetFn = jest.fn();
 
-	return {
-		...actualDataMapper,
+	return Object.assign({}, actualDataMapper, {
 		DataMapper: jest.fn().mockImplementation(() => ({
 			query: queryFn,
 			batchGet: batchGetFn,
 		})),
-		setMockQuery: (mockImplementation: (arg0: any) => any) => {
+		setMockQuery: (mockImplementation: (arg0: unknown) => unknown) => {
 			queryFn.mockImplementation(async function* (params) {
 				const iterator = mockImplementation(params);
-				for await (const item of iterator) {
+				for await (const item of iterator as AsyncIterable<unknown>) {
 					yield item;
 				}
 			});
 		},
-		setMockBatchGet: (mockImplementation: (arg0: any) => any) => {
+		setMockBatchGet: (mockImplementation: (arg0: unknown) => unknown) => {
 			batchGetFn.mockImplementation(async function* (params) {
 				const iterator = mockImplementation(params);
-				for await (const item of iterator) {
+				for await (const item of iterator as AsyncIterable<unknown>) {
 					yield item;
 				}
 			});
 		},
-	};
+	});
 });
-const setMockQuery = require('@aws/dynamodb-data-mapper').setMockQuery;
-const setMockBatchGet = require('@aws/dynamodb-data-mapper').setMockBatchGet;
 
 describe('The user subscriptions lambda', () => {
 	it('returns the correct subscriptions for a user', async () => {
-		const mockDataMapper =
-			new (require('@aws/dynamodb-data-mapper').DataMapper)();
+		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
 		const userId = '123';
 		const subscriptionId = '1';
+
+		// Get the mock functions from the mocked module
+		const { setMockQuery, setMockBatchGet } = mockedDynamoDBMapper;
+
 		setMockQuery(async function* () {
 			yield {
 				userId,
 				subscriptionId,
 			};
 		});
+
 		const sub = new SubscriptionEmpty();
 		sub.subscriptionId = subscriptionId;
 		sub.platform = Platform.IosFeast;
@@ -67,8 +76,8 @@ describe('The user subscriptions lambda', () => {
 		setMockBatchGet(async function* () {
 			yield sub;
 		});
-		const event = buildApiGatewayEvent(userId);
 
+		const event = buildApiGatewayEvent(userId);
 		const response = await handler(event);
 
 		expect(response.statusCode).toEqual(200);
@@ -97,7 +106,7 @@ const buildApiGatewayEvent = (userId: string): APIGatewayProxyEvent => {
 		pathParameters: { userId },
 		queryStringParameters: {},
 		multiValueQueryStringParameters: {},
-		// @ts-expect-error
+		// @ts-expect-error // keeping the text fixtures simple
 		requestContext: null,
 		resource: '',
 	};
