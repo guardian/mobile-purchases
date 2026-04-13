@@ -1,11 +1,43 @@
-import SQS from 'aws-sdk/clients/sqs';
 import { SubscriptionEmpty } from '../../src/models/subscription';
 import {
 	handler,
 	messageIsOneDayOld,
 } from '../../src/soft-opt-ins/dlq-processor';
 import { processAcquisition } from '../../src/soft-opt-ins/processSubscription';
-import { expect } from '@jest/globals';
+import {
+	expect,
+	jest,
+	describe,
+	beforeEach,
+	afterEach,
+	test,
+	it,
+} from '@jest/globals';
+import * as dynamodbMapper from '@aws/dynamodb-data-mapper';
+import * as sqsModule from 'aws-sdk/clients/sqs';
+import fetch from 'node-fetch';
+
+const mockedDynamoDBMapper = dynamodbMapper as unknown as {
+	DataMapper: new () => {
+		batchPut: jest.Mock;
+		get: jest.Mock;
+		put: jest.Mock;
+		delete: jest.Mock;
+		query: jest.Mock;
+		scan: jest.Mock;
+		update: jest.Mock;
+	};
+	setMockGet: (fn: (arg0: unknown) => unknown) => void;
+};
+
+const mockedSQS = sqsModule as unknown as {
+	default: new () => {
+		receiveMessage: jest.Mock;
+		deleteMessage: jest.Mock;
+		sendMessage: jest.Mock;
+	};
+	setMockReceiveMessage: (fn: (arg0: unknown) => unknown) => void;
+};
 
 jest.mock('../../src/soft-opt-ins/processSubscription', () => ({
 	processAcquisition: jest.fn(() => Promise.resolve(true)),
@@ -16,38 +48,32 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
 
 	const getFn = jest.fn();
 
-	return {
-		...actualDataMapper,
+	return Object.assign({}, actualDataMapper, {
 		DataMapper: jest.fn().mockImplementation(() => ({
 			batchPut: jest.fn(),
 			get: getFn,
-			put: jest.fn().mockResolvedValue(undefined),
+			put: jest.fn().mockImplementation(() => Promise.resolve(undefined)),
 			delete: jest.fn(),
 			query: jest.fn(),
 			scan: jest.fn(),
 			update: jest.fn(),
 		})),
-		setMockGet: (mockImplementation: (arg0: any) => any) => {
+		setMockGet: (mockImplementation: (arg0: unknown) => unknown) => {
 			getFn.mockImplementation(async (params) => {
 				return mockImplementation(params);
 			});
 		},
-	};
+	});
 });
-const setMockGet = require('@aws/dynamodb-data-mapper').setMockGet;
 
-// mock so imports don't use real client which throws an error as credentials are needed
 jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
 jest.mock('aws-sdk/clients/s3', () => jest.fn());
 jest.mock('aws-sdk/clients/ssm', () => jest.fn());
 
-const fetch = require('node-fetch');
-
-jest.mock('node-fetch');
+jest.mock('node-fetch', () => jest.fn());
 
 jest.mock('../../src/utils/guIdentityApi');
 jest.mock('@jest/globals');
-jest.mock('aws-sdk/clients/ssm', () => jest.fn());
 jest.mock('aws-sdk/clients/cloudwatch', () => jest.fn());
 
 jest.mock('util', () => jest.fn());
@@ -61,45 +87,42 @@ jest.mock('aws-sdk/clients/sqs', () => {
 		deleteMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
 		sendMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
 	};
-
-	const setMockReceiveMessage = (mockImplementation: (arg0: any) => any) => {
+	const setMockReceiveMessage = (
+		mockImplementation: (arg0: unknown) => unknown,
+	) => {
 		receiveMessageFn.mockImplementation((params) => {
 			return {
 				promise: async () => mockImplementation(params),
 			};
 		});
 	};
-
 	return {
-		__esModule: true, // this property makes it work when using ES6 imports
+		__esModule: true,
 		default: jest.fn(() => mockSQS),
 		setMockReceiveMessage: setMockReceiveMessage,
 	};
 });
 
-const { setMockReceiveMessage } = require('aws-sdk/clients/sqs');
-
 jest.mock('aws-sdk/clients/sts', () => {
 	const mockSTS = {
 		assumeRole: jest.fn().mockReturnValue({
-			promise: jest.fn().mockResolvedValue({
-				Credentials: {
-					AccessKeyId: 'mockAccessKeyId',
-					SecretAccessKey: 'mockSecretAccessKey',
-					SessionToken: 'mockSessionToken',
-				},
-			}),
+			promise: jest.fn().mockImplementation(() =>
+				Promise.resolve({
+					Credentials: {
+						AccessKeyId: 'mockAccessKeyId',
+						SecretAccessKey: 'mockSecretAccessKey',
+						SessionToken: 'mockSessionToken',
+					},
+				}),
+			),
 		}),
 	};
-
 	return jest.fn(() => mockSTS);
 });
 
 jest.mock('aws-sdk/lib/core', () => {
 	class SharedIniFileCredentialsMock {}
-
 	class CredentialProviderChainMock {}
-
 	return {
 		SharedIniFileCredentials: SharedIniFileCredentialsMock,
 		CredentialProviderChain: CredentialProviderChainMock,
@@ -142,37 +165,33 @@ describe('handler', () => {
 	});
 
 	afterEach(() => {
-		// Clean up the fake timers after each test
 		jest.useRealTimers();
-
-		fetch.mockReset();
+		(fetch as unknown as jest.Mock).mockReset();
 	});
 
 	it('should not delete message', async () => {
 		const mockProcessAcquisition = processAcquisition as jest.Mock;
-		mockProcessAcquisition.mockResolvedValue(false);
+		mockProcessAcquisition.mockResolvedValue(false as never);
 
 		// get the mock instances
-		const mockDataMapper =
-			new (require('@aws/dynamodb-data-mapper').DataMapper)();
-		const mockSQS = new SQS();
+		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
+		const mockSQS = new mockedSQS.default();
 
 		const sub = new SubscriptionEmpty();
 		sub.subscriptionId = '12345';
 		sub.startTimestamp = '2023-03-01 07:24:38 UTC';
 		sub.endTimestamp = '2025-03-01 07:24:38 UTC';
 
-		setMockGet(() => sub);
+		mockedDynamoDBMapper.setMockGet(() => sub);
 
 		let receiveMessageCallCount = 0;
 
-		setMockReceiveMessage(() => {
+		mockedSQS.setMockReceiveMessage(() => {
 			receiveMessageCallCount++;
 
 			if (receiveMessageCallCount > 1) {
-				return { Messages: [] }; // Return empty array to stop the loop after first run
+				return { Messages: [] };
 			} else {
-				// This will run on first call
 				return {
 					Messages: [
 						{
@@ -204,29 +223,25 @@ describe('handler', () => {
 
 	it('should delete expired message', async () => {
 		const mockProcessAcquisition = processAcquisition as jest.Mock;
-		mockProcessAcquisition.mockResolvedValue(true);
+		mockProcessAcquisition.mockResolvedValue(true as never);
 
-		// get the mock instances
-		const mockDataMapper =
-			new (require('@aws/dynamodb-data-mapper').DataMapper)();
-		const mockSQS = new SQS();
+		const mockSQS = new mockedSQS.default();
 
 		const sub = new SubscriptionEmpty();
 		sub.subscriptionId = '12345';
 		sub.startTimestamp = '2023-03-01 07:24:38 UTC';
 		sub.endTimestamp = '2025-03-01 07:24:38 UTC';
 
-		setMockGet(() => sub);
+		mockedDynamoDBMapper.setMockGet(() => sub);
 
 		let receiveMessageCallCount = 0;
 
-		setMockReceiveMessage(() => {
+		mockedSQS.setMockReceiveMessage(() => {
 			receiveMessageCallCount++;
 
 			if (receiveMessageCallCount > 1) {
-				return { Messages: [] }; // Return empty array to stop the loop after first run
+				return { Messages: [] };
 			} else {
-				// This will run on first call
 				return {
 					Messages: [
 						{
@@ -252,29 +267,26 @@ describe('handler', () => {
 
 	it('should delete successful message', async () => {
 		const mockProcessAcquisition = processAcquisition as jest.Mock;
-		mockProcessAcquisition.mockResolvedValue(true);
+		mockProcessAcquisition.mockResolvedValue(true as never);
 
-		// get the mock instances
-		const mockDataMapper =
-			new (require('@aws/dynamodb-data-mapper').DataMapper)();
-		const mockSQS = new SQS();
+		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
+		const mockSQS = new mockedSQS.default();
 
 		const sub = new SubscriptionEmpty();
 		sub.subscriptionId = '12345';
 		sub.startTimestamp = '2023-03-01 07:24:38 UTC';
 		sub.endTimestamp = '2025-03-01 07:24:38 UTC';
 
-		setMockGet(() => sub);
+		mockedDynamoDBMapper.setMockGet(() => sub);
 
 		let receiveMessageCallCount = 0;
 
-		setMockReceiveMessage(() => {
+		mockedSQS.setMockReceiveMessage(() => {
 			receiveMessageCallCount++;
 
 			if (receiveMessageCallCount > 1) {
-				return { Messages: [] }; // Return empty array to stop the loop after first run
+				return { Messages: [] };
 			} else {
-				// This will run on first call
 				return {
 					Messages: [
 						{
