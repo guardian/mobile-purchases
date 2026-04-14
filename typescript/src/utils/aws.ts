@@ -1,9 +1,9 @@
-import { DataMapper, ItemNotFoundException } from '@aws/dynamodb-data-mapper';
+import { DataMapper } from '@aws/dynamodb-data-mapper';
 import CloudWatch from 'aws-sdk/clients/cloudwatch';
 import DynamoDB from 'aws-sdk/clients/dynamodb';
 import S3 from 'aws-sdk/clients/s3';
 import Sqs from 'aws-sdk/clients/sqs';
-import SSM = require('aws-sdk/clients/ssm');
+import SSM from 'aws-sdk/clients/ssm';
 import STS from 'aws-sdk/clients/sts';
 import {
 	CredentialProviderChain,
@@ -135,9 +135,9 @@ export async function putMetric(
 	metricName: string,
 	value = 1.0,
 ): Promise<void> {
-	const metricDatum: AWS.CloudWatch.MetricDatum = {
+	const metricDatum = {
 		MetricName: metricName,
-		Unit: 'Count',
+		Unit: 'Count' as const,
 		Value: value,
 		Dimensions: [
 			{
@@ -147,7 +147,7 @@ export async function putMetric(
 		],
 	};
 
-	const params: AWS.CloudWatch.PutMetricDataInput = {
+	const params = {
 		Namespace: 'soft-opt-ins',
 		MetricData: [metricDatum],
 	};
@@ -157,7 +157,7 @@ export async function putMetric(
 
 export function sendToSqs(
 	queueUrl: string,
-	event: any,
+	event: unknown,
 	delaySeconds?: number,
 ): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
 	return sqs
@@ -192,7 +192,7 @@ export async function sendToSqsSoftOptIns(
 
 export async function sendToSqsComms(
 	queueUrl: string,
-	event: any,
+	event: unknown,
 	delaySeconds?: number,
 ): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
 	const membershipSqs = await getSqsClientForComms();
