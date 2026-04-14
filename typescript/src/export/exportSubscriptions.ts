@@ -7,7 +7,11 @@ import { dynamoMapper, s3 } from '../utils/aws';
 import { plusDays } from '../utils/dates';
 import { DynamoStream } from './dynamoStream';
 
-export async function handler(): Promise<any> {
+interface HandlerOutput {
+	recordCount: number;
+}
+
+export async function handler(): Promise<HandlerOutput> {
 	const bucket = process.env['ExportBucket'];
 	console.log(`[cda81c34] bucket: ${bucket}`);
 	if (!bucket) throw new Error('Variable ExportBucket must be set');
