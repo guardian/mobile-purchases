@@ -1,6 +1,6 @@
 import type { Subscription } from '../models/subscription';
 import { SubscriptionEmpty } from '../models/subscription';
-import { dynamoMapper, sendToSqs, sqs } from '../utils/aws';
+import { dynamoMapper, sqs } from '../utils/aws';
 import { processAcquisition } from './processSubscription';
 
 interface MessageBody {
@@ -24,14 +24,15 @@ async function deleteMessage(dlqUrl: string, receiptHandle: string) {
 		.promise();
 }
 
-export async function handler(event: any): Promise<void> {
+export async function handler(_event: unknown): Promise<void> {
 	const dlqUrl = process.env.DLQUrl;
 
 	if (!dlqUrl) {
 		throw new Error('process.env.DLQUrl is undefined');
 	}
 
-	while (true) {
+	const isRunning = true;
+	while (isRunning) {
 		// Receive messages from the DLQ
 		const data = await sqs
 			.receiveMessage({
