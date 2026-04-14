@@ -6,16 +6,10 @@ import type {
 	PathParameters,
 } from '../models/apiGatewayHttp';
 import { HTTPResponses } from '../models/apiGatewayHttp';
-import { Subscription, SubscriptionEmpty } from '../models/subscription';
-import { googlePackageNameToPlatform } from '../services/appToPlatform';
+import { SubscriptionEmpty } from '../models/subscription';
 import { fetchGoogleSubscription } from '../services/google-play';
-import { fetchGoogleSubscriptionV2 } from '../services/google-play-v2';
 import { dynamoMapper } from '../utils/aws';
-import {
-	dateToSecondTimestamp,
-	optionalMsToDate,
-	thirtyMonths,
-} from '../utils/dates';
+import { optionalMsToDate } from '../utils/dates';
 
 type SubscriptionStatus = {
 	subscriptionHasLapsed: boolean;
@@ -84,15 +78,16 @@ export async function handler(
 				);
 				return HTTPResponses.NOT_FOUND;
 			}
-		} catch (error: any) {
-			if (error.statusCode == 410) {
+		} catch (error: unknown) {
+			const err = error as { statusCode?: number };
+			if (err.statusCode == 410) {
 				console.log(
 					`No subscription found for purchaseToken hash: ${purchaseTokenHash} (410-Gone from upstream API)`,
 				);
 				return HTTPResponses.NOT_FOUND;
 			} else {
 				console.log(
-					`Serving an Internal Server Error due to: ${error.toString().split('/tokens/')[0]}`,
+					`Serving an Internal Server Error due to: ${err.toString().split('/tokens/')[0]}`,
 				);
 				return HTTPResponses.INTERNAL_ERROR;
 			}
@@ -149,8 +144,9 @@ async function getSubscriptionStatusFromDynamo(
 			)}`,
 		);
 		return dynamoSubscriptionStatus;
-	} catch (error: any) {
-		if (error.name === 'ItemNotFoundException') {
+	} catch (error: unknown) {
+		const err = error as { name?: string };
+		if (err.name === 'ItemNotFoundException') {
 			console.log(
 				`No subscription found in Dynamo with purchaseToken hash: ${purchaseTokenHash}`,
 			);
@@ -161,39 +157,6 @@ async function getSubscriptionStatusFromDynamo(
 		}
 		// All exceptions are swallowed here as we fall-back on the Google API for all failure modes (including cache misses)
 		return null;
-	}
-}
-
-async function updateParallelTestTable(
-	purchaseToken: string,
-	packageName: string,
-) {
-	try {
-		const googleSubscription = await fetchGoogleSubscriptionV2(
-			purchaseToken,
-			packageName,
-		);
-
-		const subscription = new Subscription(
-			purchaseToken,
-			googleSubscription.startTime?.toISOString() ?? '',
-			googleSubscription.expiryTime.toISOString(),
-			googleSubscription.userCancellationTime?.toISOString(),
-			googleSubscription.autoRenewing,
-			googleSubscription.productId,
-			googlePackageNameToPlatform(packageName),
-			googleSubscription.freeTrial,
-			googleSubscription.billingPeriodDuration,
-			googleSubscription,
-			undefined,
-			null,
-			dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)),
-			'subscriptions-parallel-test',
-		);
-
-		await dynamoMapper.put({ item: subscription });
-	} catch (err) {
-		console.log(`ANDROID-PARALLEL-TEST: Error: ${JSON.stringify(err)}`);
 	}
 }
 
