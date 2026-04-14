@@ -4,11 +4,11 @@ import {
 	withAppAccountToken,
 } from '../../../src/feast/update-subs/apple';
 import { GracefulProcessingError } from '../../../src/models/GracefulProcessingError';
-import { ProcessingError } from '../../../src/models/processingError';
 import { Subscription } from '../../../src/models/subscription';
 import type { AppleSubscriptionReference } from '../../../src/models/subscriptionReference';
 import type { UserSubscription } from '../../../src/models/userSubscription';
 import { buildSqsEvent } from './test-helpers';
+import { expect, jest, beforeEach, describe, it } from '@jest/globals';
 
 describe('The Feast (Apple) subscription updater', () => {
 	it('Should fetch the subscription(s) associated with the reference from Apple, persist them to Dynamo and send to the historical queue', async () => {
@@ -25,7 +25,7 @@ describe('The Feast (Apple) subscription updater', () => {
 			mockStoreUserSubscriptionInDynamo,
 		);
 
-		const result = await handler(event);
+		const _result = await handler(event);
 
 		// The receipts `"TEST_RECEIPT_1"` & `"TEST_RECEIPT_2"` together reference the subscriptions with IDs
 		// `"sub-1"`, `"sub-2"` & `"sub-3"`. Importantly, `"sub-4"` is referenced by the receipt `"TEST_RECEIPT_3"`,
@@ -54,7 +54,7 @@ describe('The Feast (Apple) subscription updater', () => {
 			mockStoreUserSubscriptionInDynamo,
 		);
 
-		const result = await handler(event);
+		const _result = await handler(event);
 
 		expect(mockStoreUserSubscriptionInDynamo.mock.calls.length).toEqual(3);
 
@@ -78,7 +78,7 @@ describe('The Feast (Apple) subscription updater', () => {
 	it('Does not throw an error if the receipt lookup with Apple fails with error code 21007', async () => {
 		const event = buildSqsEvent([{ receipt: 'LOOKUP_FAIL_RECEIPT' }]);
 		const fetchSubFromAppleFailure = (
-			reference: AppleSubscriptionReference,
+			_reference: AppleSubscriptionReference,
 		) => {
 			throw new GracefulProcessingError(`Got status 21007 and we're in PROD`);
 		};
@@ -201,9 +201,7 @@ const stubExchangeExternalIdForIdentityId = (externalId: string) => {
 
 	if (maybeMatchingSub) {
 		return Promise.resolve({
-			identityId: subscriptions.find(
-				(s) => s.subscription.appAccountToken == externalId,
-			)?.identityId!,
+			identityId: maybeMatchingSub.identityId!,
 		});
 	}
 
@@ -212,14 +210,14 @@ const stubExchangeExternalIdForIdentityId = (externalId: string) => {
 	);
 };
 
-const mockStoreSubscriptionInDynamo = jest.fn((subscription: Subscription) =>
+const mockStoreSubscriptionInDynamo = jest.fn((_subscription: Subscription) =>
 	Promise.resolve(),
 );
 
 const mockSendSubscriptionToHistoricalQueue = jest.fn(
-	(subscription: Subscription) => Promise.resolve(),
+	(_subscription: Subscription) => Promise.resolve(),
 );
 
 const mockStoreUserSubscriptionInDynamo = jest.fn(
-	(userSubscription: UserSubscription) => Promise.resolve(),
+	(_userSubscription: UserSubscription) => Promise.resolve(),
 );
