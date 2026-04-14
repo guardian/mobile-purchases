@@ -1,5 +1,5 @@
 import type S3 from 'aws-sdk/clients/s3';
-import aws = require('../utils/aws');
+import * as aws from '../utils/aws';
 
 // Author: Pascal
 // This file was introduced in July 2025 to implement the service that queries the Google API

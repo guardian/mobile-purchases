@@ -80,7 +80,7 @@ export async function handler(
 		console.log(`[6bfd5d4e] httpRequest.body`, httpRequest.body);
 		payload = JSON.parse(httpRequest.body ?? '') as AppleLinkPayload;
 		console.log(`[918daf29] httpRequest.body`, JSON.stringify(payload));
-	} catch (e) {
+	} catch {
 		return HTTPResponses.INVALID_REQUEST;
 	}
 

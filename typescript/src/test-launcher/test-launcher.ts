@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as process from 'process';
 
 if (process.argv.length == 4) {
 	const rawPayload = fs.readFileSync(
@@ -6,7 +7,7 @@ if (process.argv.length == 4) {
 	);
 	import(`../${process.argv[2]}`)
 		.then((module) => {
-			module.handler(JSON.parse(rawPayload.toString())).then((res: any) => {
+			module.handler(JSON.parse(rawPayload.toString())).then((res: unknown) => {
 				console.log(`Completed: result: ${JSON.stringify(res)}`);
 			});
 		})

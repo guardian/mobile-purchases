@@ -119,22 +119,26 @@ export async function getGoogleSubResponse(
 			subscriptionReference.purchaseToken,
 			subscriptionReference.packageName,
 		);
-	} catch (exception: any) {
-		if (exception.statusCode === 410) {
+	} catch (exception: unknown) {
+		const err = exception as {
+			statusCode?: number;
+			result?: { error?: { message?: string } };
+		};
+		if (err.statusCode === 410) {
 			console.log(`Purchase expired a very long time ago, ignoring`);
 			return [];
 		}
 		if (
-			exception.statusCode === 400 &&
-			exception?.result?.error?.message === 'Invalid Value'
+			err.statusCode === 400 &&
+			err?.result?.error?.message === 'Invalid Value'
 		) {
 			console.warn(
 				"The purchase token value was invalid, we can't recover from this error",
-				exception,
+				err,
 			);
 			throw new ProcessingError('Invalid token value', false);
 		} else {
-			throw exception;
+			throw err;
 		}
 	}
 

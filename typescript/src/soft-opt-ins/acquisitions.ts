@@ -5,7 +5,7 @@ import { Stage } from '../utils/appIdentity';
 import { dynamoMapper, sendToSqs } from '../utils/aws';
 import { processAcquisition } from './processSubscription';
 
-export async function handler(event: DynamoDBStreamEvent): Promise<any> {
+export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 	const dlqUrl = process.env.DLQUrl;
 
 	if (!dlqUrl) {

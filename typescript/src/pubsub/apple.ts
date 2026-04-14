@@ -56,7 +56,7 @@ export async function toDynamoEvent_apple_async(
 		notification.unified_receipt.latest_receipt = '';
 	}
 
-	var extra = '';
+	let extra = '';
 	console.log(`[f0736bbc] useStoreKitForExtra: ${useStoreKitForExtra}`);
 	if (useStoreKitForExtra) {
 		// Defining the two variables we need to call for the extra data

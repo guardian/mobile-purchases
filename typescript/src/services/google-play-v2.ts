@@ -1,7 +1,7 @@
 import { androidpublisher, auth } from '@googleapis/androidpublisher';
 import type S3 from 'aws-sdk/clients/s3';
 import { Stage } from '../utils/appIdentity';
-import aws = require('../utils/aws');
+import * as aws from '../utils/aws';
 import { mapAndroidProductId } from '../utils/mapAndroidProductId';
 
 export type GoogleSubscription = {
@@ -133,16 +133,17 @@ export async function fetchGoogleSubscriptionV2(
 			obfuscatedExternalAccountId,
 			rawResponse: purchase.data,
 		};
-	} catch (error: any) {
-		if (error?.status == 400 || error?.status == 404 || error?.status == 410) {
+	} catch (error: unknown) {
+		const err = error as { status?: number };
+		if (err?.status == 400 || err?.status == 404 || err?.status == 410) {
 			console.error(
-				`fetchGoogleSubscriptionV2 error: invalid purchase token; subscription not found; or no such package name (status = ${error.status})`,
-				error,
+				`fetchGoogleSubscriptionV2 error: invalid purchase token; subscription not found; or no such package name (status = ${err.status})`,
+				err,
 			);
 		} else {
-			console.error(`fetchGoogleSubscriptionV2 error:`, error);
+			console.error(`fetchGoogleSubscriptionV2 error:`, err);
 		}
-		throw error;
+		throw err;
 	}
 }
 
