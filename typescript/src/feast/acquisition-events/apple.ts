@@ -1,5 +1,4 @@
 import type { SQSEvent, SQSRecord } from 'aws-lambda';
-import fetch from 'node-fetch';
 import { App } from '../../models/app';
 import type { Subscription } from '../../models/subscription';
 import type { AppleStoreKitSubscriptionDataDerivationForFeastPipeline } from '../../services/api-storekit';
