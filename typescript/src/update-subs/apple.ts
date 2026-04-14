@@ -33,7 +33,7 @@ export async function toAppleSubscription_async(
 		);
 	}
 
-	var extra = '';
+	let extra = '';
 
 	// Defining the two variables we need to call for the extra data
 	const transactionId: string =
