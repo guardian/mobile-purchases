@@ -5,7 +5,7 @@ import {
 	productIdToPaymentFrequency,
 	storefrontToCountry,
 } from './apple-mappings';
-const jwt = require('jsonwebtoken');
+import * as jwt from 'jsonwebtoken';
 
 // AppleStoreKitSubscriptionData is built from the answer from
 // https://api.storekit.itunes.apple.com/inApps/v1/subscriptions/{transactionId}
