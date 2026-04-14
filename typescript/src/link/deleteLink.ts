@@ -71,7 +71,14 @@ async function disableSoftOptIns(
 	console.log(`sent soft opt-in message for identityId ${user.userId}`);
 }
 
-export async function handler(event: DynamoDBStreamEvent): Promise<any> {
+interface HandlerResponse {
+	recordCount: number;
+	rowCount: number;
+}
+
+export async function handler(
+	event: DynamoDBStreamEvent,
+): Promise<HandlerResponse> {
 	const ttlEvents = event.Records.filter((dynamoEvent) => {
 		return (
 			dynamoEvent.eventName === 'REMOVE' &&
@@ -83,14 +90,18 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 
 	const subscriptions = ttlEvents.map((event) => event.dynamodb?.OldImage);
 
-	let records = 0;
-	let rows = 0;
+	let recordCount = 0;
+	let rowCount = 0;
 	let softOptInSuccessCount = 0;
 
 	for (const subscription of subscriptions) {
-		// We're guaranteed to have a truthy subscription ID here as we filtered
-		// out Dynamo record events without it above.
-		const subscriptionId = subscription?.subscriptionId?.S!;
+		const subscriptionId = subscription?.subscriptionId?.S;
+
+		if (!subscriptionId) {
+			console.warn(`Skipping: Missing subscriptionId in subscription object`);
+			continue;
+		}
+
 		const userLinksIterator = await getUserLinks(subscriptionId);
 
 		const userSubscriptions: UserSubscription[] = [];
@@ -103,7 +114,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 				`No user links to delete for subscriptionId: ${subscriptionId}`,
 			);
 		} else {
-			rows += await deleteUserSubscription(userSubscriptions);
+			rowCount += await deleteUserSubscription(userSubscriptions);
 
 			try {
 				const platform = subscription?.platform?.S;
@@ -116,19 +127,19 @@ export async function handler(event: DynamoDBStreamEvent): Promise<any> {
 			}
 		}
 
-		records++;
+		recordCount++;
 	}
 
 	console.log(
-		`Processed ${records} records from dynamo stream to delete ${rows} rows`,
+		`Processed ${recordCount} records from dynamo stream to delete ${rowCount} rows`,
 	);
 
 	console.log(
-		`Processed ${records} records from dynamo stream to disable soft opt-ins for ${softOptInSuccessCount} users`,
+		`Processed ${recordCount} records from dynamo stream to disable soft opt-ins for ${softOptInSuccessCount} users`,
 	);
 
 	return {
-		recordCount: records,
-		rowCount: rows,
+		recordCount,
+		rowCount,
 	};
 }
