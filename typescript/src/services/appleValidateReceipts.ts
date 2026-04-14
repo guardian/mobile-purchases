@@ -75,7 +75,7 @@ export interface AppleValidationResponse {
 	isRetryable: boolean;
 	latestReceipt: string;
 	latestReceiptInfo: AppleValidatedReceiptInfo;
-	originalResponse: any;
+	originalResponse: unknown;
 }
 
 const sandboxReceiptEndpoint = 'https://sandbox.itunes.apple.com/verifyReceipt';
