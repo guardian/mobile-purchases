@@ -1,6 +1,6 @@
 import type S3 from 'aws-sdk/clients/s3';
 import { Stage } from '../utils/appIdentity';
-import aws = require('../utils/aws');
+import * as aws from '../utils/aws';
 import { restClient } from '../utils/restClient';
 
 export const GOOGLE_PAYMENT_STATE = {
