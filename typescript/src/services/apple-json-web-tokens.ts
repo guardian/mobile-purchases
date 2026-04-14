@@ -1,5 +1,5 @@
 import { getConfigValue } from '../utils/ssmConfig';
-const jwt = require('jsonwebtoken');
+import * as jwt from 'jsonwebtoken';
 
 export const forgeStoreKitBearerToken = async (
 	appBundleId: string,
