@@ -1,32 +1,59 @@
 import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
 import { handler } from '../../src/link/deleteLink';
 import { UserSubscriptionEmpty } from '../../src/models/userSubscription';
+import * as dynamodbMapper from '@aws/dynamodb-data-mapper';
+import * as sqsModule from 'aws-sdk/clients/sqs';
+import {
+	expect,
+	describe,
+	it,
+	beforeEach,
+	afterEach,
+	jest,
+} from '@jest/globals';
 
-import { expect, describe, it, beforeEach, afterEach } from '@jest/globals';
+const mockedDynamoDBMapper = dynamodbMapper as unknown as {
+	DataMapper: new () => {
+		put: jest.Mock;
+		delete: jest.Mock;
+		query: jest.Mock;
+	};
+	setMockQuery: (
+		fn: (params: {
+			keyCondition: unknown;
+			indexName: unknown;
+		}) => AsyncIterable<unknown>,
+	) => void;
+};
+
+const mockedSQS = sqsModule as unknown as {
+	default: new () => {
+		sendMessage: jest.Mock;
+	};
+};
 
 jest.mock('@aws/dynamodb-data-mapper', () => {
 	const actualDataMapper = jest.requireActual('@aws/dynamodb-data-mapper');
 
 	const queryFn = jest.fn();
-	const putFn = jest.fn().mockResolvedValue(true);
-	const deleteFn = jest.fn().mockResolvedValue(true);
+	const putFn = jest.fn().mockResolvedValue(true as never);
+	const deleteFn = jest.fn().mockResolvedValue(true as never);
 
-	return {
-		...actualDataMapper,
+	return Object.assign({}, actualDataMapper, {
 		DataMapper: jest.fn().mockImplementation(() => ({
 			put: putFn,
 			delete: deleteFn,
 			query: queryFn,
 		})),
-		setMockQuery: (mockImplementation: (arg0: any) => any) => {
+		setMockQuery: (mockImplementation: (arg0: unknown) => unknown) => {
 			queryFn.mockImplementation(async function* (params) {
 				const iterator = mockImplementation(params);
-				for await (const item of iterator) {
+				for await (const item of iterator as AsyncIterable<unknown>) {
 					yield item;
 				}
 			});
 		},
-	};
+	});
 });
 
 jest.mock('util', () => jest.fn());
@@ -36,11 +63,14 @@ jest.mock('aws-sdk/clients/sqs', () => {
 		sendMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
 	};
 
-	return jest.fn(() => mockSQS);
+	return {
+		__esModule: true,
+		default: jest.fn(() => mockSQS),
+	};
 });
+
 jest.mock('../../src/utils/guIdentityApi');
 
-// mock so imports don't use real client which throws an error as credentials are needed
 jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
 jest.mock('aws-sdk/clients/s3', () => jest.fn());
 jest.mock('aws-sdk/clients/ssm', () => jest.fn());
@@ -51,16 +81,17 @@ jest.mock('aws-sdk/clients/cloudwatch', () => jest.fn());
 jest.mock('aws-sdk/clients/sts', () => {
 	const mockSTS = {
 		assumeRole: jest.fn().mockReturnValue({
-			promise: jest.fn().mockResolvedValue({
-				Credentials: {
-					AccessKeyId: 'mockAccessKeyId',
-					SecretAccessKey: 'mockSecretAccessKey',
-					SessionToken: 'mockSessionToken',
-				},
-			}),
+			promise: jest.fn().mockImplementation(() =>
+				Promise.resolve({
+					Credentials: {
+						AccessKeyId: 'mockAccessKeyId',
+						SecretAccessKey: 'mockSecretAccessKey',
+						SessionToken: 'mockSessionToken',
+					},
+				}),
+			),
 		}),
 	};
-
 	return jest.fn(() => mockSTS);
 });
 
@@ -75,15 +106,11 @@ jest.mock('aws-sdk/lib/core', () => {
 	};
 });
 
-const setMockQuery = require('@aws/dynamodb-data-mapper').setMockQuery;
-
 describe('handler', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
-
-		// Set the current time to a fixed date (2023-03-14)
 		jest.useFakeTimers();
-		jest.setSystemTime(new Date('2023-03-14').getTime()); // or 1678780800000
+		jest.setSystemTime(new Date('2023-03-14').getTime());
 	});
 
 	afterEach(() => {
@@ -93,13 +120,12 @@ describe('handler', () => {
 
 	it('should process removed records, put messages on queue', async () => {
 		// get the mock instances
-		const mockDataMapper =
-			new (require('@aws/dynamodb-data-mapper').DataMapper)();
-		const mockSQS = new (require('aws-sdk/clients/sqs'))();
+		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
+		const mockSQS = new mockedSQS.default();
 
-		setMockQuery(async function* (params: {
-			keyCondition: any;
-			indexName: any;
+		mockedDynamoDBMapper.setMockQuery(async function* (_params: {
+			keyCondition: unknown;
+			indexName: unknown;
 		}) {
 			yield {
 				subscriptionId: '1',
@@ -150,14 +176,14 @@ describe('handler', () => {
 
 	it('puts Feast deletions on the SOI SQS queue with the product name FeastInAppPurchase', async () => {
 		// get the mock instances
-		const mockSQS = new (require('aws-sdk/clients/sqs'))();
+		const mockSQS = new mockedSQS.default();
 
 		const subscriptionId = '1';
 		const userId = '123';
 
-		setMockQuery(async function* (params: {
-			keyCondition: any;
-			indexName: any;
+		mockedDynamoDBMapper.setMockQuery(async function* (_params: {
+			keyCondition: unknown;
+			indexName: unknown;
 		}) {
 			yield {
 				subscriptionId,
@@ -195,9 +221,8 @@ describe('handler', () => {
 
 	it('should not process modified records', async () => {
 		// get the mock instances
-		const mockDataMapper =
-			new (require('@aws/dynamodb-data-mapper').DataMapper)();
-		const mockSQS = new (require('aws-sdk/clients/sqs'))();
+		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
+		const mockSQS = new mockedSQS.default();
 
 		const event: DynamoDBStreamEvent = {
 			Records: [modifyDynamoRecord],
