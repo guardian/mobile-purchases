@@ -2,7 +2,7 @@ import { App, Stack, Stage } from './appIdentity';
 import { ssm } from './aws';
 import type { Option } from './option';
 
-type Config = Record<string, any>;
+type Config = Record<string, unknown>;
 
 function recursivelyFetchConfig(
 	nextToken?: string,
@@ -50,10 +50,12 @@ function fetchConfig(): Promise<Config> {
 
 export function getConfigValue<A>(key: string, defaultValue?: A): Promise<A> {
 	return fetchConfig().then((conf) => {
-		if (conf[key]) {
-			return conf[key];
+		const value = conf[key];
+		if (value !== undefined && value !== null) {
+			// Assert that the value is of type A
+			return value as A;
 		} else {
-			if (defaultValue) {
+			if (defaultValue !== undefined) {
 				return defaultValue;
 			} else {
 				throw new Error(

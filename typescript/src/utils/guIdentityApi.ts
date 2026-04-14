@@ -1,22 +1,11 @@
 import type { HttpRequestHeaders } from '../models/apiGatewayHttp';
 import { Stage } from '../utils/appIdentity';
-import { restClient } from './restClient';
 import { getConfigValue } from './ssmConfig';
+import OktaJwtVerifier from '@okta/jwt-verifier';
 
-interface UserId {
-	id: string;
-}
-
-interface IdentityResponse {
-	status: string;
-	user: UserId;
-}
-
-interface OktaJwtVerifierReturn {
-	claims: {
-		scp: [string];
-		legacy_identity_id: string;
-	};
+interface OktaJwtVerifierClaims {
+	scp: [string];
+	legacy_identity_id: string;
 }
 
 interface OktaStageParameters {
@@ -75,43 +64,39 @@ function getOktaStageParameters(stage: string): OktaStageParameters {
 export async function getUserId(
 	headers: HttpRequestHeaders,
 ): Promise<UserIdResolution> {
+	const oktaparams = getOktaStageParameters(Stage);
+
+	const issuer = oktaparams.issuer;
+	const expectedAud = oktaparams.expectedAud;
+	const scope = oktaparams.scope;
+
+	const oktaJwtVerifier = new OktaJwtVerifier({
+		issuer: issuer,
+	});
+
+	const accessTokenString = getAuthToken(headers);
+
 	try {
-		const OktaJwtVerifier = require('@okta/jwt-verifier');
+		return await oktaJwtVerifier
+			.verifyAccessToken(accessTokenString || '', expectedAud)
+			.then((payload) => {
+				const claims = payload.claims as unknown as OktaJwtVerifierClaims;
 
-		const oktaparams = getOktaStageParameters(Stage);
-
-		const issuer = oktaparams.issuer;
-		const expectedAud = oktaparams.expectedAud;
-		const scope = oktaparams.scope;
-
-		const oktaJwtVerifier = new OktaJwtVerifier({
-			issuer: issuer,
-		});
-
-		const accessTokenString = getAuthToken(headers);
-
-		try {
-			return await oktaJwtVerifier
-				.verifyAccessToken(accessTokenString, expectedAud)
-				.then((payload: OktaJwtVerifierReturn) => {
-					if (payload.claims.scp.includes(scope)) {
-						if (payload.claims.legacy_identity_id) {
-							return {
-								status: 'success',
-								userId: payload.claims.legacy_identity_id,
-							};
-						} else {
-							return { status: 'missing-identity-id', userId: null };
-						}
+				if (claims.scp.includes(scope)) {
+					if (claims.legacy_identity_id) {
+						return {
+							status: 'success',
+							userId: claims.legacy_identity_id,
+						};
 					} else {
-						// We have passed authentication but we didn't pass the scope check
-						return { status: 'incorrect-scope', userId: null };
+						return { status: 'missing-identity-id', userId: null };
 					}
-				});
-		} catch (error) {
-			return { status: 'incorrect-token', userId: null };
-		}
+				} else {
+					return { status: 'incorrect-scope', userId: null };
+				}
+			});
 	} catch (error) {
-		throw error;
+		console.log(`error: ${error}`);
+		return { status: 'incorrect-token', userId: null };
 	}
 }
