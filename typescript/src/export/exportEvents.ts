@@ -7,7 +7,7 @@ import { dynamoMapper, s3 } from '../utils/aws';
 import { plusDays } from '../utils/dates';
 import { DynamoStream } from './dynamoStream';
 
-function cleanupEvent(subEvent: SubscriptionEvent): any {
+function cleanupEvent(subEvent: SubscriptionEvent): SubscriptionEvent {
 	if (subEvent.applePayload) {
 		delete subEvent.applePayload.password; // just to be safe
 		delete subEvent.applePayload.latest_receipt;
@@ -20,7 +20,13 @@ interface ManualBackfillEvent {
 	date?: string;
 }
 
-export async function handler(event?: ManualBackfillEvent): Promise<any> {
+interface HandlerOutput {
+	recordCount: number;
+}
+
+export async function handler(
+	event?: ManualBackfillEvent,
+): Promise<HandlerOutput> {
 	const bucket = process.env['ExportBucket'];
 	console.log(`[ca76728f] starting export with bucket: ${bucket}`);
 
