@@ -2,7 +2,6 @@ import 'source-map-support/register';
 import zlib from 'zlib';
 import { Upload } from '@aws-sdk/lib-storage';
 import {
-	SQSClient,
 	ReceiveMessageCommand,
 	DeleteMessageBatchCommand,
 	GetQueueAttributesCommand,
