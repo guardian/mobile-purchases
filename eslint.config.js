@@ -22,7 +22,7 @@ module.exports = [
         caughtErrorsIgnorePattern: '^_',
       }],
       '@typescript-eslint/no-explicit-any': 'warn',
-      'no-console': 'warn',
+      'no-console': 'off',
     },
   },
   {
