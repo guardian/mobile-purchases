@@ -52,55 +52,85 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
 	});
 });
 
-// mock so imports don't use real client which throws an error as credentials are needed
-jest.mock('@aws-sdk/client-dynamodb', () => jest.fn());
-jest.mock('@aws-sdk/client-s3', () => jest.fn());
-jest.mock('@aws-sdk/client-ssm', () => jest.fn());
+jest.mock('@aws-sdk/client-dynamodb', () => ({
+	DynamoDBClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
+
+jest.mock('@aws-sdk/client-s3', () => ({
+	S3Client: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
+
+jest.mock('@aws-sdk/client-ssm', () => ({
+	SSMClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
 
 jest.mock('node-fetch', () => jest.fn());
 
 jest.mock('../../src/utils/guIdentityApi');
-jest.mock('@aws-sdk/client-cloudwatch', () => jest.fn());
+
+jest.mock('@aws-sdk/client-cloudwatch', () => ({
+	CloudWatchClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
 
 jest.mock('util', () => jest.fn());
 
 jest.mock('@aws-sdk/client-sqs', () => {
+	const mockSend = jest.fn();
 	const mockSQS = {
-		send: jest.fn(),
+		send: mockSend,
 	};
 
 	return {
 		__esModule: true,
 		SQSClient: jest.fn(() => mockSQS),
-		SendMessageCommand: jest.fn(),
+		SendMessageCommand: jest.fn().mockImplementation((params) => params),
 	};
 });
 
 jest.mock('@aws-sdk/client-sts', () => {
 	const mockSTS = {
-		assumeRole: jest.fn().mockReturnValue({
-			promise: jest.fn().mockImplementation(() =>
-				Promise.resolve({
-					Credentials: {
-						AccessKeyId: 'mockAccessKeyId',
-						SecretAccessKey: 'mockSecretAccessKey',
-						SessionToken: 'mockSessionToken',
-					},
-				}),
-			),
-		}),
+		// @ts-ignore
+		STSClient: jest.fn().mockImplementation(() => ({
+			// @ts-ignore
+			send: jest.fn().mockResolvedValue({
+				Credentials: {
+					AccessKeyId: 'mockAccessKeyId',
+					SecretAccessKey: 'mockSecretAccessKey',
+					SessionToken: 'mockSessionToken',
+				},
+			}),
+		})),
+		AssumeRoleCommand: jest.fn(),
 	};
-
-	return jest.fn(() => mockSTS);
+	return mockSTS;
 });
 
-jest.mock('@aws-sdk/credential-providers', () => ({
-	fromIni: jest.fn(),
-	fromTemporaryCredentials: jest.fn(),
-}));
+jest.mock('@aws-sdk/credential-providers', () => {
+	// @ts-ignore
+	const mockProvider = jest.fn().mockResolvedValue(undefined);
+	return {
+		fromIni: jest.fn().mockReturnValue(mockProvider),
+		fromContainerMetadata: jest.fn().mockReturnValue(mockProvider),
+	};
+});
 
 describe('isPostAcquisition() function', () => {
 	beforeEach(() => {
+		jest.useFakeTimers();
+		jest.setSystemTime(new Date('2023-03-14').getTime());
+		process.env.DLQUrl = 'https://example.com';
+		process.env.AWS_ACCESS_KEY_ID = 'mock-key';
+		process.env.AWS_SECRET_ACCESS_KEY = 'mock-secret';
+		process.env.AWS_REGION = 'eu-west-1';
+		jest.clearAllMocks();
 		jest.useFakeTimers();
 		jest.setSystemTime(new Date('2023-03-14').getTime());
 	});
