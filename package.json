@@ -26,6 +26,7 @@
   "private": true,
   "devDependencies": {
     "@aws-sdk/client-sqs": "^3.1030.0",
+    "@eslint/config-helpers": "^0.5.5",
     "@eslint/eslintrc": "^3.3.5",
     "@guardian/eslint-config": "^14.0.1",
     "@guardian/prettier": "^10.0.0",
