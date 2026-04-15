@@ -59,42 +59,57 @@ jest.mock('@aws-sdk/client-sqs', () => {
 	return {
 		__esModule: true,
 		SQSClient: jest.fn(() => mockSQS),
-		SendMessageCommand: jest.fn(),
+		SendMessageCommand: jest.fn().mockImplementation((params) => params),
+		ReceiveMessageCommand: jest.fn(),
+		DeleteMessageCommand: jest.fn(),
 	};
 });
-
 jest.mock('../../src/utils/guIdentityApi');
 
-jest.mock('@aws-sdk/client-dynamodb', () => jest.fn());
-jest.mock('@aws-sdk/client-s3', () => jest.fn());
-jest.mock('@aws-sdk/client-ssm', () => jest.fn());
+jest.mock('@aws-sdk/client-dynamodb', () => ({
+	DynamoDBClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
 
-jest.mock('@aws-sdk/client-cloudwatch', () => jest.fn());
+jest.mock('@aws-sdk/client-s3', () => ({
+	S3Client: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
 
-jest.mock('@aws-sdk/client-sts', () => {
-	const mockSTS = {
-		assumeRole: jest.fn().mockReturnValue({
-			promise: jest.fn().mockImplementation(() =>
-				Promise.resolve({
-					Credentials: {
-						AccessKeyId: 'mockAccessKeyId',
-						SecretAccessKey: 'mockSecretAccessKey',
-						SessionToken: 'mockSessionToken',
-					},
-				}),
-			),
+jest.mock('@aws-sdk/client-ssm', () => ({
+	SSMClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
+
+jest.mock('@aws-sdk/client-cloudwatch', () => ({
+	CloudWatchClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+	PutMetricDataCommand: jest.fn(),
+}));
+
+jest.mock('@aws-sdk/client-sts', () => ({
+	STSClient: jest.fn().mockImplementation(() => ({
+		// @ts-ignore
+		send: jest.fn().mockResolvedValue({
+			Credentials: {
+				AccessKeyId: 'mockAccessKeyId',
+				SecretAccessKey: 'mockSecretAccessKey',
+				SessionToken: 'mockSessionToken',
+			},
 		}),
-	};
-	return jest.fn(() => mockSTS);
-});
-
-jest.mock('@aws-sdk/credential-providers', () => ({
-	fromIni: jest.fn(),
-	fromTemporaryCredentials: jest.fn(),
+	})),
+	AssumeRoleCommand: jest.fn(),
 }));
 
 describe('handler', () => {
 	beforeEach(() => {
+		process.env.AWS_ACCESS_KEY_ID = 'mockKey';
+		process.env.AWS_SECRET_ACCESS_KEY = 'mockSecret';
+		process.env.AWS_REGION = 'eu-west-1';
 		jest.clearAllMocks();
 		jest.useFakeTimers();
 		jest.setSystemTime(new Date('2023-03-14').getTime());
@@ -149,15 +164,12 @@ describe('handler', () => {
 			subscriptionId: '1',
 		};
 
-		expect(mockSQSClient.send).toHaveBeenCalledWith(
-			expect.objectContaining({
-				input: {
-					QueueUrl:
-						'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE',
-					MessageBody: JSON.stringify(expectedSoftOptInMessage1),
-				},
-			}),
-		);
+		expect(mockSQSClient.send).toHaveBeenCalledWith({
+			QueueUrl:
+				'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE',
+			MessageBody: JSON.stringify(expectedSoftOptInMessage1),
+			DelaySeconds: undefined,
+		});
 
 		expect(result).toEqual({ recordCount: 1, rowCount: 1 });
 	});
@@ -195,15 +207,12 @@ describe('handler', () => {
 			subscriptionId,
 		};
 
-		expect(mockSQSClient.send).toHaveBeenCalledWith(
-			expect.objectContaining({
-				input: {
-					QueueUrl:
-						'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE',
-					MessageBody: JSON.stringify(expectedSoftOptInMessage1),
-				},
-			}),
-		);
+		expect(mockSQSClient.send).toHaveBeenCalledWith({
+			QueueUrl:
+				'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE',
+			MessageBody: JSON.stringify(expectedSoftOptInMessage1),
+			DelaySeconds: undefined,
+		});
 
 		expect(result).toEqual({ recordCount: 1, rowCount: 1 });
 	});

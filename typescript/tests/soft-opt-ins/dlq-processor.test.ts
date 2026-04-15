@@ -103,15 +103,34 @@ jest.mock('@aws-sdk/client-sqs', () => {
 	};
 });
 
-jest.mock('@aws-sdk/client-dynamodb', () => jest.fn());
-jest.mock('@aws-sdk/client-s3', () => jest.fn());
-jest.mock('@aws-sdk/client-ssm', () => jest.fn());
+jest.mock('@aws-sdk/client-dynamodb', () => ({
+	DynamoDBClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
+
+jest.mock('@aws-sdk/client-s3', () => ({
+	S3Client: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
+
+jest.mock('@aws-sdk/client-ssm', () => ({
+	SSMClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
+
+jest.mock('@aws-sdk/client-cloudwatch', () => ({
+	CloudWatchClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
 
 jest.mock('node-fetch', () => jest.fn());
 
 jest.mock('../../src/utils/guIdentityApi');
 jest.mock('@jest/globals');
-jest.mock('@aws-sdk/client-cloudwatch', () => jest.fn());
 
 jest.mock('util', () => jest.fn());
 
