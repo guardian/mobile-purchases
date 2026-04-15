@@ -17,21 +17,23 @@ import { Region, Stage } from './appIdentity';
 import { getMembershipAccountId } from './guIdentityApi';
 import type { SoftOptInEventProductName } from './softOptIns';
 
-// Create credential provider that always returns credentials
-const credentialProvider = async () => {
-	try {
-		// Try ECS credentials first
-		const ecsCredentials = fromContainerMetadata();
-		const ecsCreds = await ecsCredentials();
-		if (ecsCreds) {
-			return ecsCreds;
+// Create credential provider that always returns credentials - this is a sync function that returns a promise
+const credentialProvider = () => {
+	return (async () => {
+		try {
+			// Try ECS credentials first
+			const ecsCredentials = fromContainerMetadata();
+			const ecsCreds = await ecsCredentials();
+			if (ecsCreds) {
+				return ecsCreds;
+			}
+		} catch {
+			// Fall back to shared ini file
+			const iniCredentials = fromIni({ profile: 'mobile' });
+			return iniCredentials();
 		}
-	} catch {
-		// Fall back to shared ini file
-		const iniCredentials = fromIni({ profile: 'mobile' });
-		return iniCredentials();
-	}
-	throw new Error('Unable to get AWS credentials');
+		throw new Error('Unable to get AWS credentials');
+	})();
 };
 
 // Use the credential provider directly - it will be called when needed
