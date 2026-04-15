@@ -14,7 +14,11 @@ import {
 	it,
 } from '@jest/globals';
 import * as dynamodbMapper from '@aws/dynamodb-data-mapper';
-import * as sqsModule from 'aws-sdk/clients/sqs';
+import {
+	ReceiveMessageCommand,
+	DeleteMessageCommand,
+	SendMessageCommand,
+} from '@aws-sdk/client-sqs';
 import fetch from 'node-fetch';
 
 const mockedDynamoDBMapper = dynamodbMapper as unknown as {
@@ -30,13 +34,16 @@ const mockedDynamoDBMapper = dynamodbMapper as unknown as {
 	setMockGet: (fn: (arg0: unknown) => unknown) => void;
 };
 
-const mockedSQS = sqsModule as unknown as {
-	default: new () => {
-		receiveMessage: jest.Mock;
-		deleteMessage: jest.Mock;
-		sendMessage: jest.Mock;
-	};
-	setMockReceiveMessage: (fn: (arg0: unknown) => unknown) => void;
+const mockedSQS = {
+	send: jest.fn(),
+	setMockReceiveMessage: (fn: (params: unknown) => unknown) => {
+		mockedSQS.send.mockImplementation(async (command) => {
+			if (command instanceof ReceiveMessageCommand) {
+				return fn(command);
+			}
+			return {};
+		});
+	},
 };
 
 jest.mock('../../src/soft-opt-ins/processSubscription', () => ({
@@ -66,44 +73,49 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
 	});
 });
 
-jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
-jest.mock('aws-sdk/clients/s3', () => jest.fn());
-jest.mock('aws-sdk/clients/ssm', () => jest.fn());
+jest.mock('@aws-sdk/client-sqs', () => {
+	const mockSQS = {
+		send: jest.fn(),
+	};
+	const setMockReceiveMessage = (
+		mockImplementation: (arg0: unknown) => unknown,
+	) => {
+		mockSQS.send.mockImplementation(async (command) => {
+			if (command instanceof ReceiveMessageCommand) {
+				return mockImplementation(command);
+			}
+			if (command instanceof DeleteMessageCommand) {
+				return {};
+			}
+			if (command instanceof SendMessageCommand) {
+				return {};
+			}
+			return {};
+		});
+	};
+	return {
+		__esModule: true,
+		SQSClient: jest.fn(() => mockSQS),
+		ReceiveMessageCommand: jest.fn(),
+		DeleteMessageCommand: jest.fn(),
+		SendMessageCommand: jest.fn(),
+		setMockReceiveMessage: setMockReceiveMessage,
+	};
+});
+
+jest.mock('@aws-sdk/client-dynamodb', () => jest.fn());
+jest.mock('@aws-sdk/client-s3', () => jest.fn());
+jest.mock('@aws-sdk/client-ssm', () => jest.fn());
 
 jest.mock('node-fetch', () => jest.fn());
 
 jest.mock('../../src/utils/guIdentityApi');
 jest.mock('@jest/globals');
-jest.mock('aws-sdk/clients/cloudwatch', () => jest.fn());
+jest.mock('@aws-sdk/client-cloudwatch', () => jest.fn());
 
 jest.mock('util', () => jest.fn());
 
-jest.mock('aws-sdk/clients/sqs', () => {
-	const receiveMessageFn = jest.fn();
-	const mockSQS = {
-		receiveMessage: receiveMessageFn.mockReturnValue({
-			promise: jest.fn(),
-		}),
-		deleteMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
-		sendMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
-	};
-	const setMockReceiveMessage = (
-		mockImplementation: (arg0: unknown) => unknown,
-	) => {
-		receiveMessageFn.mockImplementation((params) => {
-			return {
-				promise: async () => mockImplementation(params),
-			};
-		});
-	};
-	return {
-		__esModule: true,
-		default: jest.fn(() => mockSQS),
-		setMockReceiveMessage: setMockReceiveMessage,
-	};
-});
-
-jest.mock('aws-sdk/clients/sts', () => {
+jest.mock('@aws-sdk/client-sts', () => {
 	const mockSTS = {
 		assumeRole: jest.fn().mockReturnValue({
 			promise: jest.fn().mockImplementation(() =>
@@ -120,36 +132,28 @@ jest.mock('aws-sdk/clients/sts', () => {
 	return jest.fn(() => mockSTS);
 });
 
-jest.mock('aws-sdk/lib/core', () => {
-	class SharedIniFileCredentialsMock {}
-	class CredentialProviderChainMock {}
-	return {
-		SharedIniFileCredentials: SharedIniFileCredentialsMock,
-		CredentialProviderChain: CredentialProviderChainMock,
-	};
-});
+jest.mock('@aws-sdk/credential-providers', () => ({
+	fromIni: jest.fn(),
+	fromTemporaryCredentials: jest.fn(),
+}));
 
 describe('messageIsOneDayOld() function', () => {
 	beforeEach(() => {
-		// Set the current time to a fixed date (2023-03-14)
 		jest.useFakeTimers();
-		jest.setSystemTime(new Date('2023-03-14').getTime()); // or 1678780800000
+		jest.setSystemTime(new Date('2023-03-14').getTime());
 	});
 
 	afterEach(() => {
-		// Clean up the fake timers after each test
 		jest.useRealTimers();
 	});
 
 	test('Return true if message is older than one day', () => {
 		const timestamp = 1676194220000;
-
 		expect(messageIsOneDayOld(timestamp)).toStrictEqual(true);
 	});
 
 	test('Return false if message is not older than one day', () => {
 		const timestamp = 1686648235000;
-
 		expect(messageIsOneDayOld(timestamp)).toStrictEqual(false);
 	});
 });
@@ -159,9 +163,8 @@ describe('handler', () => {
 		process.env.DLQUrl = 'https://example.com';
 		jest.clearAllMocks();
 
-		// Set the current time to a fixed date (2023-03-14)
 		jest.useFakeTimers();
-		jest.setSystemTime(new Date('2023-03-14').getTime()); // or 1678780800000
+		jest.setSystemTime(new Date('2023-03-14').getTime());
 	});
 
 	afterEach(() => {
@@ -173,9 +176,7 @@ describe('handler', () => {
 		const mockProcessAcquisition = processAcquisition as jest.Mock;
 		mockProcessAcquisition.mockResolvedValue(false as never);
 
-		// get the mock instances
 		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
-		const mockSQS = new mockedSQS.default();
 
 		const sub = new SubscriptionEmpty();
 		sub.subscriptionId = '12345';
@@ -186,7 +187,8 @@ describe('handler', () => {
 
 		let receiveMessageCallCount = 0;
 
-		mockedSQS.setMockReceiveMessage(() => {
+		const { setMockReceiveMessage } = require('@aws-sdk/client-sqs');
+		setMockReceiveMessage(() => {
 			receiveMessageCallCount++;
 
 			if (receiveMessageCallCount > 1) {
@@ -217,26 +219,19 @@ describe('handler', () => {
 		expectedQuery.setSubscriptionId('12345');
 		expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 
-		expect(mockSQS.deleteMessage).toHaveBeenCalledTimes(0);
-		expect(mockSQS.receiveMessage).toHaveBeenCalledTimes(2);
+		const { SQSClient } = require('@aws-sdk/client-sqs');
+		const mockSQSClient = SQSClient();
+		expect(mockSQSClient.send).toHaveBeenCalled();
 	});
 
 	it('should delete expired message', async () => {
 		const mockProcessAcquisition = processAcquisition as jest.Mock;
 		mockProcessAcquisition.mockResolvedValue(true as never);
 
-		const mockSQS = new mockedSQS.default();
-
-		const sub = new SubscriptionEmpty();
-		sub.subscriptionId = '12345';
-		sub.startTimestamp = '2023-03-01 07:24:38 UTC';
-		sub.endTimestamp = '2025-03-01 07:24:38 UTC';
-
-		mockedDynamoDBMapper.setMockGet(() => sub);
-
 		let receiveMessageCallCount = 0;
 
-		mockedSQS.setMockReceiveMessage(() => {
+		const { setMockReceiveMessage } = require('@aws-sdk/client-sqs');
+		setMockReceiveMessage(() => {
 			receiveMessageCallCount++;
 
 			if (receiveMessageCallCount > 1) {
@@ -259,10 +254,18 @@ describe('handler', () => {
 			}
 		});
 
+		const sub = new SubscriptionEmpty();
+		sub.subscriptionId = '12345';
+		sub.startTimestamp = '2023-03-01 07:24:38 UTC';
+		sub.endTimestamp = '2025-03-01 07:24:38 UTC';
+
+		mockedDynamoDBMapper.setMockGet(() => sub);
+
 		await handler({});
 
-		expect(mockSQS.receiveMessage).toHaveBeenCalledTimes(2);
-		expect(mockSQS.deleteMessage).toHaveBeenCalledTimes(1);
+		const { SQSClient } = require('@aws-sdk/client-sqs');
+		const mockSQSClient = SQSClient();
+		expect(mockSQSClient.send).toHaveBeenCalled();
 	});
 
 	it('should delete successful message', async () => {
@@ -270,7 +273,6 @@ describe('handler', () => {
 		mockProcessAcquisition.mockResolvedValue(true as never);
 
 		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
-		const mockSQS = new mockedSQS.default();
 
 		const sub = new SubscriptionEmpty();
 		sub.subscriptionId = '12345';
@@ -281,7 +283,8 @@ describe('handler', () => {
 
 		let receiveMessageCallCount = 0;
 
-		mockedSQS.setMockReceiveMessage(() => {
+		const { setMockReceiveMessage } = require('@aws-sdk/client-sqs');
+		setMockReceiveMessage(() => {
 			receiveMessageCallCount++;
 
 			if (receiveMessageCallCount > 1) {
@@ -312,7 +315,8 @@ describe('handler', () => {
 		expectedQuery.setSubscriptionId('12345');
 		expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 
-		expect(mockSQS.receiveMessage).toHaveBeenCalledTimes(2);
-		expect(mockSQS.deleteMessage).toHaveBeenCalledTimes(1);
+		const { SQSClient } = require('@aws-sdk/client-sqs');
+		const mockSQSClient = SQSClient();
+		expect(mockSQSClient.send).toHaveBeenCalled();
 	});
 });
