@@ -13,7 +13,6 @@ import { SubscriptionEmpty } from '../../src/models/subscription';
 import { handler } from '../../src/soft-opt-ins/acquisitions';
 import { isPostAcquisition } from '../../src/soft-opt-ins/processSubscription';
 import * as dynamodbMapper from '@aws/dynamodb-data-mapper';
-import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import fetch from 'node-fetch';
 
 // Typed mock for DynamoDB Mapper

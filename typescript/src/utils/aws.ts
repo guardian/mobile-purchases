@@ -1,49 +1,59 @@
 import { DataMapper } from '@aws/dynamodb-data-mapper';
-import CloudWatch from 'aws-sdk/clients/cloudwatch';
-import DynamoDB from 'aws-sdk/clients/dynamodb';
-import S3 from 'aws-sdk/clients/s3';
-import Sqs from 'aws-sdk/clients/sqs';
-import SSM from 'aws-sdk/clients/ssm';
-import STS from 'aws-sdk/clients/sts';
 import {
-	CredentialProviderChain,
-	ECSCredentials,
-	SharedIniFileCredentials,
-} from 'aws-sdk/lib/core';
-import type { AWSError } from 'aws-sdk/lib/core';
-import type { PromiseResult } from 'aws-sdk/lib/request';
+	CloudWatchClient,
+	PutMetricDataCommand,
+} from '@aws-sdk/client-cloudwatch';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { S3Client } from '@aws-sdk/client-s3';
+import {
+	SQSClient,
+	SendMessageCommand,
+	type SendMessageCommandOutput,
+} from '@aws-sdk/client-sqs';
+import { SSMClient } from '@aws-sdk/client-ssm';
+import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
+import { fromIni, fromContainerMetadata } from '@aws-sdk/credential-providers';
 import { Region, Stage } from './appIdentity';
 import { getMembershipAccountId } from './guIdentityApi';
 import type { SoftOptInEventProductName } from './softOptIns';
 
-const credentialProvider = new CredentialProviderChain([
-	function () {
-		return new ECSCredentials();
-	},
-	function () {
-		return new SharedIniFileCredentials({ profile: 'mobile' });
-	},
-]);
+// Create credential provider that always returns credentials
+const credentialProvider = async () => {
+	try {
+		// Try ECS credentials first
+		const ecsCredentials = fromContainerMetadata();
+		const ecsCreds = await ecsCredentials();
+		if (ecsCreds) {
+			return ecsCreds;
+		}
+	} catch {
+		// Fall back to shared ini file
+		const iniCredentials = fromIni({ profile: 'mobile' });
+		return iniCredentials();
+	}
+	throw new Error('Unable to get AWS credentials');
+};
 
-export const aws = new DynamoDB({
+// Use the credential provider directly - it will be called when needed
+export const aws = new DynamoDBClient({
 	region: Region,
-	credentialProvider: credentialProvider,
+	credentials: credentialProvider,
 });
 
 export const dynamoMapper = new DataMapper({ client: aws });
 
-export const sqs = new Sqs({
+export const sqs = new SQSClient({
 	region: Region,
-	credentialProvider: credentialProvider,
+	credentials: credentialProvider,
 });
 
-let SOISqsClient: Sqs | undefined;
-let commsSqsClient: Sqs | undefined;
+let SOISqsClient: SQSClient | undefined;
+let commsSqsClient: SQSClient | undefined;
 
 let lastAssumedSOI: Date | undefined;
 let lastAssumedComms: Date | undefined;
 
-async function getSqsClientForSoftOptIns(): Promise<Sqs> {
+async function getSqsClientForSoftOptIns(): Promise<SQSClient> {
 	const now = new Date();
 	if (
 		!SOISqsClient ||
@@ -52,28 +62,34 @@ async function getSqsClientForSoftOptIns(): Promise<Sqs> {
 	) {
 		// refresh every 30 minutes
 		const membershipAccountId = await getMembershipAccountId();
-		const sts = new STS();
+		const sts = new STSClient({ region: Region });
 
 		const softOptInConsentSetterStage = Stage === 'PROD' ? 'PROD' : 'CODE';
 
-		const assumeRoleResult = await sts
-			.assumeRole({
-				RoleArn: `arn:aws:iam::${membershipAccountId}:role/membership-${softOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole`,
-				RoleSessionName: 'CrossAccountSession',
-			})
-			.promise();
+		const assumeRoleCommand = new AssumeRoleCommand({
+			RoleArn: `arn:aws:iam::${membershipAccountId}:role/membership-${softOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole`,
+			RoleSessionName: 'CrossAccountSession',
+		});
+
+		const assumeRoleResult = await sts.send(assumeRoleCommand);
 
 		const credentials = assumeRoleResult.Credentials;
 
-		if (!credentials) {
+		if (
+			!credentials ||
+			!credentials.AccessKeyId ||
+			!credentials.SecretAccessKey
+		) {
 			throw Error('credentials undefined in getSqsClientForSoftOptIns');
 		}
 
-		SOISqsClient = new Sqs({
-			accessKeyId: credentials.AccessKeyId,
-			secretAccessKey: credentials.SecretAccessKey,
-			sessionToken: credentials.SessionToken,
+		SOISqsClient = new SQSClient({
 			region: Region,
+			credentials: {
+				accessKeyId: credentials.AccessKeyId,
+				secretAccessKey: credentials.SecretAccessKey,
+				sessionToken: credentials.SessionToken,
+			},
 		});
 
 		lastAssumedSOI = now;
@@ -82,7 +98,7 @@ async function getSqsClientForSoftOptIns(): Promise<Sqs> {
 	return SOISqsClient;
 }
 
-async function getSqsClientForComms(): Promise<Sqs> {
+async function getSqsClientForComms(): Promise<SQSClient> {
 	const now = new Date();
 	if (
 		!commsSqsClient ||
@@ -91,26 +107,32 @@ async function getSqsClientForComms(): Promise<Sqs> {
 	) {
 		// refresh every 30 minutes
 		const membershipAccountId = await getMembershipAccountId();
-		const sts = new STS();
+		const sts = new STSClient({ region: Region });
 
-		const assumeRoleResult = await sts
-			.assumeRole({
-				RoleArn: `arn:aws:iam::${membershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole`,
-				RoleSessionName: 'CrossAccountSession',
-			})
-			.promise();
+		const assumeRoleCommand = new AssumeRoleCommand({
+			RoleArn: `arn:aws:iam::${membershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole`,
+			RoleSessionName: 'CrossAccountSession',
+		});
+
+		const assumeRoleResult = await sts.send(assumeRoleCommand);
 
 		const credentials = assumeRoleResult.Credentials;
 
-		if (!credentials) {
+		if (
+			!credentials ||
+			!credentials.AccessKeyId ||
+			!credentials.SecretAccessKey
+		) {
 			throw Error('credentials undefined in getSqsClientForComms');
 		}
 
-		commsSqsClient = new Sqs({
-			accessKeyId: credentials.AccessKeyId,
-			secretAccessKey: credentials.SecretAccessKey,
-			sessionToken: credentials.SessionToken,
+		commsSqsClient = new SQSClient({
 			region: Region,
+			credentials: {
+				accessKeyId: credentials.AccessKeyId,
+				secretAccessKey: credentials.SecretAccessKey,
+				sessionToken: credentials.SessionToken,
+			},
 		});
 
 		lastAssumedComms = now;
@@ -119,54 +141,53 @@ async function getSqsClientForComms(): Promise<Sqs> {
 	return commsSqsClient;
 }
 
-export const s3: S3 = new S3({
+export const s3: S3Client = new S3Client({
 	region: Region,
-	credentialProvider: credentialProvider,
+	credentials: credentialProvider,
 });
 
-export const ssm: SSM = new SSM({
+export const ssm: SSMClient = new SSMClient({
 	region: Region,
-	credentialProvider: credentialProvider,
+	credentials: credentialProvider,
 });
 
-const cloudWatchClient = new CloudWatch({ region: Region });
+const cloudWatchClient = new CloudWatchClient({ region: Region });
 
 export async function putMetric(
 	metricName: string,
 	value = 1.0,
 ): Promise<void> {
-	const metricDatum = {
-		MetricName: metricName,
-		Unit: 'Count' as const,
-		Value: value,
-		Dimensions: [
+	const command = new PutMetricDataCommand({
+		Namespace: 'soft-opt-ins',
+		MetricData: [
 			{
-				Name: 'Stage',
-				Value: Stage,
+				MetricName: metricName,
+				Unit: 'Count',
+				Value: value,
+				Dimensions: [
+					{
+						Name: 'Stage',
+						Value: Stage,
+					},
+				],
 			},
 		],
-	};
+	});
 
-	const params = {
-		Namespace: 'soft-opt-ins',
-		MetricData: [metricDatum],
-	};
-
-	await cloudWatchClient.putMetricData(params).promise();
+	await cloudWatchClient.send(command);
 }
 
-export function sendToSqs(
+export async function sendToSqs(
 	queueUrl: string,
 	event: unknown,
 	delaySeconds?: number,
-): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
-	return sqs
-		.sendMessage({
-			QueueUrl: queueUrl,
-			MessageBody: JSON.stringify(event),
-			DelaySeconds: delaySeconds,
-		})
-		.promise();
+): Promise<SendMessageCommandOutput> {
+	const command = new SendMessageCommand({
+		QueueUrl: queueUrl,
+		MessageBody: JSON.stringify(event),
+		DelaySeconds: delaySeconds,
+	});
+	return sqs.send(command);
 }
 
 export interface SoftOptInEvent {
@@ -175,32 +196,31 @@ export interface SoftOptInEvent {
 	productName: SoftOptInEventProductName;
 	subscriptionId: string;
 }
+
 export async function sendToSqsSoftOptIns(
 	queueUrl: string,
 	event: SoftOptInEvent,
 	delaySeconds?: number,
-): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+): Promise<SendMessageCommandOutput> {
 	const membershipSqs = await getSqsClientForSoftOptIns();
-	return membershipSqs
-		.sendMessage({
-			QueueUrl: queueUrl,
-			MessageBody: JSON.stringify(event),
-			DelaySeconds: delaySeconds,
-		})
-		.promise();
+	const command = new SendMessageCommand({
+		QueueUrl: queueUrl,
+		MessageBody: JSON.stringify(event),
+		DelaySeconds: delaySeconds,
+	});
+	return membershipSqs.send(command);
 }
 
 export async function sendToSqsComms(
 	queueUrl: string,
 	event: unknown,
 	delaySeconds?: number,
-): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+): Promise<SendMessageCommandOutput> {
 	const membershipSqs = await getSqsClientForComms();
-	return membershipSqs
-		.sendMessage({
-			QueueUrl: queueUrl,
-			MessageBody: JSON.stringify(event),
-			DelaySeconds: delaySeconds,
-		})
-		.promise();
+	const command = new SendMessageCommand({
+		QueueUrl: queueUrl,
+		MessageBody: JSON.stringify(event),
+		DelaySeconds: delaySeconds,
+	});
+	return membershipSqs.send(command);
 }

@@ -2,7 +2,6 @@ import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
 import { handler } from '../../src/link/deleteLink';
 import { UserSubscriptionEmpty } from '../../src/models/userSubscription';
 import * as dynamodbMapper from '@aws/dynamodb-data-mapper';
-import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import {
 	expect,
 	describe,
