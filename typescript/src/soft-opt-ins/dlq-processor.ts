@@ -2,6 +2,10 @@ import type { Subscription } from '../models/subscription';
 import { SubscriptionEmpty } from '../models/subscription';
 import { dynamoMapper, sqs } from '../utils/aws';
 import { processAcquisition } from './processSubscription';
+import {
+	ReceiveMessageCommand,
+	DeleteMessageCommand,
+} from '@aws-sdk/client-sqs';
 
 interface MessageBody {
 	identityId: string;
@@ -16,12 +20,11 @@ export function messageIsOneDayOld(timestamp: number): boolean {
 }
 
 async function deleteMessage(dlqUrl: string, receiptHandle: string) {
-	return sqs
-		.deleteMessage({
-			QueueUrl: dlqUrl,
-			ReceiptHandle: receiptHandle,
-		})
-		.promise();
+	const command = new DeleteMessageCommand({
+		QueueUrl: dlqUrl,
+		ReceiptHandle: receiptHandle,
+	});
+	return sqs.send(command);
 }
 
 export async function handler(_event: unknown): Promise<void> {
@@ -34,12 +37,11 @@ export async function handler(_event: unknown): Promise<void> {
 	const isRunning = true;
 	while (isRunning) {
 		// Receive messages from the DLQ
-		const data = await sqs
-			.receiveMessage({
-				QueueUrl: dlqUrl,
-				MaxNumberOfMessages: 10, // adjust as needed
-			})
-			.promise();
+		const receiveCommand = new ReceiveMessageCommand({
+			QueueUrl: dlqUrl,
+			MaxNumberOfMessages: 10, // adjust as needed
+		});
+		const data = await sqs.send(receiveCommand);
 
 		// Check if there are any messages
 		if (!data.Messages || data.Messages.length === 0) {
