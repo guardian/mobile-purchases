@@ -1,4 +1,5 @@
 import 'source-map-support/register';
+import { ExportTableToPointInTimeCommand } from '@aws-sdk/client-dynamodb';
 import { aws } from '../utils/aws';
 import { plusDays } from '../utils/dates';
 
@@ -50,22 +51,20 @@ export async function handler(): Promise<string> {
 
 	if (!tableArn) throw new Error('[1c94600f] variable TableArn must be set');
 
-	const params = {
+	const command = new ExportTableToPointInTimeCommand({
 		TableArn: tableArn,
 		S3Bucket: bucket,
 		S3BucketOwner: s3BucketOwner,
 		S3Prefix: prefix_creator(stage),
 		ExportFormat: 'DYNAMODB_JSON',
-	};
+	});
 
-	return aws
-		.exportTableToPointInTime(params)
-		.promise()
-		.then((result) => {
-			console.log(`[89ba1cd3] exporting subscription data to ${bucket}`);
-			return `[0d1f18ab] dynamo export started, with status: ${result.ExportDescription?.ExportStatus}`;
-		})
-		.catch((_) => {
-			throw new Error('[4f4acf88] Failed to start dynamo export');
-		});
+	try {
+		const result = await aws.send(command);
+		console.log(`[89ba1cd3] exporting subscription data to ${bucket}`);
+		return `[0d1f18ab] dynamo export started, with status: ${result.ExportDescription?.ExportStatus}`;
+	} catch (error: unknown) {
+		console.error('[4f4acf88] Failed to start dynamo export', error);
+		throw new Error('[4f4acf88] Failed to start dynamo export');
+	}
 }
