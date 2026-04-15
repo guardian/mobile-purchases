@@ -1,10 +1,13 @@
 import 'source-map-support/register';
 import zlib from 'zlib';
-import type {
-	GetQueueAttributesRequest,
-	Message,
-	ReceiveMessageRequest,
-} from 'aws-sdk/clients/sqs';
+import { Upload } from '@aws-sdk/lib-storage';
+import {
+	SQSClient,
+	ReceiveMessageCommand,
+	DeleteMessageBatchCommand,
+	GetQueueAttributesCommand,
+	type Message,
+} from '@aws-sdk/client-sqs';
 import { Stage } from '../utils/appIdentity';
 import { s3, sqs } from '../utils/aws';
 import { plusDays } from '../utils/dates';
@@ -15,13 +18,13 @@ async function recursivelyFetchSqsMessages(
 	handleMsg: (message: Message) => void,
 ): Promise<void> {
 	if (remainingMessagesToFetch > 0) {
-		const request: ReceiveMessageRequest = {
+		const command = new ReceiveMessageCommand({
 			QueueUrl: sqsUrl,
 			MaxNumberOfMessages: 10,
 			WaitTimeSeconds: 3,
 			VisibilityTimeout: 600,
-		};
-		const sqsResp = await sqs.receiveMessage(request).promise();
+		});
+		const sqsResp = await sqs.send(command);
 		if (sqsResp.Messages && sqsResp.Messages.length > 0) {
 			sqsResp.Messages.forEach(handleMsg);
 			return await recursivelyFetchSqsMessages(
@@ -58,9 +61,11 @@ async function deleteAllSqsMessages(
 			const entries = batch.map((receiptHandle, index) => {
 				return { Id: (index + 1).toString(), ReceiptHandle: receiptHandle };
 			});
-			return sqs
-				.deleteMessageBatch({ QueueUrl: sqsUrl, Entries: entries })
-				.promise();
+			const command = new DeleteMessageBatchCommand({
+				QueueUrl: sqsUrl,
+				Entries: entries,
+			});
+			return sqs.send(command);
 		});
 
 		await Promise.all(deletions);
@@ -68,14 +73,14 @@ async function deleteAllSqsMessages(
 }
 
 async function getNumberOfMessagesNotVisible(sqsUrl: string): Promise<number> {
-	const request: GetQueueAttributesRequest = {
+	const command = new GetQueueAttributesCommand({
 		QueueUrl: sqsUrl,
 		AttributeNames: ['ApproximateNumberOfMessagesNotVisible'],
-	};
-	const sqsResponse = await sqs.getQueueAttributes(request).promise();
+	});
+	const sqsResponse = await sqs.send(command);
 	if (sqsResponse.Attributes) {
 		return parseInt(
-			sqsResponse.Attributes.ApproximateNumberOfMessagesNotVisible,
+			sqsResponse.Attributes.ApproximateNumberOfMessagesNotVisible!,
 		);
 	} else {
 		throw new Error(
@@ -121,11 +126,14 @@ export async function handler(params: {
 	const filename = `${prefix}/date=${yesterday}/${yesterday}-${randomString}.json.gz`;
 	console.log(`[b3e0e9c1] filename: ${filename}`);
 
-	const managedUpload = s3.upload({
-		Bucket: bucket,
-		Key: filename,
-		Body: zippedStream,
-		ACL: 'bucket-owner-full-control',
+	const upload = new Upload({
+		client: s3,
+		params: {
+			Bucket: bucket,
+			Key: filename,
+			Body: zippedStream,
+			ACL: 'bucket-owner-full-control',
+		},
 	});
 
 	const msgToDelete: string[] = [];
@@ -151,7 +159,7 @@ export async function handler(params: {
 	);
 
 	zippedStream.end();
-	await managedUpload.promise();
+	await upload.done();
 
 	console.log(
 		`[bd9ba1a3] export succeeded, read ${totalMsgCount} records, processed ${processedMsgCount}`,
