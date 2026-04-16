@@ -1,5 +1,5 @@
 import { androidpublisher, auth } from '@googleapis/androidpublisher';
-import type S3 from 'aws-sdk/clients/s3';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { Stage } from '../utils/appIdentity';
 import * as aws from '../utils/aws';
 import { mapAndroidProductId } from '../utils/mapAndroidProductId';
@@ -32,7 +32,7 @@ export type GoogleSubscription = {
 // 2. Assuming that the purchase is of _exactly one_ subscription product
 // 3. Looking up detailed information about the purchased subscription product from the `android-publisher` API:
 //    https://developers.google.com/android-publisher/api-ref/rest/v3/monetization.subscriptions/get
-// 4. Applying heuristics to attempt to determine whether the subscription is currently beneffiting from a free trial (see detailed discussion below.)
+// 4. Applying heuristics to attempt to determine whether the subscription is currently benefitting from a free trial (see detailed discussion below.)
 export async function fetchGoogleSubscriptionV2(
 	purchaseToken: string,
 	packageName: string,
@@ -176,7 +176,7 @@ function parseNullableDate(date: string | null): Date | null {
 }
 
 async function initialiseAndroidPublisherClient() {
-	const accessToken = await getAccessToken(getParams(Stage));
+	const accessToken = await getAccessToken(Stage);
 
 	const authClient = new auth.OAuth2({
 		credentials: { access_token: accessToken.token },
@@ -190,28 +190,29 @@ interface AccessToken {
 	date: Date;
 }
 
-function getParams(stage: string): S3.Types.GetObjectRequest {
+function getParams(stage: string) {
 	return {
 		Bucket: 'gu-mobile-access-tokens',
 		Key: `${stage}/google-play-developer-api/access_token.json`,
 	};
 }
 
-function getAccessToken(
-	params: S3.Types.GetObjectRequest,
-): Promise<AccessToken> {
-	return aws.s3
-		.getObject(params)
-		.promise()
-		.then((s3OutPut) => {
-			if (s3OutPut.Body) {
-				return JSON.parse(s3OutPut.Body.toString());
-			} else {
-				throw Error('S3 output body was not defined');
-			}
-		})
-		.catch((error) => {
-			console.log(`Failed to get access token from S3 due to: ${error}`);
-			throw error;
-		});
+async function getAccessToken(stage: string): Promise<AccessToken> {
+	const params = getParams(stage);
+
+	try {
+		const command = new GetObjectCommand(params);
+		const s3Output = await aws.s3.send(command);
+
+		if (!s3Output.Body) {
+			throw Error('S3 output body was not defined');
+		}
+
+		const bodyString = await s3Output.Body.transformToString();
+		return JSON.parse(bodyString) as AccessToken;
+	} catch (error: unknown) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		console.log(`Failed to get access token from S3 due to: ${errorMessage}`);
+		throw error;
+	}
 }

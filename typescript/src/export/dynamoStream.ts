@@ -6,11 +6,16 @@ import type { ScanIterator } from '@aws/dynamodb-data-mapper';
 
 export class DynamoStream<T> extends Readable {
 	iterator: ScanIterator<T>;
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	transformItem: (t: T) => any;
 
 	constructor(
 		iterator: ScanIterator<T>,
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		transformItem?: (t: T) => any,
+
 		opts?: ReadableOptions,
 	) {
 		super(opts);
@@ -36,7 +41,7 @@ export class DynamoStream<T> extends Readable {
 		});
 	}
 
-	_read(size: number): void {
+	_read(_size: number): void {
 		this.readNext();
 	}
 

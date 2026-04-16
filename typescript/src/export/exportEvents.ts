@@ -1,5 +1,6 @@
 import 'source-map-support/register';
 import zlib from 'zlib';
+import { Upload } from '@aws-sdk/lib-storage';
 import type { SubscriptionEvent } from '../models/subscriptionEvent';
 import { SubscriptionEventEmpty } from '../models/subscriptionEvent';
 import { Stage } from '../utils/appIdentity';
@@ -53,14 +54,17 @@ export async function handler(
 	const filename = `${prefix}/date=${yesterday}/${yesterday}.json.gz`;
 	console.log(`[b6640f04] filename: ${filename}`);
 
-	const managedUpload = s3.upload({
-		Bucket: bucket,
-		Key: filename,
-		Body: zippedStream,
-		ACL: 'bucket-owner-full-control',
+	const upload = new Upload({
+		client: s3,
+		params: {
+			Bucket: bucket,
+			Key: filename,
+			Body: zippedStream,
+			ACL: 'bucket-owner-full-control',
+		},
 	});
 
-	await managedUpload.promise();
+	await upload.done();
 
 	console.log(
 		`[5a02d341] export succeeded, read ${stream.recordCount()} records`,

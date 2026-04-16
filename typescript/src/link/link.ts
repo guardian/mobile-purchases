@@ -1,5 +1,8 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import type { SendMessageBatchRequestEntry } from 'aws-sdk/clients/sqs';
+import {
+	SendMessageBatchCommand,
+	type SendMessageBatchRequestEntry,
+} from '@aws-sdk/client-sqs';
 import { HTTPResponses } from '../models/apiGatewayHttp';
 import { ProcessingError } from '../models/processingError';
 import { SubscriptionEmpty } from '../models/subscription';
@@ -58,16 +61,19 @@ async function enqueueUnstoredPurchaseToken(
 			}),
 		);
 
-		const result = await sqs
-			.sendMessageBatch({ QueueUrl: queueUrl, Entries: sqsMessages })
-			.promise();
+		const command = new SendMessageBatchCommand({
+			QueueUrl: queueUrl,
+			Entries: sqsMessages,
+		});
+		const result = await sqs.send(command);
+
 		if (result.Failed && result.Failed.length > 0) {
 			throw new ProcessingError(
 				'Unable to send all the subscription reference to SQS, will retry',
 				true,
 			);
 		}
-		return result.Successful.length;
+		return result.Successful?.length ?? 0;
 	} else {
 		return 0;
 	}
@@ -82,6 +88,7 @@ async function persistUserSubscriptionLinks(
 	}
 	return count;
 }
+
 export async function parseAndStoreLink<A>(
 	httpRequest: APIGatewayProxyEvent,
 	parsePayload: (request: APIGatewayProxyEvent) => A,

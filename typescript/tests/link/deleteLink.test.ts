@@ -2,7 +2,6 @@ import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
 import { handler } from '../../src/link/deleteLink';
 import { UserSubscriptionEmpty } from '../../src/models/userSubscription';
 import * as dynamodbMapper from '@aws/dynamodb-data-mapper';
-import * as sqsModule from 'aws-sdk/clients/sqs';
 import {
 	expect,
 	describe,
@@ -24,12 +23,6 @@ const mockedDynamoDBMapper = dynamodbMapper as unknown as {
 			indexName: unknown;
 		}) => AsyncIterable<unknown>,
 	) => void;
-};
-
-const mockedSQS = sqsModule as unknown as {
-	default: new () => {
-		sendMessage: jest.Mock;
-	};
 };
 
 jest.mock('@aws/dynamodb-data-mapper', () => {
@@ -58,56 +51,65 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
 
 jest.mock('util', () => jest.fn());
 
-jest.mock('aws-sdk/clients/sqs', () => {
+jest.mock('@aws-sdk/client-sqs', () => {
 	const mockSQS = {
-		sendMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
+		send: jest.fn(),
 	};
 
 	return {
 		__esModule: true,
-		default: jest.fn(() => mockSQS),
+		SQSClient: jest.fn(() => mockSQS),
+		SendMessageCommand: jest.fn().mockImplementation((params) => params),
+		ReceiveMessageCommand: jest.fn(),
+		DeleteMessageCommand: jest.fn(),
 	};
 });
-
 jest.mock('../../src/utils/guIdentityApi');
 
-jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
-jest.mock('aws-sdk/clients/s3', () => jest.fn());
-jest.mock('aws-sdk/clients/ssm', () => jest.fn());
+jest.mock('@aws-sdk/client-dynamodb', () => ({
+	DynamoDBClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
 
-jest.mock('aws-sdk/clients/ssm', () => jest.fn());
-jest.mock('aws-sdk/clients/cloudwatch', () => jest.fn());
+jest.mock('@aws-sdk/client-s3', () => ({
+	S3Client: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
 
-jest.mock('aws-sdk/clients/sts', () => {
-	const mockSTS = {
-		assumeRole: jest.fn().mockReturnValue({
-			promise: jest.fn().mockImplementation(() =>
-				Promise.resolve({
-					Credentials: {
-						AccessKeyId: 'mockAccessKeyId',
-						SecretAccessKey: 'mockSecretAccessKey',
-						SessionToken: 'mockSessionToken',
-					},
-				}),
-			),
+jest.mock('@aws-sdk/client-ssm', () => ({
+	SSMClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+}));
+
+jest.mock('@aws-sdk/client-cloudwatch', () => ({
+	CloudWatchClient: jest.fn().mockImplementation(() => ({
+		send: jest.fn(),
+	})),
+	PutMetricDataCommand: jest.fn(),
+}));
+
+jest.mock('@aws-sdk/client-sts', () => ({
+	STSClient: jest.fn().mockImplementation(() => ({
+		// @ts-ignore
+		send: jest.fn().mockResolvedValue({
+			Credentials: {
+				AccessKeyId: 'mockAccessKeyId',
+				SecretAccessKey: 'mockSecretAccessKey',
+				SessionToken: 'mockSessionToken',
+			},
 		}),
-	};
-	return jest.fn(() => mockSTS);
-});
-
-jest.mock('aws-sdk/lib/core', () => {
-	class SharedIniFileCredentialsMock {}
-
-	class CredentialProviderChainMock {}
-
-	return {
-		SharedIniFileCredentials: SharedIniFileCredentialsMock,
-		CredentialProviderChain: CredentialProviderChainMock,
-	};
-});
+	})),
+	AssumeRoleCommand: jest.fn(),
+}));
 
 describe('handler', () => {
 	beforeEach(() => {
+		process.env.AWS_ACCESS_KEY_ID = 'mockKey';
+		process.env.AWS_SECRET_ACCESS_KEY = 'mockSecret';
+		process.env.AWS_REGION = 'eu-west-1';
 		jest.clearAllMocks();
 		jest.useFakeTimers();
 		jest.setSystemTime(new Date('2023-03-14').getTime());
@@ -121,7 +123,8 @@ describe('handler', () => {
 	it('should process removed records, put messages on queue', async () => {
 		// get the mock instances
 		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
-		const mockSQS = new mockedSQS.default();
+		const { SQSClient } = require('@aws-sdk/client-sqs');
+		const mockSQSClient = SQSClient();
 
 		mockedDynamoDBMapper.setMockQuery(async function* (_params: {
 			keyCondition: unknown;
@@ -152,7 +155,7 @@ describe('handler', () => {
 			userId: '123',
 		});
 
-		expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
+		expect(mockSQSClient.send).toHaveBeenCalledTimes(1);
 
 		const expectedSoftOptInMessage1 = {
 			identityId: '123',
@@ -161,22 +164,20 @@ describe('handler', () => {
 			subscriptionId: '1',
 		};
 
-		const expectedQueueMessageParams1 = {
+		expect(mockSQSClient.send).toHaveBeenCalledWith({
 			QueueUrl:
 				'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE',
 			MessageBody: JSON.stringify(expectedSoftOptInMessage1),
-		};
-
-		expect(mockSQS.sendMessage).toHaveBeenCalledWith(
-			expectedQueueMessageParams1,
-		);
+			DelaySeconds: undefined,
+		});
 
 		expect(result).toEqual({ recordCount: 1, rowCount: 1 });
 	});
 
 	it('puts Feast deletions on the SOI SQS queue with the product name FeastInAppPurchase', async () => {
 		// get the mock instances
-		const mockSQS = new mockedSQS.default();
+		const { SQSClient } = require('@aws-sdk/client-sqs');
+		const mockSQSClient = SQSClient();
 
 		const subscriptionId = '1';
 		const userId = '123';
@@ -197,7 +198,7 @@ describe('handler', () => {
 
 		const result = await handler(event);
 
-		expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
+		expect(mockSQSClient.send).toHaveBeenCalledTimes(1);
 
 		const expectedSoftOptInMessage1 = {
 			identityId: userId,
@@ -206,15 +207,12 @@ describe('handler', () => {
 			subscriptionId,
 		};
 
-		const expectedQueueMessageParams1 = {
+		expect(mockSQSClient.send).toHaveBeenCalledWith({
 			QueueUrl:
 				'https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE',
 			MessageBody: JSON.stringify(expectedSoftOptInMessage1),
-		};
-
-		expect(mockSQS.sendMessage).toHaveBeenCalledWith(
-			expectedQueueMessageParams1,
-		);
+			DelaySeconds: undefined,
+		});
 
 		expect(result).toEqual({ recordCount: 1, rowCount: 1 });
 	});
@@ -222,7 +220,8 @@ describe('handler', () => {
 	it('should not process modified records', async () => {
 		// get the mock instances
 		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
-		const mockSQS = new mockedSQS.default();
+		const { SQSClient } = require('@aws-sdk/client-sqs');
+		const mockSQSClient = SQSClient();
 
 		const event: DynamoDBStreamEvent = {
 			Records: [modifyDynamoRecord],
@@ -233,7 +232,7 @@ describe('handler', () => {
 		expect(mockDataMapper.query).toHaveBeenCalledTimes(0);
 		expect(mockDataMapper.put).toHaveBeenCalledTimes(0);
 		expect(mockDataMapper.delete).toHaveBeenCalledTimes(0);
-		expect(mockSQS.sendMessage).toHaveBeenCalledTimes(0);
+		expect(mockSQSClient.send).toHaveBeenCalledTimes(0);
 
 		expect(result).toEqual({ recordCount: 0, rowCount: 0 });
 	});
