@@ -2,10 +2,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import type { SendMessageCommandOutput } from '@aws-sdk/client-sqs';
 import { HTTPResponses } from '../../models/apiGatewayHttp';
 import type { AppleSubscriptionReference } from '../../models/subscriptionReference';
-import {
-	toDynamoEvent_apple_async,
-	toSqsSubReference,
-} from '../../pubsub/apple';
+import { toDynamoEventAppleAsync, toSqsSubReference } from '../../pubsub/apple';
 import type { StatusUpdateNotification } from '../../pubsub/apple-common';
 import { parsePayload } from '../../pubsub/apple-common';
 import { dynamoMapper, sendToSqs } from '../../utils/aws';
@@ -16,7 +13,7 @@ const defaultLogRequest = (request: APIGatewayProxyEvent): void =>
 const defaultStoreEventInDynamo = async (
 	event: StatusUpdateNotification,
 ): Promise<void> => {
-	const item = await toDynamoEvent_apple_async(event, true);
+	const item = await toDynamoEventAppleAsync(event, true);
 	return dynamoMapper.put({ item }).then((_) => undefined);
 };
 

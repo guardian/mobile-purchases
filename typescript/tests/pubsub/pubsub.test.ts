@@ -3,7 +3,7 @@ import type { SendMessageCommandOutput } from '@aws-sdk/client-sqs';
 import { HTTPResponses } from '../../src/models/apiGatewayHttp';
 import { SubscriptionEvent } from '../../src/models/subscriptionEvent';
 import {
-	toDynamoEvent_apple_async as applePayloadToDynamo,
+	toDynamoEventAppleAsync as applePayloadToDynamo,
 	toSqsSubReference as toAppleSqsEvent,
 } from '../../src/pubsub/apple';
 import type { StatusUpdateNotification } from '../../src/pubsub/apple-common';
@@ -13,7 +13,7 @@ import type {
 	SubscriptionNotification,
 } from '../../src/pubsub/google-common';
 import {
-	toDynamoEvent_google_async as googlePayloadToDynamo,
+	toDynamoEventGoogleAsync as googlePayloadToDynamo,
 	parsePayload as parseGooglePayload,
 	toSqsSubReference as toGoogleSqsEvent,
 } from '../../src/pubsub/google-common';

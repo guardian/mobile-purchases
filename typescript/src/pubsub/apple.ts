@@ -11,7 +11,7 @@ import type { StatusUpdateNotification } from './apple-common';
 import { parsePayload } from './apple-common';
 import { parseStoreAndSend_async } from './pubsub';
 
-export async function toDynamoEvent_apple_async(
+export async function toDynamoEventAppleAsync(
 	notification: StatusUpdateNotification,
 	useStoreKitForExtra: boolean,
 ): Promise<SubscriptionEvent> {
@@ -130,7 +130,7 @@ export async function handler(
 		request,
 		parsePayload,
 		(notification: StatusUpdateNotification) =>
-			toDynamoEvent_apple_async(notification, true),
+			toDynamoEventAppleAsync(notification, true),
 		toSqsSubReference,
 		() => Promise.resolve(undefined),
 	);

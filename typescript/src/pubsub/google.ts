@@ -7,7 +7,7 @@ import type {
 import {
 	fetchMetadata,
 	parsePayload,
-	toDynamoEvent_google_async,
+	toDynamoEventGoogleAsync,
 	toSqsSubReference,
 } from './google-common';
 import { parseStoreAndSend_async } from './pubsub';
@@ -21,7 +21,7 @@ export async function handler(
 		(
 			notification: SubscriptionNotification,
 			metaData?: GoogleSubscriptionMetaData,
-		) => toDynamoEvent_google_async(notification, true, metaData),
+		) => toDynamoEventGoogleAsync(notification, true, metaData),
 		toSqsSubReference,
 		fetchMetadata,
 	);
