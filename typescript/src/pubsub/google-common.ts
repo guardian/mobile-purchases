@@ -148,7 +148,7 @@ export async function fetchMetadata(
 	}
 }
 
-export async function toDynamoEvent_google_async(
+export async function toDynamoEventGoogleAsync(
 	notification: SubscriptionNotification,
 	shouldBuildExtra: boolean,
 	metaData?: GoogleSubscriptionMetaData,

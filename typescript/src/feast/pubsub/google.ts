@@ -10,7 +10,7 @@ import type {
 import {
 	fetchMetadata as defaultFetchMetadata,
 	parsePayload,
-	toDynamoEvent_google_async,
+	toDynamoEventGoogleAsync,
 	toSqsSubReference,
 } from '../../pubsub/google-common';
 import { Ignorable } from '../../pubsub/ignorable';
@@ -58,7 +58,7 @@ export function buildHandler(
 				}
 
 				const metaData = await fetchMetadata(notification);
-				const dynamoEvent = await toDynamoEvent_google_async(
+				const dynamoEvent = await toDynamoEventGoogleAsync(
 					notification,
 					false,
 					metaData,
