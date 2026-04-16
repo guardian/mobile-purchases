@@ -60,7 +60,7 @@ export function buildHandler(
 
 				return HTTPResponses.OK;
 			} catch (e) {
-				console.error('Internal server error', e);
+				console.error('[505b73ff] internal server error', e);
 				return HTTPResponses.INTERNAL_ERROR;
 			}
 		} else {
