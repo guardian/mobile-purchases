@@ -1,5 +1,4 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import { APIGatewayProxyResult } from 'aws-lambda';
 import type { Platform } from '../models/platform';
 
 type AppleSubscription = {

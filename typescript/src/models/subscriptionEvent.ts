@@ -23,10 +23,15 @@ export class SubscriptionEvent {
 	appId: string;
 	@attribute()
 	freeTrial?: boolean;
+
 	@attribute()
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	googlePayload?: any;
+
 	@attribute()
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	applePayload?: any;
+
 	@attribute()
 	ttl: number;
 	@attribute()
@@ -51,14 +56,26 @@ export class SubscriptionEvent {
 		platform: string,
 		appId: string,
 		freeTrial: boolean | undefined,
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		googlePayload: any,
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		applePayload: any,
+
 		ttl: number,
 		promotional_offer_id: string | null,
 		promotional_offer_name: string | null,
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		product_id: any,
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		purchase_date_ms: any,
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		expires_date_ms: any,
+
 		extra: string,
 	) {
 		this.subscriptionId = subscriptionId;
@@ -84,6 +101,9 @@ export class SubscriptionEvent {
 		return App + '-' + Stage + '-subscription-events-v2';
 	}
 }
+
+// Pascal, 14th April
+// I am not updating these `any` ^ for the moment to prevent breaking something by accident
 
 export class SubscriptionEventEmpty extends SubscriptionEvent {
 	constructor() {

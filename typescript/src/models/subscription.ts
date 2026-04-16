@@ -38,12 +38,14 @@ export class Subscription {
 	billingPeriod?: string;
 
 	@attribute()
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	googlePayload?: any;
 
 	@attribute()
 	receipt?: string;
 
 	@attribute()
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	applePayload?: any;
 
 	@attribute()
@@ -64,9 +66,14 @@ export class Subscription {
 		platform: string | undefined,
 		freeTrial: boolean | undefined,
 		billingPeriod: string | undefined,
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		googlePayload?: any,
 		receipt?: string,
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		applePayload?: any,
+
 		ttl?: number,
 		extra?: string,
 		tableName = 'subscriptions',
@@ -99,6 +106,9 @@ export class Subscription {
 //     set the subscriptionId, before passing the resulting object to dynamoMapper.get).
 //     It is not meant to stand where a Subscription is the right type, notably as the return type of dynamoMapper.get.
 //     Function dynamoMapper.get will return a Subscription object, not a SubscriptionEmpty object.
+
+// Pascal, 14th April
+// I am not updating these `any` ^ for the moment to prevent breaking something by accident
 
 export class SubscriptionEmpty extends Subscription {
 	constructor() {

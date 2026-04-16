@@ -1,4 +1,4 @@
-export interface SubscriptionReference {}
+export type SubscriptionReference = object;
 
 export interface GoogleSubscriptionReference extends SubscriptionReference {
 	packageName: string;

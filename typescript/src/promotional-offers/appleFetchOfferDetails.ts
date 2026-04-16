@@ -1,7 +1,6 @@
 import 'source-map-support/register';
 import * as crypto from 'crypto';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { HTTPResponses } from '../models/apiGatewayHttp';
 import { getConfigValue } from '../utils/ssmConfig';
 
 interface HttpRequestPayload {

@@ -77,12 +77,12 @@ async function persistUserSubscriptionLinks(
 	userSubscriptions: UserSubscription[],
 ): Promise<number> {
 	let count = 0;
-	for await (const r of dynamoMapper.batchPut(userSubscriptions)) {
+	for await (const _r of dynamoMapper.batchPut(userSubscriptions)) {
 		count++;
 	}
 	return count;
 }
-export async function parseAndStoreLink<A, B>(
+export async function parseAndStoreLink<A>(
 	httpRequest: APIGatewayProxyEvent,
 	parsePayload: (request: APIGatewayProxyEvent) => A,
 	toUserSubscription: (userId: string, payload: A) => UserSubscription[],

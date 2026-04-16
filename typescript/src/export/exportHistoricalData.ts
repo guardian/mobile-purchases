@@ -84,10 +84,16 @@ async function getNumberOfMessagesNotVisible(sqsUrl: string): Promise<number> {
 	}
 }
 
+interface HandlerOutput {
+	date: string;
+	recordCount: number;
+	processedCount: number;
+}
+
 export async function handler(params: {
 	date: string;
 	maxMessagesToFetch?: number;
-}): Promise<any> {
+}): Promise<HandlerOutput> {
 	const bucket = process.env['ExportBucket'];
 	if (!bucket) throw new Error('Variable ExportBucket must be set');
 

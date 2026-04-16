@@ -53,9 +53,9 @@ export interface StatusUpdateNotification {
 	expiration_intent?: string;
 	promotional_offer_id: string | null;
 	promotional_offer_name: string | null;
-	product_id: any;
-	purchase_date_ms: any;
-	expires_date_ms: any;
+	product_id: unknown;
+	purchase_date_ms: unknown;
+	expires_date_ms: unknown;
 }
 
 type binaryStatus = '0' | '1';

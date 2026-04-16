@@ -5,7 +5,7 @@ import type Sqs from 'aws-sdk/clients/sqs';
 import type { PromiseResult } from 'aws-sdk/lib/request';
 import { HTTPResponses } from '../models/apiGatewayHttp';
 import type { SubscriptionEvent } from '../models/subscriptionEvent';
-import { dynamoMapper, sendToSqs, sqs } from '../utils/aws';
+import { dynamoMapper, sendToSqs } from '../utils/aws';
 import type { Option } from '../utils/option';
 import { Ignorable } from './ignorable';
 
@@ -74,7 +74,7 @@ export async function parseStoreAndSend_async<Payload, SqsEvent, MetaData>(
 			const sqsPromise = sendToSqsFunction(queueUrl, sqsEvent);
 
 			return Promise.all([sqsPromise, dynamoPromise])
-				.then((value) => HTTPResponses.OK)
+				.then((_value) => HTTPResponses.OK)
 				.catch((error) => {
 					console.error('Unable to process event' + notification, error);
 					return HTTPResponses.INTERNAL_ERROR;
