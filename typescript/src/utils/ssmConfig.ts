@@ -1,40 +1,38 @@
 import { App, Stack, Stage } from './appIdentity';
 import { ssm } from './aws';
 import type { Option } from './option';
-import { GetParametersByPathCommand } from '@aws-sdk/client-ssm';
 
 type Config = Record<string, unknown>;
 
-async function recursivelyFetchConfig(
+function recursivelyFetchConfig(
 	nextToken?: string,
 	currentConfig?: Config,
 ): Promise<Config> {
 	const path = `/${App}/${Stage}/${Stack}/`;
-	const command = new GetParametersByPathCommand({
-		Path: path,
-		WithDecryption: true,
-		NextToken: nextToken,
-	});
-
-	const result = await ssm.send(command);
-
-	const fetchedConfig: Config = {};
-	if (result.Parameters) {
-		result.Parameters.forEach((param) => {
-			if (param.Name) {
-				const name = param.Name.replace(path, '');
-				fetchedConfig[name] = param.Value;
+	return ssm
+		.getParametersByPath({
+			Path: path,
+			WithDecryption: true,
+			NextToken: nextToken,
+		})
+		.promise()
+		.then((result) => {
+			const fetchedConfig: Config = {};
+			if (result.Parameters) {
+				result.Parameters.forEach((param) => {
+					if (param.Name) {
+						const name = param.Name.replace(path, '');
+						fetchedConfig[name] = param.Value;
+					}
+				});
+			}
+			const config = Object.assign({}, currentConfig, fetchedConfig);
+			if (result.NextToken) {
+				return recursivelyFetchConfig(result.NextToken, config);
+			} else {
+				return Promise.resolve(config);
 			}
 		});
-	}
-
-	const config = Object.assign({}, currentConfig, fetchedConfig);
-
-	if (result.NextToken) {
-		return recursivelyFetchConfig(result.NextToken, config);
-	} else {
-		return config;
-	}
 }
 
 let state: Option<Config> = null;

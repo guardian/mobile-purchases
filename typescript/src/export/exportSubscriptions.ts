@@ -1,6 +1,5 @@
 import 'source-map-support/register';
 import zlib from 'zlib';
-import { Upload } from '@aws-sdk/lib-storage';
 import { SubscriptionEmpty } from '../models/subscription';
 import { UserSubscriptionEmpty } from '../models/userSubscription';
 import { Stage } from '../utils/appIdentity';
@@ -45,18 +44,14 @@ export async function handler(): Promise<HandlerOutput> {
 	const prefix = Stage === 'PROD' ? 'data' : 'code-data';
 	const filename = `${prefix}/date=${yesterday}/${yesterday}.json.gz`;
 	console.log(`[ead5f375] uploading ${filename} to s3`);
-
-	const upload = new Upload({
-		client: s3,
-		params: {
-			Bucket: bucket,
-			Key: filename,
-			Body: zippedStream,
-			ACL: 'bucket-owner-full-control',
-		},
+	const managedUpload = s3.upload({
+		Bucket: bucket,
+		Key: filename,
+		Body: zippedStream,
+		ACL: 'bucket-owner-full-control',
 	});
 
-	await upload.done();
+	await managedUpload.promise();
 
 	console.log(
 		`[0cf35b42] export succeeded, read ${stream.recordCount()} records`,

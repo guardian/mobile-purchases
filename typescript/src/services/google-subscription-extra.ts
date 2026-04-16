@@ -1,4 +1,4 @@
-import { GetObjectCommand, type GetObjectRequest } from '@aws-sdk/client-s3';
+import type S3 from 'aws-sdk/clients/s3';
 import * as aws from '../utils/aws';
 
 // Author: Pascal
@@ -13,32 +13,28 @@ export interface AccessToken {
 	date: Date;
 }
 
-export function getParams(stage: string): GetObjectRequest {
+export function getParams(stage: string): S3.Types.GetObjectRequest {
 	return {
 		Bucket: 'gu-mobile-access-tokens',
 		Key: `${stage}/google-play-developer-api/access_token.json`,
 	};
 }
 
-export async function getAccessToken(stage: string): Promise<AccessToken> {
-	const params: GetObjectRequest = getParams(stage);
-
-	try {
-		const command = new GetObjectCommand(params);
-		const s3Output = await aws.s3.send(command);
-
-		if (!s3Output.Body) {
-			throw Error('S3 output body was not defined');
-		}
-
-		// Convert the body (which is a ReadableStream or Uint8Array) to string
-		const bodyString = await s3Output.Body.transformToString();
-		return JSON.parse(bodyString) as AccessToken;
-	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		console.log(`Failed to get access token from S3 due to: ${errorMessage}`);
-		throw error;
-	}
+export function getAccessToken(stage: string): Promise<AccessToken> {
+	const params: S3.Types.GetObjectRequest = getParams(stage);
+	return aws.s3
+		.getObject(params)
+		.promise()
+		.then((s3OutPut) => {
+			if (!s3OutPut.Body) {
+				throw Error('S3 output body was not defined');
+			}
+			return JSON.parse(s3OutPut.Body.toString()) as AccessToken;
+		})
+		.catch((error) => {
+			console.log(`Failed to get access token from S3 due to: ${error}`);
+			throw error;
+		});
 }
 
 interface E1CommonPrice {
@@ -103,13 +99,13 @@ const extractGoogleSubscription = async (
 		} else {
 			console.error(`[19e802a9] error: fetch failed: ${response.status}`);
 		}
-	} catch (error: unknown) {
+	} catch (error) {
 		if (error instanceof Error) {
 			console.error(`[24c359f8] error: fetch failed: ${error.message}`);
 		} else {
 			console.error(`[34bff1ac] error: fetch failed: ${JSON.stringify(error)}`);
 		}
-		throw error;
+		throw error; // <-- rethrow the original error
 	}
 
 	return Promise.resolve(subscription);
@@ -188,6 +184,8 @@ export async function extraction(
 		);
 		if (googleSubscription === undefined) {
 			console.log(`[3c0a9db2] could not determine the google subscription`);
+			// And here we short circuit the entire process and just return undefined since not being to
+			// determine the google subscription means that computing the extra object itself won't work.
 			return Promise.resolve(undefined);
 		}
 		const extraObject = await buildExtraObject(
@@ -208,7 +206,7 @@ export async function extraction(
 			offer_id,
 		};
 		return Promise.resolve(answer);
-	} catch (error: unknown) {
+	} catch (error) {
 		if (error instanceof Error) {
 			console.error(`[dab24062] error: building failed: ${error.message}`);
 		} else {

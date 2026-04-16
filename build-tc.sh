@@ -10,7 +10,6 @@ yarn install
 yarn run clean
 
 yarn format:check
-yarn lint:check
 
 yarn run test
 

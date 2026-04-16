@@ -13,6 +13,7 @@ import { SubscriptionEmpty } from '../../src/models/subscription';
 import { handler } from '../../src/soft-opt-ins/acquisitions';
 import { isPostAcquisition } from '../../src/soft-opt-ins/processSubscription';
 import * as dynamodbMapper from '@aws/dynamodb-data-mapper';
+import * as sqsModule from 'aws-sdk/clients/sqs';
 import fetch from 'node-fetch';
 
 // Typed mock for DynamoDB Mapper
@@ -27,6 +28,13 @@ const mockedDynamoDBMapper = dynamodbMapper as unknown as {
 		update: jest.Mock;
 	};
 	setMockGet: (fn: (arg0: unknown) => unknown) => void;
+};
+
+// Typed mock for SQS
+const mockedSQS = sqsModule as unknown as {
+	default: new () => {
+		sendMessage: jest.Mock;
+	};
 };
 
 jest.mock('@aws/dynamodb-data-mapper', () => {
@@ -52,85 +60,60 @@ jest.mock('@aws/dynamodb-data-mapper', () => {
 	});
 });
 
-jest.mock('@aws-sdk/client-dynamodb', () => ({
-	DynamoDBClient: jest.fn().mockImplementation(() => ({
-		send: jest.fn(),
-	})),
-}));
-
-jest.mock('@aws-sdk/client-s3', () => ({
-	S3Client: jest.fn().mockImplementation(() => ({
-		send: jest.fn(),
-	})),
-}));
-
-jest.mock('@aws-sdk/client-ssm', () => ({
-	SSMClient: jest.fn().mockImplementation(() => ({
-		send: jest.fn(),
-	})),
-}));
+// mock so imports don't use real client which throws an error as credentials are needed
+jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
+jest.mock('aws-sdk/clients/s3', () => jest.fn());
+jest.mock('aws-sdk/clients/ssm', () => jest.fn());
 
 jest.mock('node-fetch', () => jest.fn());
 
 jest.mock('../../src/utils/guIdentityApi');
-
-jest.mock('@aws-sdk/client-cloudwatch', () => ({
-	CloudWatchClient: jest.fn().mockImplementation(() => ({
-		send: jest.fn(),
-	})),
-}));
+jest.mock('aws-sdk/clients/cloudwatch', () => jest.fn());
 
 jest.mock('util', () => jest.fn());
 
-jest.mock('@aws-sdk/client-sqs', () => {
-	const mockSend = jest.fn();
+jest.mock('aws-sdk/clients/sqs', () => {
 	const mockSQS = {
-		send: mockSend,
+		sendMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
 	};
 
 	return {
 		__esModule: true,
-		SQSClient: jest.fn(() => mockSQS),
-		SendMessageCommand: jest.fn().mockImplementation((params) => params),
+		default: jest.fn(() => mockSQS),
 	};
 });
 
-jest.mock('@aws-sdk/client-sts', () => {
+jest.mock('aws-sdk/clients/sts', () => {
 	const mockSTS = {
-		// @ts-ignore
-		STSClient: jest.fn().mockImplementation(() => ({
-			// @ts-ignore
-			send: jest.fn().mockResolvedValue({
-				Credentials: {
-					AccessKeyId: 'mockAccessKeyId',
-					SecretAccessKey: 'mockSecretAccessKey',
-					SessionToken: 'mockSessionToken',
-				},
-			}),
-		})),
-		AssumeRoleCommand: jest.fn(),
+		assumeRole: jest.fn().mockReturnValue({
+			promise: jest.fn().mockImplementation(() =>
+				Promise.resolve({
+					Credentials: {
+						AccessKeyId: 'mockAccessKeyId',
+						SecretAccessKey: 'mockSecretAccessKey',
+						SessionToken: 'mockSessionToken',
+					},
+				}),
+			),
+		}),
 	};
-	return mockSTS;
+
+	return jest.fn(() => mockSTS);
 });
 
-jest.mock('@aws-sdk/credential-providers', () => {
-	// @ts-ignore
-	const mockProvider = jest.fn().mockResolvedValue(undefined);
+jest.mock('aws-sdk/lib/core', () => {
+	class SharedIniFileCredentialsMock {}
+
+	class CredentialProviderChainMock {}
+
 	return {
-		fromIni: jest.fn().mockReturnValue(mockProvider),
-		fromContainerMetadata: jest.fn().mockReturnValue(mockProvider),
+		SharedIniFileCredentials: SharedIniFileCredentialsMock,
+		CredentialProviderChain: CredentialProviderChainMock,
 	};
 });
 
 describe('isPostAcquisition() function', () => {
 	beforeEach(() => {
-		jest.useFakeTimers();
-		jest.setSystemTime(new Date('2023-03-14').getTime());
-		process.env.DLQUrl = 'https://example.com';
-		process.env.AWS_ACCESS_KEY_ID = 'mock-key';
-		process.env.AWS_SECRET_ACCESS_KEY = 'mock-secret';
-		process.env.AWS_REGION = 'eu-west-1';
-		jest.clearAllMocks();
 		jest.useFakeTimers();
 		jest.setSystemTime(new Date('2023-03-14').getTime());
 	});
@@ -180,8 +163,7 @@ describe('handler', () => {
 		};
 
 		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
-		const { SQSClient } = require('@aws-sdk/client-sqs');
-		const mockSQSClient = SQSClient();
+		const mockSQS = new mockedSQS.default();
 
 		const sub = new SubscriptionEmpty();
 		sub.subscriptionId = '12345';
@@ -198,7 +180,7 @@ describe('handler', () => {
 		subEmpty.setSubscriptionId('12345');
 		expect(mockDataMapper.get).toHaveBeenCalledWith(subEmpty);
 
-		expect(mockSQSClient.send).toHaveBeenCalledTimes(1);
+		expect(mockSQS.sendMessage).toHaveBeenCalledTimes(1);
 
 		const expectedSendMessageParams = {
 			QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
@@ -210,7 +192,7 @@ describe('handler', () => {
 			}),
 		};
 
-		expect(mockSQSClient.send).toHaveBeenCalledWith(expectedSendMessageParams);
+		expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSendMessageParams);
 	});
 
 	it('sends the correct SOI consents and SOI email for Feast acquisitions', async () => {
@@ -251,8 +233,7 @@ describe('handler', () => {
 		};
 
 		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
-		const { SQSClient } = require('@aws-sdk/client-sqs');
-		const mockSQSClient = SQSClient();
+		const mockSQS = new mockedSQS.default();
 
 		const sub = new SubscriptionEmpty();
 		sub.subscriptionId = subscriptionId;
@@ -268,7 +249,7 @@ describe('handler', () => {
 		expectedQuery.setSubscriptionId(subscriptionId);
 		expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 
-		expect(mockSQSClient.send).toHaveBeenCalledTimes(2);
+		expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
 
 		const expectedSOIParams = {
 			QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
@@ -279,7 +260,7 @@ describe('handler', () => {
 				subscriptionId,
 			}),
 		};
-		expect(mockSQSClient.send).toHaveBeenCalledWith(expectedSOIParams);
+		expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSOIParams);
 
 		const expectedEmailParams = {
 			QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/braze-emails-CODE`,
@@ -292,7 +273,7 @@ describe('handler', () => {
 				IdentityUserId: identityId,
 			}),
 		};
-		expect(mockSQSClient.send).toHaveBeenCalledWith(expectedEmailParams);
+		expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedEmailParams);
 	});
 
 	it('sends the correct SOI for Feast Android acquisitions', async () => {
@@ -333,8 +314,7 @@ describe('handler', () => {
 		};
 
 		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
-		const { SQSClient } = require('@aws-sdk/client-sqs');
-		const mockSQSClient = SQSClient();
+		const mockSQS = new mockedSQS.default();
 
 		const sub = new SubscriptionEmpty();
 		sub.subscriptionId = subscriptionId;
@@ -350,7 +330,7 @@ describe('handler', () => {
 		expectedQuery.setSubscriptionId(subscriptionId);
 		expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
 
-		expect(mockSQSClient.send).toHaveBeenCalledTimes(2);
+		expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
 
 		const expectedSOIParams = {
 			QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/soft-opt-in-consent-setter-queue-CODE`,
@@ -361,7 +341,7 @@ describe('handler', () => {
 				subscriptionId,
 			}),
 		};
-		expect(mockSQSClient.send).toHaveBeenCalledWith(expectedSOIParams);
+		expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedSOIParams);
 
 		const expectedEmailParams = {
 			QueueUrl: `https://sqs.eu-west-1.amazonaws.com/mock-aws-account-id/braze-emails-CODE`,
@@ -374,7 +354,7 @@ describe('handler', () => {
 				IdentityUserId: identityId,
 			}),
 		};
-		expect(mockSQSClient.send).toHaveBeenCalledWith(expectedEmailParams);
+		expect(mockSQS.sendMessage).toHaveBeenCalledWith(expectedEmailParams);
 	});
 
 	it('should process a post acquisition sign-in correctly', async () => {
@@ -411,8 +391,7 @@ describe('handler', () => {
 		};
 
 		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
-		const { SQSClient } = require('@aws-sdk/client-sqs');
-		const mockSQSClient = SQSClient();
+		const mockSQS = new mockedSQS.default();
 
 		const sub = new SubscriptionEmpty();
 		sub.subscriptionId = '12345';
@@ -429,7 +408,7 @@ describe('handler', () => {
 		subEmpty.setSubscriptionId('12345');
 		expect(mockDataMapper.get).toHaveBeenCalledWith(subEmpty);
 
-		expect(mockSQSClient.send).toHaveBeenCalledTimes(2);
+		expect(mockSQS.sendMessage).toHaveBeenCalledTimes(2);
 
 		expect(fetch).toHaveBeenCalledTimes(1);
 
@@ -443,6 +422,8 @@ describe('handler', () => {
 			}),
 		};
 
-		expect(mockSQSClient.send).toHaveBeenCalledWith(expectedSendMessageParams1);
+		expect(mockSQS.sendMessage).toHaveBeenCalledWith(
+			expectedSendMessageParams1,
+		);
 	});
 });

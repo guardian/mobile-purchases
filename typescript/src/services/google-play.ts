@@ -1,4 +1,4 @@
-import { GetObjectCommand } from '@aws-sdk/client-s3';
+import type S3 from 'aws-sdk/clients/s3';
 import { Stage } from '../utils/appIdentity';
 import * as aws from '../utils/aws';
 import { restClient } from '../utils/restClient';
@@ -15,32 +15,30 @@ export interface AccessToken {
 	date: Date;
 }
 
-function getParams(stage: string) {
+function getParams(stage: string): S3.Types.GetObjectRequest {
 	return {
 		Bucket: 'gu-mobile-access-tokens',
 		Key: `${stage}/google-play-developer-api/access_token.json`,
 	};
 }
 
-async function getAccessToken(stage: string): Promise<AccessToken> {
-	const params = getParams(stage);
-
-	try {
-		const command = new GetObjectCommand(params);
-		const s3Output = await aws.s3.send(command);
-
-		if (!s3Output.Body) {
-			throw Error('S3 output body was not defined');
-		}
-
-		// Convert the body to string
-		const bodyString = await s3Output.Body.transformToString();
-		return JSON.parse(bodyString) as AccessToken;
-	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		console.log(`Failed to get access token from S3 due to: ${errorMessage}`);
-		throw error;
-	}
+function getAccessToken(
+	params: S3.Types.GetObjectRequest,
+): Promise<AccessToken> {
+	return aws.s3
+		.getObject(params)
+		.promise()
+		.then((s3OutPut) => {
+			if (s3OutPut.Body) {
+				return JSON.parse(s3OutPut.Body.toString());
+			} else {
+				throw Error('S3 output body was not defined');
+			}
+		})
+		.catch((error) => {
+			console.log(`Failed to get access token from S3 due to: ${error}`);
+			throw error;
+		});
 }
 
 function buildGoogleUrl(
@@ -66,7 +64,7 @@ export async function fetchGoogleSubscription(
 	packageName: string,
 ): Promise<GoogleResponseBody | null> {
 	const url = buildGoogleUrl(subscriptionId, purchaseToken, packageName);
-	const accessToken = await getAccessToken(Stage);
+	const accessToken = await getAccessToken(getParams(Stage));
 	const response = await restClient.get<GoogleResponseBody>(url, {
 		additionalHeaders: { Authorization: `Bearer ${accessToken.token}` },
 	});

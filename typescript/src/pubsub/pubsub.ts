@@ -1,6 +1,8 @@
 import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import type { SendMessageCommandOutput } from '@aws-sdk/client-sqs';
+import type { AWSError } from 'aws-sdk';
+import type Sqs from 'aws-sdk/clients/sqs';
+import type { PromiseResult } from 'aws-sdk/lib/request';
 import { HTTPResponses } from '../models/apiGatewayHttp';
 import type { SubscriptionEvent } from '../models/subscriptionEvent';
 import { dynamoMapper, sendToSqs } from '../utils/aws';
@@ -13,7 +15,7 @@ async function catchingServerErrors(
 	block: () => Promise<APIGatewayProxyResult>,
 ): Promise<APIGatewayProxyResult> {
 	try {
-		return await block();
+		return block();
 	} catch (e) {
 		console.error('Internal server error', e);
 		return HTTPResponses.INTERNAL_ERROR;
@@ -41,7 +43,7 @@ export async function parseStoreAndSend_async<Payload, SqsEvent, MetaData>(
 	sendToSqsFunction: (
 		queueUrl: string,
 		event: SqsEvent,
-	) => Promise<SendMessageCommandOutput> = sendToSqs,
+	) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
 ): Promise<APIGatewayProxyResult> {
 	const secret = process.env.Secret;
 	return catchingServerErrors(async () => {

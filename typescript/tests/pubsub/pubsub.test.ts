@@ -1,5 +1,4 @@
 import { expect, test, describe, it, jest } from '@jest/globals';
-import type { SendMessageCommandOutput } from '@aws-sdk/client-sqs';
 import { HTTPResponses } from '../../src/models/apiGatewayHttp';
 import { SubscriptionEvent } from '../../src/models/subscriptionEvent';
 import {
@@ -19,6 +18,8 @@ import {
 } from '../../src/pubsub/google-common';
 import { parseStoreAndSend_async } from '../../src/pubsub/pubsub';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
+import { SendMessageResult } from 'aws-sdk/clients/sqs';
+import { PromiseResult } from 'aws-sdk/lib/request';
 
 type GooglePayload = {
 	version: string;
@@ -38,20 +39,6 @@ type GooglePayload = {
 	};
 };
 
-// Mock SQS send result type matching v3 SendMessageCommandOutput
-const createMockSendMessageOutput = (): SendMessageCommandOutput => ({
-	MessageId: '123',
-	MD5OfMessageBody: 'md5body',
-	$metadata: {
-		httpStatusCode: 200,
-		requestId: 'mock-request-id',
-		extendedRequestId: undefined,
-		cfId: undefined,
-		attempts: 1,
-		totalRetryDelay: 0,
-	},
-});
-
 describe('The google pubsub', () => {
 	test('Should return HTTP 200 and store the correct data in dynamo (1)', () => {
 		process.env['Secret'] = 'MYSECRET';
@@ -63,7 +50,12 @@ describe('The google pubsub', () => {
 
 		const mockSqsFunction = jest.fn(
 			(_queueUrl: string, _event: { purchaseToken: string }) =>
-				Promise.resolve(createMockSendMessageOutput()),
+				Promise.resolve(
+					{} as unknown as PromiseResult<
+						SendMessageResult,
+						import('aws-sdk').AWSError
+					>,
+				),
 		);
 
 		const mockGoogleFetchMetadataFunction = jest.fn((_event: GooglePayload) =>
@@ -187,7 +179,12 @@ describe('The google pubsub', () => {
 		);
 		const mockSqsFunction = jest.fn(
 			(_queueUrl: string, _event: { purchaseToken: string }) =>
-				Promise.resolve(createMockSendMessageOutput()),
+				Promise.resolve(
+					{} as unknown as PromiseResult<
+						SendMessageResult,
+						import('aws-sdk').AWSError
+					>,
+				),
 		);
 		const mockGoogleFetchMetadataFunction = jest.fn((_event: GooglePayload) =>
 			Promise.resolve({ freeTrial: true }),
@@ -248,7 +245,12 @@ describe('The google pubsub', () => {
 		);
 		const mockSqsFunction = jest.fn(
 			(_queueUrl: string, _event: { purchaseToken: string }) =>
-				Promise.resolve(createMockSendMessageOutput()),
+				Promise.resolve(
+					{} as unknown as PromiseResult<
+						SendMessageResult,
+						import('aws-sdk').AWSError
+					>,
+				),
 		);
 		const mockGoogleFetchMetadataFunction = jest.fn((_event: GooglePayload) =>
 			Promise.resolve({ freeTrial: true }),
@@ -321,7 +323,12 @@ describe('The apple pubsub', () => {
 		);
 		const mockSqsFunction = jest.fn(
 			(_queueUrl: string, _event: { receipt: string }) =>
-				Promise.resolve(createMockSendMessageOutput()),
+				Promise.resolve(
+					{} as unknown as PromiseResult<
+						SendMessageResult,
+						import('aws-sdk').AWSError
+					>,
+				),
 		);
 		const mockAppleFetchMetadataFunction = jest.fn(
 			(_event: StatusUpdateNotification) => Promise.resolve(undefined),
