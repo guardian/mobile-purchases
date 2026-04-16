@@ -12,22 +12,41 @@ import {
 } from '@aws-sdk/client-sqs';
 import { SSMClient } from '@aws-sdk/client-ssm';
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
+import { fromIni, fromContainerMetadata } from '@aws-sdk/credential-providers';
 import { Region, Stage } from './appIdentity';
 import { getMembershipAccountId } from './guIdentityApi';
 import type { SoftOptInEventProductName } from './softOptIns';
-import { defaultProvider } from '@aws-sdk/credential-provider-node';
+
+// Create credential provider that always returns credentials - this is a sync function that returns a promise
+const credentialProvider = () => {
+	return (async () => {
+		try {
+			// Try ECS credentials first
+			const ecsCredentials = fromContainerMetadata();
+			const ecsCreds = await ecsCredentials();
+			if (ecsCreds) {
+				return ecsCreds;
+			}
+		} catch {
+			// Fall back to shared ini file
+			const iniCredentials = fromIni({ profile: 'mobile' });
+			return iniCredentials();
+		}
+		throw new Error('Unable to get AWS credentials');
+	})();
+};
 
 // Use the credential provider directly - it will be called when needed
 export const aws = new DynamoDBClient({
 	region: Region,
-	credentials: defaultProvider(),
+	credentials: credentialProvider,
 });
 
 export const dynamoMapper = new DataMapper({ client: aws });
 
 export const sqs = new SQSClient({
 	region: Region,
-	credentials: defaultProvider(),
+	credentials: credentialProvider,
 });
 
 let SOISqsClient: SQSClient | undefined;
@@ -126,12 +145,12 @@ async function getSqsClientForComms(): Promise<SQSClient> {
 
 export const s3: S3Client = new S3Client({
 	region: Region,
-	credentials: defaultProvider(),
+	credentials: credentialProvider,
 });
 
 export const ssm: SSMClient = new SSMClient({
 	region: Region,
-	credentials: defaultProvider(),
+	credentials: credentialProvider,
 });
 
 const cloudWatchClient = new CloudWatchClient({ region: Region });
