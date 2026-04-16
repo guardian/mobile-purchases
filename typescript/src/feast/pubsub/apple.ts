@@ -1,5 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import type { SendMessageCommandOutput } from '@aws-sdk/client-sqs';
+import type { AWSError } from 'aws-sdk';
+import type Sqs from 'aws-sdk/clients/sqs';
+import type { PromiseResult } from 'aws-sdk/lib/request';
 import { HTTPResponses } from '../../models/apiGatewayHttp';
 import type { AppleSubscriptionReference } from '../../models/subscriptionReference';
 import { toDynamoEventAppleAsync, toSqsSubReference } from '../../pubsub/apple';
@@ -21,7 +23,7 @@ export function buildHandler(
 	sendMessageToSqs: (
 		queueUrl: string,
 		message: AppleSubscriptionReference,
-	) => Promise<SendMessageCommandOutput> = sendToSqs,
+	) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
 	storeEventInDynamo: (
 		event: StatusUpdateNotification,
 	) => Promise<void> = defaultStoreEventInDynamo,
