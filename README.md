@@ -2,11 +2,6 @@
 
 The Mobile Purchases API System (MPAPI) is a collection of software functions that keep track of IAP purchases within the Live and Feast apps and surface information about these to other downstream systems.
 
-## Structure of the project
-
-- The scala part of the project is considered "legacy". It's only kept for very old iOS devices and should be decommissioned once there's only a tiny amount of [traffic reaching the service](https://eu-west-1.console.aws.amazon.com/cloudwatch/home?region=eu-west-1#dashboards:name=MobilePurchases;start=P7D).
-- The Typescript part of the project contains the more modern approach to validating and storing mobile purchases.
-
 ## Local Development
 
 ### Node
@@ -39,7 +34,7 @@ These tables are exported daily to the datalake.
 
 See [Documentation Portal](docs/README.md).
 
-## Running TypeScript lambdas locally
+### Running TypeScript lambdas locally
 
 We're using [TypeScript](https://www.typescriptlang.org/) to develop this project and it's useful to be able to test these locally, without having to resubmit a build and deploy to the cloud.
 
