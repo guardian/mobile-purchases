@@ -70,6 +70,7 @@ object S3Uploader {
 
   def uploadTokenToS3(accessToken: AccessToken): Try[PutObjectResponse] = Try {
     logger.info("[f1f510f0] uploading token to s3")
+    println("[5dadda18] uploading token to s3")
     val bucket = "gu-mobile-access-tokens"
     val key = s"${System.getenv("Stage")}/google-play-developer-api/access_token.json"
     val content = accessTokenAsJsonString(accessToken)
