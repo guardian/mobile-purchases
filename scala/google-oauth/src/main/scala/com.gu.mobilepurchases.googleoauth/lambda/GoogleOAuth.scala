@@ -62,12 +62,14 @@ object GoogleOAuth {
 
 object S3Uploader {
 
+  private val logger = LogManager.getLogger
   private val s3Client: S3Client = S3Client.builder().build()
 
   def accessTokenAsJsonString(accessToken: AccessToken): String =
     s"""{"token":"${accessToken.getTokenValue}","expiry":"${accessToken.getExpirationTime}"}"""
 
   def uploadTokenToS3(accessToken: AccessToken): Try[PutObjectResponse] = Try {
+    logger.info("[f1f510f0] uploading token to s3")
     val bucket = "gu-mobile-access-tokens"
     val key = s"${System.getenv("Stage")}/google-play-developer-api/access_token.json"
     val content = accessTokenAsJsonString(accessToken)
