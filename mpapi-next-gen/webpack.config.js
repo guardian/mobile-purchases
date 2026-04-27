@@ -23,7 +23,8 @@ module.exports = (env = {}) => ({
 
 	// Your Lambda handlers
 	entry: {
-		test: './src/handlers/test.ts',
+		'mobile-purchases-google-oauth2':
+			'./src/handlers/mobile-purchases-google-oauth2.ts',
 	},
 
 	output: {

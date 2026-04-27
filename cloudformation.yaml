@@ -70,8 +70,8 @@ Mappings:
       SoftOptInConsentSetterStage: PROD
 
 Conditions:
-  IsCode: !Equals [!Ref "Stage", "CODE"]
-  IsProd: !Equals [!Ref "Stage", "PROD"]
+  IsCode: !Equals [!Ref 'Stage', 'CODE']
+  IsProd: !Equals [!Ref 'Stage', 'PROD']
 
 Resources:
   MobilePurchasesLambdasRole:
@@ -95,7 +95,7 @@ Resources:
                 - logs:CreateLogStream
                 - logs:PutLogEvents
                 - cloudwatch:putMetricData
-              Resource: "*"
+              Resource: '*'
         - PolicyName: config
           PolicyDocument:
             Statement:
@@ -137,12 +137,12 @@ Resources:
             Statement:
               Effect: Allow
               Action:
-                - "dynamodb:GetItem"
-                - "dynamodb:BatchGetItem"
-                - "dynamodb:BatchWriteItem"
-                - "dynamodb:PutItem"
-                - "dynamodb:UpdateItem"
-                - "dynamodb:Query"
+                - 'dynamodb:GetItem'
+                - 'dynamodb:BatchGetItem'
+                - 'dynamodb:BatchWriteItem'
+                - 'dynamodb:PutItem'
+                - 'dynamodb:UpdateItem'
+                - 'dynamodb:Query'
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-${Stack}-user-purchases
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscription-events
@@ -167,17 +167,17 @@ Resources:
           PolicyDocument:
             Statement:
               Effect: Allow
-              Action: ["kms:GenerateDataKey", "kms:Decrypt"]
+              Action: ['kms:GenerateDataKey', 'kms:Decrypt']
               Resource:
                 - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0215d06c-81c4-4896-a5da-c818770ea8db
 
   LogGroupValidateReceipts:
-    Type: "AWS::Logs::LogGroup"
+    Type: 'AWS::Logs::LogGroup'
     Properties:
       LogGroupName: !Sub /aws/lambda/${App}-iosvalidatereceipts-${Stage}
       RetentionInDays: 7
   LogGroupUserPurchases:
-    Type: "AWS::Logs::LogGroup"
+    Type: 'AWS::Logs::LogGroup'
     Properties:
       LogGroupName: !Sub /aws/lambda/${App}-iosuserpurchases-${Stage}
       RetentionInDays: 7
@@ -188,19 +188,19 @@ Resources:
       MethodSettings:
         [
           {
-            "MetricsEnabled": True,
-            "LoggingLevel": "OFF",
-            "ResourcePath": "/*",
-            "HttpMethod": "*",
+            'MetricsEnabled': True,
+            'LoggingLevel': 'OFF',
+            'ResourcePath': '/*',
+            'HttpMethod': '*',
           },
         ]
       DefinitionBody:
-        swagger: "2.0"
+        swagger: '2.0'
         info:
-          version: "1.0.0"
+          version: '1.0.0'
           title: !Sub ${App}-${Stage}
         paths:
-          "/google/pubsub":
+          '/google/pubsub':
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -209,9 +209,9 @@ Resources:
               consumes: [application/json]
               produces: [application/json]
               responses:
-                "200":
-                  "description": "Successfully processed a Live App purchase receipt from Google Play Store"
-          "/google/subscription/{subscriptionId}/status":
+                '200':
+                  'description': 'Successfully processed a Live App purchase receipt from Google Play Store'
+          '/google/subscription/{subscriptionId}/status':
             get:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -220,9 +220,9 @@ Resources:
               consumes: [application/json]
               produces: [application/json]
               responses:
-                "200":
-                  "description": "200 response"
-          "/apple/subscription/status":
+                '200':
+                  'description': '200 response'
+          '/apple/subscription/status':
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -231,9 +231,9 @@ Resources:
               consumes: [application/json]
               produces: [application/json]
               responses:
-                "200":
-                  "description": "200 response"
-          "/apple/pubsub":
+                '200':
+                  'description': '200 response'
+          '/apple/pubsub':
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -242,9 +242,9 @@ Resources:
               consumes: [application/json]
               produces: [application/json]
               responses:
-                "200":
-                  "description": "Successfully processed a Live App purchase receipt from the Apple App Store"
-          "/apple/linkToSubscriptions":
+                '200':
+                  'description': 'Successfully processed a Live App purchase receipt from the Apple App Store'
+          '/apple/linkToSubscriptions':
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -253,9 +253,9 @@ Resources:
               consumes: [application/json]
               produces: [application/json]
               responses:
-                "200":
-                  "description": "Successfully handled link request from iOS Live App"
-          "/google/linkToSubscriptions":
+                '200':
+                  'description': 'Successfully handled link request from iOS Live App'
+          '/google/linkToSubscriptions':
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -264,9 +264,9 @@ Resources:
               consumes: [application/json]
               produces: [application/json]
               responses:
-                "200":
-                  "description": "Successfully handled link request from Android Live App"
-          "/user/subscriptions/{userId}":
+                '200':
+                  'description': 'Successfully handled link request from Android Live App'
+          '/user/subscriptions/{userId}':
             get:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -275,9 +275,9 @@ Resources:
               consumes: [application/json]
               produces: [application/json]
               responses:
-                "200":
-                  "description": "200 response"
-          "/apple/fetchOfferDetails":
+                '200':
+                  'description': '200 response'
+          '/apple/fetchOfferDetails':
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -286,9 +286,9 @@ Resources:
               consumes: [application/json]
               produces: [application/json]
               responses:
-                "200":
-                  "description": "200 response (+)"
-          "feast/apple/pubsub":
+                '200':
+                  'description': '200 response (+)'
+          'feast/apple/pubsub':
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -297,9 +297,9 @@ Resources:
               consumes: [application/json]
               produces: [application/json]
               responses:
-                "200":
-                  "description": "Successfully processed a Feast App purchase receipt from the Apple App Store"
-          "/feast/google/pubsub":
+                '200':
+                  'description': 'Successfully processed a Feast App purchase receipt from the Apple App Store'
+          '/feast/google/pubsub':
             post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
@@ -308,13 +308,13 @@ Resources:
               consumes: [application/json]
               produces: [application/json]
               responses:
-                "200":
-                  "description": "Successfully processed a Feast App purchase receipt from the Google Play Store"
-          "/healthcheck":
+                '200':
+                  'description': 'Successfully processed a Feast App purchase receipt from the Google Play Store'
+          '/healthcheck':
             get:
               responses:
-                "200":
-                  description: "200 response"
+                '200':
+                  description: '200 response'
               x-amazon-apigateway-integration:
                 type: mock
                 requestTemplates:
@@ -325,7 +325,7 @@ Resources:
                 httpMethod: GET
                 responses:
                   default:
-                    statusCode: "200"
+                    statusCode: '200'
 
   ApiDomainName:
     Type: AWS::ApiGateway::DomainName
@@ -394,6 +394,34 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
+  GoogleOAuthLambda2:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: google-pubsub.handler
+      Runtime: nodejs20.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-google-oauth/${App}-google-oauth2.zip
+      FunctionName: !Sub ${App}-googleoauth2-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+      Description: Fetches access tokens for the Google Play Developer API (version 2)
+      MemorySize: 512
+      Timeout: 45
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
   GooglePubSubLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -418,7 +446,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/google/pubsub"
+            Path: '/google/pubsub'
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -450,7 +478,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/apple/pubsub"
+            Path: '/apple/pubsub'
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -481,7 +509,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/google/linkToSubscriptions"
+            Path: '/google/linkToSubscriptions'
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -512,7 +540,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/apple/linkToSubscriptions"
+            Path: '/apple/linkToSubscriptions'
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -542,7 +570,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/google/subscription/{subscriptionId}/status"
+            Path: '/google/subscription/{subscriptionId}/status'
             Method: GET
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -572,7 +600,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/apple/subscription/status"
+            Path: '/apple/subscription/status'
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -602,7 +630,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/apple/fetchOfferDetails"
+            Path: '/apple/fetchOfferDetails'
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -634,7 +662,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/feast/google/pubsub"
+            Path: '/feast/google/pubsub'
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -666,7 +694,7 @@ Resources:
         PostApi:
           Type: Api
           Properties:
-            Path: "/feast/apple/pubsub"
+            Path: '/feast/apple/pubsub'
             Method: POST
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -836,7 +864,7 @@ Resources:
       Metrics:
         - Id: e1
           Label: Percentage of requests which result in a 5XX error
-          Expression: "100*(FILL(m1,0)/FILL(m2,1))"
+          Expression: '100*(FILL(m1,0)/FILL(m2,1))'
         - Id: m1
           Label: Number of 5XX responses
           MetricStat:
@@ -921,7 +949,7 @@ Resources:
       Metrics:
         - Id: e1
           Label: Percentage of requests which result in a 5XX error
-          Expression: "100*(FILL(m1,0)/FILL(m2,1))"
+          Expression: '100*(FILL(m1,0)/FILL(m2,1))'
         - Id: m1
           Label: Number of 5XX responses
           MetricStat:
@@ -1115,7 +1143,7 @@ Resources:
         InternalAccess:
           Type: Api
           Properties:
-            Path: "/user/subscriptions/{userId}"
+            Path: '/user/subscriptions/{userId}'
             Method: GET
             RestApiId: !Ref MobilePuchasesApi
       Tags:
@@ -1156,12 +1184,12 @@ Resources:
     Properties:
       ActionsEnabled:
         !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
-      AlarmDescription: "Ensure that the apple subscription dead letter queue is empty"
-      Namespace: "AWS/SQS"
+      AlarmDescription: 'Ensure that the apple subscription dead letter queue is empty'
+      Namespace: 'AWS/SQS'
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
-          Value: !GetAtt "AppleSubscriptionsQueueDlq.QueueName"
+          Value: !GetAtt 'AppleSubscriptionsQueueDlq.QueueName'
       Period: 60
       Statistic: Sum
       EvaluationPeriods: 1
@@ -1181,12 +1209,12 @@ Resources:
     Properties:
       ActionsEnabled:
         !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
-      AlarmDescription: "Ensure that the google subscription dead letter queue is empty"
-      Namespace: "AWS/SQS"
+      AlarmDescription: 'Ensure that the google subscription dead letter queue is empty'
+      Namespace: 'AWS/SQS'
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
-          Value: !GetAtt "GoogleSubscriptionsQueueDlq.QueueName"
+          Value: !GetAtt 'GoogleSubscriptionsQueueDlq.QueueName'
       Period: 60
       Statistic: Sum
       EvaluationPeriods: 1
@@ -1262,12 +1290,12 @@ Resources:
     Properties:
       ActionsEnabled:
         !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
-      AlarmDescription: "The Feast Apple subscription dead letter queue is over the threshold"
-      Namespace: "AWS/SQS"
+      AlarmDescription: 'The Feast Apple subscription dead letter queue is over the threshold'
+      Namespace: 'AWS/SQS'
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
-          Value: !GetAtt "FeastAppleSubscriptionsQueueDlq.QueueName"
+          Value: !GetAtt 'FeastAppleSubscriptionsQueueDlq.QueueName'
       Period: 60
       Statistic: Sum
       EvaluationPeriods: 1
@@ -1286,13 +1314,13 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       ActionsEnabled:
-        !FindInMap [ StageVariables, !Ref Stage, AlarmActionsEnabled ]
-      AlarmDescription: "Ensure that the Feast Android subscription dead letter queue is empty"
-      Namespace: "AWS/SQS"
+        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      AlarmDescription: 'Ensure that the Feast Android subscription dead letter queue is empty'
+      Namespace: 'AWS/SQS'
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
-          Value: !GetAtt "FeastGoogleSubscriptionsQueueDlq.QueueName"
+          Value: !GetAtt 'FeastGoogleSubscriptionsQueueDlq.QueueName'
       Period: 60
       Statistic: Sum
       EvaluationPeriods: 1
@@ -1328,13 +1356,13 @@ Resources:
                 - logs:CreateLogStream
                 - logs:PutLogEvents
                 - cloudwatch:putMetricData
-              Resource: "*"
+              Resource: '*'
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
               Effect: Allow
               Action:
-                - "dynamodb:Scan"
+                - 'dynamodb:Scan'
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/index/ios-endTimestamp-revalidation-index-with-platform
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
@@ -1343,7 +1371,7 @@ Resources:
             Statement:
               Effect: Allow
               Action:
-                - "sqs:SendMessage"
+                - 'sqs:SendMessage'
               Resource:
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-apple-subscriptions-to-fetch
                 - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${App}-${Stage}-feast-apple-subscriptions-to-fetch
@@ -1370,8 +1398,7 @@ Resources:
           Type: DynamoDB
           Properties:
             Stream:
-              Fn::ImportValue:
-                !Sub ${App}-${Stage}-subscriptions-stream-arn
+              Fn::ImportValue: !Sub ${App}-${Stage}-subscriptions-stream-arn
             StartingPosition: LATEST
       Tags:
         Stage: !Ref Stage
@@ -1385,22 +1412,21 @@ Resources:
                 - logs:CreateLogStream
                 - logs:PutLogEvents
                 - cloudwatch:putMetricData
-              Resource: "*"
+              Resource: '*'
         - Statement:
             - Effect: Allow
               Action:
-                - "dynamodb:GetRecords"
-                - "dynamodb:GetShardIterator"
-                - "dynamodb:DescribeStream"
-                - "dynamodb:ListStreams"
+                - 'dynamodb:GetRecords'
+                - 'dynamodb:GetShardIterator'
+                - 'dynamodb:DescribeStream'
+                - 'dynamodb:ListStreams'
               Resource:
-                - Fn::ImportValue:
-                    !Sub ${App}-${Stage}-subscriptions-stream-arn
+                - Fn::ImportValue: !Sub ${App}-${Stage}-subscriptions-stream-arn
         - Statement:
             - Effect: Allow
               Action:
-                - "dynamodb:Query"
-                - "dynamodb:DeleteItem"
+                - 'dynamodb:Query'
+                - 'dynamodb:DeleteItem'
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions/*
@@ -1408,15 +1434,19 @@ Resources:
             - Effect: Allow
               Action:
                 - sts:AssumeRole
-              Resource:
-                !Sub
-                - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
-                - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
+              Resource: !Sub
+                - 'arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole'
+                - SoftOptInConsentSetterStage:
+                    !FindInMap [
+                      StageVariables,
+                      !Ref Stage,
+                      SoftOptInConsentSetterStage,
+                    ]
         - Statement:
             - Effect: Allow
               Action:
                 - sts:AssumeRole
-              Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole"
+              Resource: !Sub 'arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole'
         - Statement:
             - Effect: Allow
               Action:
@@ -1481,7 +1511,7 @@ Resources:
         DynamoDBStreamTrigger:
           Type: DynamoDB
           Properties:
-            Stream: !Sub "{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}"
+            Stream: !Sub '{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}'
             StartingPosition: LATEST
             MaximumRecordAgeInSeconds: 28800
       Tags:
@@ -1493,20 +1523,24 @@ Resources:
             - Effect: Allow
               Action:
                 - sts:AssumeRole
-              Resource:
-                !Sub
-                - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
-                - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
+              Resource: !Sub
+                - 'arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole'
+                - SoftOptInConsentSetterStage:
+                    !FindInMap [
+                      StageVariables,
+                      !Ref Stage,
+                      SoftOptInConsentSetterStage,
+                    ]
         - Statement:
             - Effect: Allow
               Action:
                 - sts:AssumeRole
-              Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole"
+              Resource: !Sub 'arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole'
         - Statement:
             - Effect: Allow
               Action:
-                - "dynamodb:Query"
-                - "dynamodb:GetItem"
+                - 'dynamodb:Query'
+                - 'dynamodb:GetItem'
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
@@ -1522,23 +1556,23 @@ Resources:
                 - logs:CreateLogStream
                 - logs:PutLogEvents
                 - cloudwatch:putMetricData
-              Resource: "*"
+              Resource: '*'
         - Statement:
             - Effect: Allow
               Action:
-                - "dynamodb:GetRecords"
-                - "dynamodb:GetShardIterator"
-                - "dynamodb:DescribeStream"
-                - "dynamodb:ListStreams"
-                - "dynamodb:Query"
-              Resource: !Sub "{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}"
+                - 'dynamodb:GetRecords'
+                - 'dynamodb:GetShardIterator'
+                - 'dynamodb:DescribeStream'
+                - 'dynamodb:ListStreams'
+                - 'dynamodb:Query'
+              Resource: !Sub '{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}'
         - Statement:
             - Effect: Allow
               Action:
                 - sqs:DeleteMessage
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
-              Resource: "*"
+              Resource: '*'
         - Statement:
             - Effect: Allow
               Action:
@@ -1571,7 +1605,7 @@ Resources:
         ScheduledRun:
           Type: Schedule
           Properties:
-            Schedule: !FindInMap [ StageVariables, !Ref Stage, Schedule]
+            Schedule: !FindInMap [StageVariables, !Ref Stage, Schedule]
             Description: Runs AcquisitionsDLQProcessorLambda
             Enabled: True
       Policies:
@@ -1579,20 +1613,24 @@ Resources:
             - Effect: Allow
               Action:
                 - sts:AssumeRole
-              Resource:
-                !Sub
-                - "arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole"
-                - SoftOptInConsentSetterStage: !FindInMap [ StageVariables, !Ref Stage, SoftOptInConsentSetterStage ]
+              Resource: !Sub
+                - 'arn:aws:iam::${MembershipAccountId}:role/membership-${SoftOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole'
+                - SoftOptInConsentSetterStage:
+                    !FindInMap [
+                      StageVariables,
+                      !Ref Stage,
+                      SoftOptInConsentSetterStage,
+                    ]
         - Statement:
             - Effect: Allow
               Action:
                 - sts:AssumeRole
-              Resource: !Sub "arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole"
+              Resource: !Sub 'arn:aws:iam::${MembershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole'
         - Statement:
             - Effect: Allow
               Action:
-                - "dynamodb:Query"
-                - "dynamodb:GetItem"
+                - 'dynamodb:Query'
+                - 'dynamodb:GetItem'
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
@@ -1608,14 +1646,14 @@ Resources:
                 - logs:CreateLogStream
                 - logs:PutLogEvents
                 - cloudwatch:putMetricData
-              Resource: "*"
+              Resource: '*'
         - Statement:
             - Effect: Allow
               Action:
                 - sqs:DeleteMessage
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
-              Resource: "*"
+              Resource: '*'
 
   failedSettingCancellationSoftOptIns:
     Condition: IsProd
@@ -1713,12 +1751,12 @@ Resources:
               - Effect: Allow
                 Action:
                   - cloudwatch:ListTagsForResource
-                Resource: "*"
+                Resource: '*'
               - Effect: Allow
                 Action:
                   - cloudwatch:DescribeAlarms
-                Resource: "*"
+                Resource: '*'
               - Effect: Allow
                 Action:
                   - cloudwatch:DescribeAlarmHistory
-                Resource: "*"
+                Resource: '*'
