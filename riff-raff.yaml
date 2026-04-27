@@ -86,12 +86,6 @@ deployments:
       functionNames: [mobile-purchases-apple-fetch-offer-details-]
       fileName: apple-fetch-offer-details.zip
 
-  mobile-purchases-google-oauth:
-    template: lambda
-    parameters:
-      functionNames: [mobile-purchases-googleoauth-]
-      fileName: mobile-purchases-google-oauth.jar
-
   mobile-purchases-google-link-user-subscription:
     template: lambda
     parameters:
