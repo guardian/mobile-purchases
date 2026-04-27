@@ -4,7 +4,8 @@ regions: [eu-west-1]
 templates:
   lambda:
     type: aws-lambda
-    dependencies: [mobile-purchases-cloudformation, mobile-purchases-exports-cloudformation]
+    dependencies:
+      [mobile-purchases-cloudformation, mobile-purchases-exports-cloudformation]
     parameters:
       bucketSsmLookup: true
       prefixStack: false
@@ -19,7 +20,7 @@ deployments:
 
   mobile-purchases-cloudformation:
     type: cloud-formation
-    dependencies: [ mobile-purchases-dynamo-cloudformation ]
+    dependencies: [mobile-purchases-dynamo-cloudformation]
     parameters:
       templatePath: cloudformation.yaml
 
@@ -47,7 +48,7 @@ deployments:
   mobile-purchases-feast-google-update-subscriptions:
     template: lambda
     parameters:
-      functionNames: [ mobile-purchases-feast-google-update-subscriptions- ]
+      functionNames: [mobile-purchases-feast-google-update-subscriptions-]
       fileName: feast-google-update-subscriptions.zip
 
   mobile-purchases-feast-google-pubsub:
@@ -125,13 +126,21 @@ deployments:
   mobile-purchases-export-subscription-tables:
     template: lambda
     parameters:
-      functionNames: [mobile-purchases-export-subscription-table-, mobile-purchases-export-user-subscription-table-]
+      functionNames:
+        [
+          mobile-purchases-export-subscription-table-,
+          mobile-purchases-export-user-subscription-table-,
+        ]
       fileName: export-subscription-tables.zip
 
   mobile-purchases-export-subscription-table-v2:
     template: lambda
     parameters:
-      functionNames: [mobile-purchases-export-subscription-table-v2-, mobile-purchases-export-user-subscription-table-v2-]
+      functionNames:
+        [
+          mobile-purchases-export-subscription-table-v2-,
+          mobile-purchases-export-user-subscription-table-v2-,
+        ]
       fileName: export-subscription-table-v2.zip
 
   mobile-purchases-export-subscription-events-table:
@@ -149,13 +158,13 @@ deployments:
   mobile-purchases-soft-opt-in-acquisitions:
     template: lambda
     parameters:
-      functionNames: [ mobile-purchases-soft-opt-in-acquisitions- ]
+      functionNames: [mobile-purchases-soft-opt-in-acquisitions-]
       fileName: soft-opt-in-acquisitions.zip
 
   mobile-purchases-soft-opt-in-acquisitions-dlq-processor:
     template: lambda
     parameters:
-      functionNames: [ mobile-purchases-soft-opt-in-acquisitions-dlq-processor- ]
+      functionNames: [mobile-purchases-soft-opt-in-acquisitions-dlq-processor-]
       fileName: soft-opt-in-acquisitions-dlq-processor.zip
 
   mobile-purchases-exports-cloudformation:
@@ -166,7 +175,11 @@ deployments:
   mobile-purchases-export-historical-data:
     template: lambda
     parameters:
-      functionNames: [mobile-purchases-export-google-historical-data-, mobile-purchases-export-apple-historical-data-]
+      functionNames:
+        [
+          mobile-purchases-export-google-historical-data-,
+          mobile-purchases-export-apple-historical-data-,
+        ]
       fileName: export-historical-data.zip
 
   mobile-purchases-apple-revalidate-receipts:
@@ -203,10 +216,10 @@ deployments:
       prefixStack: false
 
   mobile-purchases-feast-google-acquisition-events:
-      type: aws-lambda
-      dependencies: [mobile-purchases-feast-acquisition-events-bus-cloudformation]
-      parameters:
-        functionNames: [mobile-purchases-feast-google-acquisition-events-]
-        fileName: feast-google-acquisition-events.zip
-        bucketSsmLookup: true
-        prefixStack: false
+    type: aws-lambda
+    dependencies: [mobile-purchases-feast-acquisition-events-bus-cloudformation]
+    parameters:
+      functionNames: [mobile-purchases-feast-google-acquisition-events-]
+      fileName: feast-google-acquisition-events.zip
+      bucketSsmLookup: true
+      prefixStack: false
