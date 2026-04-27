@@ -86,6 +86,8 @@ jobs:
               - exports-cloudformation.yaml
             mobile-purchases-google-oauth:
               - scala/google-oauth/target/scala-2.12/mobile-purchases-google-oauth.jar
+            mobile-purchases-google-oauth2:
+              - mpapi-next-gen/dist/mobile-purchases-google-oauth2.zip
             mobile-purchases-apple-fetch-offer-details:
               - tsc-target/apple-fetch-offer-details.zip
             mobile-purchases-apple-link-user-subscription:
