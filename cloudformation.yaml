@@ -397,7 +397,7 @@ Resources:
   GoogleOAuthLambda2:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: google-pubsub.handler
+      Handler: mobile-purchases-google-oauth2.handler
       Runtime: nodejs20.x
       CodeUri:
         Bucket: !Ref DeployBucket
