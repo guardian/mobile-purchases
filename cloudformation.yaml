@@ -401,7 +401,7 @@ Resources:
       Runtime: nodejs20.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-google-oauth/${App}-google-oauth2.zip
+        Key: !Sub ${Stack}/${Stage}/${App}-google-oauth2/${App}-google-oauth2.zip
       FunctionName: !Sub ${App}-googleoauth2-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
