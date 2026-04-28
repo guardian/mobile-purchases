@@ -98,6 +98,8 @@ deployments:
     parameters:
       functionNames: [mobile-purchases-googleoauth2-]
       fileName: mobile-purchases-google-oauth2.zip
+    actions:
+      - uploadLambda
 
   mobile-purchases-google-link-user-subscription:
     template: lambda
