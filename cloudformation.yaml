@@ -1352,7 +1352,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: delete-user-subscription.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-delete-user-subscription/delete-user-subscription.zip
