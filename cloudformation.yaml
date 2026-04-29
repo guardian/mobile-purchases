@@ -1239,7 +1239,7 @@ Resources:
       MemorySize: 512
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Timeout: 25
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
 
   FeastAppleSubscriptionsEventSource:
     Type: AWS::Lambda::EventSourceMapping
