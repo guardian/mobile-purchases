@@ -370,7 +370,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: com.gu.mobilepurchases.googleoauth.lambda.GoogleOAuth::handler
-      Runtime: java11
+      Runtime: java8
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-google-oauth/${App}-google-oauth.jar
