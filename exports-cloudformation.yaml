@@ -65,15 +65,15 @@ Resources:
                 - logs:CreateLogStream
                 - logs:PutLogEvents
                 - cloudwatch:putMetricData
-              Resource: "*"
+              Resource: '*'
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
               Effect: Allow
               Action:
-                - "dynamodb:Scan"
-                - "dynamodb:Query"
-                - "dynamodb:ExportTableToPointInTime"
+                - 'dynamodb:Scan'
+                - 'dynamodb:Query'
+                - 'dynamodb:ExportTableToPointInTime'
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
@@ -164,7 +164,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-table-v2.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-table-v2/export-subscription-table-v2.zip
