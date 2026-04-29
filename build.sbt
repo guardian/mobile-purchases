@@ -55,7 +55,7 @@ def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = comm
 )
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
   val specsVersion: String = "4.19.2" // Not possible to upgrade to 5.*.* unless moving to Scala 3.
-  val log4j2Version: String = "2.17.1"
+  val log4j2Version: String = "2.17.2"
   val jacksonVersion: String = "2.18.2"
   List(
     fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
