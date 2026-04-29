@@ -1465,7 +1465,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: soft-opt-in-acquisitions.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-soft-opt-in-acquisitions/soft-opt-in-acquisitions.zip
