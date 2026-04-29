@@ -493,7 +493,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: apple-link-user-subscription.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-apple-link-user-subscription/apple-link-user-subscription.zip
