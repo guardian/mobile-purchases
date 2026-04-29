@@ -1,5 +1,6 @@
 import sbt.{Def, project}
 import sbtassembly.MergeStrategy
+import sbtassembly.AssemblyPlugin.autoImport._
 
 import scala.collection.immutable
 
@@ -28,9 +29,9 @@ lazy val googleOauth = project.in(scalaRoot / "google-oauth").enablePlugins(Asse
   .settings(
     commonAssemblySettings("google-oauth"),
     libraryDependencies ++= List(
-    "com.google.auth" % "google-auth-library-oauth2-http" % "1.15.0",
-    "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
-    "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData
+      "com.google.auth" % "google-auth-library-oauth2-http" % "1.15.0",
+      "com.gu" %% "simple-configuration-ssm" % simpleConfigurationVersion,
+      "com.fasterxml.jackson.core" % "jackson-databind" % jacksonData
     )
   )
   .dependsOn(common % testAndCompileDependencies)
@@ -39,26 +40,30 @@ lazy val root = project
   .in(file("."))
   .aggregate(common, googleOauth)
   .settings(
-    fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
+    fork := true,
     name := "mobile-purchases",
   )
 
 def commonAssemblySettings(module: String): immutable.Seq[Def.Setting[_]] = commonSettings(module) ++ List(
   Compile / packageDoc / publishArtifact := false,
   assembly / assemblyMergeStrategy := {
+    case PathList("META-INF", "versions", xs @ _*) => MergeStrategy.first
+    case PathList("META-INF", "org", "apache", "logging", "log4j", "core", "config", "plugins", "Log4j2Plugins.dat") => MergeStrategy.concat
+    case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
     case "META-INF/MANIFEST.MF" => MergeStrategy.discard
-    case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat" => new MergeFilesStrategy
-    case "module-info.class" => MergeStrategy.discard // See: https://stackoverflow.com/a/55557287
+    case "module-info.class" => MergeStrategy.discard
     case x => MergeStrategy.first
   },
-  assemblyJarName := s"${name.value}.jar"
+  assemblyJarName := s"${name.value}.jar",
+  packageOptions += Package.ManifestAttributes("Multi-Release" -> "true")
 )
+
 def commonSettings(module: String): immutable.Seq[Def.Setting[_]] = {
-  val specsVersion: String = "4.19.2" // Not possible to upgrade to 5.*.* unless moving to Scala 3.
-  val log4j2Version: String = "2.17.1"
+  val specsVersion: String = "4.19.2"
+  val log4j2Version: String = "2.17.2"
   val jacksonVersion: String = "2.18.2"
   List(
-    fork := true, // was hitting deadlock, found similar complaints online, disabling concurrency helps: https://github.com/sbt/sbt/issues/3022, https://github.com/mockito/mockito/issues/1067
+    fork := true,
     Test / scalacOptions ++= Seq("-Yrangepos"),
     libraryDependencies ++= Seq(
       "software.amazon.awssdk" % "s3" % awsVersion2,

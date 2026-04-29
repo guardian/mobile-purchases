@@ -16,7 +16,7 @@ import scala.util.{Failure, Success, Try}
 
 object GoogleOAuth {
 
-  private val logger = LogManager.getLogger
+  private val logger = LogManager.getLogger(getClass)
 
   def accessToken(): Unit = {
 
@@ -62,7 +62,7 @@ object GoogleOAuth {
 
 object S3Uploader {
 
-  private val logger = LogManager.getLogger
+  private val logger = LogManager.getLogger(getClass)
   private val s3Client: S3Client = S3Client.builder().build()
 
   def accessTokenAsJsonString(accessToken: AccessToken): String =
