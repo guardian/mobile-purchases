@@ -4526,7 +4526,7 @@ pure-rand@^7.0.0:
   resolved "https://registry.yarnpkg.com/pure-rand/-/pure-rand-7.0.1.tgz#6f53a5a9e3e4a47445822af96821ca509ed37566"
   integrity sha512-oTUZM/NAZS8p7ANR3SHh30kXB+zK2r2BPcEn/awJIbOvq82WoMN4p62AWWp3Hhw50G0xMsw1mhIBLqHw64EcNQ==
 
-qs@^6.14.1, qs@^6.7.0:
+qs@6.15.1, qs@^6.7.0:
   version "6.15.1"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.15.1.tgz#bdb55aed06bfac257a90c44a446a73fba5575c8f"
   integrity sha512-6YHEFRL9mfgcAvql/XhwTvf5jKcOiiupt2FiJxHkiX1z4j7WL8J/jRHYLluORvc1XxB5rV20KoeK00gVJamspg==
@@ -5294,14 +5294,14 @@ typed-array-length@^1.0.7:
     possible-typed-array-names "^1.0.0"
     reflect.getprototypeof "^1.0.6"
 
-typed-rest-client@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-2.3.0.tgz#6012b882e6cdbd1b0e0b60407f7d4e3fa5498a1d"
-  integrity sha512-FfBj5tjviexjIus3La4n4s9i+f81Zj7HU+lUlQWK219HMRfmzLsbIf4PZF2+X6EouJKyuANpvvef5VrUWM4AFw==
+typed-rest-client@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-2.3.1.tgz#8a7e488da15da381e82d5cbbdedd0b08828e897d"
+  integrity sha512-k4kX5Up6qA68D0Cby2AK+6+vM5k3qTxe+/3FqhnHRExjY5cfbOnzjQZbP/LXleF8hVoDvDqxlgk9KK83HoBZlQ==
   dependencies:
     des.js "^1.1.0"
     js-md4 "^0.3.2"
-    qs "^6.14.1"
+    qs "6.15.1"
     tunnel "0.0.6"
     underscore "^1.13.8"
 
