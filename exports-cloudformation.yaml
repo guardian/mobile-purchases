@@ -228,7 +228,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-events-table.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-events-table/export-subscription-events-table.zip
