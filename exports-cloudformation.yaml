@@ -196,7 +196,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-table-v2.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-table-v2/export-subscription-table-v2.zip
