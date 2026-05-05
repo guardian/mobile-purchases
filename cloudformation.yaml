@@ -1429,7 +1429,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: apple-revalidate-receipts.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-apple-revalidate-receipts/apple-revalidate-receipts.zip
