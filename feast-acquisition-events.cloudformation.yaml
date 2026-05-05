@@ -347,7 +347,7 @@ Resources:
       Handler: feast-apple-acquisition-events.handler
       MemorySize: 1024
       Role: !GetAtt FeastAcquisitionEventsLambdaServiceRole.Arn
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       Tags:
         - Key: App
           Value: !Ref App
