@@ -272,7 +272,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: feast-acquisition-events-router.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-feast-acquisition-events-router/feast-acquisition-events-router.zip
