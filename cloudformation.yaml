@@ -554,7 +554,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: apple-subscription-status.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-apple-subscription-status/apple-subscription-status.zip
