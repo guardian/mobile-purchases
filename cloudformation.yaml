@@ -646,7 +646,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: feast-apple-pubsub.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-feast-apple-pubsub/feast-apple-pubsub.zip
