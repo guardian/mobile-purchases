@@ -614,7 +614,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: feast-google-pubsub.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-feast-google-pubsub/feast-google-pubsub.zip
