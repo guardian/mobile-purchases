@@ -152,6 +152,7 @@ const countryToCurrencyMap = {
 	GH: 'GHS', // Ghana - Ghanaian Cedi
 	JM: 'JMD', // Jamaica - Jamaican dollar
 	PR: 'USD', // Puerto Rico - United States Dollar
+	BO: 'BOB', // Bolivia - Bolivian boliviano
 };
 
 const countryToCurrency = (country: string): string => {

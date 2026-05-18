@@ -33,8 +33,8 @@ Mappings:
       AlarmActionsEnabled: TRUE
 
 Conditions:
-  IsCode: !Equals [!Ref "Stage", "CODE"]
-  IsProd: !Equals [!Ref "Stage", "PROD"]
+  IsCode: !Equals [!Ref 'Stage', 'CODE']
+  IsProd: !Equals [!Ref 'Stage', 'PROD']
 
 Resources:
   FeastAppleAcquisitionEventsQueue:
@@ -76,13 +76,13 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       ActionsEnabled:
-        !FindInMap [ StageVariables, !Ref Stage, AlarmActionsEnabled ]
-      AlarmDescription: "Ensure that the feast apple acquisition events dead letter queue is empty"
-      Namespace: "AWS/SQS"
+        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      AlarmDescription: 'Ensure that the feast apple acquisition events dead letter queue is empty'
+      Namespace: 'AWS/SQS'
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
-          Value: !GetAtt "FeastAppleAcquisitionEventsDlq.QueueName"
+          Value: !GetAtt 'FeastAppleAcquisitionEventsDlq.QueueName'
       Period: 60
       Statistic: Sum
       EvaluationPeriods: 1
@@ -136,13 +136,13 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       ActionsEnabled:
-        !FindInMap [ StageVariables, !Ref Stage, AlarmActionsEnabled ]
-      AlarmDescription: "Ensure that the feast google acquisition events dead letter queue is empty"
-      Namespace: "AWS/SQS"
+        !FindInMap [StageVariables, !Ref Stage, AlarmActionsEnabled]
+      AlarmDescription: 'Ensure that the feast google acquisition events dead letter queue is empty'
+      Namespace: 'AWS/SQS'
       MetricName: ApproximateNumberOfMessagesVisible
       Dimensions:
         - Name: QueueName
-          Value: !GetAtt "FeastGoogleAcquisitionEventsDlq.QueueName"
+          Value: !GetAtt 'FeastGoogleAcquisitionEventsDlq.QueueName'
       Period: 60
       Statistic: Sum
       EvaluationPeriods: 1
@@ -272,7 +272,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: feast-acquisition-events-router.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-feast-acquisition-events-router/feast-acquisition-events-router.zip
@@ -290,7 +290,7 @@ Resources:
         DynamoDBStreamTrigger:
           Type: DynamoDB
           Properties:
-            Stream: !Sub "{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}"
+            Stream: !Sub '{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}'
             StartingPosition: LATEST
             MaximumRetryAttempts: 10
       Tags:
@@ -301,8 +301,8 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
-                - "dynamodb:Query"
-                - "dynamodb:GetItem"
+                - 'dynamodb:Query'
+                - 'dynamodb:GetItem'
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions/*
@@ -314,12 +314,12 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
-                - "dynamodb:GetRecords"
-                - "dynamodb:GetShardIterator"
-                - "dynamodb:DescribeStream"
-                - "dynamodb:ListStreams"
-                - "dynamodb:Query"
-              Resource: !Sub "{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}"
+                - 'dynamodb:GetRecords'
+                - 'dynamodb:GetShardIterator'
+                - 'dynamodb:DescribeStream'
+                - 'dynamodb:ListStreams'
+                - 'dynamodb:Query'
+              Resource: !Sub '{{resolve:ssm:/${App}/${Stage}/user-subscriptions-stream-arn}}'
         - Statement:
             - Effect: Allow
               Action:
@@ -347,7 +347,7 @@ Resources:
       Handler: feast-apple-acquisition-events.handler
       MemorySize: 1024
       Role: !GetAtt FeastAcquisitionEventsLambdaServiceRole.Arn
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       Tags:
         - Key: App
           Value: !Ref App
@@ -378,7 +378,7 @@ Resources:
       Handler: feast-google-acquisition-events.handler
       MemorySize: 1024
       Role: !GetAtt FeastAcquisitionEventsLambdaServiceRole.Arn
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       Tags:
         - Key: App
           Value: !Ref App

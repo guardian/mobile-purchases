@@ -65,15 +65,15 @@ Resources:
                 - logs:CreateLogStream
                 - logs:PutLogEvents
                 - cloudwatch:putMetricData
-              Resource: "*"
+              Resource: '*'
         - PolicyName: dynamo
           PolicyDocument:
             Statement:
               Effect: Allow
               Action:
-                - "dynamodb:Scan"
-                - "dynamodb:Query"
-                - "dynamodb:ExportTableToPointInTime"
+                - 'dynamodb:Scan'
+                - 'dynamodb:Query'
+                - 'dynamodb:ExportTableToPointInTime'
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-subscriptions
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${App}-${Stage}-user-subscriptions
@@ -104,7 +104,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-tables.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
@@ -134,7 +134,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-tables.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-tables/export-subscription-tables.zip
@@ -164,7 +164,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-table-v2.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-table-v2/export-subscription-table-v2.zip
@@ -196,7 +196,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-table-v2.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-table-v2/export-subscription-table-v2.zip
@@ -228,7 +228,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-subscription-events-table.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-subscription-events-table/export-subscription-events-table.zip
@@ -317,7 +317,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-historical-data.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-historical-data/export-historical-data.zip
@@ -331,7 +331,7 @@ Resources:
           ExportBucket: !Ref AppleSubscriptionHistoryExportBucket
           SqsUrl: !Ref AppleHistoricalSubscriptionsQueue
       Description: Export the historical Apple subscriptions to the data lake
-      MemorySize: 3008
+      MemorySize: 8192
       Timeout: 900
       Events:
         Schedule:
@@ -347,7 +347,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: export-historical-data.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-export-historical-data/export-historical-data.zip
