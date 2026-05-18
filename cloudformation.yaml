@@ -394,6 +394,34 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
+  GoogleOAuthLambda2:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: mobile-purchases-google-oauth2.handler
+      Runtime: nodejs20.x
+      CodeUri:
+        Bucket: !Ref DeployBucket
+        Key: !Sub ${Stack}/${Stage}/${App}-google-oauth2/${App}-google-oauth2.zip
+      FunctionName: !Sub ${App}-googleoauth2-${Stage}
+      Role: !GetAtt MobilePurchasesLambdasRole.Arn
+      Environment:
+        Variables:
+          Stage: !Ref Stage
+          Stack: !Ref Stack
+          App: !Ref App
+      Description: Fetches access tokens for the Google Play Developer API (version 2)
+      MemorySize: 512
+      Timeout: 45
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+      Tags:
+        Stage: !Ref Stage
+        Stack: !Ref Stack
+        App: !Ref App
+
   GooglePubSubLambda:
     Type: AWS::Serverless::Function
     Properties:

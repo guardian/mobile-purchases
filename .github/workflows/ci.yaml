@@ -31,7 +31,7 @@ jobs:
       - name: Setup Scala
         uses: guardian/setup-scala@v1
 
-      - name: Test and Build TypeScript
+      - name: Test and build the old lambda collection
         run: |
           export NODE_OPTIONS="--max-old-space-size=4096"
           mkdir -p tsc-target
@@ -46,6 +46,20 @@ jobs:
           do
               zip "${BUNDLE%.*}.zip" "$BUNDLE"
           done
+
+      - name: Build the new lambda collection
+        run: |
+          cd mpapi-next-gen
+          yarn clean
+          mkdir dist
+          yarn install
+          yarn build
+          cd dist
+          for BUNDLE in *.js
+          do
+              zip "${BUNDLE%.*}.zip" "$BUNDLE"
+          done
+
       - name: Test and Build Scala
         run: sbt test assembly
 
@@ -72,6 +86,8 @@ jobs:
               - exports-cloudformation.yaml
             mobile-purchases-google-oauth:
               - scala/google-oauth/target/scala-2.12/mobile-purchases-google-oauth.jar
+            mobile-purchases-google-oauth2:
+              - mpapi-next-gen/dist/mobile-purchases-google-oauth2.zip
             mobile-purchases-apple-fetch-offer-details:
               - tsc-target/apple-fetch-offer-details.zip
             mobile-purchases-apple-link-user-subscription:

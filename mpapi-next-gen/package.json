@@ -1,0 +1,22 @@
+{
+	"name": "mpapi-next-gen",
+	"version": "1.0.0",
+	"main": "index.js",
+	"license": "MIT",
+	"scripts": {
+		"build": "webpack --env production",
+		"clean": "rm -rf dist"
+	},
+	"dependencies": {
+		"@aws-sdk/client-s3": "^3.1037.0"
+	},
+	"devDependencies": {
+		"@types/aws-lambda": "^8.10.161",
+		"@types/node": "^25.6.0",
+		"aws-lambda": "^1.0.7",
+		"ts-loader": "^9.5.7",
+		"typescript": "^6.0.3",
+		"webpack": "^5.106.2",
+		"webpack-cli": "^7.0.2"
+	}
+}

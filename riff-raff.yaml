@@ -93,6 +93,14 @@ deployments:
       functionNames: [mobile-purchases-googleoauth-]
       fileName: mobile-purchases-google-oauth.jar
 
+  mobile-purchases-google-oauth2:
+    template: lambda
+    parameters:
+      functionNames: [mobile-purchases-googleoauth2-]
+      fileName: mobile-purchases-google-oauth2.zip
+    dependencies:
+      - mobile-purchases-cloudformation
+
   mobile-purchases-google-link-user-subscription:
     template: lambda
     parameters:
