@@ -6,6 +6,16 @@ import scala.collection.immutable
 
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" % "scala-xml" % VersionScheme.Always
 
+ThisBuild / dependencyOverrides ++= Seq(
+  "io.netty" % "netty-codec-http2" % "4.1.133.Final",
+  "io.netty" % "netty-codec-http" % "4.1.133.Final",
+  "io.netty" % "netty-codec" % "4.1.133.Final",
+  "io.netty" % "netty-common" % "4.1.133.Final",
+  "io.netty" % "netty-buffer" % "4.1.133.Final",
+  "io.netty" % "netty-transport" % "4.1.133.Final",
+  "io.netty" % "netty-handler" % "4.1.133.Final"
+)
+
 val testAndCompileDependencies: String = "test->test;compile->compile"
 val simpleConfigurationVersion: String = "1.6.2"
 
