@@ -18,5 +18,9 @@
 		"typescript": "^6.0.3",
 		"webpack": "^5.106.2",
 		"webpack-cli": "^7.0.2"
+	},
+	"resolutions": {
+		"fast-uri": "3.1.2",
+		"fast-xml-builder": "1.1.7"
 	}
 }
