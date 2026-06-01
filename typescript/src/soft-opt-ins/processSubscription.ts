@@ -21,8 +21,10 @@ export function isPostAcquisition(startTimestamp: string): boolean {
 }
 
 async function handleError(message: string): Promise<never> {
-	console.warn(message);
-	throw new Error(message);
+	// We set adding a common marker to all messages handled by this function
+	const m2 = `[8892291c] ${message}`;
+	console.warn(m2);
+	throw new Error(m2);
 }
 
 async function getUserEmailAddress(
@@ -61,7 +63,9 @@ async function getUserEmailAddress(
 		});
 	} catch (error) {
 		return await handleError(
-			`[3184ae21] error while retrieving user data for identityId: ${identityId}: ${error}`,
+			`[3184ae21] error while retrieving user data for identityId: ${identityId}: ${JSON.stringify(
+				error,
+			)}`,
 		);
 	}
 }
@@ -156,7 +160,9 @@ export async function processAcquisition(
 		);
 	} catch (e) {
 		handleError(
-			`[1f3a0ede] soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`,
+			`[1f3a0ede] soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${JSON.stringify(
+				e,
+			)}`,
 		);
 	}
 
@@ -184,7 +190,9 @@ export async function processAcquisition(
 			);
 		} catch (e) {
 			handleError(
-				`[5bec6354] failed to send comms for subscriptionId: ${subscriptionId}. ${e}`,
+				`[5bec6354] failed to send comms for subscriptionId: ${subscriptionId}. ${JSON.stringify(
+					e,
+				)}`,
 			);
 		}
 
