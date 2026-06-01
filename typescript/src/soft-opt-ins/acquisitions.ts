@@ -21,11 +21,17 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 	for (const record of records) {
 		const eventName = record.eventName;
 
-		const identityId = record.dynamodb?.NewImage?.userId?.S || '';
-		const subscriptionId = record.dynamodb?.NewImage?.subscriptionId?.S || '';
+		// We only process INSERT events.
+		// For that we try and extract the subscription record with the given
+		// subscriptionId and call `processAcquisition`.
+		// If we could not extract a subscription record, we send the event to
+		// the dead letter queue.
 
 		if (eventName === 'INSERT') {
 			processedCount++;
+
+			const identityId = record.dynamodb?.NewImage?.userId?.S || '';
+			const subscriptionId = record.dynamodb?.NewImage?.subscriptionId?.S || '';
 
 			console.log(
 				`[71744259] identityId: ${identityId}, subscriptionId: ${subscriptionId}`,
@@ -51,12 +57,9 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 						`[39fd8be1] could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}. Error: ${e}`,
 					);
 				}
-
-				// We are done processing the INSERT event
 				continue;
 			}
 
-			// We run `processAcquisition` if it wasn't an INSERT event.
 			await processAcquisition(subscriptionRecord, identityId);
 		}
 	}

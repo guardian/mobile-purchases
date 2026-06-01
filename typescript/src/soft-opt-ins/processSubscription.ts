@@ -17,7 +17,6 @@ export function isPostAcquisition(startTimestamp: string): boolean {
 	const twoDaysInMilliseconds = 48 * 60 * 60 * 1000;
 	const today = new Date();
 	const acquisitionDate = new Date(startTimestamp);
-
 	return today.getTime() - acquisitionDate.getTime() >= twoDaysInMilliseconds;
 }
 
@@ -41,7 +40,7 @@ async function getUserEmailAddress(
 	};
 
 	try {
-		console.log(`url ${url}`);
+		console.log(`[e2a4b432] url ${url}`);
 
 		return fetch(url, params).then(async (response: Response) => {
 			if (response.ok) {
@@ -49,20 +48,20 @@ async function getUserEmailAddress(
 
 				if (!json.user || !json.user.primaryEmailAddress) {
 					return await handleError(
-						`User or primaryEmailAddress is undefined for user ${identityId}`,
+						`[8973f68a] user or primaryEmailAddress is undefined for user ${identityId}`,
 					);
 				}
 
 				return json.user.primaryEmailAddress;
 			} else {
 				return await handleError(
-					`Could not fetch details from identity API for user ${identityId}`,
+					`[0dce5329] could not fetch details from identity API for user ${identityId}`,
 				);
 			}
 		});
 	} catch (error) {
 		return await handleError(
-			`error while retrieving user data for identityId: ${identityId}: ${error}`,
+			`[3184ae21] error while retrieving user data for identityId: ${identityId}: ${error}`,
 		);
 	}
 }
@@ -89,7 +88,7 @@ async function sendSoftOptIns(
 		message,
 	);
 	console.log(
-		`Sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(
+		`[7497f6a3] sent message to soft-opt-in-consent-setter-queue for user: ${identityId}: ${JSON.stringify(
 			message,
 		)}`,
 	);
@@ -138,7 +137,7 @@ export async function processAcquisition(
 
 	if (!valid) {
 		console.log(
-			`Subscription ${subscriptionRecord.subscriptionId} is not active. Stopping processing.`,
+			`[af7e978e] subscription ${subscriptionRecord.subscriptionId} is not active. Stopping processing.`,
 		);
 		return true;
 	}
@@ -157,7 +156,7 @@ export async function processAcquisition(
 		);
 	} catch (e) {
 		handleError(
-			`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`,
+			`[1f3a0ede] soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`,
 		);
 	}
 
@@ -185,12 +184,12 @@ export async function processAcquisition(
 			);
 		} catch (e) {
 			handleError(
-				`Failed to send comms for subscriptionId: ${subscriptionId}. ${e}`,
+				`[5bec6354] failed to send comms for subscriptionId: ${subscriptionId}. ${e}`,
 			);
 		}
 
 		console.log(
-			`Sent message to braze-emails queue for user: ${identityId}: ${JSON.stringify(brazeMessage)}`,
+			`[72aca7f8] sent message to braze-emails queue for user: ${identityId}: ${JSON.stringify(brazeMessage)}`,
 		);
 	}
 
