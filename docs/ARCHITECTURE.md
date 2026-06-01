@@ -129,22 +129,47 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
 
 (Unless otherwise specified elements are in the mobile aws account)
 
- -----------------------------      DELETE event (trigerred by TTL)    ----------------------------------                        ---------------------------------------
-| Dynamo table: subscriptions | ------------------------------------> | Lambda: delete-user-subscription |               -----> | SQS: soft-opt-in-consent-setter-queue |
- -----------------------------                                         ----------------------------------               |        ---------------------------------------
-                                                                                      |                                 |         (membership account)
-                                                                                      |                                 |
-                                          DELETE                                      |                                 |
-            --------------------------------------------------------------------------                                  |
-           |                                                                                                            |
-           v                                                                                                            |
- ----------------------------------          INSERT event                   ----------------------------------          |              -------------------
-| Dynamo table: user-subscriptions | ------------------------------------> | Lambda: soft-opt-in-acquisitions | --------------------> | SQS: braze-emails |
- ----------------------------------                                         ----------------------------------                         -------------------
-                                                                                                                                      (membership account)
+                                   DELETE event
+                                (trigerred by TTL)
+ ---------------------------------              ----------------------------------
+| Dynamo table: subscriptions (2) |----------> | Lambda: delete-user-subscription |
+ ---------------------------------              ----------------------------------
+                                                            |
+                                                            |
+                                                          DELETE
+                                                            |
+                                                            |
+                                                            v
+                                              ----------------------------------
+                                             | Dynamo table: user-subscriptions |
+                                              ----------------------------------
+                                                            |
+                                                            |
+                                                       INSERT event
+                                                  ( DynamoDBStreamEvent )
+                                                            |
+                                                            |
+                                                            v
+                                          --------------------------------------              -------------------
+                                         | Lambda: soft-opt-in-acquisitions (1) | ---------> | SQS: braze-emails |
+                                          --------------------------------------              -------------------
+                                                            |                               (membership account)
+                                                            |
+                                                            v
+                                          ---------------------------------------
+                                         | SQS: soft-opt-in-consent-setter-queue |
+                                          ---------------------------------------
+                                                  (membership account)
 
-subscriptions
-    - Dynamo table: mobile-purchases-PROD-subscriptions
+
+(1) Lambda: mobile-purchases-soft-opt-in-acquisitions-PROD
+    Works in conjunction with (3) and (4)
+
+(2) Dynamo table: mobile-purchases-PROD-subscriptions
+
+(3) SQS Queue: mobile-purchases-soft-opt-in-acquisitions-DLQ-PROD
+
+(4) Lambda: mobile-purchases-soft-opt-in-acquisitions-dlq-processor-PROD
 
 ```
 
