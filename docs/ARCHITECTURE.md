@@ -130,7 +130,7 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
 (Unless otherwise specified elements are in the mobile aws account)
 
                                    DELETE event
-                                (trigerred by TTL)
+                                (triggered by TTL)
  ---------------------------------              ----------------------------------
 | Dynamo table: subscriptions (2) |----------> | Lambda: delete-user-subscription |
  ---------------------------------              ----------------------------------
