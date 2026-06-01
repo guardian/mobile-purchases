@@ -1,4 +1,4 @@
-import type { DynamoDBRecord, DynamoDBStreamEvent } from 'aws-lambda';
+import type { DynamoDBStreamEvent } from 'aws-lambda';
 import type { Subscription } from '../models/subscription';
 import { SubscriptionEmpty } from '../models/subscription';
 import { Stage } from '../utils/appIdentity';
@@ -18,7 +18,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 
 	let processedCount = 0;
 
-	const processRecordPromises = records.map(async (record: DynamoDBRecord) => {
+	for (const record of records) {
 		const eventName = record.eventName;
 
 		const identityId = record.dynamodb?.NewImage?.userId?.S || '';
@@ -54,14 +54,14 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 					);
 				}
 
-				return false;
+				// We are done processing the INSERT event
+				continue;
 			}
 
-			return processAcquisition(subscriptionRecord, identityId);
+			// We run `processAcquisition` if it wasn't an INSERT event.
+			await processAcquisition(subscriptionRecord, identityId);
 		}
-	});
-
-	await Promise.all(processRecordPromises);
+	}
 
 	console.log(
 		`Processed ${processedCount} newly inserted records from the link (mobile-purchases-${Stage}-user-subscriptions) DynamoDB table`,
