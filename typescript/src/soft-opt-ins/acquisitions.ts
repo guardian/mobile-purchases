@@ -12,7 +12,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 		throw new Error('process.env.DLQUrl is undefined');
 	}
 
-	console.log(`dlqUrl: ${dlqUrl}`);
+	console.log(`[b35c1956] dlqUrl: ${dlqUrl}`);
 
 	const records = event.Records;
 
@@ -28,7 +28,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 			processedCount++;
 
 			console.log(
-				`identityId: ${identityId}, subscriptionId: ${subscriptionId}`,
+				`[71744259] identityId: ${identityId}, subscriptionId: ${subscriptionId}`,
 			);
 
 			const itemToQuery = new SubscriptionEmpty();
@@ -40,8 +40,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 				subscriptionRecord = await dynamoMapper.get(itemToQuery);
 			} catch (error) {
 				console.log(
-					`[e5201022] Subscription ${subscriptionId} record not found in the subscriptions table. Error: `,
-					error,
+					`[e5201022] Subscription ${subscriptionId} record not found in the subscriptions table. Error: ${error}`,
 				);
 
 				try {
@@ -49,8 +48,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 					await sendToSqs(dlqUrl, { subscriptionId, identityId, timestamp });
 				} catch (e) {
 					console.log(
-						`could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}. Error: `,
-						e,
+						`[39fd8be1] could not send message to dead letter queue for identityId: ${identityId}, subscriptionId: ${subscriptionId}. Error: ${e}`,
 					);
 				}
 
@@ -64,6 +62,6 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 	}
 
 	console.log(
-		`Processed ${processedCount} newly inserted records from the link (mobile-purchases-${Stage}-user-subscriptions) DynamoDB table`,
+		`[f314aa19] processed ${processedCount} newly inserted records from the link (mobile-purchases-${Stage}-user-subscriptions) DynamoDB table`,
 	);
 }
