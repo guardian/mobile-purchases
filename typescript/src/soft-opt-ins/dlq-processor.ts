@@ -11,7 +11,6 @@ interface MessageBody {
 
 export function messageIsOneDayOld(timestamp: number): boolean {
 	const now = Date.now();
-
 	return now - timestamp >= 86400000;
 }
 
@@ -43,7 +42,7 @@ export async function handler(_event: unknown): Promise<void> {
 
 		// Check if there are any messages
 		if (!data.Messages || data.Messages.length === 0) {
-			console.log('No messages to process');
+			console.log('[2ac507af] no messages to process');
 			break;
 		}
 
@@ -52,14 +51,14 @@ export async function handler(_event: unknown): Promise<void> {
 			if (!message.Body) {
 				// Should never happen
 				throw new Error(
-					`Message ${message.MessageId} does not have a Body property`,
+					`[ded89e48] message ${message.MessageId} does not have a Body property`,
 				);
 			}
 
 			if (!message.ReceiptHandle) {
 				// Should never happen
 				throw new Error(
-					`Message ${message.MessageId} does not have a ReceiptHandle property`,
+					`[567149de] message ${message.MessageId} does not have a ReceiptHandle property`,
 				);
 			}
 
@@ -69,7 +68,7 @@ export async function handler(_event: unknown): Promise<void> {
 				body = JSON.parse(message.Body);
 			} catch (err) {
 				throw new Error(
-					`JSON.parse() failed to parse Body of message ${message.MessageId}: ${err}`,
+					`[841e2493] JSON.parse() failed to parse Body of message ${message.MessageId}: ${err}`,
 				);
 			}
 
@@ -77,14 +76,14 @@ export async function handler(_event: unknown): Promise<void> {
 
 			if (messageIsOneDayOld(timestamp)) {
 				console.log(
-					`Message ${message.MessageId} is more than one day old. Deleting message from DLQ`,
+					`[3f8e7f5d] message ${message.MessageId} is more than one day old. Deleting message from DLQ`,
 				);
 				await deleteMessage(dlqUrl, message.ReceiptHandle);
 				continue;
 			}
 
 			console.log(
-				`identityId: ${identityId}, subscriptionId: ${subscriptionId}, timestamp: ${timestamp}`,
+				`[2c663a8c] identityId: ${identityId}, subscriptionId: ${subscriptionId}, timestamp: ${timestamp}`,
 			);
 
 			const subEmpty = new SubscriptionEmpty();
@@ -96,8 +95,7 @@ export async function handler(_event: unknown): Promise<void> {
 				subscriptionRecord = await dynamoMapper.get(subEmpty);
 			} catch (error) {
 				console.log(
-					`[5410a826] Subscription ${subscriptionId} record not found in the subscriptions table. Error: `,
-					error,
+					`[5410a826] Subscription ${subscriptionId} record not found in the subscriptions table. Error: ${error}`,
 				);
 				continue;
 			}
