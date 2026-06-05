@@ -153,6 +153,7 @@ const countryToCurrencyMap = {
 	JM: 'JMD', // Jamaica - Jamaican dollar
 	PR: 'USD', // Puerto Rico - United States Dollar
 	BO: 'BOB', // Bolivia - Bolivian boliviano
+	KW: 'KWD', // Kuwait - Kuwaiti dinar (KWD)
 };
 
 const countryToCurrency = (country: string): string => {
