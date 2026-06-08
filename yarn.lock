@@ -5477,10 +5477,10 @@ typed-array-length@^1.0.7:
     possible-typed-array-names "^1.0.0"
     reflect.getprototypeof "^1.0.6"
 
-typed-rest-client@^2.3.1:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-2.3.1.tgz#8a7e488da15da381e82d5cbbdedd0b08828e897d"
-  integrity sha512-k4kX5Up6qA68D0Cby2AK+6+vM5k3qTxe+/3FqhnHRExjY5cfbOnzjQZbP/LXleF8hVoDvDqxlgk9KK83HoBZlQ==
+typed-rest-client@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/typed-rest-client/-/typed-rest-client-3.0.0.tgz#fec612b93cd67be131cfc900cf52ac46fd5dc266"
+  integrity sha512-J1KaEgK4jvnShMs+Y/oRbWYUKG5chdE5jgCinPWqlP+qXcznJqY2SiGcckKEHeQEiRZQAE4kAfepvCzx5ACQtw==
   dependencies:
     des.js "^1.1.0"
     js-md4 "^0.3.2"
