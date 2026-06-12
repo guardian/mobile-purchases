@@ -154,6 +154,7 @@ const countryToCurrencyMap = {
 	PR: 'USD', // Puerto Rico - United States Dollar
 	BO: 'BOB', // Bolivia - Bolivian boliviano
 	KW: 'KWD', // Kuwait - Kuwaiti dinar (KWD)
+	CR: 'CRC', // Costa Rica - Costa Rican Colones (CRC)
 };
 
 const countryToCurrency = (country: string): string => {
