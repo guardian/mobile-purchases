@@ -47,5 +47,6 @@ This is a standard google service account credential object of the form
 }
 ```
 
-
+Then using the google auth library we get the bearer token that we can then 
+write to the file access_token2.json file.
 
