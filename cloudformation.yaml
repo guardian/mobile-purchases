@@ -124,6 +124,13 @@ Resources:
                 - ssm:GetParametersByPath
               Effect: Allow
               Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/google-oauth-lambda
+        - PolicyName: googleoauth-config2
+          PolicyDocument:
+            Statement:
+              Action:
+                - ssm:GetParameter
+              Effect: Allow
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/mobile-purchases/${Stage}/google-oauth-lambda/google.serviceAccountJson
         - PolicyName: google-access-tokens
           PolicyDocument:
             Statement:
@@ -398,7 +405,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: mobile-purchases-google-oauth2.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
         Key: !Sub ${Stack}/${Stage}/${App}-google-oauth2/${App}-google-oauth2.zip
