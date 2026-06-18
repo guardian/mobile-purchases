@@ -50,9 +50,10 @@ jobs:
       - name: Build the new lambda collection
         run: |
           cd mpapi-next-gen
-          yarn clean
           mkdir dist
+          yarn clean
           yarn install
+          yarn validate
           yarn build
           cd dist
           for BUNDLE in *.js
