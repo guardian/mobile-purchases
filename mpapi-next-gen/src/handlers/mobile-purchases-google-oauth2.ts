@@ -1,5 +1,6 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { APIGatewayProxyEvent } from 'aws-lambda';
+import { Stage } from '../utils/appIdentity';
 
 const s3Client = new S3Client({
 	region: process.env.AWS_REGION || 'us-east-1',
@@ -33,9 +34,7 @@ export const handler = async (_event: APIGatewayProxyEvent) => {
 		// access_token.json, which is still being generated.
 		const filename = 'access_token2.json';
 
-		// We still have the stage hardcoded because we do not yet have support for
-		// retrieving it.
-		const locationKey = `PROD/google-play-developer-api/${filename}`;
+		const locationKey = `${Stage}/google-play-developer-api/${filename}`;
 
 		const command = new PutObjectCommand({
 			Bucket: bucketName,
