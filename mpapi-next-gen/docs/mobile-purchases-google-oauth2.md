@@ -1,4 +1,6 @@
 
+### Introduction
+
 The purpose of this lambda is essentially to write the S3 file 
 
 ```
@@ -15,3 +17,35 @@ Which contains a JSON object of the form
 ```
 
 The token is a bearer token used by a certain number of services which know to find it there. 
+
+### Credentials generation
+
+First we retrieve the information contained in SSM parameter
+
+```
+/mobile-purchases/<STAGE>/google-oauth-lambda/google.serviceAccountJson
+```
+
+```
+/mobile-purchases/PROD/google-oauth-lambda/google.serviceAccountJson
+```
+
+This is a standard google service account credential object of the form
+
+```
+{
+    "type": "service_account",
+    "project_id": "[REMOVED]",
+    "private_key_id": "[REMOVED]",
+    "private_key": "[REMOVED]",
+    "client_email": "[REMOVED]",
+    "client_id": "[REMOVED]",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "[REMOVED]"
+}
+```
+
+
+
