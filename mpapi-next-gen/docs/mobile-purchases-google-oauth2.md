@@ -16,7 +16,9 @@ Which contains a JSON object of the form
 }
 ```
 
-The token is a bearer token used by a certain number of services which know to find it there. 
+The token is a bearer token used by a certain number of services which know to find it there.
+
+The file is generated every 15 minutes (the lambda is generated every 15 mins) and the bearer token is valid 1 hour.
 
 ### Credentials generation
 
