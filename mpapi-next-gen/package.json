@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"main": "index.js",
 	"license": "MIT",
+	"packageManager": "yarn@1.22.22",
 	"scripts": {
 		"build": "webpack --env production",
 		"clean": "rm -rf dist"
