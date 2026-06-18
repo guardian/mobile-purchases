@@ -27,7 +27,7 @@
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.3.5",
 		"@guardian/eslint-config": "^14.0.1",
-		"@guardian/prettier": "^10.0.0",
+		"@guardian/prettier": "^11.0.0",
 		"@types/eslint-scope": "^9.1.0",
 		"@types/jest": "^30.0.0",
 		"@types/node-fetch": "^2.6.2",
