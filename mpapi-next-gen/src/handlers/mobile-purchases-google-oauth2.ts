@@ -89,7 +89,7 @@ export const handler = async (_event: APIGatewayProxyEvent) => {
 
 		// In this version we are generating  access_token2.json to sit along side
 		// access_token.json, which is still being generated.
-		const filename = 'access_token2.json';
+		const filename = 'access_token.json';
 
 		const locationKey = `${Stage}/google-play-developer-api/${filename}`;
 
