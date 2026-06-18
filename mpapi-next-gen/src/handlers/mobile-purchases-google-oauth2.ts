@@ -1,10 +1,65 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { Stage } from '../utils/appIdentity';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { JWT } from 'google-auth-library';
 
 const s3Client = new S3Client({
 	region: process.env.AWS_REGION || 'us-east-1',
 });
+
+const ssmClient = new SSMClient({
+	region: process.env.AWS_REGION || 'us-east-1',
+});
+
+interface GoogleServiceAccountCredentials {
+	type: string;
+	project_id: string;
+	private_key_id: string;
+	private_key: string;
+	client_email: string;
+	client_id: string;
+	auth_uri: string;
+	token_uri: string;
+	auth_provider_x509_cert_url: string;
+	client_x509_cert_url: string;
+}
+
+async function getGoogleCredentials(): Promise<GoogleServiceAccountCredentials> {
+	const parameterName = `/mobile-purchases/${Stage}/google-oauth-lambda/google.serviceAccountJson`;
+
+	try {
+		const command = new GetParameterCommand({
+			Name: parameterName,
+			WithDecryption: true,
+		});
+
+		const response = await ssmClient.send(command);
+
+		if (!response.Parameter?.Value) {
+			throw new Error('No credentials found in SSM');
+		}
+
+		// Parse the JSON string from SSM
+		return JSON.parse(response.Parameter.Value);
+	} catch (error) {
+		console.error('Error retrieving credentials from SSM:', error);
+		throw error;
+	}
+}
+
+async function getBearerToken(): Promise<string> {
+	const credentials = await getGoogleCredentials();
+
+	const client = new JWT({
+		email: credentials.client_email,
+		key: credentials.private_key,
+		scopes: ['https://www.googleapis.com/auth/androidpublisher'],
+	});
+
+	const token = await client.authorize();
+	return token.access_token!;
+}
 
 function getFormattedDateTime(): string {
 	// Return a datetime in the format: "Thu Jun 18 11:54:00 UTC 2026"
@@ -25,8 +80,10 @@ export const handler = async (_event: APIGatewayProxyEvent) => {
 		// so we are doing the same here for simplicity.
 		const bucketName = 'gu-mobile-access-tokens';
 
+		const bearerToken = await getBearerToken();
+
 		const data = {
-			token: 'fake-token',
+			token: bearerToken,
 			expiry: getFormattedDateTime(),
 		};
 
