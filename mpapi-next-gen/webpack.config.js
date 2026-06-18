@@ -1,14 +1,19 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = (env = {}) => ({
-	// Good for debugging Lambda errors
 	devtool: 'inline-cheap-source-map',
 
 	module: {
 		rules: [
 			{
 				test: /\.ts$/,
-				use: 'ts-loader',
+				use: {
+					loader: 'ts-loader',
+					options: {
+						configFile: 'tsconfig.json',
+					},
+				},
 				exclude: /node_modules/,
 			},
 		],
@@ -16,12 +21,20 @@ module.exports = (env = {}) => ({
 
 	resolve: {
 		extensions: ['.ts', '.js'],
+		extensionAlias: {
+			'.js': ['.ts', '.js'],
+			'.mjs': ['.mts', '.mjs'],
+			'.cjs': ['.cts', '.cjs'],
+		},
+		// Force a single version of the library
+		alias: {
+			'google-auth-library': require.resolve('google-auth-library'),
+		},
 	},
 
 	target: 'node',
 	mode: env.production ? 'production' : 'development',
 
-	// Your Lambda handlers
 	entry: {
 		'mobile-purchases-google-oauth2':
 			'./src/handlers/mobile-purchases-google-oauth2.ts',
@@ -32,10 +45,32 @@ module.exports = (env = {}) => ({
 		filename: '[name].js',
 		libraryTarget: 'commonjs2',
 		clean: true,
+		chunkFilename: '[name].js',
 	},
 
-	// Optimize bundle size (AWS SDK v3 is already modular)
 	optimization: {
+		splitChunks: false,
+		minimize: true,
 		usedExports: true,
+		runtimeChunk: false,
+		// Disable all chunk optimizations
+		removeAvailableModules: true,
+		removeEmptyChunks: true,
+		mergeDuplicateChunks: true,
 	},
+
+	// No externals - bundle everything
+	externals: {},
+
+	node: {
+		__dirname: false,
+		__filename: false,
+	},
+
+	plugins: [
+		// Force a single chunk
+		new webpack.optimize.LimitChunkCountPlugin({
+			maxChunks: 1,
+		}),
+	],
 });
