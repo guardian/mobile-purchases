@@ -2,5 +2,5 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
 export const handler = async (_event: APIGatewayProxyEvent) => {
-  console.log('[0a433488] new lambda');
+	console.log('[0a433488] new lambda');
 };
