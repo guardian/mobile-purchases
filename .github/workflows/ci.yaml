@@ -50,7 +50,6 @@ jobs:
       - name: Build the new lambda collection
         run: |
           cd mpapi-next-gen
-          mkdir dist
           yarn clean
           yarn install
           yarn validate
