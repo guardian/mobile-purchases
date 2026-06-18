@@ -61,6 +61,7 @@
     "skipLibCheck": true                      /* skip type-checking declaration files (.d.ts files) */
   },
   "exclude": [
-    "cdk"
+    "cdk",
+    "mpapi-next-gen/**/*"
   ],
 }
