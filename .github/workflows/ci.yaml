@@ -92,7 +92,7 @@ jobs:
             mobile-purchases-export-subscription-events-table:
               - tsc-target/export-subscription-events-table.zip
             mobile-purchases-export-subscription-table-v2:
-              - tsc-target/export-subscription-table-v2.zip
+              - mpapi-next-gen/dist/export-subscription-table-v2.zip
             mobile-purchases-export-subscription-tables:
               - tsc-target/export-subscription-tables.zip
             mobile-purchases-google-link-user-subscription:
