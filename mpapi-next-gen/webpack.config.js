@@ -40,6 +40,7 @@ module.exports = (env = {}) => ({
 			'./src/handlers/mobile-purchases-google-oauth2.ts',
 		'export-subscription-table-v2':
 			'./src/handlers/export-subscription-table-v2.ts',
+		'export-historical-data': './src/handlers/export-historical-data.ts',
 	},
 
 	output: {
