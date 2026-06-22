@@ -82,14 +82,15 @@ async function getNumberOfMessagesNotVisible(sqsUrl: string): Promise<number> {
 	});
 	const sqsResponse = await sqsClient.send(command);
 	if (sqsResponse.Attributes) {
-		return parseInt(
-			sqsResponse.Attributes.ApproximateNumberOfMessagesNotVisible!,
-		);
-	} else {
-		throw new Error(
-			`Failed to retrieve number of messages not visible for ${sqsUrl}`,
-		);
+		if (sqsResponse.Attributes.ApproximateNumberOfMessagesNotVisible) {
+			return parseInt(
+				sqsResponse.Attributes.ApproximateNumberOfMessagesNotVisible,
+			);
+		}
 	}
+	throw new Error(
+		`Failed to retrieve number of messages not visible for ${sqsUrl}`,
+	);
 }
 
 interface HandlerOutput {
