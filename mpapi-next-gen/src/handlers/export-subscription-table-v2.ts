@@ -1,9 +1,10 @@
 import 'source-map-support/register';
-import { aws } from '../utils/aws';
+import { DynamoDBClient, ExportFormat } from '@aws-sdk/client-dynamodb';
+import { ExportTableToPointInTimeCommand } from '@aws-sdk/client-dynamodb';
 import { plusDays } from '../utils/dates';
 
 function prefix_creator(stage: string): string {
-	const yesterday = plusDays(new Date(), -1).toISOString().substr(0, 10);
+	const yesterday = plusDays(new Date(), -1).toISOString().substring(0, 10);
 	if (stage == 'CODE') {
 		return `v2/code-data/date=${yesterday}`;
 	} else {
@@ -55,17 +56,18 @@ export async function handler(): Promise<string> {
 		S3Bucket: bucket,
 		S3BucketOwner: s3BucketOwner,
 		S3Prefix: prefix_creator(stage),
-		ExportFormat: 'DYNAMODB_JSON',
+		ExportFormat: ExportFormat.DYNAMODB_JSON,
 	};
 
-	return aws
-		.exportTableToPointInTime(params)
-		.promise()
-		.then((result) => {
-			console.log(`[89ba1cd3] exporting subscription data to ${bucket}`);
-			return `[0d1f18ab] dynamo export started, with status: ${result.ExportDescription?.ExportStatus}`;
-		})
-		.catch((_) => {
-			throw new Error('[4f4acf88] Failed to start dynamo export');
-		});
+	const client = new DynamoDBClient({ region: 'eu-west-1' });
+	const command = new ExportTableToPointInTimeCommand(params);
+
+	try {
+		const result = await client.send(command);
+		console.log(`[89ba1cd3] exporting subscription data to ${bucket}`);
+		return `[0d1f18ab] dynamo export started, with status: ${result.ExportDescription?.ExportStatus}`;
+	} catch (error) {
+		console.error('[58869c86] Failed to start dynamo export:', error);
+		throw new Error('[4f4acf88] Failed to start dynamo export');
+	}
 }

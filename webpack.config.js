@@ -16,7 +16,6 @@ const getEntries = (env) => {
     "soft-opt-in-acquisitions": "./typescript/src/soft-opt-ins/acquisitions.ts",
     "soft-opt-in-acquisitions-dlq-processor": "./typescript/src/soft-opt-ins/dlq-processor.ts",
     "export-subscription-tables": "./typescript/src/export/exportSubscriptions.ts",
-    "export-subscription-table-v2": "./typescript/src/export/exportSubscriptions-v2.ts",
     "export-subscription-events-table": "./typescript/src/export/exportEvents.ts",
     "export-historical-data": "./typescript/src/export/exportHistoricalData.ts",
     "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
