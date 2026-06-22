@@ -59,7 +59,6 @@ export async function handler(): Promise<string> {
 		ExportFormat: ExportFormat.DYNAMODB_JSON,
 	};
 
-	// Create DynamoDB client
 	const client = new DynamoDBClient({ region: 'eu-west-1' });
 	const command = new ExportTableToPointInTimeCommand(params);
 
