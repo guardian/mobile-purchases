@@ -11,7 +11,6 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Stage } from '../utils/appIdentity';
 import { plusDays } from '../utils/dates';
 
-// Initialize clients
 const sqsClient = new SQSClient({ region: 'eu-west-1' });
 const s3Client = new S3Client({ region: 'eu-west-1' });
 
@@ -154,7 +153,6 @@ export async function handler(params: {
 
 	zippedStream.end();
 
-	// Upload to S3 using PutObjectCommand
 	const uploadCommand = new PutObjectCommand({
 		Bucket: bucket,
 		Key: filename,
