@@ -88,9 +88,9 @@ jobs:
             mobile-purchases-delete-user-subscription:
               - tsc-target/delete-user-subscription.zip
             mobile-purchases-export-historical-data:
-              - tsc-target/export-historical-data.zip
+              - mpapi-next-gen/dist/export-historical-data.zip
             mobile-purchases-export-subscription-events-table:
-              - tsc-target/export-subscription-events-table.zip
+              - mpapi-next-gen/dist/export-subscription-events-table.zip
             mobile-purchases-export-subscription-table-v2:
               - mpapi-next-gen/dist/export-subscription-table-v2.zip
             mobile-purchases-export-subscription-tables:

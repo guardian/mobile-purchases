@@ -1,7 +1,7 @@
 
 ### Introduction
 
-The purpose of this lambda is essentially to write the S3 file 
+The purpose of this lambda (mobile-purchases-google-oauth2-PROD) is essentially to write the S3 file 
 
 ```
 [mobile] [S3] /gu-mobile-access-tokens/PROD/google-play-developer-api/access_token.json
