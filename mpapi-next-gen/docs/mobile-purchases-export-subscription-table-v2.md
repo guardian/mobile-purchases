@@ -6,3 +6,5 @@ arn:aws:dynamodb:eu-west-1:${account}:table/mobile-purchases-PROD-subscriptions
 ```
 
 It uses the exportTableToPointInTime function which is an operation in AWS DynamoDB that exports your table data to an Amazon S3 bucket.
+
+This lambda and mobile-purchases-export-user-subscription-table-v2 use the same handler. The difference is triggered by environment variable `ClassName`
