@@ -380,7 +380,7 @@ Resources:
       Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-googleoauth2/${App}-googleoauth2.zip
+        Key: !Sub ${Stack}/${Stage}/${App}-googleoauth2/googleoauth2.zip
       FunctionName: !Sub ${App}-googleoauth2-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:
