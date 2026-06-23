@@ -72,7 +72,7 @@ jobs:
             mobile-purchases-exports-cloudformation:
               - exports-cloudformation.yaml
             mobile-purchases-google-oauth2:
-              - mpapi-next-gen/dist/mobile-purchases-googleoauth2.zip
+              - mpapi-next-gen/dist/googleoauth2.zip
             mobile-purchases-apple-fetch-offer-details:
               - tsc-target/apple-fetch-offer-details.zip
             mobile-purchases-apple-link-user-subscription:

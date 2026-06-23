@@ -36,12 +36,12 @@ module.exports = (env = {}) => ({
 	mode: env.production ? 'production' : 'development',
 
 	entry: {
-		'mobile-purchases-googleoauth2': './src/handlers/googleOauth2.ts',
-		'export-subscription-table-v2':
-			'./src/handlers/exportSubscriptionTableV2.ts',
+		googleoauth2: './src/handlers/googleOauth2.ts',
 		'export-historical-data': './src/handlers/exportHistoricalData.ts',
 		'export-subscription-events-table':
 			'./src/handlers/exportSubscriptionEventsTable.ts',
+		'export-subscription-table-v2':
+			'./src/handlers/exportSubscriptionTableV2.ts',
 	},
 
 	output: {
