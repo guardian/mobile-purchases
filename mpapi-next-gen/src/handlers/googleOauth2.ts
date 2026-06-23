@@ -73,7 +73,7 @@ function getFormattedDateTime(): string {
 }
 
 export const handler = async (_event: APIGatewayProxyEvent) => {
-	console.log('[0a433488] starting mobile-purchases-google-oauth2');
+	console.log('[0a433488] starting mobile-purchases-googleoauth2');
 
 	try {
 		// The bucket name is hardcoded in the existing scala code,

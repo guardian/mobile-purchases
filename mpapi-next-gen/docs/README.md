@@ -8,4 +8,4 @@ Documentation directory for mpapi-next-gen
 - [mobile-purchases-export-subscription-events-table.md](mobile-purchases-export-subscription-events-table.md)
 - [mobile-purchases-export-subscription-table-v2.md](mobile-purchases-export-subscription-table-v2.md)
 - [mobile-purchases-export-user-subscription-table-v2.md](mobile-purchases-export-user-subscription-table-v2.md)
-- [mobile-purchases-google-oauth2.md](mobile-purchases-google-oauth2.md)
+- [mobile-purchases-googleoauth2.md](mobile-purchases-googleoauth2.md)
