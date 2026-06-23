@@ -153,10 +153,16 @@ export async function handler(params: {
 
 	zippedStream.end();
 
+	const chunks: Buffer[] = [];
+	for await (const chunk of zippedStream) {
+		chunks.push(chunk);
+	}
+	const buffer = Buffer.concat(chunks);
+
 	const uploadCommand = new PutObjectCommand({
 		Bucket: bucket,
 		Key: filename,
-		Body: zippedStream,
+		Body: buffer,
 		ACL: 'bucket-owner-full-control',
 	});
 	await s3Client.send(uploadCommand);
