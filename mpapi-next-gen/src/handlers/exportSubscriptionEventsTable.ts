@@ -14,11 +14,8 @@ const s3Client = new S3Client({});
 function cleanupEvent(subEvent: SubscriptionEvent): SubscriptionEvent {
 	if (subEvent.applePayload) {
 		const payload = subEvent.applePayload as Record<string, unknown>;
-
-		// Safe to delete these properties
 		delete payload.password;
 		delete payload.latest_receipt;
-
 		if (
 			payload.unified_receipt &&
 			typeof payload.unified_receipt === 'object'
