@@ -8,7 +8,6 @@ import { SubscriptionEventEmpty } from '../models/subscriptionEvent';
 import { Stage } from '../utils/appIdentity';
 import { plusDays } from '../utils/dates';
 
-// Initialize AWS SDK v3 clients
 const dynamoClient = new DynamoDBClient({});
 const s3Client = new S3Client({});
 
@@ -97,7 +96,6 @@ async function streamToS3(
 		recordCount++;
 	}
 
-	// Concatenate all chunks and gzip
 	const data = Buffer.concat(chunks);
 	const gzippedData = zlib.gzipSync(data);
 
@@ -127,13 +125,10 @@ export async function handler(
 		yesterday = event.date;
 	}
 
-	// Get the table name from the SubscriptionEventEmpty model
 	const tableName = SubscriptionEventEmpty.getTableName();
 
-	// Create async generator for DynamoDB items
 	const itemGenerator = queryDynamoDBItems(tableName, yesterday);
 
-	// Transform items to stream chunks
 	const streamGenerator = createStreamFromGenerator(itemGenerator);
 
 	const prefix = Stage === 'PROD' ? 'data' : 'code-data';
