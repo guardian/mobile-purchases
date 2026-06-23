@@ -35,11 +35,13 @@ interface HandlerOutput {
 	recordCount: number;
 }
 
+import type { AttributeValue } from '@aws-sdk/client-dynamodb';
+
 async function* queryDynamoDBItems(
 	tableName: string,
 	date: string,
 ): AsyncGenerator<SubscriptionEvent> {
-	let lastEvaluatedKey: Record<string, any> | undefined = undefined;
+	let lastEvaluatedKey: Record<string, AttributeValue> | undefined = undefined;
 	let totalRecords = 0;
 
 	do {
