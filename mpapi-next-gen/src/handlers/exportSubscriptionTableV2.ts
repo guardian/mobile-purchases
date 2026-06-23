@@ -63,9 +63,11 @@ export async function handler(): Promise<string> {
 	const command = new ExportTableToPointInTimeCommand(params);
 
 	try {
-		const result = await client.send(command);
 		console.log(`[89ba1cd3] exporting subscription data to ${bucket}`);
-		return `[0d1f18ab] dynamo export started, with status: ${result.ExportDescription?.ExportStatus}`;
+		const result = await client.send(command);
+		const message = `[0d1f18ab] dynamo export has completed, with status: ${result.ExportDescription?.ExportStatus}`;
+		console.log(message);
+		return message;
 	} catch (error) {
 		console.error('[58869c86] Failed to start dynamo export:', error);
 		throw new Error('[4f4acf88] Failed to start dynamo export');

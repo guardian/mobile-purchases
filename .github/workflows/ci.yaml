@@ -45,7 +45,7 @@ jobs:
           yarn validate
           yarn build
           cd dist
-          for HANDLER in mobile-purchases-google-oauth2 export-subscription-table-v2 export-historical-data; do
+          for HANDLER in googleoauth2 export-subscription-table-v2 export-historical-data export-subscription-events-table; do
             mkdir -p temp_${HANDLER}
             cp ${HANDLER}.js temp_${HANDLER}/
             cp -r ../node_modules temp_${HANDLER}/
@@ -76,8 +76,8 @@ jobs:
               - dynamo.cloudformation.yaml
             mobile-purchases-exports-cloudformation:
               - exports-cloudformation.yaml
-            mobile-purchases-google-oauth2:
-              - mpapi-next-gen/dist/mobile-purchases-google-oauth2.zip
+            mobile-purchases-googleoauth2:
+              - mpapi-next-gen/dist/googleoauth2.zip
             mobile-purchases-apple-fetch-offer-details:
               - tsc-target/apple-fetch-offer-details.zip
             mobile-purchases-apple-link-user-subscription:
@@ -95,7 +95,7 @@ jobs:
             mobile-purchases-export-historical-data:
               - mpapi-next-gen/dist/export-historical-data.zip
             mobile-purchases-export-subscription-events-table:
-              - tsc-target/export-subscription-events-table.zip
+              - mpapi-next-gen/dist/export-subscription-events-table.zip
             mobile-purchases-export-subscription-table-v2:
               - mpapi-next-gen/dist/export-subscription-table-v2.zip
             mobile-purchases-export-subscription-tables:

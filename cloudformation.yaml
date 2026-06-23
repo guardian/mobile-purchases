@@ -376,11 +376,11 @@ Resources:
   GoogleOAuthLambda2:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: mobile-purchases-google-oauth2.handler
+      Handler: googleoauth2.handler
       Runtime: nodejs22.x
       CodeUri:
         Bucket: !Ref DeployBucket
-        Key: !Sub ${Stack}/${Stage}/${App}-google-oauth2/${App}-google-oauth2.zip
+        Key: !Sub ${Stack}/${Stage}/${App}-googleoauth2/googleoauth2.zip
       FunctionName: !Sub ${App}-googleoauth2-${Stage}
       Role: !GetAtt MobilePurchasesLambdasRole.Arn
       Environment:

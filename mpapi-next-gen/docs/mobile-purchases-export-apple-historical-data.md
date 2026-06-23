@@ -1,5 +1,5 @@
 
-export-historical-data writes the datalake files, of the form
+mobile-purchases-export-historical-data writes the datalake files, of the form
 
 ```
 bucket: s3://ophan-raw-mobile-subscription-historical-google/

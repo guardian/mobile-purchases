@@ -1,9 +1,11 @@
 const esbuild = require('esbuild');
 
 const entryPoints = {
-	'mobile-purchases-google-oauth2': './src/handlers/googleOauth2.ts',
-	'export-subscription-table-v2': './src/handlers/exportSubscriptionTableV2.ts',
 	'export-historical-data': './src/handlers/exportHistoricalData.ts',
+	'export-subscription-events-table':
+		'./src/handlers/exportSubscriptionEventsTable.ts',
+	'export-subscription-table-v2': './src/handlers/exportSubscriptionTableV2.ts',
+	googleoauth2: './src/handlers/googleOauth2.ts',
 };
 
 async function build() {
