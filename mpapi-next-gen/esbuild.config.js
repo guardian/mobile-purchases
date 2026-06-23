@@ -3,7 +3,7 @@ const esbuild = require('esbuild');
 const entryPoints = {
 	'export-historical-data': './src/handlers/exportHistoricalData.ts',
 	'export-subscription-table-v2': './src/handlers/exportSubscriptionTableV2.ts',
-	'googleoauth2': './src/handlers/googleOauth2.ts',
+	googleoauth2: './src/handlers/googleOauth2.ts',
 };
 
 async function build() {
