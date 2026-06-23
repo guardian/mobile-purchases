@@ -137,7 +137,7 @@ export async function handler(params: {
 		totalMsgCount++;
 		const parsedMessage = JSON.parse(sqsMessage.Body ?? '');
 		const messageDate = parsedMessage.snapshotDate.substring(0, 10);
-		if (messageDate == yesterday) {
+		if (messageDate <= yesterday) {
 			processedMsgCount++;
 			const message = JSON.stringify(parsedMessage) + '\n';
 			zippedStream.write(message);
