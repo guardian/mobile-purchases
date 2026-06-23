@@ -40,31 +40,20 @@ jobs:
       - name: Build the new lambda collection
         run: |
           cd mpapi-next-gen
-            yarn clean
-            yarn install
-            yarn validate
-            yarn build
-            
-            # Package each handler with node_modules
-            cd dist
-            for HANDLER in mobile-purchases-google-oauth2 export-subscription-table-v2 export-historical-data; do
-              # Create temp directory for each handler
-              mkdir -p temp_${HANDLER}
-              
-              # Copy the handler JS file (assuming it's at the root of dist)
-              cp ${HANDLER}.js temp_${HANDLER}/
-              
-              # Copy node_modules
-              cp -r ../node_modules temp_${HANDLER}/
-              
-              # Zip everything
-              cd temp_${HANDLER}
-              zip -r "../${HANDLER}.zip" .
-              cd ..
-              
-              # Clean up temp
-              rm -rf temp_${HANDLER}
-            done
+          yarn clean
+          yarn install
+          yarn validate
+          yarn build
+          cd dist
+          for HANDLER in mobile-purchases-google-oauth2 export-subscription-table-v2 export-historical-data; do
+            mkdir -p temp_${HANDLER}
+            cp ${HANDLER}.js temp_${HANDLER}/
+            cp -r ../node_modules temp_${HANDLER}/
+            cd temp_${HANDLER}
+            zip -r "../${HANDLER}.zip" .
+            cd ..
+            rm -rf temp_${HANDLER}
+          done
 
       - name: Generate CFN templates using GuCDK
         run: bash ./script/cdk-synth.sh
