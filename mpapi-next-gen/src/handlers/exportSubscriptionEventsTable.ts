@@ -1,29 +1,31 @@
 import 'source-map-support/register';
 import zlib from 'zlib';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { QueryCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 import type { SubscriptionEvent } from '../models/subscriptionEvent';
+import { SubscriptionEventEmpty } from '../models/subscriptionEvent';
 import { Stage } from '../utils/appIdentity';
 import { plusDays } from '../utils/dates';
-import { DynamoStream } from '../utils/dynamoStream';
 
-const dynamoDBClient = new DynamoDBClient({ region: 'eu-west-1' });
-const s3Client = new S3Client({ region: 'eu-west-1' });
+// Initialize AWS SDK v3 clients
+const dynamoClient = new DynamoDBClient({});
+const s3Client = new S3Client({});
 
 function cleanupEvent(subEvent: SubscriptionEvent): SubscriptionEvent {
-	const payload = subEvent.applePayload as
-		| {
-				password?: string;
-				latest_receipt?: string;
-				unified_receipt?: { latest_receipt?: string };
-		  }
-		| undefined;
+	if (subEvent.applePayload) {
+		const payload = subEvent.applePayload as Record<string, unknown>;
 
-	if (payload) {
+		// Safe to delete these properties
 		delete payload.password;
 		delete payload.latest_receipt;
-		if (payload.unified_receipt) {
-			delete payload.unified_receipt.latest_receipt;
+
+		if (
+			payload.unified_receipt &&
+			typeof payload.unified_receipt === 'object'
+		) {
+			const unifiedReceipt = payload.unified_receipt as Record<string, unknown>;
+			delete unifiedReceipt.latest_receipt;
 		}
 	}
 	return subEvent;
@@ -37,6 +39,79 @@ interface HandlerOutput {
 	recordCount: number;
 }
 
+async function* queryDynamoDBItems(
+	tableName: string,
+	date: string,
+): AsyncGenerator<SubscriptionEvent> {
+	let lastEvaluatedKey: Record<string, any> | undefined = undefined;
+	let totalRecords = 0;
+
+	do {
+		const command: QueryCommand = new QueryCommand({
+			TableName: tableName,
+			IndexName: 'date-timestamp-index-v2',
+			KeyConditionExpression: '#date = :date',
+			ExpressionAttributeNames: {
+				'#date': 'date',
+			},
+			ExpressionAttributeValues: {
+				':date': { S: date },
+			},
+			ExclusiveStartKey: lastEvaluatedKey,
+		});
+
+		const response = await dynamoClient.send(command);
+
+		if (response.Items) {
+			for (const item of response.Items) {
+				const unmarshalled = unmarshall(item) as SubscriptionEvent;
+				yield cleanupEvent(unmarshalled);
+				totalRecords++;
+			}
+		}
+
+		lastEvaluatedKey = response.LastEvaluatedKey;
+	} while (lastEvaluatedKey);
+
+	console.log(`[dynamo-stream] read ${totalRecords} records`);
+}
+
+async function* createStreamFromGenerator(
+	generator: AsyncGenerator<SubscriptionEvent>,
+): AsyncGenerator<Buffer> {
+	for await (const item of generator) {
+		yield Buffer.from(JSON.stringify(item) + '\n', 'utf-8');
+	}
+}
+
+async function streamToS3(
+	generator: AsyncGenerator<Buffer>,
+	bucket: string,
+	key: string,
+): Promise<number> {
+	const chunks: Buffer[] = [];
+	let recordCount = 0;
+
+	for await (const chunk of generator) {
+		chunks.push(chunk);
+		recordCount++;
+	}
+
+	// Concatenate all chunks and gzip
+	const data = Buffer.concat(chunks);
+	const gzippedData = zlib.gzipSync(data);
+
+	const command = new PutObjectCommand({
+		Bucket: bucket,
+		Key: key,
+		Body: gzippedData,
+		ACL: 'bucket-owner-full-control',
+	});
+
+	await s3Client.send(command);
+	return recordCount;
+}
+
 export async function handler(
 	event?: ManualBackfillEvent,
 ): Promise<HandlerOutput> {
@@ -45,60 +120,30 @@ export async function handler(
 
 	if (!bucket) throw new Error('Variable ExportBucket must be set');
 
-	const account = process.env['AccountId'];
-	const app = process.env['App'];
-	const stage = process.env['Stage'];
-	const className = 'subscriptions';
-
-	if (!account) throw new Error('Variable AccountId must be set');
-	if (!app) throw new Error('Variable App must be set');
-	if (!stage) throw new Error('Variable Stage must be set');
-
-	const tableName = `${app}-${stage}-${className}`;
-	console.log(`[table] using table: ${tableName}`);
-
-	let yesterday = plusDays(new Date(), -1).toISOString().substring(0, 10);
+	let yesterday = plusDays(new Date(), -1).toISOString().substr(0, 10);
 	console.log(`[c882b045] yesterday: ${yesterday}`);
 
 	if (event && event.date) {
 		yesterday = event.date;
 	}
 
-	const stream = new DynamoStream<SubscriptionEvent>({
-		client: dynamoDBClient,
-		params: {
-			TableName: tableName,
-			FilterExpression: '#date = :date',
-			ExpressionAttributeNames: {
-				'#date': 'date',
-			},
-			ExpressionAttributeValues: {
-				':date': { S: yesterday },
-			},
-		},
-		transformItem: cleanupEvent,
-		pageSize: 1000,
-	});
+	// Get the table name from the SubscriptionEventEmpty model
+	const tableName = SubscriptionEventEmpty.getTableName();
 
-	const zippedStream = zlib.createGzip();
-	stream.pipe(zippedStream);
+	// Create async generator for DynamoDB items
+	const itemGenerator = queryDynamoDBItems(tableName, yesterday);
+
+	// Transform items to stream chunks
+	const streamGenerator = createStreamFromGenerator(itemGenerator);
 
 	const prefix = Stage === 'PROD' ? 'data' : 'code-data';
 	const filename = `${prefix}/date=${yesterday}/${yesterday}.json.gz`;
 	console.log(`[b6640f04] filename: ${filename}`);
 
-	const uploadCommand = new PutObjectCommand({
-		Bucket: bucket,
-		Key: filename,
-		Body: zippedStream,
-		ACL: 'bucket-owner-full-control',
-	});
+	// Upload to S3
+	const recordCount = await streamToS3(streamGenerator, bucket, filename);
 
-	await s3Client.send(uploadCommand);
+	console.log(`[5a02d341] export succeeded, read ${recordCount} records`);
 
-	console.log(
-		`[5a02d341] export succeeded, read ${stream.recordCount()} records`,
-	);
-
-	return { recordCount: stream.recordCount() };
+	return { recordCount };
 }
