@@ -45,7 +45,7 @@ jobs:
           yarn validate
           yarn build
           cd dist
-          for HANDLER in mobile-purchases-google-oauth2 export-subscription-table-v2 export-historical-data; do
+          for HANDLER in google-oauth2 export-subscription-table-v2 export-historical-data; do
             mkdir -p temp_${HANDLER}
             cp ${HANDLER}.js temp_${HANDLER}/
             cp -r ../node_modules temp_${HANDLER}/
