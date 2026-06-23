@@ -91,7 +91,7 @@ deployments:
     template: lambda
     parameters:
       functionNames: [mobile-purchases-googleoauth2-]
-      fileName: mobile-purchases-googleoauth2.zip
+      fileName: googleoauth2.zip
     dependencies:
       - mobile-purchases-cloudformation
 
