@@ -135,7 +135,6 @@ export async function handler(
 	const filename = `${prefix}/date=${yesterday}/${yesterday}.json.gz`;
 	console.log(`[b6640f04] filename: ${filename}`);
 
-	// Upload to S3
 	const recordCount = await streamToS3(streamGenerator, bucket, filename);
 
 	console.log(`[5a02d341] export succeeded, read ${recordCount} records`);
