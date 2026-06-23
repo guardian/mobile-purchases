@@ -5,7 +5,9 @@
 	"license": "MIT",
 	"packageManager": "yarn@1.22.22",
 	"scripts": {
-		"build": "webpack --env production",
+		"build": "node esbuild.config.js",
+		"package": "yarn build && cp -r node_modules dist/ && cd dist && zip -r ../lambda-package.zip .",
+		"package:clean": "rm -f lambda-package.zip && rm -rf dist",
 		"clean": "rm -rf dist",
 		"lint:check": "eslint src --ext .ts,.tsx",
 		"lint:fix": "eslint src --ext .ts,.tsx --fix",
@@ -28,12 +30,10 @@
 		"@typescript-eslint/eslint-plugin": "^8.61.1",
 		"@typescript-eslint/parser": "^8.61.1",
 		"aws-lambda": "^1.0.7",
+		"esbuild": "^0.28.1",
 		"eslint": "^10.5.0",
 		"prettier": "^3.8.4",
-		"ts-loader": "^9.5.7",
-		"typescript": "^6.0.3",
-		"webpack": "^5.106.2",
-		"webpack-cli": "^7.0.2"
+		"typescript": "^6.0.3"
 	},
 	"resolutions": {
 		"fast-uri": "3.1.2",
