@@ -9,12 +9,20 @@ yarn build
 
 cd dist
 
-for HANDLER in googleoauth2 export-subscription-table-v2 export-historical-data export-subscription-events-table; do
-	mkdir -p temp_${HANDLER}
-	cp ${HANDLER}.js temp_${HANDLER}/
-	cp -r ../node_modules temp_${HANDLER}/
-	cd temp_${HANDLER}
-	zip -r "../${HANDLER}.zip" .
-	cd ..
-	rm -rf temp_${HANDLER}
+# maintenance: please maintain alphabetical order
+HANDLERS=(
+    "export-historical-data"
+    "export-subscription-events-table"
+    "export-subscription-table-v2"
+    "googleoauth2"
+)
+
+for HANDLER in "${HANDLERS[@]}"; do
+    mkdir -p "${HANDLER}_tmp"
+    cp "${HANDLER}.js" "${HANDLER}_tmp/"
+    cp -r ../node_modules "${HANDLER}_tmp/"
+    pushd "${HANDLER}_tmp" > /dev/null
+    zip -r "../${HANDLER}.zip" .
+    popd > /dev/null
+    rm -rf "${HANDLER}_tmp"
 done
