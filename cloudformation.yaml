@@ -401,6 +401,35 @@ Resources:
         Stack: !Ref Stack
         App: !Ref App
 
+  GoogleOAuthLambda2ErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProd
+    DependsOn:
+      - GoogleOAuthLambda2
+    Properties:
+      AlarmActions:
+        - Ref: AlarmTopic
+      OKActions:
+        - Ref: AlarmTopic
+      AlarmName: !Sub ${App}-googleoauth2-${Stage}-errors
+      AlarmDescription: >
+        The GoogleOAuthLambda2 function has failed. This Lambda forges access tokens for other functions.
+        Runbook: Check CloudWatch logs for ${App}-googleoauth2-${Stage}
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref GoogleOAuthLambda2
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 900
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+      Tags:
+        - Key: App
+          Value: mobile-purchases-google-oauth2
+
   GooglePubSubLambda:
     Type: AWS::Serverless::Function
     Properties:
