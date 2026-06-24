@@ -1,5 +1,11 @@
 
-mobile-purchases-export-historical-data writes the datalake files, of the form
+mobile-purchases-export-historical-data read from queue
+
+```
+mobile-purchases-PROD-apple-historical-subscriptions
+```
+
+and writes the datalake files, of the form
 
 ```
 PROD/date=YYYY-MM-DD/YYYY-MM-DD-<random>.json.gz
