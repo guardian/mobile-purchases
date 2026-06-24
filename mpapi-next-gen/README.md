@@ -15,6 +15,19 @@ yarn format:fix
 yarn validate
 ```
 
-### Documentation 
+### Adding a new lamdda
+
+1. Add a new .ts file in `scr/handlers`
+2. Add a new entry in `esbuild.config.js`
+3. Add a new entry in `build.sh`
+4. Update the "Upload to Riff-Raff" of ci.yaml to point at the right bundle
+
+In the specific case of the on going lambda migrations, you will also need to 
+
+1. Remove the old handler in the legacy code
+2. Remove the entry in the legacy webpack config file
+
+
+### System documentation
 
 see [./docs](./docs/README.md)

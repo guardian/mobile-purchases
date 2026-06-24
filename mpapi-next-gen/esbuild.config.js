@@ -1,5 +1,6 @@
 const esbuild = require('esbuild');
 
+// maintenance: please maintain alphabetical order
 const entryPoints = {
 	'export-historical-data': './src/handlers/exportHistoricalData.ts',
 	'export-subscription-events-table':
