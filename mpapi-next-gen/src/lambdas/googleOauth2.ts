@@ -1,6 +1,6 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import { Stage } from '../utils/appIdentity';
+import { Stage } from '../common/appIdentity';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { JWT } from 'google-auth-library';
 

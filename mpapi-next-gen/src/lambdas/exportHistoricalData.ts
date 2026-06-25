@@ -8,8 +8,8 @@ import {
 	type Message,
 } from '@aws-sdk/client-sqs';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { Stage } from '../utils/appIdentity';
-import { plusDays } from '../utils/dates';
+import { Stage } from '../common/appIdentity';
+import { plusDays } from '../common/dates';
 
 const sqsClient = new SQSClient({ region: 'eu-west-1' });
 const s3Client = new S3Client({ region: 'eu-west-1' });

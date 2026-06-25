@@ -1,1 +1,0 @@
-If a datatype is used in more than one lambda, then we put it in the models directory, otheriwse it remain in the handler.

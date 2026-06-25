@@ -2,11 +2,11 @@ const esbuild = require('esbuild');
 
 // maintenance: please maintain alphabetical order
 const entryPoints = {
-	'export-historical-data': './src/handlers/exportHistoricalData.ts',
+	'export-historical-data': './src/lambdas/exportHistoricalData.ts',
 	'export-subscription-events-table':
-		'./src/handlers/exportSubscriptionEventsTable.ts',
-	'export-subscription-table-v2': './src/handlers/exportSubscriptionTableV2.ts',
-	googleoauth2: './src/handlers/googleOauth2.ts',
+		'./src/lambdas/exportSubscriptionEventsTable.ts',
+	'export-subscription-table-v2': './src/lambdas/exportSubscriptionTableV2.ts',
+	googleoauth2: './src/lambdas/googleOauth2.ts',
 };
 
 async function build() {

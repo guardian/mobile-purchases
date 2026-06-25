@@ -1,4 +1,4 @@
-import { App, Stage } from '../utils/appIdentity';
+import { App, Stage } from '../common/appIdentity';
 
 export class SubscriptionEvent {
 	subscriptionId: string;
