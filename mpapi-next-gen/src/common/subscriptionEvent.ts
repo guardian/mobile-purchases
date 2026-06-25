@@ -1,5 +1,8 @@
 import { App, Stage } from '../common/appIdentity';
 
+// This class abstract the records in the dynamo table
+// mobile-purchases-PROD-subscription-events-v2
+
 export class SubscriptionEvent {
 	subscriptionId: string;
 	timestampAndType: string;
