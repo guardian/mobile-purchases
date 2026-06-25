@@ -15,6 +15,8 @@ yarn format:fix
 yarn validate
 ```
 
+If you are not familiar with them please refer to [scr/code-directives.md](scr/code-directives.md)
+
 ### Adding a new lamdda
 
 1. Add a new .ts file in `scr/handlers`

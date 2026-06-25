@@ -3,10 +3,10 @@ import zlib from 'zlib';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { QueryCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
-import type { SubscriptionEvent } from '../models/subscriptionEvent';
-import { SubscriptionEventEmpty } from '../models/subscriptionEvent';
-import { Stage } from '../utils/appIdentity';
-import { plusDays } from '../utils/dates';
+import type { SubscriptionEvent } from '../common/subscriptionEvent';
+import { SubscriptionEventEmpty } from '../common/subscriptionEvent';
+import { Stage } from '../common/appIdentity';
+import { plusDays } from '../common/dates';
 
 const dynamoClient = new DynamoDBClient({});
 const s3Client = new S3Client({});
