@@ -19,8 +19,12 @@ export class UserSubscription {
 		this.creationTimestamp = creationTimestamp;
 	}
 
-	get [DynamoDbTable]() {
+	static getTableName(): string {
 		return `${App}-${Stage}-user-subscriptions`;
+	}
+
+	get [DynamoDbTable]() {
+		return UserSubscription.getTableName();
 	}
 }
 
