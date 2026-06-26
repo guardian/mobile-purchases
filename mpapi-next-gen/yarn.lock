@@ -312,6 +312,17 @@
     mnemonist "0.38.3"
     tslib "^2.6.2"
 
+"@aws-sdk/lib-dynamodb@^3.1075.0":
+  version "3.1075.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/lib-dynamodb/-/lib-dynamodb-3.1075.0.tgz#273588fc97cd707cc72947f81b0b371d68763565"
+  integrity sha512-3OxmMDgk8wvK6QOaVrQuOq9t6xlgS5047aDPxAZxTSwGBcEMc6FtiamtoK3kfClfOt7k3t+NWIo0bIfhWQ4Pzg==
+  dependencies:
+    "@aws-sdk/core" "^3.974.23"
+    "@aws-sdk/util-dynamodb" "^3.996.5"
+    "@smithy/core" "^3.24.6"
+    "@smithy/types" "^4.14.3"
+    tslib "^2.6.2"
+
 "@aws-sdk/middleware-endpoint-discovery@^3.972.19":
   version "3.972.19"
   resolved "https://registry.yarnpkg.com/@aws-sdk/middleware-endpoint-discovery/-/middleware-endpoint-discovery-3.972.19.tgz#affa05f6ac297a8eff7eeae5650fd08baf16b5f4"
