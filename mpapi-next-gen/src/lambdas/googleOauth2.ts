@@ -1,14 +1,10 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { Stage } from '../common/appIdentity';
-import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { JWT } from 'google-auth-library';
+import { getParameterValue } from '../common/ssmParameters';
 
 const s3Client = new S3Client({
-	region: process.env.AWS_REGION || 'us-east-1',
-});
-
-const ssmClient = new SSMClient({
 	region: process.env.AWS_REGION || 'us-east-1',
 });
 
@@ -27,23 +23,14 @@ interface GoogleServiceAccountCredentials {
 
 async function getGoogleCredentials(): Promise<GoogleServiceAccountCredentials> {
 	const parameterName = `/mobile-purchases/${Stage}/google-oauth-lambda/google.serviceAccountJson`;
-
 	try {
-		const command = new GetParameterCommand({
-			Name: parameterName,
-			WithDecryption: true,
-		});
-
-		const response = await ssmClient.send(command);
-
-		if (!response.Parameter?.Value) {
-			throw new Error('No credentials found in SSM');
-		}
-
-		// Parse the JSON string from SSM
-		return JSON.parse(response.Parameter.Value);
+		const value = await getParameterValue(parameterName);
+		return JSON.parse(value);
 	} catch (error) {
-		console.error('Error retrieving credentials from SSM:', error);
+		console.error(
+			'[de62945b] Error retrieving google credentials from SSM:',
+			error,
+		);
 		throw error;
 	}
 }
