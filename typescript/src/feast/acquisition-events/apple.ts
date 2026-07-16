@@ -19,8 +19,7 @@ const appleSubscriptionToAcquisitionApiPayload = async (
 	subscription: Subscription,
 ): Promise<AcquisitionApiPayload> => {
 	const extendedData:
-		| AppleStoreKitSubscriptionDataDerivationForFeastPipeline
-		| undefined =
+		AppleStoreKitSubscriptionDataDerivationForFeastPipeline | undefined =
 		await appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline(
 			subscription,
 		);
