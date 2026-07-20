@@ -52,13 +52,15 @@ export async function parseStoreAndSend_async<Payload, SqsEvent, MetaData>(
 			return HTTPResponses.INTERNAL_ERROR;
 		}
 		if (request.queryStringParameters?.secret === secret) {
+			console.log(`[6e2c7935] ${JSON.stringify(request)}`);
+			console.log(`[b8099bec] ${request.body}`);
 			const notification = parsePayload(request.body);
 			console.log(`[e13c6557] ${JSON.stringify(notification)}`);
 			if (notification instanceof Error) {
-				console.log('Parsing the payload failed: ', notification.message);
+				console.log('[52bd8bf0] parsing the payload failed: ', notification.message);
 				return HTTPResponses.INVALID_REQUEST;
 			} else if (notification instanceof Ignorable) {
-				console.log('Ignoring event: ', notification.message);
+				console.log('[4b6a3593] ignoring event: ', notification.message);
 				return HTTPResponses.OK;
 			}
 
