@@ -47,7 +47,10 @@ export function buildHandler(
 			console.log(`[ccdca271] ${request.body}`);
 			const notification = parsePayload(request.body);
 			if (notification instanceof Error) {
-				console.log('[f0d090ab] parsing the payload failed: ', notification.message);
+				console.log(
+					'[f0d090ab] parsing the payload failed: ',
+					notification.message,
+				);
 				return HTTPResponses.INVALID_REQUEST;
 			} else if (notification instanceof Ignorable) {
 				console.log('[69182f1d] ignoring event: ', notification.message);

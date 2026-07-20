@@ -57,7 +57,10 @@ export async function parseStoreAndSend_async<Payload, SqsEvent, MetaData>(
 			const notification = parsePayload(request.body);
 			console.log(`[e13c6557] ${JSON.stringify(notification)}`);
 			if (notification instanceof Error) {
-				console.log('[52bd8bf0] parsing the payload failed: ', notification.message);
+				console.log(
+					'[52bd8bf0] parsing the payload failed: ',
+					notification.message,
+				);
 				return HTTPResponses.INVALID_REQUEST;
 			} else if (notification instanceof Ignorable) {
 				console.log('[4b6a3593] ignoring event: ', notification.message);
