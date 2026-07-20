@@ -38,17 +38,22 @@ export function buildHandler(
 		const secret = process.env.Secret;
 
 		if (secret === undefined) {
-			console.error("PubSub secret in env is 'undefined'");
+			console.error("pubSub secret in env is 'undefined'");
 			return HTTPResponses.INTERNAL_ERROR;
 		}
 
 		if (request.queryStringParameters?.secret === secret) {
+			console.log(`[9ec5ee1d] ${JSON.stringify(request)}`);
+			console.log(`[ccdca271] ${request.body}`);
 			const notification = parsePayload(request.body);
 			if (notification instanceof Error) {
-				console.log('Parsing the payload failed: ', notification.message);
+				console.log(
+					'[f0d090ab] parsing the payload failed: ',
+					notification.message,
+				);
 				return HTTPResponses.INVALID_REQUEST;
 			} else if (notification instanceof Ignorable) {
-				console.log('Ignoring event: ', notification.message);
+				console.log('[69182f1d] ignoring event: ', notification.message);
 				return HTTPResponses.OK;
 			}
 
