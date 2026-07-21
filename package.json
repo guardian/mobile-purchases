@@ -25,7 +25,7 @@
 	"homepage": "https://github.com/guardian/mobile-purchases#readme",
 	"private": true,
 	"devDependencies": {
-		"@eslint/eslintrc": "^3.3.5",
+		"@eslint/eslintrc": "^3.3.6",
 		"@guardian/eslint-config": "^16.0.0",
 		"@guardian/prettier": "^11.0.0",
 		"@types/eslint-scope": "^9.1.0",
