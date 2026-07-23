@@ -50,10 +50,27 @@ export type VoidedPurchaseNotification = z.infer<
 	typeof VoidedPurchaseNotificationSchema
 >;
 
+const PendingRefundReviewNotificationSchema =
+	DeveloperNotificationBaseSchema.extend({
+		pendingRefundReviewNotification: z.object({
+			version: z.string(),
+			pendingRefundToken: z.string(),
+			orderId: z.string(),
+			refundReason: z.number(),
+		}),
+	});
+export type PendingRefundReviewNotification = z.infer<
+	typeof PendingRefundReviewNotificationSchema
+>;
+
 // Zod doesn't seem to support both extending a base schema with a refinement
 // and extending so I need to apply the refinement here.
 const DeveloperNotificationSchema = z
-	.union([SubscriptionNotificationSchema, VoidedPurchaseNotificationSchema])
+	.union([
+		SubscriptionNotificationSchema,
+		VoidedPurchaseNotificationSchema,
+		PendingRefundReviewNotificationSchema,
+	])
 	.refine(
 		(data) => optionalMsToDate(data.eventTimeMillis) !== null,
 		(data) => ({
@@ -96,7 +113,7 @@ export function parsePayload(
 		const data = parseResult.data;
 		console.log(`[5e895cb6] ${JSON.stringify(data)}`);
 		if (isSubscriptionNotification(data)) {
-			console.log(`[f3f7d615] returning data`);
+			console.log(`[78fd9338] returning data`);
 			return data;
 		}
 		return new Ignorable(
