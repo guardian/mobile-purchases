@@ -83,23 +83,29 @@ export function parsePayload(
 			JSON.parse(body ?? '').message.data,
 			'base64',
 		);
+		console.log(`[79079615] ${rawNotification}`);
 		const parseResult = DeveloperNotificationSchema.safeParse(
 			JSON.parse(rawNotification.toString()),
 		);
+		console.log(`[f3f7d615] ${JSON.stringify(parseResult)}`);
 		if (!parseResult.success) {
-			return new Error(`HTTP Payload body parse error: ${parseResult.error}`);
+			return new Error(
+				`[5f0bf526] HTTP Payload body parse error: ${parseResult.error}`,
+			);
 		}
-
 		const data = parseResult.data;
+		console.log(`[5e895cb6] ${JSON.stringify(data)}`);
 		if (isSubscriptionNotification(data)) {
+			console.log(`[f3f7d615] returning data`);
 			return data;
 		}
-
 		return new Ignorable(
-			`Notification is not a subscription notification. Notification was: ${JSON.stringify(data)}`,
+			`[12d734c8] notification is not a subscription notification. Notification was: ${JSON.stringify(data)}`,
 		);
 	} catch (e) {
-		console.log('Error during the parsing of the HTTP Payload body: ' + e);
+		console.log(
+			'[5a49e03d] error during the parsing of the HTTP Payload body: ' + e,
+		);
 		return e as Error;
 	}
 }
