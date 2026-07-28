@@ -66,7 +66,7 @@ function logClientServerStatusDiff(
 		// if the server decide the subscription isn't valid, but the client has decided the subscription is valid
 		if (!resp?.valid && req.clientSideValid === true) {
 			console.warn(
-				`Client thought ${req.originalTransactionId} was valid but server disagreed`,
+				`[25fd8d72] client thought ${req.originalTransactionId} was valid but server disagreed`,
 			);
 		}
 	}

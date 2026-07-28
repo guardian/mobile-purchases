@@ -44,18 +44,11 @@ export async function handler(
 	const packageName = googlePackageName(request.headers);
 
 	if (purchaseToken && subscriptionId) {
-		// We're testing the new implementation in production, but want to limit traffic through this codepath
-		// This was turned off 2024-11-06 in an attempt to reduce our API quota usage
-		// const roll = Math.floor(Math.random() * 100 + 1)
-		// if (roll <= 0) {
-		//     await updateParallelTestTable(purchaseToken, packageName)
-		// }
-
 		const purchaseTokenHash = createHash('sha256')
 			.update(purchaseToken)
 			.digest('hex');
 		console.log(
-			`Searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}, for purchaseToken hash: ${purchaseTokenHash}`,
+			`[4814d85a] searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}, for purchaseToken hash: ${purchaseTokenHash}`,
 		);
 		try {
 			const subscriptionStatus =
@@ -74,7 +67,7 @@ export async function handler(
 				return { statusCode: 200, body: JSON.stringify(subscriptionStatus) };
 			} else {
 				console.log(
-					`No subscription found for purchaseToken hash: ${purchaseTokenHash}`,
+					`[f22b782f] no subscription found for purchaseToken hash: ${purchaseTokenHash}`,
 				);
 				return HTTPResponses.NOT_FOUND;
 			}
@@ -82,12 +75,12 @@ export async function handler(
 			const err = error as { statusCode?: number };
 			if (err.statusCode == 410) {
 				console.log(
-					`No subscription found for purchaseToken hash: ${purchaseTokenHash} (410-Gone from upstream API)`,
+					`[5c5abf00] no subscription found for purchaseToken hash: ${purchaseTokenHash} (410-Gone from upstream API)`,
 				);
 				return HTTPResponses.NOT_FOUND;
 			} else {
 				console.log(
-					`Serving an Internal Server Error due to: ${err.toString().split('/tokens/')[0]}`,
+					`[44aeccc7] serving an Internal Server Error due to: ${err.toString().split('/tokens/')[0]}`,
 				);
 				return HTTPResponses.INTERNAL_ERROR;
 			}
@@ -131,7 +124,7 @@ async function getSubscriptionStatusFromDynamo(
 ): Promise<SubscriptionStatus | null> {
 	try {
 		console.log(
-			`Fetching subscription from Dynamo for purchaseToken hash: ${purchaseTokenHash}`,
+			`[3db5157b] fetching subscription from Dynamo for purchaseToken hash: ${purchaseTokenHash}`,
 		);
 		const itemToQuery = new SubscriptionEmpty();
 		itemToQuery.setSubscriptionId(purchaseToken);
@@ -139,7 +132,7 @@ async function getSubscriptionStatusFromDynamo(
 		const subscriptionExpiryDate = new Date(subscription.endTimestamp);
 		const dynamoSubscriptionStatus = subscriptionStatus(subscriptionExpiryDate);
 		console.log(
-			`Dynamo SubscriptionStatus for purchaseToken hash: ${purchaseTokenHash}: ${JSON.stringify(
+			`[58de59d8] dynamo SubscriptionStatus for purchaseToken hash: ${purchaseTokenHash}: ${JSON.stringify(
 				dynamoSubscriptionStatus,
 			)}`,
 		);
@@ -148,11 +141,11 @@ async function getSubscriptionStatusFromDynamo(
 		const err = error as { name?: string };
 		if (err.name === 'ItemNotFoundException') {
 			console.log(
-				`No subscription found in Dynamo with purchaseToken hash: ${purchaseTokenHash}`,
+				`[9e038a90] no subscription found in Dynamo with purchaseToken hash: ${purchaseTokenHash}`,
 			);
 		} else {
 			console.log(
-				`The following Dynamo error occurred when attempting to retrieve a subscription with purchaseToken hash: ${purchaseTokenHash}: ${error}`,
+				`[ff0d8bf2] the following Dynamo error occurred when attempting to retrieve a subscription with purchaseToken hash: ${purchaseTokenHash}: ${error}`,
 			);
 		}
 		// All exceptions are swallowed here as we fall-back on the Google API for all failure modes (including cache misses)
