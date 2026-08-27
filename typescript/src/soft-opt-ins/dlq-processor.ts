@@ -112,9 +112,7 @@ export async function handler(_event: unknown): Promise<void> {
 					await deleteMessage(dlqUrl, message.ReceiptHandle);
 				}
 			} catch (error) {
-				console.log(
-					`[ERROR] [952e2a60] Subscription ${subscriptionId} record not found in the subscriptions table. Error: ${error}`,
-				);
+				console.log(`[ERROR] [952e2a60] error: ${error}`);
 				throw error;
 			}
 		}
