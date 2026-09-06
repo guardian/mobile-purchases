@@ -2,6 +2,7 @@ const esbuild = require('esbuild');
 
 // maintenance: please maintain alphabetical order
 const entryPoints = {
+	'delete-user-subscription': './src/lambdas/deleteUserSubscription.ts',
 	'export-historical-data': './src/lambdas/exportHistoricalData.ts',
 	'export-subscription-events-table':
 		'./src/lambdas/exportSubscriptionEventsTable.ts',

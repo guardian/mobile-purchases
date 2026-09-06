@@ -11,6 +11,7 @@ cd dist
 
 # maintenance: please maintain alphabetical order
 HANDLERS=(
+    "delete-user-subscription"
     "export-historical-data"
     "export-subscription-events-table"
     "export-subscription-table-v2"
