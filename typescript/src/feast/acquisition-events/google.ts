@@ -155,7 +155,7 @@ const countryToCurrencyMap = {
 	BO: 'BOB', // Bolivia - Bolivian boliviano
 	KW: 'KWD', // Kuwait - Kuwaiti dinar (KWD)
 	CR: 'CRC', // Costa Rica - Costa Rican Colones (CRC)
-	GT: 'GTQ', // Guatemala- Quetzal (GTQ)
+	GT: 'GTQ', // Guatemala - Quetzal (GTQ)
 	EC: 'USD', // Ecuador - United States dollar (USD)
 };
 
