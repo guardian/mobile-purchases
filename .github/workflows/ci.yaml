@@ -77,7 +77,7 @@ jobs:
             mobile-purchases-apple-update-subscriptions:
               - tsc-target/apple-update-subscriptions.zip
             mobile-purchases-delete-user-subscription:
-              - tsc-target/delete-user-subscription.zip
+              - mpapi-next-gen/dist/delete-user-subscription.zip
             mobile-purchases-export-historical-data:
               - mpapi-next-gen/dist/export-historical-data.zip
             mobile-purchases-export-subscription-events-table:

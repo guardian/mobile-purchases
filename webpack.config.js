@@ -9,7 +9,6 @@ const getEntries = (env) => {
     "apple-fetch-offer-details": "./typescript/src/promotional-offers/appleFetchOfferDetails.ts",
     "google-link-user-subscription": "./typescript/src/link/google.ts",
     "apple-link-user-subscription": "./typescript/src/link/apple.ts",
-    "delete-user-subscription": "./typescript/src/link/deleteLink.ts",
     "user-subscriptions": "./typescript/src/user/user.ts",
     "google-update-subscriptions": "./typescript/src/update-subs/google.ts",
     "apple-update-subscriptions": "./typescript/src/update-subs/apple.ts",
