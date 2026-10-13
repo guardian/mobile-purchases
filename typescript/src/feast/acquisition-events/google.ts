@@ -157,6 +157,7 @@ const countryToCurrencyMap = {
 	CR: 'CRC', // Costa Rica - Costa Rican Colones (CRC)
 	GT: 'GTQ', // Guatemala - Quetzal (GTQ)
 	EC: 'USD', // Ecuador - United States dollar (USD)
+	GI: 'GIP', // Gibraltar - Gibraltar Pound
 };
 
 const countryToCurrency = (country: string): string => {
