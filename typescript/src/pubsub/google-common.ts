@@ -50,10 +50,27 @@ export type VoidedPurchaseNotification = z.infer<
 	typeof VoidedPurchaseNotificationSchema
 >;
 
+const PendingRefundReviewNotificationSchema =
+	DeveloperNotificationBaseSchema.extend({
+		pendingRefundReviewNotification: z.object({
+			version: z.string(),
+			pendingRefundToken: z.string(),
+			orderId: z.string(),
+			refundReason: z.number(),
+		}),
+	});
+export type PendingRefundReviewNotification = z.infer<
+	typeof PendingRefundReviewNotificationSchema
+>;
+
 // Zod doesn't seem to support both extending a base schema with a refinement
 // and extending so I need to apply the refinement here.
 const DeveloperNotificationSchema = z
-	.union([SubscriptionNotificationSchema, VoidedPurchaseNotificationSchema])
+	.union([
+		SubscriptionNotificationSchema,
+		VoidedPurchaseNotificationSchema,
+		PendingRefundReviewNotificationSchema,
+	])
 	.refine(
 		(data) => optionalMsToDate(data.eventTimeMillis) !== null,
 		(data) => ({
@@ -83,23 +100,29 @@ export function parsePayload(
 			JSON.parse(body ?? '').message.data,
 			'base64',
 		);
+		console.log(`[79079615] ${rawNotification}`);
 		const parseResult = DeveloperNotificationSchema.safeParse(
 			JSON.parse(rawNotification.toString()),
 		);
+		console.log(`[f3f7d615] ${JSON.stringify(parseResult)}`);
 		if (!parseResult.success) {
-			return new Error(`HTTP Payload body parse error: ${parseResult.error}`);
+			return new Error(
+				`[5f0bf526] HTTP Payload body parse error: ${parseResult.error}`,
+			);
 		}
-
 		const data = parseResult.data;
+		console.log(`[5e895cb6] ${JSON.stringify(data)}`);
 		if (isSubscriptionNotification(data)) {
+			console.log(`[78fd9338] returning data`);
 			return data;
 		}
-
 		return new Ignorable(
-			`Notification is not a subscription notification. Notification was: ${JSON.stringify(data)}`,
+			`[12d734c8] notification is not a subscription notification. Notification was: ${JSON.stringify(data)}`,
 		);
 	} catch (e) {
-		console.log('Error during the parsing of the HTTP Payload body: ' + e);
+		console.log(
+			'[5a49e03d] error during the parsing of the HTTP Payload body: ' + e,
+		);
 		return e as Error;
 	}
 }

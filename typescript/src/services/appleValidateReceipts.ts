@@ -49,8 +49,7 @@ export interface AppleValidationServerResponse {
 	latest_receipt?: string;
 	// yes you've read the type well. It can both be an array or a value, good luck parsing that
 	latest_receipt_info?:
-		| AppleValidatedReceiptServerInfo
-		| AppleValidatedReceiptServerInfo[];
+		AppleValidatedReceiptServerInfo | AppleValidatedReceiptServerInfo[];
 	latest_expired_receipt_info?: AppleValidatedReceiptServerInfo;
 	pending_renewal_info?: PendingRenewalInfo[];
 	receipt?: AppleValidatedReceiptServerInfo;

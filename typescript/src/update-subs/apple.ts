@@ -41,8 +41,7 @@ export async function toAppleSubscription_async(
 	const appBundleId: string | undefined = response.latestReceiptInfo.bundleId;
 	if (appBundleId !== undefined) {
 		const extra_object:
-			| AppleStoreKitSubscriptionDataDerivationForExtra
-			| undefined =
+			AppleStoreKitSubscriptionDataDerivationForExtra | undefined =
 			await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(
 				appBundleId,
 				transactionId,

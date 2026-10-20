@@ -428,7 +428,7 @@ Resources:
       TreatMissingData: notBreaching
       Tags:
         - Key: App
-          Value: mobile-purchases-google-oauth2
+          Value: mobile-purchases-googleoauth2
 
   GooglePubSubLambda:
     Type: AWS::Serverless::Function

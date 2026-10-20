@@ -16,10 +16,7 @@ interface OktaStageParameters {
 
 export interface UserIdResolution {
 	status:
-		| 'incorrect-token'
-		| 'incorrect-scope'
-		| 'missing-identity-id'
-		| 'success';
+		'incorrect-token' | 'incorrect-scope' | 'missing-identity-id' | 'success';
 	userId: null | string;
 }
 

@@ -100,10 +100,20 @@ export async function handler(_event: unknown): Promise<void> {
 				continue;
 			}
 
-			const success = await processAcquisition(subscriptionRecord, identityId);
-
-			if (success) {
-				await deleteMessage(dlqUrl, message.ReceiptHandle);
+			try {
+				console.log(
+					`[fd0c3e01] processing acquisition, subscriptionId: ${subscriptionId}, identityId: ${identityId}`,
+				);
+				const success = await processAcquisition(
+					subscriptionRecord,
+					identityId,
+				);
+				if (success) {
+					await deleteMessage(dlqUrl, message.ReceiptHandle);
+				}
+			} catch (error) {
+				console.log(`[ERROR] [952e2a60] error: ${error}`);
+				throw error;
 			}
 		}
 	}
