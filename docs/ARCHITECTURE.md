@@ -193,10 +193,13 @@ Inserts into the user-subscriptions Dynamo table trigger the soft-opt-in-acquisi
 
 
 [01] Lambda/function:
+    code: typescript/src/soft-opt-ins/acquisitions.ts
     name: mobile-purchases-soft-opt-in-acquisitions-PROD
     Works in conjunction with:
        - SQS Queue: mobile-purchases-soft-opt-in-acquisitions-DLQ-PROD
-       - Lambda/function: mobile-purchases-soft-opt-in-acquisitions-dlq-processor-PROD
+       - Lambda/function:
+          code: typescript/src/soft-opt-ins/dlq-processor.ts
+          name: mobile-purchases-soft-opt-in-acquisitions-dlq-processor-PROD
 
 [02] Dynamo table
      name: mobile-purchases-PROD-user-subscriptions
