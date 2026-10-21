@@ -219,7 +219,7 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
  ----------------------------------             ----------------------------------------
                                                             |         |
                                                             |         |
-                                                          DELETE       ----> [SQS queue; membership account]
+                                                          DELETE       ----> [ (membership account) SQS queue: soft-opt-in-consent-setter-queue-PROD ]
                                                             |
                                                             |
                                                             v
