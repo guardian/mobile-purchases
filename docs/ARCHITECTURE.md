@@ -123,23 +123,10 @@ In some cases the subscription is queued for processing by pushing to the subscr
 
 Inserts into the user-subscriptions Dynamo table trigger the soft-opt-in-acquisitions lambda which in turn pushes onto SQS queues in the membership account to set SOI consents and send emails.
 
-Deletions from the subscriptions table (triggered by the TTL being reached) trigger the delete-user-subscription lambda. This severs the user-subscription record for this subscription and pushes onto a queue in the membership account to trigger a recalculation of SOI consents.
-
 ```
 
 (Unless otherwise specified elements are in the mobile aws account)
 
-                                   DELETE event
-                                (triggered by TTL)
- ---------------------------------              ----------------------------------
-| Dynamo table: subscriptions (2) |----------> | Lambda: delete-user-subscription |
- ---------------------------------              ----------------------------------
-                                                            |
-                                                            |
-                                                          DELETE
-                                                            |
-                                                            |
-                                                            v
                                               ----------------------------------
                                              | Dynamo table: user-subscriptions |
                                               ----------------------------------
@@ -153,7 +140,7 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
                                           --------------------------------------              -------------------
                                          | Lambda: soft-opt-in-acquisitions (1) | ---------> | SQS: braze-emails |
                                           --------------------------------------              -------------------
-                                                            |                               (membership account)
+                                                            |                                 (membership account)
                                                             |
                                                             v
                                           ---------------------------------------
@@ -163,13 +150,34 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
 
 
 (1) Lambda: mobile-purchases-soft-opt-in-acquisitions-PROD
-    Works in conjunction with (3) and (4)
+    Works in conjunction with:
+       - SQS Queue: mobile-purchases-soft-opt-in-acquisitions-DLQ-PROD
+       - Lambda: mobile-purchases-soft-opt-in-acquisitions-dlq-processor-PROD
 
-(2) Dynamo table: mobile-purchases-PROD-subscriptions
+```
 
-(3) SQS Queue: mobile-purchases-soft-opt-in-acquisitions-DLQ-PROD
+Deletions from the subscriptions table (triggered by the TTL being reached) trigger the delete-user-subscription lambda. This severs the user-subscription record for this subscription and pushes onto a queue in the membership account to trigger a recalculation of SOI consents.
 
-(4) Lambda: mobile-purchases-soft-opt-in-acquisitions-dlq-processor-PROD
+```
+
+(Unless otherwise specified elements are in the mobile aws account)
+
+                                   DELETE event
+                                (triggered by TTL)
+ ---------------------------------              ----------------------------------
+| Dynamo table: subscriptions (2) |----------> | Lambda: delete-user-subscription |
+ ---------------------------------              ----------------------------------
+                                                            |         |
+                                                            |         |
+                                                          DELETE       ----> [SQS queue; membership account]
+                                                            |
+                                                            |
+                                                            v
+                                              ----------------------------------
+                                             | Dynamo table: user-subscriptions |
+                                              ----------------------------------
+
+(1) Dynamo table: mobile-purchases-PROD-subscriptions
 
 ```
 
@@ -204,7 +212,6 @@ The subscriptions, subscription-events-v2 and user-subscriptions Dynamo tables a
 The update-subscriptions lambdas push onto an SQS queue for each change and this historical data is exported by lambdas.
 
 ```
-
 
 (Unless otherwise specified elements are in the mobile aws account)
 
