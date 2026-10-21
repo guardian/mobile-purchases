@@ -183,16 +183,13 @@ Inserts into the user-subscriptions Dynamo table trigger the soft-opt-in-acquisi
                                                             |
                                                             |
                                                             v
-                                          ---------------------------------------              -------------------
-                                         | Lambda: soft-opt-in-acquisitions [01] | ---------> | SQS: braze-emails |
-                                          ---------------------------------------              -------------------
-                                                            |                                 (membership account)
+                                          ---------------------------------------             
+                                         | Lambda: soft-opt-in-acquisitions [01] | ---------> [ (membership account) SQS: braze-emails-PROD ]
+                                          ---------------------------------------
+                                                            | 
                                                             |
                                                             v
-                                          ---------------------------------------
-                                         | SQS: soft-opt-in-consent-setter-queue |
-                                          ---------------------------------------
-                                                  (membership account)
+                                         [ (membership account) SQS: soft-opt-in-consent-setter-queue-PROD ]
 
 
 [01] Lambda/function:
