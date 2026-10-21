@@ -2,6 +2,8 @@
 
 This service is a set of AWS lambdas, triggered by an API Gateway, SQS queues or Dynamo events. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services.
 
+For clarity and convenience we specify the code paths to the entry point of saw lambdas, and note that the paths are given from the root of the repository.
+
 ## Pubsub
 
 Data enters the system via pubsub endpoints which are called by the Apple App Store and Google Play Store when subscription events happen (e.g. purchase, renewal, cancellation):
@@ -38,47 +40,49 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
                                                  -------------------------------------------                                                                                   ( google-historical-subscriptions )
 
 
-[09] lambda : applepubsub
-     code: src/pubsub/apple.ts
-     AWS function (s): mobile-purchases-applepubsub-PROD
-                     : mobile-purchases-applepubsub-CODE
+[09] AWS lambda/function
+     code: typescript/src/pubsub/apple.ts
+     name: mobile-purchases-applepubsub-PROD
+         : mobile-purchases-applepubsub-CODE
 
-[10] lambda : googlepubsub
-     code: src/pubsub/google.ts
-     AWS function (s): mobile-purchases-googlepubsub-PROD (generate extra for table [07])
-                     : mobile-purchases-googlepubsub-CODE
+[10] AWS lambda/function
+     code: typescript/src/pubsub/google.ts
+     name: mobile-purchases-googlepubsub-PROD (generate extra for table [07])
+         : mobile-purchases-googlepubsub-CODE
 
-[06] queue : google-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch-dlq
+[06] SQS queue
+     name: mobile-purchases-PROD-google-subscriptions-to-fetch
+         : mobile-purchases-PROD-google-subscriptions-to-fetch-dlq
 
-[05] queue : feast-apple-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch-dlq
+[05] SQS queue
+     name: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch
+         : mobile-purchases-PROD-feast-apple-subscriptions-to-fetch-dlq
 
-[04] queue : feast-google-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-feast-google-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-feast-google-subscriptions-to-fetch-dlq
+[04] SQS queue
+     name: mobile-purchases-PROD-feast-google-subscriptions-to-fetch
+         : mobile-purchases-PROD-feast-google-subscriptions-to-fetch-dlq
 
-[03] lambda : apple-update-subscriptions
-     code: src/update-subs/apple.ts
-     AWS function (s): mobile-purchases-apple-update-subscriptions-PROD
+[03] AWS lambda/function
+     code: typescript/src/update-subs/apple.ts
+     name: mobile-purchases-apple-update-subscriptions-PROD
 
-[02] lambda : google-update-subscriptions
-     code: src/update-subs/google.ts
-     AWS function (s): mobile-purchases-google-update-subscriptions-PROD
+[02] AWS lambda/function
+     code: typescript/src/update-subs/google.ts
+     name: mobile-purchases-google-update-subscriptions-PROD
 
-[01] lambda :
-     AWS function: mobile-purchases-feast-google-update-subscriptions-PROD
+[01] AWS lambda/function
+     code: typescript/src/feast/update-subs/google.ts
+     name: mobile-purchases-feast-google-update-subscriptions-PROD
 
-[11] lambda :
-     AWS function: mobile-purchases-feast-apple-update-subscriptions-PROD
+[11] AWS lambda/function
+     code: typescript/src/feast/update-subs/apple.ts
+     name: mobile-purchases-feast-apple-update-subscriptions-PROD
 
-[07] table : subscription-events-v2
-     Dynamo table: mobile-purchases-PROD-subscription-events-v2 [extra]
+[07] Dynamo table
+     name: mobile-purchases-PROD-subscription-events-v2 [extra]
 
-[08] table : subscriptions
-     Dynamo table: mobile-purchases-PROD-subscriptions [extra]
+[08] Dynamo table
+     name: mobile-purchases-PROD-subscriptions [extra]
 
 ```
 
@@ -239,7 +243,7 @@ Dynamo tables:
     [01] mobile-purchases-PROD-subscription-events-v2
     [02] mobile-purchases-PROD-subscriptions
 
-Lambda Functions:
+AWS lambda/function (s):
     [03] mobile-purchases-export-google-historical-data-PROD
     [04] mobile-purchases-export-apple-historical-data-PROD
     [05] mobile-purchases-export-subscription-events-table-PROD
