@@ -2,6 +2,8 @@
 
 This service is a set of AWS lambdas, triggered by an API Gateway, SQS queues or Dynamo events. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services.
 
+For clarity and convenience we specify the code paths to the entry point of the lambdas, and note that the paths are given from the root of the repository.
+
 ## Pubsub
 
 Data enters the system via pubsub endpoints which are called by the Apple App Store and Google Play Store when subscription events happen (e.g. purchase, renewal, cancellation):
@@ -20,65 +22,82 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
  ------------------------      HTTP via API Gateway        ----------------                         ------------                                         -----------------------------                        ----------------------------------
 | App Store & Play Store | --------------------------->   | Pubsub Lambdas |      ---------------> | SQS Queues | --------------------------------------| Update subscription Lambdas | -------------------> | Dynamo Table: subscriptions [08] |
  ------------------------                                  ----------------                         ------------                                         -----------------------------                       |               [extra]            |
-                                                          ( applepubsub [09] )                     ( apple-subscriptions-to-fetch )                     ( apple-update-subscriptions [03] )                   ----------------------------------
+                                                          ( applepubsub [09] )                     ( apple-subscriptions-to-fetch [13] )                ( apple-update-subscriptions [03] )                   ----------------------------------
                                                           ( googlepubsub [10] )                    ( google-subscriptions-to-fetch [06] )               ( google-update-subscriptions [02] )
                                                           ( feastapplepubsub )                     ( feast-apple-subscriptions-to-fetch [05] )          ( feast-apple-subscriptions-to-fetch [11] )
                                                           ( feastgooglepubsub )                    ( feast-google-subscriptions-to-fetch [04] )         ( feast-google-subscriptions-to-fetch [01] )
                                                                 |                                                                                               |
                                                                 |                                                                                               |
-                                                                |                                                                                               |                   ----------------------------------
-                                                                |                                                                                                ----------------> | Dynamo table: user-subscriptions |
-                                                                |                                                                                                  (feast only)     ----------------------------------
+                                                                |                                                                                               |                   ---------------------------------------
+                                                                |                                                                                                ----------------> | Dynamo table: user-subscriptions [12] |
+                                                                |                                                                                                  (feast only)     ---------------------------------------
                                                                 |                                                                                               |
                                                                 |                                                                                               |
                                                                 v                                                                                               |                   ------------
                                                  -------------------------------------------                                                                     ----------------> | SQS Queues |
                                                 | Dynamo Table: subscription-events-v2 [07] |                                                                      (feast only)     ------------
-                                                |               [extra]                     |                                                                                  ( apple-historical-subscriptions )
-                                                 -------------------------------------------                                                                                   ( google-historical-subscriptions )
+                                                |               [extra]                     |                                                                                      ( apple-historical-subscriptions [14] )
+                                                 -------------------------------------------                                                                                       ( google-historical-subscriptions [15] )
 
 
-[09] lambda : applepubsub
-     code: src/pubsub/apple.ts
-     AWS function (s): mobile-purchases-applepubsub-PROD
-                     : mobile-purchases-applepubsub-CODE
+[09] Lambda/function
+     code: typescript/src/pubsub/apple.ts
+     name: mobile-purchases-applepubsub-PROD
+         : mobile-purchases-applepubsub-CODE
 
-[10] lambda : googlepubsub
-     code: src/pubsub/google.ts
-     AWS function (s): mobile-purchases-googlepubsub-PROD (generate extra for table [07])
-                     : mobile-purchases-googlepubsub-CODE
+[10] Lambda/function
+     code: typescript/src/pubsub/google.ts
+     name: mobile-purchases-googlepubsub-PROD (generate extra for table [07])
+         : mobile-purchases-googlepubsub-CODE
 
-[06] queue : google-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-google-subscriptions-to-fetch-dlq
+[13] SQS queue
+     name: mobile-purchases-PROD-apple-subscriptions-to-fetch
+         : mobile-purchases-PROD-apple-subscriptions-to-fetch-dlq
 
-[05] queue : feast-apple-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch-dlq
+[06] SQS queue
+     name: mobile-purchases-PROD-google-subscriptions-to-fetch
+         : mobile-purchases-PROD-google-subscriptions-to-fetch-dlq
 
-[04] queue : feast-google-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-feast-google-subscriptions-to-fetch
-     SQS queue: mobile-purchases-PROD-feast-google-subscriptions-to-fetch-dlq
+[05] SQS queue
+     name: mobile-purchases-PROD-feast-apple-subscriptions-to-fetch
+         : mobile-purchases-PROD-feast-apple-subscriptions-to-fetch-dlq
 
-[03] lambda : apple-update-subscriptions
-     code: src/update-subs/apple.ts
-     AWS function (s): mobile-purchases-apple-update-subscriptions-PROD
+[04] SQS queue
+     name: mobile-purchases-PROD-feast-google-subscriptions-to-fetch
+         : mobile-purchases-PROD-feast-google-subscriptions-to-fetch-dlq
 
-[02] lambda : google-update-subscriptions
-     code: src/update-subs/google.ts
-     AWS function (s): mobile-purchases-google-update-subscriptions-PROD
+[03] Lambda/function
+     code: typescript/src/update-subs/apple.ts
+     name: mobile-purchases-apple-update-subscriptions-PROD
 
-[01] lambda :
-     AWS function: mobile-purchases-feast-google-update-subscriptions-PROD
+[02] Lambda/function
+     code: typescript/src/update-subs/google.ts
+     name: mobile-purchases-google-update-subscriptions-PROD
 
-[11] lambda :
-     AWS function: mobile-purchases-feast-apple-update-subscriptions-PROD
+[01] Lambda/function
+     code: typescript/src/feast/update-subs/google.ts
+     name: mobile-purchases-feast-google-update-subscriptions-PROD
 
-[07] table : subscription-events-v2
-     Dynamo table: mobile-purchases-PROD-subscription-events-v2 [extra]
+[11] Lambda/function
+     code: typescript/src/feast/update-subs/apple.ts
+     name: mobile-purchases-feast-apple-update-subscriptions-PROD
 
-[08] table : subscriptions
-     Dynamo table: mobile-purchases-PROD-subscriptions [extra]
+[07] Dynamo table
+     name: mobile-purchases-PROD-subscription-events-v2 [extra]
+
+[08] Dynamo table
+     name: mobile-purchases-PROD-subscriptions [extra]
+
+[12] Dynamo table
+     name: mobile-purchases-PROD-user-subscriptions
+
+[14] SQS queue
+     name: mobile-purchases-PROD-apple-historical-subscriptions
+         : mobile-purchases-PROD-apple-historical-subscriptions-dlq
+
+[15] SQS queue
+     name: mobile-purchases-PROD-google-historical-subscriptions
+         : mobile-purchases-PROD-google-historical-subscriptions-dlq
 
 ```
 
@@ -103,17 +122,44 @@ The mobile apps link an In App Purchase with a Guardian user by calling the link
                                     ------------                                -----------------------------
                                    | SQS Queues | ---------------------------> | Update subscription Lambdas |
                                     ------------                                -----------------------------
-                                   ( apple-subscriptions-to-fetch )
-                                   ( google-subscriptions-to-fetch )
+                                   ( apple-subscriptions-to-fetch [06] )       (apple-update-subscriptions [04])
+                                   ( google-subscriptions-to-fetch [07] )      (google-update-subscriptions [05])
                                          ^
                                          |
                                          |
                                          |
- ---------------                   --------------                               ----------------------------------
-| Mobile Device | --------------> | Link Lambdas | --------------------------> | Dynamo table: user-subscriptions |
- ---------------                   --------------                               ----------------------------------
-                                  (google-link-user-subscription)
-                                  (apple-link-user-subscription)
+ ---------------                   --------------                               ---------------------------------------
+| Mobile Device | --------------> | Link Lambdas | --------------------------> | Dynamo table: user-subscriptions [03] |
+ ---------------                   --------------                               ---------------------------------------
+                                  (google-link-user-subscription [01])
+                                  (apple-link-user-subscription [02])
+
+[01] Lambda/function
+     code: typescript/src/link/apple.ts
+     name: mobile-purchases-google-link-user-subscription-PROD
+
+[02] Lambda/function
+     code: typescript/src/link/google.ts
+     name: mobile-purchases-apple-link-user-subscription-PROD
+
+[03] Dynamo table
+     name: mobile-purchases-PROD-user-subscriptions
+
+[04] Lambda/function
+     code: typescript/src/update-subs/apple.ts
+     name: mobile-purchases-apple-update-subscriptions-PROD
+
+[05] Lambda/function
+     code: typescript/src/update-subs/google.ts
+     name: mobile-purchases-google-update-subscriptions-PROD
+
+[06] SQS queue
+     name: mobile-purchases-PROD-apple-historical-subscriptions
+         : mobile-purchases-PROD-apple-historical-subscriptions-dlq
+
+[07] SQS queue
+     name: mobile-purchases-PROD-google-historical-subscriptions
+         : mobile-purchases-PROD-google-historical-subscriptions-dlq
 
 ```
 
@@ -127,9 +173,9 @@ Inserts into the user-subscriptions Dynamo table trigger the soft-opt-in-acquisi
 
 (Unless otherwise specified elements are in the mobile aws account)
 
-                                              ----------------------------------
-                                             | Dynamo table: user-subscriptions |
-                                              ----------------------------------
+                                              ---------------------------------------
+                                             | Dynamo table: user-subscriptions [02] |
+                                              ---------------------------------------
                                                             |
                                                             |
                                                        INSERT event
@@ -137,22 +183,26 @@ Inserts into the user-subscriptions Dynamo table trigger the soft-opt-in-acquisi
                                                             |
                                                             |
                                                             v
-                                          --------------------------------------              -------------------
-                                         | Lambda: soft-opt-in-acquisitions (1) | ---------> | SQS: braze-emails |
-                                          --------------------------------------              -------------------
-                                                            |                                 (membership account)
+                                          ---------------------------------------             
+                                         | Lambda: soft-opt-in-acquisitions [01] | ---------> [ (membership account) SQS: braze-emails-PROD ]
+                                          ---------------------------------------
+                                                            | 
                                                             |
                                                             v
-                                          ---------------------------------------
-                                         | SQS: soft-opt-in-consent-setter-queue |
-                                          ---------------------------------------
-                                                  (membership account)
+                                         [ (membership account) SQS: soft-opt-in-consent-setter-queue-PROD ]
 
 
-(1) Lambda: mobile-purchases-soft-opt-in-acquisitions-PROD
+[01] Lambda/function:
+    code: typescript/src/soft-opt-ins/acquisitions.ts
+    name: mobile-purchases-soft-opt-in-acquisitions-PROD
     Works in conjunction with:
        - SQS Queue: mobile-purchases-soft-opt-in-acquisitions-DLQ-PROD
-       - Lambda: mobile-purchases-soft-opt-in-acquisitions-dlq-processor-PROD
+       - Lambda/function:
+          code: typescript/src/soft-opt-ins/dlq-processor.ts
+          name: mobile-purchases-soft-opt-in-acquisitions-dlq-processor-PROD
+
+[02] Dynamo table
+     name: mobile-purchases-PROD-user-subscriptions
 
 ```
 
@@ -164,20 +214,28 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
 
                                    DELETE event
                                 (triggered by TTL)
- ---------------------------------              ----------------------------------
-| Dynamo table: subscriptions (2) |----------> | Lambda: delete-user-subscription |
- ---------------------------------              ----------------------------------
+ ----------------------------------             ----------------------------------------
+| Dynamo table: subscriptions [01] |----------> | Lambda: delete-user-subscription [03] |
+ ----------------------------------             ----------------------------------------
                                                             |         |
                                                             |         |
-                                                          DELETE       ----> [SQS queue; membership account]
+                                                          DELETE       ----> [ (membership account) SQS queue: soft-opt-in-consent-setter-queue-PROD ]
                                                             |
                                                             |
                                                             v
-                                              ----------------------------------
-                                             | Dynamo table: user-subscriptions |
-                                              ----------------------------------
+                                              ---------------------------------------
+                                             | Dynamo table: user-subscriptions [02] |
+                                              ---------------------------------------
 
-(1) Dynamo table: mobile-purchases-PROD-subscriptions
+[01] Dynamo table
+     name: mobile-purchases-PROD-subscriptions [extra]
+
+[02] Dynamo table
+     name: mobile-purchases-PROD-user-subscriptions
+
+[03] Lambda/function
+     code: typescript/src/link/deleteLink.ts
+     name: mobile-purchases-delete-user-subscription-PROD
 
 ```
 
@@ -189,17 +247,22 @@ The apps call endpoints to check the status of a subscription.
 
 (Unless otherwise specified elements are in the mobile aws account)
 
- ---------------                   -----------------------------------------                   -------------------
-| Mobile Device | --------------> | Lambda: google-subscription-status [02] | --------------> | Google Play Store |
- ---------------                   -----------------------------------------                   -------------------
-
  ---------------                   ----------------------------------------                    -----------------
 | Mobile Device | --------------> | Lambda: apple-subscription-status [01] | ---------------> | Apple App Store |
  ---------------                   ----------------------------------------                    -----------------
 
-[01] lambda function: mobile-purchases-google-subscription-status-PROD
+ ---------------                   -----------------------------------------                   -------------------
+| Mobile Device | --------------> | Lambda: google-subscription-status [02] | --------------> | Google Play Store |
+ ---------------                   -----------------------------------------                   -------------------
 
-[02] lambda function: mobile-purchases-apple-subscription-status-PROD
+[01] Lambda/function
+     code: typescript/src/subscription-status/appleSubStatus.ts
+     name: mobile-purchases-apple-subscription-status-PROD
+
+
+[02] Lambda/function
+     code: typescript/src/subscription-status/googleSubStatus.ts
+     name: mobile-purchases-google-subscription-status-PROD
 
 ```
 
@@ -231,15 +294,16 @@ The update-subscriptions lambdas push onto an SQS queue for each change and this
 | Dynamo Table: subscriptions [02] | ---------------> | Lambda: export-subscription-table-v2 [06] | ------------| S3 |----------> | datalake.mobile_subscriptions |
  ----------------------------------                    -------------------------------------------               ----              -------------------------------
 
- ----------------------------------                    ------------------------------------------------          ----              ------------------------------------
-| Dynamo Table: user-subscriptions | ---------------> | Lambda: export-user-subscription-table-v2 [07] | -------| S3 |----------> | datalake.mobile_user_subscriptions |
- ----------------------------------                    ------------------------------------------------          ----              ------------------------------------
+ ---------------------------------------               ------------------------------------------------          ----              ------------------------------------
+| Dynamo Table: user-subscriptions [08] | ----------> | Lambda: export-user-subscription-table-v2 [07] | -------| S3 |----------> | datalake.mobile_user_subscriptions |
+ ---------------------------------------               ------------------------------------------------          ----              ------------------------------------
 
 Dynamo tables:
     [01] mobile-purchases-PROD-subscription-events-v2
     [02] mobile-purchases-PROD-subscriptions
+    [08] mobile-purchases-PROD-user-subscriptions
 
-Lambda Functions:
+Lambda/function (s):
     [03] mobile-purchases-export-google-historical-data-PROD
     [04] mobile-purchases-export-apple-historical-data-PROD
     [05] mobile-purchases-export-subscription-events-table-PROD
