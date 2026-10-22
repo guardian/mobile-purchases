@@ -1,15 +1,23 @@
 import 'source-map-support/register';
 import { createHash } from 'crypto';
+import { DynamoDB } from 'aws-sdk';
+import { DataMapper } from '@aws/dynamodb-data-mapper';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import type {
 	HttpRequestHeaders,
 	PathParameters,
-} from '../models/apiGatewayHttp';
-import { HTTPResponses } from '../models/apiGatewayHttp';
-import { SubscriptionEmpty } from '../models/subscription';
-import { fetchGoogleSubscription } from '../services/google-play';
-import { dynamoMapper } from '../utils/aws';
-import { optionalMsToDate } from '../utils/dates';
+} from '../common/apiGatewayHttp';
+import { HTTPResponses } from '../common/apiGatewayHttp';
+import { SubscriptionEmpty } from '../common/subscription';
+import { fetchGoogleSubscription } from '../common/google-play';
+import { optionalMsToDate } from '../common/dates';
+import { Region } from '../common/appIdentity';
+
+const aws = new DynamoDB({
+	region: Region,
+});
+
+const dynamoMapper = new DataMapper({ client: aws });
 
 type SubscriptionStatus = {
 	subscriptionHasLapsed: boolean;

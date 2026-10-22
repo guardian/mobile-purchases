@@ -8,6 +8,7 @@ const entryPoints = {
 	'export-subscription-events-table':
 		'./src/lambdas/exportSubscriptionEventsTable.ts',
 	'export-subscription-table-v2': './src/lambdas/exportSubscriptionTableV2.ts',
+	'google-subscription-status': './src/lambdas/googleSubscriptionStatus.ts',
 	'soft-opt-in-acquisitions': './src/lambdas/softOptInAcquisitions.ts',
 	googleoauth2: './src/lambdas/googleOauth2.ts',
 };
