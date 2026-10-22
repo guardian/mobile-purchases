@@ -1,8 +1,12 @@
 import { handler } from './softOptInAcquisitions';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
 import { mockClient } from 'aws-sdk-client-mock';
 import type { DynamoDBStreamEvent } from 'aws-lambda';
+
+const mockV2SqsSendMessage = jest.fn().mockReturnThis();
+const mockV2SqsPromise = jest.fn().mockResolvedValue({ MessageId: 'mock-msg-id' });
 
 jest.mock('../common/guIdentityApi', () => ({
 	getMembershipAccountId: jest.fn().mockResolvedValue('123456789012'),
@@ -32,8 +36,8 @@ jest.mock('aws-sdk/clients/sts', () => {
 
 jest.mock('aws-sdk/clients/sqs', () => {
 	return jest.fn().mockImplementation(() => ({
-		sendMessage: jest.fn().mockReturnThis(),
-		promise: jest.fn().mockResolvedValue({ MessageId: 'mock-msg-id' }),
+		sendMessage: mockV2SqsSendMessage,
+		promise: mockV2SqsPromise,
 	}));
 });
 
@@ -79,15 +83,36 @@ describe('DynamoDB Stream Handler - GetItem Unmarshalling Test', () => {
 
 		await expect(handler(mockStreamEvent)).resolves.not.toThrow();
 
-		expect(dynamoMock.call(0).args[0].input).toEqual({
+		const firstDynamoCall = dynamoMock.call(0);
+		expect(firstDynamoCall.args[0].input).toEqual({
 			TableName: 'mobile-purchases-CODE-subscriptions',
 			Key: { subscriptionId: { S: 'sub-123' } },
 		});
 
-		const sqsCalls = sqsMock.commandCalls(SendMessageCommand);
-		const dlqCalls = sqsCalls.filter(
-			(call) => call.args[0].input.QueueUrl === process.env.DLQUrl,
+		expect(mockV2SqsSendMessage).toHaveBeenCalledTimes(2);
+
+		expect(mockV2SqsSendMessage).toHaveBeenNthCalledWith(
+			1,
+			expect.objectContaining({
+				QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/123456789012/soft-opt-in-consent-setter-queue-CODE',
+				MessageBody: expect.stringContaining('"subscriptionId":"sub-123"'),
+			})
 		);
+
+		expect(mockV2SqsSendMessage).toHaveBeenNthCalledWith(
+			2,
+			expect.objectContaining({
+				QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/123456789012/braze-emails-CODE',
+				MessageBody: expect.stringContaining('"Address":"test-user@theguardian.com"'),
+			})
+		);
+
+		const sqsCalls = sqsMock.calls();
+		const dlqCalls = sqsCalls.filter((call) => {
+			const commandInstance = call.args[0] as SendMessageCommand;
+			const input = commandInstance.input as SendMessageCommandInput;
+			return input?.QueueUrl === process.env.DLQUrl;
+		});
 		expect(dlqCalls.length).toBe(0);
 	});
 
@@ -98,14 +123,18 @@ describe('DynamoDB Stream Handler - GetItem Unmarshalling Test', () => {
 
 		await expect(handler(mockStreamEvent)).resolves.not.toThrow();
 
-		const sqsCalls = sqsMock.commandCalls(SendMessageCommand);
-		const dlqCalls = sqsCalls.filter(
-			(call) => call.args[0].input.QueueUrl === process.env.DLQUrl,
-		);
+		const sqsCalls = sqsMock.calls();
+		const dlqCalls = sqsCalls.filter((call) => {
+			const commandInstance = call.args[0] as SendMessageCommand;
+			const input = commandInstance.input as SendMessageCommandInput;
+			return input?.QueueUrl === process.env.DLQUrl;
+		});
 		
 		expect(dlqCalls.length).toBe(1);
 		
-		const messageBody = JSON.parse(dlqCalls[0].args[0].input.MessageBody as string);
+		const standardCommand = dlqCalls[0].args[0] as SendMessageCommand;
+		const input = standardCommand.input as SendMessageCommandInput;
+		const messageBody = JSON.parse(input.MessageBody as string);
 		expect(messageBody).toMatchObject({
 			subscriptionId: 'sub-123',
 			identityId: 'user-456',
