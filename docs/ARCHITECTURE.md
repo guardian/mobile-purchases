@@ -193,7 +193,7 @@ Inserts into the user-subscriptions Dynamo table trigger the soft-opt-in-acquisi
 
 
 [01] Lambda/function:
-    code: typescript/src/soft-opt-ins/acquisitions.ts
+    code: code: mpapi-next-gen/src/lambdas/softOptInAcquisitions.ts
     name: mobile-purchases-soft-opt-in-acquisitions-PROD
     Works in conjunction with:
        - SQS Queue: mobile-purchases-soft-opt-in-acquisitions-DLQ-PROD
@@ -234,7 +234,7 @@ Deletions from the subscriptions table (triggered by the TTL being reached) trig
      name: mobile-purchases-PROD-user-subscriptions
 
 [03] Lambda/function
-     code: typescript/src/link/deleteLink.ts
+     code: mpapi-next-gen/src/lambdas/deleteUserSubscription.ts
      name: mobile-purchases-delete-user-subscription-PROD
 
 ```
