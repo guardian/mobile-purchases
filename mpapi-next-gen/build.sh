@@ -15,6 +15,7 @@ HANDLERS=(
     "export-historical-data"
     "export-subscription-events-table"
     "export-subscription-table-v2"
+    "soft-opt-in-acquisitions"
     "googleoauth2"
 )
 
