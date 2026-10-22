@@ -9,7 +9,8 @@ module.exports = [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        project: './tsconfig.json',
+        projectService: true, // tell esLint to automatically find the closest tsconfig.json for any file it lints
+        tsconfigRootDir: __dirname, // resolves paths relative to mpapi-next-gen
       },
     },
     plugins: {

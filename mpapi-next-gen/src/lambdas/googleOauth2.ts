@@ -92,6 +92,6 @@ export const handler = async (_event: APIGatewayProxyEvent) => {
 		console.log(`File uploaded successfully: ${locationKey}`);
 		console.log('ETag:', response.ETag);
 	} catch (error) {
-		console.error('Error uploading `${locationKey}` to S3:', error);
+		console.error('[8e446120] error uploading `${locationKey}` to S3:', error);
 	}
 };
