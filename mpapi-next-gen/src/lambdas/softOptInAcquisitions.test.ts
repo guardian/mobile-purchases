@@ -4,14 +4,12 @@ import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { mockClient } from 'aws-sdk-client-mock';
 import type { DynamoDBStreamEvent } from 'aws-lambda';
 
-// 1. Mock the whole common configurations folder to prevent outbound HTTP dependencies
 jest.mock('../common/guIdentityApi', () => ({
 	getMembershipAccountId: jest.fn().mockResolvedValue('123456789012'),
 	getIdentityApiKey: jest.fn().mockResolvedValue('mock-api-key'),
 	getIdentityUrl: jest.fn().mockResolvedValue('https://mock-guardian.co.uk'),
 }));
 
-// Mock the global network fetch engine for PostAcquisition verification checks
 global.fetch = jest.fn().mockResolvedValue({
 	ok: true,
 	json: jest.fn().mockResolvedValue({
@@ -19,7 +17,6 @@ global.fetch = jest.fn().mockResolvedValue({
 	}),
 });
 
-// 2. Intercept and completely isolate AWS SDK v2 clients declared at runtime in the file
 jest.mock('aws-sdk/clients/sts', () => {
 	return jest.fn().mockImplementation(() => ({
 		assumeRole: jest.fn().mockReturnThis(),
