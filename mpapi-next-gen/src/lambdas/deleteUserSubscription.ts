@@ -70,7 +70,7 @@ async function putMetric(metricName: string, value: number) {
 		});
 		await cloudWatchClient.send(command);
 	} catch (error) {
-		console.error(`Failed to put metric ${metricName}:`, error);
+		console.error(`[451c3ca7] failed to put metric ${metricName}:`, error);
 	}
 }
 
@@ -92,12 +92,14 @@ async function deleteUserSubscription(
 			await dynamoClient.send(command);
 			count++;
 		} catch (error) {
-			console.error(`Failed to delete user link:`, error);
+			console.error(`[59bea505] failed to delete user link:`, error);
 		}
 	}
 
 	if (userLinks.length !== count) {
-		console.warn(`Queried ${userLinks.length} rows, but only deleted ${count}`);
+		console.warn(
+			`[4a6b2399] queried ${userLinks.length} rows, but only deleted ${count}`,
+		);
 	}
 
 	console.log(`Deleted ${count} rows`);
@@ -122,18 +124,20 @@ async function disableSoftOptIns(
 
 	const user = userLinks[0];
 
-	await sendToSqsSoftOptIns(
+	const queueName =
 		Stage === 'PROD'
 			? `${queueNamePrefix}/soft-opt-in-consent-setter-queue-PROD`
-			: `${queueNamePrefix}/soft-opt-in-consent-setter-queue-CODE`,
-		{
-			identityId: user.userId,
-			eventType: 'Cancellation',
-			productName: mapPlatformToSoftOptInProductName(platform),
-			subscriptionId: subscriptionId,
-		},
+			: `${queueNamePrefix}/soft-opt-in-consent-setter-queue-CODE`;
+
+	await sendToSqsSoftOptIns(queueName, {
+		identityId: user.userId,
+		eventType: 'Cancellation',
+		productName: mapPlatformToSoftOptInProductName(platform),
+		subscriptionId: subscriptionId,
+	});
+	console.log(
+		`[e3541b9d] sent soft opt-in message for identityId ${user.userId}`,
 	);
-	console.log(`sent soft opt-in message for identityId ${user.userId}`);
 }
 
 interface HandlerResponse {
@@ -163,7 +167,9 @@ export async function handler(
 		const subscriptionId = subscription?.subscriptionId?.S;
 
 		if (!subscriptionId) {
-			console.warn(`Skipping: Missing subscriptionId in subscription object`);
+			console.warn(
+				`[72661f2e] skipping: Missing subscriptionId in subscription object`,
+			);
 			continue;
 		}
 
@@ -171,7 +177,7 @@ export async function handler(
 
 		if (userSubscriptions.length === 0) {
 			console.log(
-				`No user links to delete for subscriptionId: ${subscriptionId}`,
+				`[a3ad0327] no user links to delete for subscriptionId: ${subscriptionId}`,
 			);
 		} else {
 			rowCount += await deleteUserSubscription(userSubscriptions);
@@ -182,7 +188,7 @@ export async function handler(
 				softOptInSuccessCount++;
 			} catch (e) {
 				await handleSoftOptInsError(
-					`Soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`,
+					`[ef3c101a] soft opt-in message send failed for subscriptionId: ${subscriptionId}. ${e}`,
 				);
 			}
 		}
@@ -191,11 +197,11 @@ export async function handler(
 	}
 
 	console.log(
-		`Processed ${recordCount} records from dynamo stream to delete ${rowCount} rows`,
+		`[33ae2f4d] processed ${recordCount} records from dynamo stream to delete ${rowCount} rows`,
 	);
 
 	console.log(
-		`Processed ${recordCount} records from dynamo stream to disable soft opt-ins for ${softOptInSuccessCount} users`,
+		`[8fc7737d] processed ${recordCount} records from dynamo stream to disable soft opt-ins for ${softOptInSuccessCount} users`,
 	);
 
 	return {

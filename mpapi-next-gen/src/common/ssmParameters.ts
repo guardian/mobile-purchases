@@ -38,8 +38,11 @@ export async function getParameterValueUsingAppStageStackConvention<A>(
 ): Promise<A> {
 	// This function was introduced to help migrating the old
 	// getConfigValue<A>(key: string, defaultValue?: A): Promise<A>
-	// from the legacy code.
+	// from the legacy code, by providing a similar signature, but calling
+	// `getParameterValue` from this file.
+
 	// We will get rid of it later on.
+
 	const parameterName = `/${App}/${Stage}/${Stack}/${key}`;
 	const value = await getParameterValue(parameterName);
 	return value as A;
