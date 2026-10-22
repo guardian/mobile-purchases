@@ -6,7 +6,9 @@ import { mockClient } from 'aws-sdk-client-mock';
 import type { DynamoDBStreamEvent } from 'aws-lambda';
 
 const mockV2SqsSendMessage = jest.fn().mockReturnThis();
-const mockV2SqsPromise = jest.fn().mockResolvedValue({ MessageId: 'mock-msg-id' });
+const mockV2SqsPromise = jest
+	.fn()
+	.mockResolvedValue({ MessageId: 'mock-msg-id' });
 
 jest.mock('../common/guIdentityApi', () => ({
 	getMembershipAccountId: jest.fn().mockResolvedValue('123456789012'),
@@ -94,17 +96,21 @@ describe('DynamoDB Stream Handler - GetItem Unmarshalling Test', () => {
 		expect(mockV2SqsSendMessage).toHaveBeenNthCalledWith(
 			1,
 			expect.objectContaining({
-				QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/123456789012/soft-opt-in-consent-setter-queue-CODE',
+				QueueUrl:
+					'https://sqs.eu-west-1.amazonaws.com/123456789012/soft-opt-in-consent-setter-queue-CODE',
 				MessageBody: expect.stringContaining('"subscriptionId":"sub-123"'),
-			})
+			}),
 		);
 
 		expect(mockV2SqsSendMessage).toHaveBeenNthCalledWith(
 			2,
 			expect.objectContaining({
-				QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/123456789012/braze-emails-CODE',
-				MessageBody: expect.stringContaining('"Address":"test-user@theguardian.com"'),
-			})
+				QueueUrl:
+					'https://sqs.eu-west-1.amazonaws.com/123456789012/braze-emails-CODE',
+				MessageBody: expect.stringContaining(
+					'"Address":"test-user@theguardian.com"',
+				),
+			}),
 		);
 
 		const sqsCalls = sqsMock.calls();
@@ -129,9 +135,9 @@ describe('DynamoDB Stream Handler - GetItem Unmarshalling Test', () => {
 			const input = commandInstance.input as SendMessageCommandInput;
 			return input?.QueueUrl === process.env.DLQUrl;
 		});
-		
+
 		expect(dlqCalls.length).toBe(1);
-		
+
 		const standardCommand = dlqCalls[0].args[0] as SendMessageCommand;
 		const input = standardCommand.input as SendMessageCommandInput;
 		const messageBody = JSON.parse(input.MessageBody as string);
