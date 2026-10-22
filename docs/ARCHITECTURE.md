@@ -2,7 +2,7 @@
 
 This service is a set of AWS lambdas, triggered by an API Gateway, SQS queues or Dynamo events. This allow us to scale very efficiently and very cheaply as well as getting retries for free when querying Apple and Google's services.
 
-For clarity and convenience we specify the code paths to the entry point of saw lambdas, and note that the paths are given from the root of the repository.
+For clarity and convenience we specify the code paths to the entry point of the lambdas, and note that the paths are given from the root of the repository.
 
 ## Pubsub
 
