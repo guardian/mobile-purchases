@@ -12,6 +12,7 @@ import Sqs from 'aws-sdk/clients/sqs';
 import type { PromiseResult } from 'aws-sdk/lib/request';
 import STS from 'aws-sdk/clients/sts';
 import { getIdentityApiKey, getIdentityUrl } from '../common/guIdentityApi';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 // -----------------------------------------------------------------------------
 // Types
@@ -422,7 +423,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 						`[6529e6f7] subscription ${subscriptionId} not found`,
 					);
 				}
-				subscriptionRecord = result.Item as unknown as Subscription;
+				subscriptionRecord = unmarshall(result.Item) as Subscription;
 			} catch (error) {
 				console.log(
 					`[e5201022] Subscription ${subscriptionId} record not found in the subscriptions table. Error: ${error}`,
