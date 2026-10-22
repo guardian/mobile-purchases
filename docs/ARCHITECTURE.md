@@ -295,13 +295,13 @@ The update-subscriptions lambdas push onto an SQS queue for each change and this
  ----------------------------------                    -------------------------------------------               ----              -------------------------------
 
  ---------------------------------------               ------------------------------------------------          ----              ------------------------------------
-| Dynamo Table: user-subscriptions [03] | ----------> | Lambda: export-user-subscription-table-v2 [07] | -------| S3 |----------> | datalake.mobile_user_subscriptions |
+| Dynamo Table: user-subscriptions [08] | ----------> | Lambda: export-user-subscription-table-v2 [07] | -------| S3 |----------> | datalake.mobile_user_subscriptions |
  ---------------------------------------               ------------------------------------------------          ----              ------------------------------------
 
 Dynamo tables:
     [01] mobile-purchases-PROD-subscription-events-v2
     [02] mobile-purchases-PROD-subscriptions
-    [03] mobile-purchases-PROD-user-subscriptions
+    [08] mobile-purchases-PROD-user-subscriptions
 
 Lambda/function (s):
     [03] mobile-purchases-export-google-historical-data-PROD
