@@ -4,7 +4,6 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { QueryCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import type { SubscriptionEvent } from '../common/subscriptionEvent';
-import { SubscriptionEventEmpty } from '../common/subscriptionEvent';
 import { Stage } from '../common/appIdentity';
 import { plusDays } from '../common/dates';
 
@@ -124,7 +123,7 @@ export async function handler(
 		yesterday = event.date;
 	}
 
-	const tableName = SubscriptionEventEmpty.getTableName();
+	const tableName = `mobile-purchases-${Stage}-subscription-events`;
 
 	const itemGenerator = queryDynamoDBItems(tableName, yesterday);
 

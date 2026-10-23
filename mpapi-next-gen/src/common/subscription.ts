@@ -1,4 +1,3 @@
-import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
 import { App, Stage } from '../common/appIdentity';
 
 export class Subscription {
@@ -67,39 +66,7 @@ export class Subscription {
 		this.tableName = tableName;
 	}
 
-	get [DynamoDbTable]() {
-		return `${App}-${Stage}-${this.tableName}`;
-	}
-}
-
-// Note:
-//     SubscriptionEmpty is a convenience class to help with the instantiation of an empty Subscription object.
-//     It's often used to create a argument of dynamoMapper.get (we instantiate it and then
-//     set the subscriptionId, before passing the resulting object to dynamoMapper.get).
-//     It is not meant to stand where a Subscription is the right type, notably as the return type of dynamoMapper.get.
-//     Function dynamoMapper.get will return a Subscription object, not a SubscriptionEmpty object.
-
-export class SubscriptionEmpty extends Subscription {
-	constructor() {
-		super(
-			'', // subscriptionId
-			'', // startTimestamp
-			'', // endTimestamp
-			undefined, // cancellationTimestamp
-			false, // autoRenewing
-			'', // productId
-			undefined, // platform
-			undefined, // freeTrial
-			undefined, // billingPeriod
-		);
-	}
-
-	setSubscriptionId(subscriptionId: string): SubscriptionEmpty {
-		this.subscriptionId = subscriptionId;
-		return this;
-	}
-
-	get [DynamoDbTable]() {
+	get fullTableName(): string {
 		return `${App}-${Stage}-${this.tableName}`;
 	}
 }
