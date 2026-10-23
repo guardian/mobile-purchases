@@ -7,10 +7,7 @@ import type { SendMessageCommandOutput } from '@aws-sdk/client-sqs';
 import { plusDays } from '../common/dates';
 import { getMembershipAccountId } from '../common/guIdentityApi';
 import { Platform } from '../common/platform';
-import type { AWSError } from 'aws-sdk/lib/core';
-import Sqs from 'aws-sdk/clients/sqs';
-import type { PromiseResult } from 'aws-sdk/lib/request';
-import STS from 'aws-sdk/clients/sts';
+import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
 import { getIdentityApiKey, getIdentityUrl } from '../common/guIdentityApi';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
@@ -29,9 +26,9 @@ interface SoftOptInEvent {
 // -----------------------------------------------------------------------------
 // Globals Variables
 
-let SOISqsClient: Sqs | undefined;
+let SOISqsClient: SQSClient | undefined;
 let lastAssumedSOI: Date | undefined;
-let commsSqsClient: Sqs | undefined;
+let commsSqsClient: SQSClient | undefined;
 let lastAssumedComms: Date | undefined;
 
 // -----------------------------------------------------------------------------
@@ -43,35 +40,40 @@ const sqsClient = new SQSClient({ region: Region });
 // -----------------------------------------------------------------------------
 // Functions (Clients Initialization Only)
 
-async function getSqsClientForComms(): Promise<Sqs> {
+async function getSqsClientForComms(): Promise<SQSClient> {
 	const now = new Date();
 	if (
 		!commsSqsClient ||
 		!lastAssumedComms ||
 		now.getTime() - lastAssumedComms.getTime() >= 1800000
 	) {
-		// refresh every 30 minutes
 		const membershipAccountId = await getMembershipAccountId();
-		const sts = new STS();
+		const stsClient = new STSClient({ region: Region });
 
-		const assumeRoleResult = await sts
-			.assumeRole({
+		const assumeRoleResult = await stsClient.send(
+			new AssumeRoleCommand({
 				RoleArn: `arn:aws:iam::${membershipAccountId}:role/comms-${Stage}-EmailQueueCrossAccountRole`,
 				RoleSessionName: 'CrossAccountSession',
-			})
-			.promise();
+			}),
+		);
 
 		const credentials = assumeRoleResult.Credentials;
 
-		if (!credentials) {
+		if (
+			!credentials ||
+			!credentials.AccessKeyId ||
+			!credentials.SecretAccessKey
+		) {
 			throw Error('credentials undefined in getSqsClientForComms');
 		}
 
-		commsSqsClient = new Sqs({
-			accessKeyId: credentials.AccessKeyId,
-			secretAccessKey: credentials.SecretAccessKey,
-			sessionToken: credentials.SessionToken,
+		commsSqsClient = new SQSClient({
 			region: Region,
+			credentials: {
+				accessKeyId: credentials.AccessKeyId,
+				secretAccessKey: credentials.SecretAccessKey,
+				sessionToken: credentials.SessionToken || '',
+			},
 		});
 
 		lastAssumedComms = now;
@@ -80,37 +82,42 @@ async function getSqsClientForComms(): Promise<Sqs> {
 	return commsSqsClient;
 }
 
-async function getSqsClientForSoftOptIns(): Promise<Sqs> {
+async function getSqsClientForSoftOptIns(): Promise<SQSClient> {
 	const now = new Date();
 	if (
 		!SOISqsClient ||
 		!lastAssumedSOI ||
 		now.getTime() - lastAssumedSOI.getTime() >= 1800000
 	) {
-		// refresh every 30 minutes
 		const membershipAccountId = await getMembershipAccountId();
-		const sts = new STS();
+		const stsClient = new STSClient({ region: Region });
 
 		const softOptInConsentSetterStage = Stage === 'PROD' ? 'PROD' : 'CODE';
 
-		const assumeRoleResult = await sts
-			.assumeRole({
+		const assumeRoleResult = await stsClient.send(
+			new AssumeRoleCommand({
 				RoleArn: `arn:aws:iam::${membershipAccountId}:role/membership-${softOptInConsentSetterStage}-soft-opt-in-consent-setter-QueueCrossAccountRole`,
 				RoleSessionName: 'CrossAccountSession',
-			})
-			.promise();
+			}),
+		);
 
 		const credentials = assumeRoleResult.Credentials;
 
-		if (!credentials) {
+		if (
+			!credentials ||
+			!credentials.AccessKeyId ||
+			!credentials.SecretAccessKey
+		) {
 			throw Error('credentials undefined in getSqsClientForSoftOptIns');
 		}
 
-		SOISqsClient = new Sqs({
-			accessKeyId: credentials.AccessKeyId,
-			secretAccessKey: credentials.SecretAccessKey,
-			sessionToken: credentials.SessionToken,
+		SOISqsClient = new SQSClient({
 			region: Region,
+			credentials: {
+				accessKeyId: credentials.AccessKeyId,
+				secretAccessKey: credentials.SecretAccessKey,
+				sessionToken: credentials.SessionToken || '',
+			},
 		});
 
 		lastAssumedSOI = now;
@@ -241,15 +248,15 @@ async function sendToSqsComms(
 	queueUrl: string,
 	event: unknown,
 	delaySeconds?: number,
-): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+): Promise<SendMessageCommandOutput> {
 	const membershipSqs = await getSqsClientForComms();
-	return membershipSqs
-		.sendMessage({
+	return membershipSqs.send(
+		new SendMessageCommand({
 			QueueUrl: queueUrl,
 			MessageBody: JSON.stringify(event),
-			...(delaySeconds !== undefined && { DelaySeconds: delaySeconds }),
-		})
-		.promise();
+			DelaySeconds: delaySeconds,
+		}),
+	);
 }
 
 // returns true if message successfully processed
@@ -334,15 +341,15 @@ async function sendToSqsSoftOptIns(
 	queueUrl: string,
 	event: SoftOptInEvent,
 	delaySeconds?: number,
-): Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> {
+): Promise<SendMessageCommandOutput> {
 	const membershipSqs = await getSqsClientForSoftOptIns();
-	return membershipSqs
-		.sendMessage({
+	return membershipSqs.send(
+		new SendMessageCommand({
 			QueueUrl: queueUrl,
 			MessageBody: JSON.stringify(event),
-			...(delaySeconds !== undefined && { DelaySeconds: delaySeconds }),
-		})
-		.promise();
+			DelaySeconds: delaySeconds,
+		}),
+	);
 }
 
 async function sendSoftOptIns(
