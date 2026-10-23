@@ -1,8 +1,8 @@
-import S3 from 'aws-sdk/clients/s3';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Stage, Region } from '../common/appIdentity';
 import { restClient } from '../common/restClient';
 
-const s3: S3 = new S3({
+const s3 = new S3Client({
 	region: Region,
 });
 
@@ -18,22 +18,26 @@ export interface AccessToken {
 	date: Date;
 }
 
-function getParams(stage: string): S3.Types.GetObjectRequest {
+function getParams(stage: string) {
 	return {
 		Bucket: 'gu-mobile-access-tokens',
 		Key: `${stage}/google-play-developer-api/access_token.json`,
 	};
 }
 
-function getAccessToken(
-	params: S3.Types.GetObjectRequest,
-): Promise<AccessToken> {
+function getAccessToken(params: {
+	Bucket: string;
+	Key: string;
+}): Promise<AccessToken> {
+	const command = new GetObjectCommand(params);
+
 	return s3
-		.getObject(params)
-		.promise()
-		.then((s3OutPut) => {
-			if (s3OutPut.Body) {
-				return JSON.parse(s3OutPut.Body.toString());
+		.send(command)
+		.then(async (s3Output) => {
+			if (s3Output.Body) {
+				// Convert the v3 stream payload back into a string
+				const bodyString = await s3Output.Body.transformToString();
+				return JSON.parse(bodyString);
 			} else {
 				throw Error('S3 output body was not defined');
 			}
