@@ -21,6 +21,7 @@ HANDLERS=(
     "soft-opt-in-acquisitions-dlq-processor"
     "googleoauth2"
     "google-subscription-status"
+    "google-update-subscriptions"
 )
 
 for HANDLER in "${HANDLERS[@]}"; do
