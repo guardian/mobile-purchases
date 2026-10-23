@@ -313,12 +313,12 @@ export const transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra =
 				transactionId,
 			);
 		if (data1 === undefined) {
-			return Promise.resolve(undefined);
-		} else {
 			console.log(
 				`[f459032a] could not retrieve data from AppleStoreKit; appBundleId: ${appBundleId}, transactionId: ${transactionId}`,
 			);
+			return Promise.resolve(undefined);
 		}
+
 		const data2: AppleStoreKitSubscriptionDataDerivationForExtra = {
 			guType: 'apple-extra-2025-04-29',
 			...data1,
