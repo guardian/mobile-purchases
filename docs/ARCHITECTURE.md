@@ -135,11 +135,11 @@ The mobile apps link an In App Purchase with a Guardian user by calling the link
                                   (apple-link-user-subscription [02])
 
 [01] Lambda/function
-     code: typescript/src/link/apple.ts
+     code: typescript/src/link/google.ts
      name: mobile-purchases-google-link-user-subscription-PROD
 
 [02] Lambda/function
-     code: typescript/src/link/google.ts
+     code: typescript/src/link/apple.ts
      name: mobile-purchases-apple-link-user-subscription-PROD
 
 [03] Dynamo table
