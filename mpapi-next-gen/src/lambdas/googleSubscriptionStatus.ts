@@ -72,6 +72,10 @@ async function getSubscriptionStatusFromDynamo(
 	purchaseToken: string,
 	purchaseTokenHash: string,
 ): Promise<SubscriptionStatus | null> {
+	// This function will return null if
+	// 1. A subscription could not be found with the given purchaseToken (aka: subscriptionId)
+	// 2. Any error was raised during processing.
+
 	try {
 		console.log(
 			`[3db5157b] fetching subscription from Dynamo for purchaseToken hash: ${purchaseTokenHash}`,
@@ -85,7 +89,14 @@ async function getSubscriptionStatusFromDynamo(
 			}),
 		);
 		if (!result.Item) {
-			throw new Error(`[690ac298] subscription ${subscriptionId} not found`);
+			// Note: dynamoClient.send / new GetItemCommand
+			// resolves successfully with `result.Item` undefined if a subscription
+			// could not be found.
+			// We log a message and return null
+			console.log(
+				`[9e038a90] no subscription found in Dynamo with purchaseToken hash: ${purchaseTokenHash}`,
+			);
+			return null;
 		}
 		const subscription = unmarshall(result.Item) as Subscription;
 
@@ -98,17 +109,9 @@ async function getSubscriptionStatusFromDynamo(
 		);
 		return dynamoSubscriptionStatus;
 	} catch (error: unknown) {
-		const err = error as { name?: string };
-		if (err.name === 'ItemNotFoundException') {
-			console.log(
-				`[9e038a90] no subscription found in Dynamo with purchaseToken hash: ${purchaseTokenHash}`,
-			);
-		} else {
-			console.log(
-				`[ff0d8bf2] the following Dynamo error occurred when attempting to retrieve a subscription with purchaseToken hash: ${purchaseTokenHash}: ${error}`,
-			);
-		}
-		// All exceptions are swallowed here as we fall-back on the Google API for all failure modes (including cache misses)
+		console.log(
+			`[ff0d8bf2] the following Dynamo error occurred when attempting to retrieve a subscription with purchaseToken hash: ${purchaseTokenHash}: ${error}`,
+		);
 		return null;
 	}
 }
