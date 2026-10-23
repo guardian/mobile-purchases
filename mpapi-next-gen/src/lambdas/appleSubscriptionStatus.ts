@@ -1,10 +1,10 @@
 import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { HTTPResponses } from '../models/apiGatewayHttp';
-import type { Platform } from '../models/platform';
-import type { AppleValidationResponse } from '../services/appleValidateReceipts';
-import { validateReceipt } from '../services/appleValidateReceipts';
-import { plusDays } from '../utils/dates';
+import { HTTPResponses } from '../common/apiGatewayHttp';
+import type { Platform } from '../common/platform';
+import type { AppleValidationResponse } from '../common/appleValidateReceipts';
+import { validateReceipt } from '../common/appleValidateReceipts';
+import { plusDays } from '../common/dates';
 
 interface AppleSubscription {
 	receipt: string;
