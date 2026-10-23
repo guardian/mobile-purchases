@@ -39,9 +39,27 @@ const sqsClient = new SQSClient({});
 export async function putSubscription(
 	subscription: Subscription,
 ): Promise<Subscription> {
+	// Map the class properties to a plain object to prevent marshalling failures
+	const dbItem = {
+		subscriptionId: subscription.subscriptionId,
+		startTimestamp: subscription.startTimestamp,
+		endTimestamp: subscription.endTimestamp,
+		cancellationTimestamp: subscription.cancellationTimestamp,
+		autoRenewing: subscription.autoRenewing,
+		productId: subscription.productId,
+		platform: subscription.platform,
+		freeTrial: subscription.freeTrial,
+		billingPeriod: subscription.billingPeriod,
+		googlePayload: subscription.googlePayload,
+		receipt: subscription.receipt,
+		applePayload: subscription.applePayload,
+		ttl: subscription.ttl,
+		extra: subscription.extra,
+	};
+
 	const command = new PutItemCommand({
 		TableName: subscriptionsFullTableName(),
-		Item: marshall(subscription, { removeUndefinedValues: true }),
+		Item: marshall(dbItem, { removeUndefinedValues: true }),
 	});
 	await dynamoDbClient.send(command);
 	return subscription;
