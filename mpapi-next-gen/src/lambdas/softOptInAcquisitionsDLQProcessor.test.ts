@@ -1,8 +1,4 @@
-import { SubscriptionEmpty } from '../common/subscription';
-import {
-	handler,
-	messageIsOneDayOld,
-	processAcquisition } from './softOptInAcquisitionsDLQProcessor';
+import * as dlqProcessor from './softOptInAcquisitionsDLQProcessor';
 import {
 	expect,
 	jest,
@@ -12,180 +8,112 @@ import {
 	test,
 	it,
 } from '@jest/globals';
-import * as dynamodbMapper from '@aws/dynamodb-data-mapper';
-import * as sqsModule from 'aws-sdk/clients/sqs';
-import fetch from 'node-fetch';
+import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
+import {
+	SQSClient,
+	ReceiveMessageCommand,
+	DeleteMessageCommand,
+	SendMessageCommand,
+} from '@aws-sdk/client-sqs';
+import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
+import { mockClient } from 'aws-sdk-client-mock';
 
-const mockedDynamoDBMapper = dynamodbMapper as unknown as {
-	DataMapper: new () => {
-		batchPut: jest.Mock;
-		get: jest.Mock;
-		put: jest.Mock;
-		delete: jest.Mock;
-		query: jest.Mock;
-		scan: jest.Mock;
-		update: jest.Mock;
-	};
-	setMockGet: (fn: (arg0: unknown) => unknown) => void;
-};
+// -----------------------------------------------------------------------------
+// Mocks
 
-const mockedSQS = sqsModule as unknown as {
-	default: new () => {
-		receiveMessage: jest.Mock;
-		deleteMessage: jest.Mock;
-		sendMessage: jest.Mock;
-	};
-	setMockReceiveMessage: (fn: (arg0: unknown) => unknown) => void;
-};
+const dynamoMock = mockClient(DynamoDBClient);
+const sqsMock = mockClient(SQSClient);
+const stsMock = mockClient(STSClient);
 
-jest.mock('./softOptInAcquisitionsDLQProcessor', () => ({
-	processAcquisition: jest.fn(() => Promise.resolve(true)),
+jest.mock('../common/guIdentityApi', () => ({
+	getMembershipAccountId: jest.fn(() => Promise.resolve('123456789012')),
+	getIdentityApiKey: jest.fn(() => Promise.resolve('mock-api-key')),
+	getIdentityUrl: jest.fn(() =>
+		Promise.resolve('https://identity.example.com'),
+	),
 }));
-
-jest.mock('@aws/dynamodb-data-mapper', () => {
-	const actualDataMapper = jest.requireActual('@aws/dynamodb-data-mapper');
-
-	const getFn = jest.fn();
-
-	return Object.assign({}, actualDataMapper, {
-		DataMapper: jest.fn().mockImplementation(() => ({
-			batchPut: jest.fn(),
-			get: getFn,
-			put: jest.fn().mockImplementation(() => Promise.resolve(undefined)),
-			delete: jest.fn(),
-			query: jest.fn(),
-			scan: jest.fn(),
-			update: jest.fn(),
-		})),
-		setMockGet: (mockImplementation: (arg0: unknown) => unknown) => {
-			getFn.mockImplementation(async (params) => {
-				return mockImplementation(params);
-			});
-		},
-	});
-});
-
-jest.mock('aws-sdk/clients/dynamodb', () => jest.fn());
-jest.mock('aws-sdk/clients/s3', () => jest.fn());
-jest.mock('aws-sdk/clients/ssm', () => jest.fn());
-
-jest.mock('node-fetch', () => jest.fn());
-
-jest.mock('../common/guIdentityApi');
 jest.mock('@jest/globals');
-jest.mock('aws-sdk/clients/cloudwatch', () => jest.fn());
 
-jest.mock('aws-sdk/clients/sqs', () => {
-	const receiveMessageFn = jest.fn();
-	const mockSQS = {
-		receiveMessage: receiveMessageFn.mockReturnValue({
-			promise: jest.fn(),
-		}),
-		deleteMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
-		sendMessage: jest.fn().mockReturnValue({ promise: jest.fn() }),
-	};
-	const setMockReceiveMessage = (
-		mockImplementation: (arg0: unknown) => unknown,
-	) => {
-		receiveMessageFn.mockImplementation((params) => {
-			return {
-				promise: async () => mockImplementation(params),
-			};
-		});
-	};
-	return {
-		__esModule: true,
-		default: jest.fn(() => mockSQS),
-		setMockReceiveMessage: setMockReceiveMessage,
-	};
-});
-
-jest.mock('aws-sdk/clients/sts', () => {
-	const mockSTS = {
-		assumeRole: jest.fn().mockReturnValue({
-			promise: jest.fn().mockImplementation(() =>
-				Promise.resolve({
-					Credentials: {
-						AccessKeyId: 'mockAccessKeyId',
-						SecretAccessKey: 'mockSecretAccessKey',
-						SessionToken: 'mockSessionToken',
-					},
-				}),
-			),
-		}),
-	};
-	return jest.fn(() => mockSTS);
-});
-
-jest.mock('aws-sdk/lib/core', () => {
-	class SharedIniFileCredentialsMock {}
-	class CredentialProviderChainMock {}
-	return {
-		SharedIniFileCredentials: SharedIniFileCredentialsMock,
-		CredentialProviderChain: CredentialProviderChainMock,
-	};
-});
+// -----------------------------------------------------------------------------
+// Test
 
 describe('messageIsOneDayOld() function', () => {
 	beforeEach(() => {
-		// Set the current time to a fixed date (2023-03-14)
 		jest.useFakeTimers();
-		jest.setSystemTime(new Date('2023-03-14').getTime()); // or 1678780800000
+		jest.setSystemTime(new Date('2023-03-14').getTime());
 	});
 
 	afterEach(() => {
-		// Clean up the fake timers after each test
 		jest.useRealTimers();
 	});
 
 	test('Return true if message is older than one day', () => {
 		const timestamp = 1676194220000;
-
-		expect(messageIsOneDayOld(timestamp)).toStrictEqual(true);
+		expect(dlqProcessor.messageIsOneDayOld(timestamp)).toStrictEqual(true);
 	});
 
 	test('Return false if message is not older than one day', () => {
 		const timestamp = 1686648235000;
-
-		expect(messageIsOneDayOld(timestamp)).toStrictEqual(false);
+		expect(dlqProcessor.messageIsOneDayOld(timestamp)).toStrictEqual(false);
 	});
 });
 
 describe('handler', () => {
+	let originalFetch: typeof fetch;
+
 	beforeEach(() => {
 		process.env.DLQUrl = 'https://example.com';
 		jest.clearAllMocks();
 
-		// Set the current time to a fixed date (2023-03-14)
+		dynamoMock.reset();
+		sqsMock.reset();
+		stsMock.reset();
+
+		// Mock the credentials payload response from STS to satisfy the AWS client auth check
+		stsMock.on(AssumeRoleCommand).resolves({
+			Credentials: {
+				AccessKeyId: 'mockAccessKeyId',
+				SecretAccessKey: 'mockSecretAccessKey',
+				SessionToken: 'mockSessionToken',
+				Expiration: new Date(Date.now() + 3600000),
+			},
+		});
+
+		// Ensure SQS writes don't fail internally during execution passes
+		sqsMock.on(SendMessageCommand).resolves({ MessageId: 'mock-msg-id' });
+
+		// Stub out the global native fetch engine instead of the local library import package
+		originalFetch = global.fetch;
+		global.fetch = jest.fn().mockImplementation(() =>
+			Promise.resolve({
+				ok: true,
+				json: () =>
+					Promise.resolve({
+						user: { primaryEmailAddress: 'test@example.com' },
+					}),
+			} as Response),
+		);
+
 		jest.useFakeTimers();
-		jest.setSystemTime(new Date('2023-03-14').getTime()); // or 1678780800000
+		jest.setSystemTime(new Date('2023-03-14').getTime());
 	});
 
 	afterEach(() => {
 		jest.useRealTimers();
-		(fetch as unknown as jest.Mock).mockReset();
+		global.fetch = originalFetch;
 	});
 
 	it('should not delete message', async () => {
-		const mockProcessAcquisition = processAcquisition as jest.Mock;
-		mockProcessAcquisition.mockResolvedValue(false as never);
-
-		// get the mock instances
-		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
-		const mockSQS = new mockedSQS.default();
-
-		const sub = new SubscriptionEmpty();
-		sub.subscriptionId = '12345';
-		sub.startTimestamp = '2023-03-01 07:24:38 UTC';
-		sub.endTimestamp = '2025-03-01 07:24:38 UTC';
-
-		mockedDynamoDBMapper.setMockGet(() => sub);
+		// Simulate a missing subscription record in the DynamoDB table.
+		// When the item is missing, the code catches it and breaks the loop processing
+		// without deleting the message.
+		dynamoMock.on(GetItemCommand).resolves({
+			Item: undefined,
+		});
 
 		let receiveMessageCallCount = 0;
-
-		mockedSQS.setMockReceiveMessage(() => {
+		sqsMock.on(ReceiveMessageCommand).callsFake(() => {
 			receiveMessageCallCount++;
-
 			if (receiveMessageCallCount > 1) {
 				return { Messages: [] };
 			} else {
@@ -206,36 +134,23 @@ describe('handler', () => {
 			}
 		});
 
-		await handler({});
+		await dlqProcessor.handler({});
 
-		expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
+		const firstDynamoCall = dynamoMock.call(0);
+		expect(firstDynamoCall).toBeDefined();
+		expect(firstDynamoCall.firstArg.input).toEqual({
+			TableName: 'mobile-purchases-CODE-subscriptions',
+			Key: { subscriptionId: { S: '12345' } },
+		});
 
-		const expectedQuery = new SubscriptionEmpty();
-		expectedQuery.setSubscriptionId('12345');
-		expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
-
-		expect(mockSQS.deleteMessage).toHaveBeenCalledTimes(0);
-		expect(mockSQS.receiveMessage).toHaveBeenCalledTimes(2);
+		expect(sqsMock.commandCalls(DeleteMessageCommand)).toHaveLength(0);
+		expect(sqsMock.commandCalls(ReceiveMessageCommand)).toHaveLength(2);
 	});
 
 	it('should delete expired message', async () => {
-		const mockProcessAcquisition = processAcquisition as jest.Mock;
-		mockProcessAcquisition.mockResolvedValue(true as never);
-
-		const mockSQS = new mockedSQS.default();
-
-		const sub = new SubscriptionEmpty();
-		sub.subscriptionId = '12345';
-		sub.startTimestamp = '2023-03-01 07:24:38 UTC';
-		sub.endTimestamp = '2025-03-01 07:24:38 UTC';
-
-		mockedDynamoDBMapper.setMockGet(() => sub);
-
 		let receiveMessageCallCount = 0;
-
-		mockedSQS.setMockReceiveMessage(() => {
+		sqsMock.on(ReceiveMessageCommand).callsFake(() => {
 			receiveMessageCallCount++;
-
 			if (receiveMessageCallCount > 1) {
 				return { Messages: [] };
 			} else {
@@ -256,31 +171,27 @@ describe('handler', () => {
 			}
 		});
 
-		await handler({});
+		sqsMock.on(DeleteMessageCommand).resolves({});
 
-		expect(mockSQS.receiveMessage).toHaveBeenCalledTimes(2);
-		expect(mockSQS.deleteMessage).toHaveBeenCalledTimes(1);
+		await dlqProcessor.handler({});
+
+		expect(sqsMock.commandCalls(ReceiveMessageCommand)).toHaveLength(2);
+		expect(sqsMock.commandCalls(DeleteMessageCommand)).toHaveLength(1);
 	});
 
 	it('should delete successful message', async () => {
-		const mockProcessAcquisition = processAcquisition as jest.Mock;
-		mockProcessAcquisition.mockResolvedValue(true as never);
-
-		const mockDataMapper = new mockedDynamoDBMapper.DataMapper();
-		const mockSQS = new mockedSQS.default();
-
-		const sub = new SubscriptionEmpty();
-		sub.subscriptionId = '12345';
-		sub.startTimestamp = '2023-03-01 07:24:38 UTC';
-		sub.endTimestamp = '2025-03-01 07:24:38 UTC';
-
-		mockedDynamoDBMapper.setMockGet(() => sub);
+		// Mock an active subscription so that processAcquisition completes happily
+		dynamoMock.on(GetItemCommand).resolves({
+			Item: {
+				subscriptionId: { S: '12345' },
+				startTimestamp: { S: '2023-03-01 07:24:38 UTC' },
+				endTimestamp: { S: '2025-03-01 07:24:38 UTC' },
+			},
+		});
 
 		let receiveMessageCallCount = 0;
-
-		mockedSQS.setMockReceiveMessage(() => {
+		sqsMock.on(ReceiveMessageCommand).callsFake(() => {
 			receiveMessageCallCount++;
-
 			if (receiveMessageCallCount > 1) {
 				return { Messages: [] };
 			} else {
@@ -301,15 +212,18 @@ describe('handler', () => {
 			}
 		});
 
-		await handler({});
+		sqsMock.on(DeleteMessageCommand).resolves({});
 
-		expect(mockDataMapper.get).toHaveBeenCalledTimes(1);
+		await dlqProcessor.handler({});
 
-		const expectedQuery = new SubscriptionEmpty();
-		expectedQuery.setSubscriptionId('12345');
-		expect(mockDataMapper.get).toHaveBeenCalledWith(expectedQuery);
+		const firstDynamoCall = dynamoMock.call(0);
+		expect(firstDynamoCall).toBeDefined();
+		expect(firstDynamoCall.firstArg.input).toEqual({
+			TableName: 'mobile-purchases-CODE-subscriptions',
+			Key: { subscriptionId: { S: '12345' } },
+		});
 
-		expect(mockSQS.receiveMessage).toHaveBeenCalledTimes(2);
-		expect(mockSQS.deleteMessage).toHaveBeenCalledTimes(1);
+		expect(sqsMock.commandCalls(ReceiveMessageCommand)).toHaveLength(2);
+		expect(sqsMock.commandCalls(DeleteMessageCommand)).toHaveLength(1);
 	});
 });
