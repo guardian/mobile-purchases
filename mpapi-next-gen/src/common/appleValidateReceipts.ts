@@ -252,10 +252,9 @@ export function toSensiblePayloadFormat(
 			response.receipt?.bundle_id ??
 			response.receipt?.bid;
 		if (!bundleId) {
-			console.error(
+			console.warn(
 				`Unable to identify the bundle id for the original transaction id ${receiptInfo.original_transaction_id}`,
 			);
-			throw new ProcessingError(`Unable to identify the bundle id`, false);
 		}
 
 		const originalPurchaseDate = optionalMsToDate(
