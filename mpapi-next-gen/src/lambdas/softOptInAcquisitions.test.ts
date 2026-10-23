@@ -1,14 +1,9 @@
 import { handler } from './softOptInAcquisitions';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
-import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
 import { mockClient } from 'aws-sdk-client-mock';
 import type { DynamoDBStreamEvent } from 'aws-lambda';
-
-const mockV2SqsSendMessage = jest.fn().mockReturnThis();
-const mockV2SqsPromise = jest
-	.fn()
-	.mockResolvedValue({ MessageId: 'mock-msg-id' });
+import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
 
 jest.mock('../common/guIdentityApi', () => ({
 	getMembershipAccountId: jest.fn().mockResolvedValue('123456789012'),
@@ -23,37 +18,31 @@ global.fetch = jest.fn().mockResolvedValue({
 	}),
 });
 
-jest.mock('aws-sdk/clients/sts', () => {
-	return jest.fn().mockImplementation(() => ({
-		assumeRole: jest.fn().mockReturnThis(),
-		promise: jest.fn().mockResolvedValue({
-			Credentials: {
-				AccessKeyId: 'mock-access-key',
-				SecretAccessKey: 'mock-secret-key',
-				SessionToken: 'mock-session-token',
-			},
-		}),
-	}));
-});
-
-jest.mock('aws-sdk/clients/sqs', () => {
-	return jest.fn().mockImplementation(() => ({
-		sendMessage: mockV2SqsSendMessage,
-		promise: mockV2SqsPromise,
-	}));
-});
-
 const dynamoMock = mockClient(DynamoDBClient);
 const sqsMock = mockClient(SQSClient);
+const stsMock = mockClient(STSClient);
 
 process.env.DLQUrl = 'https://amazonaws.com';
-process.env.AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE = '1';
 
 describe('DynamoDB Stream Handler - GetItem Unmarshalling Test', () => {
 	beforeEach(() => {
 		dynamoMock.reset();
 		sqsMock.reset();
+		stsMock.reset();
 		jest.clearAllMocks();
+
+		stsMock.on(AssumeRoleCommand).resolves({
+			Credentials: {
+				AccessKeyId: 'mock-access-key',
+				SecretAccessKey: 'mock-secret-key',
+				SessionToken: 'mock-session-token',
+				Expiration: new Date(Date.now() + 3600 * 1000),
+			},
+		});
+
+		sqsMock.on(SendMessageCommand).resolves({
+			MessageId: 'mock-msg-id',
+		});
 	});
 
 	const rawDynamoItem = {
@@ -91,10 +80,14 @@ describe('DynamoDB Stream Handler - GetItem Unmarshalling Test', () => {
 			Key: { subscriptionId: { S: 'sub-123' } },
 		});
 
-		expect(mockV2SqsSendMessage).toHaveBeenCalledTimes(2);
+		// Verify total standard SQS messages sent is 2 (Soft Opt-In queue + Braze queue)
+		expect(sqsMock.calls().length).toBe(2);
 
-		expect(mockV2SqsSendMessage).toHaveBeenNthCalledWith(
-			1,
+		// 1. First SQS Call should be the Soft Opt-In consent setter message
+		const firstCommand = sqsMock.call(0).args[0] as unknown as {
+			input: Record<string, any>;
+		};
+		expect(firstCommand.input).toEqual(
 			expect.objectContaining({
 				QueueUrl:
 					'https://sqs.eu-west-1.amazonaws.com/123456789012/soft-opt-in-consent-setter-queue-CODE',
@@ -102,8 +95,11 @@ describe('DynamoDB Stream Handler - GetItem Unmarshalling Test', () => {
 			}),
 		);
 
-		expect(mockV2SqsSendMessage).toHaveBeenNthCalledWith(
-			2,
+		// 2. Second SQS Call should be the Braze email payload message
+		const secondCommand = sqsMock.call(1).args[0] as unknown as {
+			input: Record<string, any>;
+		};
+		expect(secondCommand.input).toEqual(
 			expect.objectContaining({
 				QueueUrl:
 					'https://sqs.eu-west-1.amazonaws.com/123456789012/braze-emails-CODE',
@@ -113,11 +109,10 @@ describe('DynamoDB Stream Handler - GetItem Unmarshalling Test', () => {
 			}),
 		);
 
-		const sqsCalls = sqsMock.calls();
-		const dlqCalls = sqsCalls.filter((call) => {
-			const commandInstance = call.args[0] as SendMessageCommand;
-			const input = commandInstance.input as SendMessageCommandInput;
-			return input?.QueueUrl === process.env.DLQUrl;
+		// 3. Double-check that none of these calls were routed to the DLQ in this test path
+		const dlqCalls = sqsMock.calls().filter((call) => {
+			const cmd = call.args[0] as unknown as { input: Record<string, any> };
+			return cmd.input?.QueueUrl === process.env.DLQUrl;
 		});
 		expect(dlqCalls.length).toBe(0);
 	});
@@ -131,16 +126,18 @@ describe('DynamoDB Stream Handler - GetItem Unmarshalling Test', () => {
 
 		const sqsCalls = sqsMock.calls();
 		const dlqCalls = sqsCalls.filter((call) => {
-			const commandInstance = call.args[0] as SendMessageCommand;
-			const input = commandInstance.input as SendMessageCommandInput;
-			return input?.QueueUrl === process.env.DLQUrl;
+			const commandInstance = call.args[0] as unknown as {
+				input: Record<string, any>;
+			};
+			return commandInstance.input?.QueueUrl === process.env.DLQUrl;
 		});
 
 		expect(dlqCalls.length).toBe(1);
 
-		const standardCommand = dlqCalls[0].args[0] as SendMessageCommand;
-		const input = standardCommand.input as SendMessageCommandInput;
-		const messageBody = JSON.parse(input.MessageBody as string);
+		const standardCommand = dlqCalls[0].args[0] as unknown as {
+			input: Record<string, any>;
+		};
+		const messageBody = JSON.parse(standardCommand.input.MessageBody as string);
 		expect(messageBody).toMatchObject({
 			subscriptionId: 'sub-123',
 			identityId: 'user-456',
