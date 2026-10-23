@@ -133,11 +133,12 @@ export async function toAppleSubscription_async(
 
 	let extra = '';
 
-	// Defining the two variables we need to call for the extra data
 	const transactionId: string =
 		response.latestReceiptInfo.originalTransactionId;
 	const appBundleId: string | undefined = response.latestReceiptInfo.bundleId;
-	if (appBundleId !== undefined) {
+	
+	// preserving legacy behavior: gate the call strictly if appBundleId is present
+	if (appBundleId) {
 		const extra_object:
 			| AppleStoreKitSubscriptionDataDerivationForExtra
 			| undefined =
