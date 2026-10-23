@@ -2,8 +2,9 @@ import { App, Stage } from '../common/appIdentity';
 
 export class Subscription {
 	/*
-        Warning: The subscriptionId value, defined in this schema, is going to carry the purchase token (`purchaseToken`) 
-        from a Google Play notification and not the value of the attribute `subscriptionId` of that notification.
+        Warning: The subscriptionId value, defined in this schema, is going to
+		carry the purchase token (`purchaseToken`) from a Google Play notification
+		and not the value of the attribute `subscriptionId` of that notification.
 
         See the file: google-identifiers.md in the documentation folder for details.
     */
