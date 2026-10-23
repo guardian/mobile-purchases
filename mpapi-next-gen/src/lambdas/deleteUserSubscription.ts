@@ -1,6 +1,9 @@
 import 'source-map-support/register';
 import type { DynamoDBStreamEvent } from 'aws-lambda';
-import { UserSubscription } from '../common/userSubscription';
+import {
+	UserSubscription,
+	userSubscriptionsGetFullTableName,
+} from '../common/userSubscription';
 import { Region, Stage } from '../common/appIdentity';
 import { getMembershipAccountId } from '../common/guIdentityApi';
 import { mapPlatformToSoftOptInProductName } from '../common/softOptIns';
@@ -33,7 +36,7 @@ const cloudWatchClient = new CloudWatchClient({ region: Region });
 // -----------------------------------------------------------------------------
 // Globals Variables
 
-const userSubscriptionTableName = UserSubscription.getTableName();
+const userSubscriptionTableName = userSubscriptionsGetFullTableName();
 
 // -----------------------------------------------------------------------------
 // Functions
@@ -95,7 +98,7 @@ async function deleteUserSubscription(
 	userLinks: UserSubscription[],
 ): Promise<number> {
 	let count = 0;
-	const tableName = UserSubscription.getTableName();
+	const tableName = userSubscriptionsGetFullTableName();
 
 	for (const userLink of userLinks) {
 		try {

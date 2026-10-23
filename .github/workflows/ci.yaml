@@ -75,7 +75,7 @@ jobs:
             mobile-purchases-apple-subscription-status:
               - mpapi-next-gen/dist/apple-subscription-status.zip
             mobile-purchases-apple-update-subscriptions:
-              - tsc-target/apple-update-subscriptions.zip
+              - mpapi-next-gen/dist/apple-update-subscriptions.zip
             mobile-purchases-delete-user-subscription:
               - mpapi-next-gen/dist/delete-user-subscription.zip
             mobile-purchases-export-historical-data:

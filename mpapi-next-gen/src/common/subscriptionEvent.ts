@@ -59,11 +59,10 @@ export class SubscriptionEvent {
 		this.expires_date_ms = expires_date_ms;
 		this.extra = extra;
 	}
+}
 
-	// Static method to get table name
-	static getTableName(): string {
-		return App + '-' + Stage + '-subscription-events-v2';
-	}
+export function subscriptionEventsV2FullTableName() {
+	return `${App}-${Stage}-subscription-events-v2`;
 }
 
 export class SubscriptionEventEmpty extends SubscriptionEvent {

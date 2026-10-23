@@ -65,8 +65,8 @@ export class Subscription {
 		this.extra = extra;
 		this.tableName = tableName;
 	}
+}
 
-	get fullTableName(): string {
-		return `${App}-${Stage}-${this.tableName}`;
-	}
+export function subscriptionsFullTableName() {
+	return `${App}-${Stage}-subscriptions`;
 }
