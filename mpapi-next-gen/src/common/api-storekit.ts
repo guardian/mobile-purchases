@@ -78,8 +78,6 @@ const transactionIdToAppleStoreKitSubscriptionData = async (
 
 	const token = await forgeStoreKitBearerToken(appBundleId);
 
-	console.log(`[f1335718] ${token}`);
-
 	const params = {
 		method: 'GET',
 		headers: {
@@ -91,7 +89,6 @@ const transactionIdToAppleStoreKitSubscriptionData = async (
 	let json: any;
 
 	try {
-		console.log(`[0f984ea0] ${JSON.stringify(params)}`);
 		const response = await fetch(url, params);
 		if (response.ok) {
 			json = await response.json();
