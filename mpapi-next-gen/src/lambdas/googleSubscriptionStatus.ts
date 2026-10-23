@@ -40,60 +40,6 @@ function googlePackageName(headers: HttpRequestHeaders): string {
 	}
 }
 
-export async function handler(
-	request: APIGatewayProxyEvent,
-): Promise<APIGatewayProxyResult> {
-	const purchaseToken = getPurchaseToken(request.headers);
-	const subscriptionId = getSubscriptionId(request.pathParameters);
-	const packageName = googlePackageName(request.headers);
-
-	if (purchaseToken && subscriptionId) {
-		const purchaseTokenHash = createHash('sha256')
-			.update(purchaseToken)
-			.digest('hex');
-		console.log(
-			`[4814d85a] searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}, for purchaseToken hash: ${purchaseTokenHash}`,
-		);
-		try {
-			const subscriptionStatus =
-				(await getSubscriptionStatusFromDynamo(
-					purchaseToken,
-					purchaseTokenHash,
-				)) ??
-				(await getSubscriptionStatusFromGoogle(
-					subscriptionId,
-					purchaseToken,
-					packageName,
-					purchaseTokenHash,
-				));
-
-			if (subscriptionStatus !== null) {
-				return { statusCode: 200, body: JSON.stringify(subscriptionStatus) };
-			} else {
-				console.log(
-					`[f22b782f] no subscription found for purchaseToken hash: ${purchaseTokenHash}`,
-				);
-				return HTTPResponses.NOT_FOUND;
-			}
-		} catch (error: unknown) {
-			const err = error as { statusCode?: number };
-			if (err.statusCode == 410) {
-				console.log(
-					`[5c5abf00] no subscription found for purchaseToken hash: ${purchaseTokenHash} (410-Gone from upstream API)`,
-				);
-				return HTTPResponses.NOT_FOUND;
-			} else {
-				console.log(
-					`[44aeccc7] serving an Internal Server Error due to: ${err.toString().split('/tokens/')[0]}`,
-				);
-				return HTTPResponses.INTERNAL_ERROR;
-			}
-		}
-	} else {
-		return HTTPResponses.INVALID_REQUEST;
-	}
-}
-
 async function getSubscriptionStatusFromGoogle(
 	subscriptionId: string,
 	purchaseToken: string,
@@ -173,4 +119,58 @@ function subscriptionStatus(expiryDate: Date): SubscriptionStatus {
 		subscriptionHasLapsed: now > expiryDate,
 		subscriptionExpiryDate: expiryDate,
 	};
+}
+
+export async function handler(
+	request: APIGatewayProxyEvent,
+): Promise<APIGatewayProxyResult> {
+	const purchaseToken = getPurchaseToken(request.headers);
+	const subscriptionId = getSubscriptionId(request.pathParameters);
+	const packageName = googlePackageName(request.headers);
+
+	if (purchaseToken && subscriptionId) {
+		const purchaseTokenHash = createHash('sha256')
+			.update(purchaseToken)
+			.digest('hex');
+		console.log(
+			`[4814d85a] searching for valid ${subscriptionId} subscription for Android app with package name: ${packageName}, for purchaseToken hash: ${purchaseTokenHash}`,
+		);
+		try {
+			const subscriptionStatus =
+				(await getSubscriptionStatusFromDynamo(
+					purchaseToken,
+					purchaseTokenHash,
+				)) ??
+				(await getSubscriptionStatusFromGoogle(
+					subscriptionId,
+					purchaseToken,
+					packageName,
+					purchaseTokenHash,
+				));
+
+			if (subscriptionStatus !== null) {
+				return { statusCode: 200, body: JSON.stringify(subscriptionStatus) };
+			} else {
+				console.log(
+					`[f22b782f] no subscription found for purchaseToken hash: ${purchaseTokenHash}`,
+				);
+				return HTTPResponses.NOT_FOUND;
+			}
+		} catch (error: unknown) {
+			const err = error as { statusCode?: number };
+			if (err.statusCode == 410) {
+				console.log(
+					`[5c5abf00] no subscription found for purchaseToken hash: ${purchaseTokenHash} (410-Gone from upstream API)`,
+				);
+				return HTTPResponses.NOT_FOUND;
+			} else {
+				console.log(
+					`[44aeccc7] serving an Internal Server Error due to: ${err.toString().split('/tokens/')[0]}`,
+				);
+				return HTTPResponses.INTERNAL_ERROR;
+			}
+		}
+	} else {
+		return HTTPResponses.INVALID_REQUEST;
+	}
 }
