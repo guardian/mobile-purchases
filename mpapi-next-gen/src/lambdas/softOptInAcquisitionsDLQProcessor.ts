@@ -85,7 +85,7 @@ async function getSqsClientForComms(): Promise<Sqs> {
 // -----------------------------------------------------------------------------
 // Functions
 
-function messageIsOneDayOld(timestamp: number): boolean {
+export function messageIsOneDayOld(timestamp: number): boolean {
 	const now = Date.now();
 	return now - timestamp >= 86400000;
 }
