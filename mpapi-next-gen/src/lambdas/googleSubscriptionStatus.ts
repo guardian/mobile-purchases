@@ -1,23 +1,19 @@
 import 'source-map-support/register';
 import { createHash } from 'crypto';
-import { DynamoDB } from 'aws-sdk';
-import { DataMapper } from '@aws/dynamodb-data-mapper';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import type {
 	HttpRequestHeaders,
 	PathParameters,
 } from '../common/apiGatewayHttp';
 import { HTTPResponses } from '../common/apiGatewayHttp';
-import { SubscriptionEmpty } from '../common/subscription';
+import { Subscription } from '../common/subscription';
 import { fetchGoogleSubscription } from '../common/google-play';
 import { optionalMsToDate } from '../common/dates';
-import { Region } from '../common/appIdentity';
+import { Region, Stage } from '../common/appIdentity';
+import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 
-const aws = new DynamoDB({
-	region: Region,
-});
-
-const dynamoMapper = new DataMapper({ client: aws });
+const dynamoClient = new DynamoDBClient({ region: Region });
 
 type SubscriptionStatus = {
 	subscriptionHasLapsed: boolean;
@@ -134,9 +130,19 @@ async function getSubscriptionStatusFromDynamo(
 		console.log(
 			`[3db5157b] fetching subscription from Dynamo for purchaseToken hash: ${purchaseTokenHash}`,
 		);
-		const itemToQuery = new SubscriptionEmpty();
-		itemToQuery.setSubscriptionId(purchaseToken);
-		const subscription = await dynamoMapper.get(itemToQuery);
+
+		const subscriptionId = purchaseToken; // just for clarification
+		const result = await dynamoClient.send(
+			new GetItemCommand({
+				TableName: `mobile-purchases-${Stage}-subscriptions`,
+				Key: { subscriptionId: { S: subscriptionId } },
+			}),
+		);
+		if (!result.Item) {
+			throw new Error(`[690ac298] subscription ${subscriptionId} not found`);
+		}
+		const subscription = unmarshall(result.Item) as Subscription;
+
 		const subscriptionExpiryDate = new Date(subscription.endTimestamp);
 		const dynamoSubscriptionStatus = subscriptionStatus(subscriptionExpiryDate);
 		console.log(
