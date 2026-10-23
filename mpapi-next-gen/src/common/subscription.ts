@@ -25,8 +25,6 @@ export class Subscription {
 	ttl: number | undefined;
 	extra: string | undefined;
 
-	tableName: string;
-
 	constructor(
 		subscriptionId: string,
 		startTimestamp: string,
@@ -47,7 +45,6 @@ export class Subscription {
 
 		ttl?: number,
 		extra?: string,
-		tableName = 'subscriptions',
 	) {
 		this.subscriptionId = subscriptionId;
 		this.startTimestamp = startTimestamp;
@@ -63,7 +60,6 @@ export class Subscription {
 		this.applePayload = applePayload;
 		this.ttl = ttl;
 		this.extra = extra;
-		this.tableName = tableName;
 	}
 }
 
