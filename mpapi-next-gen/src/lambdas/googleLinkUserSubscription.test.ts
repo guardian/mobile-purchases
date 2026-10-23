@@ -92,7 +92,7 @@ describe('DynamoDB Chunking and Retry Persistence Layer', () => {
 				.resolves({ Successful: Array(10).fill({}), Failed: [] });
 
 			const result = await enqueueUnstoredPurchaseToken(mockChecks);
-			result;
+			expect(result).toBe(10);
 
 			const getCalls = dynamoMock.commandCalls(BatchGetCommand);
 			expect(getCalls.length).toBe(2);
