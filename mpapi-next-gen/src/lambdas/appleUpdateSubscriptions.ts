@@ -136,7 +136,7 @@ export async function toAppleSubscription_async(
 	const transactionId: string =
 		response.latestReceiptInfo.originalTransactionId;
 	const appBundleId: string | undefined = response.latestReceiptInfo.bundleId;
-	
+
 	// preserving legacy behavior: gate the call strictly if appBundleId is present
 	if (appBundleId) {
 		const extra_object:
