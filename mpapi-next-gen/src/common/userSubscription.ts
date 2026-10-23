@@ -19,6 +19,6 @@ export class UserSubscription {
 	}
 }
 
-export function userSubscriptionsGetFullTableName() {
+export function userSubscriptionsFullTableName() {
 	return `${App}-${Stage}-user-subscriptions`;
 }
