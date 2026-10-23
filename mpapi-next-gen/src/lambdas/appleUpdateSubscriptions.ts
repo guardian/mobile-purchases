@@ -19,8 +19,14 @@ import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 
+// -----------------------------------------------------------------------------
+// Globals
+
 const dynamoDbClient = new DynamoDBClient({});
 const sqsClient = new SQSClient({});
+
+// -----------------------------------------------------------------------------
+// Functions
 
 export async function putSubscription(
 	subscription: Subscription,
@@ -168,6 +174,9 @@ function sqsRecordToAppleSubscription(
 		async (subs) => Promise.all(subs.map(toAppleSubscription_async)),
 	); // `subs` here is a AppleValidationResponse[]
 }
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export async function handler(event: SQSEvent): Promise<string> {
 	const promises = event.Records.map((record) =>

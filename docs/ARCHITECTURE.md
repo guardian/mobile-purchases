@@ -150,7 +150,7 @@ The mobile apps link an In App Purchase with a Guardian user by calling the link
      name: mobile-purchases-apple-update-subscriptions-PROD
 
 [05] Lambda/function
-     code: typescript/src/update-subs/google.ts
+     code: mpapi-next-gen/src/lambdas/googleUpdateSubscriptions.ts
      name: mobile-purchases-google-update-subscriptions-PROD
 
 [06] SQS queue
