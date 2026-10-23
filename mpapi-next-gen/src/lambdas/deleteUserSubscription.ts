@@ -15,11 +15,28 @@ import {
 	PutMetricDataCommand,
 } from '@aws-sdk/client-cloudwatch';
 
+// -----------------------------------------------------------------------------
+// Types
+
+interface HandlerResponse {
+	recordCount: number;
+	rowCount: number;
+}
+
+// -----------------------------------------------------------------------------
+// Clients Initialization
+
 const dynamoClient = new DynamoDBClient({ region: Region });
 const sqsClient = new SQSClient({ region: Region });
 const cloudWatchClient = new CloudWatchClient({ region: Region });
 
+// -----------------------------------------------------------------------------
+// Globals Variables
+
 const userSubscriptionTableName = UserSubscription.getTableName();
+
+// -----------------------------------------------------------------------------
+// Functions
 
 async function handleSoftOptInsError(message: string) {
 	console.error(message);
@@ -140,10 +157,8 @@ async function disableSoftOptIns(
 	);
 }
 
-interface HandlerResponse {
-	recordCount: number;
-	rowCount: number;
-}
+// -----------------------------------------------------------------------------
+// Handler
 
 export async function handler(
 	event: DynamoDBStreamEvent,
