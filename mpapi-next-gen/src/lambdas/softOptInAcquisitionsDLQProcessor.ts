@@ -1,6 +1,6 @@
 import type { Subscription } from '../common/subscription';
 import { Region, Stage } from '../common/appIdentity';
-import Sqs from 'aws-sdk/clients/sqs';
+import Sqs from '@aws-sdk/client-sqs';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { plusDays } from '../common/dates';
@@ -8,7 +8,7 @@ import { getMembershipAccountId } from '../common/guIdentityApi';
 import { mapPlatformToSoftOptInProductName } from '../common/softOptIns';
 import type { AWSError } from 'aws-sdk/lib/core';
 import type { PromiseResult } from 'aws-sdk/lib/request';
-import STS from 'aws-sdk/clients/sts';
+import STS from '@aws-sdk/client-sts';
 import { Platform } from '../common/platform';
 import { getIdentityApiKey, getIdentityUrl } from '../common/guIdentityApi';
 
