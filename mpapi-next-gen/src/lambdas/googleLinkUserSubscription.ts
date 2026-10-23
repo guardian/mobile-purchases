@@ -24,7 +24,6 @@ import { SQSClient } from '@aws-sdk/client-sqs';
 // Clients Initialization
 
 const baseDynamoClient = new DynamoDBClient({ region: Region });
-// The DocumentClient automatically extracts plain JS objects from your class structures
 const dynamoClient = DynamoDBDocumentClient.from(baseDynamoClient, {
 	marshallOptions: { removeUndefinedValues: true },
 });
@@ -41,11 +40,9 @@ export interface SubscriptionCheckData {
 // -----------------------------------------------------------------------------
 // Functions
 
-async function enqueueUnstoredPurchaseToken(
+export async function enqueueUnstoredPurchaseToken(
 	subChecks: SubscriptionCheckData[],
 ): Promise<number> {
-	// There's nothing to do if there are no subs to check - this will always be
-	// the case for Feast.
 	if (subChecks.length === 0) {
 		return 0;
 	}
@@ -57,32 +54,40 @@ async function enqueueUnstoredPurchaseToken(
 			return agg;
 		}, {});
 
-	let keysToFetch: Array<Record<string, any>> = subChecks.map((sub) => ({
-		subscriptionId: sub.subscriptionId,
-	}));
+	const initialKeysToFetch: Array<Record<string, any>> = subChecks.map(
+		(sub) => ({
+			subscriptionId: sub.subscriptionId,
+		}),
+	);
 	const tableName = subscriptionsFullTableName();
 
-	// same behaviour as the original mapper async iterator
-	while (keysToFetch.length > 0) {
-		const command = new BatchGetCommand({
-			RequestItems: {
-				[tableName]: {
-					Keys: keysToFetch,
+	// chunk the total keys into batches of 100
+	const BATCH_GET_LIMIT = 100;
+	for (let i = 0; i < initialKeysToFetch.length; i += BATCH_GET_LIMIT) {
+		let keysToFetch = initialKeysToFetch.slice(i, i + BATCH_GET_LIMIT);
+
+		// Process the current chunk until all its keys (including unprocessed items) are handled
+		while (keysToFetch.length > 0) {
+			const command = new BatchGetCommand({
+				RequestItems: {
+					[tableName]: {
+						Keys: keysToFetch,
+					},
 				},
-			},
-		});
+			});
 
-		const dynamoResult = await dynamoClient.send(command);
-		const items = dynamoResult.Responses?.[tableName] ?? [];
+			const dynamoResult = await dynamoClient.send(command);
+			const items = dynamoResult.Responses?.[tableName] ?? [];
 
-		for (const item of items) {
-			delete indexedReferences[item.subscriptionId];
+			for (const item of items) {
+				delete indexedReferences[item.subscriptionId];
+			}
+
+			keysToFetch =
+				(dynamoResult.UnprocessedKeys?.[tableName]?.Keys as Array<
+					Record<string, any>
+				>) ?? [];
 		}
-
-		keysToFetch =
-			(dynamoResult.UnprocessedKeys?.[tableName]?.Keys as Array<
-				Record<string, any>
-			>) ?? [];
 	}
 
 	const refsToSend = Object.values(indexedReferences).map(
@@ -92,7 +97,7 @@ async function enqueueUnstoredPurchaseToken(
 	if (refsToSend.length > 0) {
 		const queueUrl = process.env.QueueUrl;
 		if (queueUrl === undefined) {
-			throw new Error('No QueueUrl env parameter provided');
+			throw new Error('[c6d7536a] no QueueUrl env parameter provided');
 		}
 
 		const sqsMessages: SendMessageBatchRequestEntry[] = refsToSend.map(
@@ -111,7 +116,7 @@ async function enqueueUnstoredPurchaseToken(
 
 		if (result.Failed && result.Failed.length > 0) {
 			throw new ProcessingError(
-				'Unable to send all the subscription reference to SQS, will retry',
+				'[d3de7cee] unable to send all the subscription reference to SQS, will retry',
 				true,
 			);
 		}
@@ -121,7 +126,7 @@ async function enqueueUnstoredPurchaseToken(
 	}
 }
 
-async function persistUserSubscriptionLinks(
+export async function persistUserSubscriptionLinks(
 	userSubscriptions: UserSubscription[],
 ): Promise<number> {
 	if (userSubscriptions.length === 0) {
@@ -130,28 +135,29 @@ async function persistUserSubscriptionLinks(
 
 	const tableName = userSubscriptionsFullTableName();
 
-	// Convert class instances directly to plain object syntax.
-	// JSON parsing/stringifying strips internal class getter methods and symbols safely.
-	let writeRequests = userSubscriptions.map((sub) => ({
+	const allWriteRequests = userSubscriptions.map((sub) => ({
 		PutRequest: {
 			Item: JSON.parse(JSON.stringify(sub)),
 		},
 	}));
 
-	// Retry loop ensures UnprocessedItems are not silently dropped (restoring v2 Mapper safety)
-	while (writeRequests.length > 0) {
-		const command = new BatchWriteCommand({
-			RequestItems: {
-				[tableName]: writeRequests,
-			},
-		});
+	// chunk the total items into batches of 25
+	const BATCH_WRITE_LIMIT = 25;
+	for (let i = 0; i < allWriteRequests.length; i += BATCH_WRITE_LIMIT) {
+		let writeRequests = allWriteRequests.slice(i, i + BATCH_WRITE_LIMIT);
+		while (writeRequests.length > 0) {
+			const command = new BatchWriteCommand({
+				RequestItems: {
+					[tableName]: writeRequests,
+				},
+			});
 
-		const result = await dynamoClient.send(command);
-		writeRequests = (result.UnprocessedItems?.[tableName] as any[]) ?? [];
+			const result = await dynamoClient.send(command);
+			writeRequests = (result.UnprocessedItems?.[tableName] as any[]) ?? [];
 
-		if (writeRequests.length > 0) {
-			// Small backoff delay before retrying throttled items
-			await new Promise((resolve) => setTimeout(resolve, 100));
+			if (writeRequests.length > 0) {
+				await new Promise((resolve) => setTimeout(resolve, 100));
+			}
 		}
 	}
 
