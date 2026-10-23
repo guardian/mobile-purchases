@@ -1,5 +1,5 @@
 import type { DynamoDBStreamEvent } from 'aws-lambda';
-import { SubscriptionEmpty, Subscription } from '../common/subscription';
+import { Subscription } from '../common/subscription';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { Region, Stage } from '../common/appIdentity';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
@@ -412,9 +412,6 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 			console.log(
 				`[71744259] identityId: ${identityId}, subscriptionId: ${subscriptionId}`,
 			);
-
-			const itemToQuery = new SubscriptionEmpty();
-			itemToQuery.setSubscriptionId(subscriptionId);
 
 			let subscriptionRecord: Subscription;
 
