@@ -13,12 +13,21 @@ import { Region, Stage } from '../common/appIdentity';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
-const dynamoClient = new DynamoDBClient({ region: Region });
+// -----------------------------------------------------------------------------
+// Types
 
 type SubscriptionStatus = {
 	subscriptionHasLapsed: boolean;
 	subscriptionExpiryDate: Date;
 };
+
+// -----------------------------------------------------------------------------
+// Globals
+
+const dynamoClient = new DynamoDBClient({ region: Region });
+
+// -----------------------------------------------------------------------------
+// Functions
 
 function getPurchaseToken(headers: HttpRequestHeaders): string | undefined {
 	return headers['Play-Purchase-Token'] ?? headers['play-purchase-token'];
@@ -123,6 +132,9 @@ function subscriptionStatus(expiryDate: Date): SubscriptionStatus {
 		subscriptionExpiryDate: expiryDate,
 	};
 }
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export async function handler(
 	request: APIGatewayProxyEvent,
