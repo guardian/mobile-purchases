@@ -54,15 +54,21 @@ function sendToSqs(
 	);
 }
 
-const storeUserSubscriptionInDynamo = async (
+export const storeUserSubscriptionInDynamo = async (
 	userSubscription: UserSubscription,
 ): Promise<void> => {
 	const tableName = userSubscriptionsFullTableName();
 
+	const plainUserSubscription = {
+		userId: userSubscription.userId,
+		subscriptionId: userSubscription.subscriptionId,
+		creationTimestamp: userSubscription.creationTimestamp,
+	};
+
 	await dynamoDbClient.send(
 		new PutItemCommand({
 			TableName: tableName,
-			Item: marshall(userSubscription, { removeUndefinedValues: true }),
+			Item: marshall(plainUserSubscription, { removeUndefinedValues: true }),
 		}),
 	);
 };

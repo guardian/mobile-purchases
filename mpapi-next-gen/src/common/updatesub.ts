@@ -18,10 +18,27 @@ export async function putSubscription(
 ): Promise<Subscription> {
 	const tableName = subscriptionsFullTableName();
 
+	const plainSubscription = {
+		subscriptionId: subscription.subscriptionId,
+		startTimestamp: subscription.startTimestamp,
+		endTimestamp: subscription.endTimestamp,
+		cancellationTimestamp: subscription.cancellationTimestamp,
+		autoRenewing: subscription.autoRenewing,
+		productId: subscription.productId,
+		platform: subscription.platform,
+		freeTrial: subscription.freeTrial,
+		billingPeriod: subscription.billingPeriod,
+		googlePayload: subscription.googlePayload,
+		receipt: subscription.receipt,
+		applePayload: subscription.applePayload,
+		ttl: subscription.ttl,
+		extra: subscription.extra,
+	};
+
 	await dynamoDbClient.send(
 		new PutItemCommand({
 			TableName: tableName,
-			Item: marshall(subscription, { removeUndefinedValues: true }),
+			Item: marshall(plainSubscription, { removeUndefinedValues: true }),
 		}),
 	);
 
