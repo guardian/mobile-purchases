@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { getParameterValueUsingAppStageStackConvention } from './ssmParameters';
 
 function apiKeyForBraze(): Promise<string> {
