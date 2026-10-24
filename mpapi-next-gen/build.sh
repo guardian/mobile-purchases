@@ -19,6 +19,7 @@ HANDLERS=(
     "export-historical-data"
     "export-subscription-events-table"
     "export-subscription-table-v2"
+    "export-subscription-tables"
     "feast-acquisition-events-router"
     "feast-apple-acquisition-events"
     "feast-apple-update-subscriptions"

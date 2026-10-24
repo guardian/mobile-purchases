@@ -24,6 +24,7 @@
 		"@aws-sdk/client-ssm": "^3.1071.0",
 		"@aws-sdk/client-sts": "^3.1156.0",
 		"@aws-sdk/lib-dynamodb": "^3.1156.0",
+		"@aws-sdk/lib-storage": "^3.1156.0",
 		"@aws-sdk/util-dynamodb": "^3.996.9",
 		"@googleapis/androidpublisher": "27.0.0",
 		"@okta/jwt-verifier": "^4.0.2",
