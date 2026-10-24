@@ -1,4 +1,3 @@
-import 'source-map-support/register';
 import { createHash } from 'crypto';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import type {

@@ -1,4 +1,3 @@
-import 'source-map-support/register';
 import type { SQSEvent, SQSRecord } from 'aws-lambda';
 import {
 	Subscription,

@@ -1,4 +1,3 @@
-import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { HTTPResponses } from '../common/apiGatewayHttp';
 import type { Platform } from '../common/platform';
