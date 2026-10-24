@@ -5,7 +5,19 @@ import {
 	parseAppleLinkPayload,
 	AppleLinkPayload,
 } from './appleLinkUserSubscription';
+import {
+	persistUserSubscriptionLinksShared,
+	enqueueUnstoredPurchaseTokenShared,
+} from '../common/sharedLink';
 import { APIGatewayProxyEvent } from 'aws-lambda';
+
+jest.mock('../common/sharedLink', () => ({
+	persistUserSubscriptionLinksShared: jest.fn(),
+	enqueueUnstoredPurchaseTokenShared: jest.fn(),
+}));
+
+jest.spyOn(console, 'log').mockImplementation(() => {});
+jest.spyOn(console, 'error').mockImplementation(() => {});
 
 describe('Apple Link Handler Primitives', () => {
 	const mockUserId = 'user-12345';
@@ -15,13 +27,17 @@ describe('Apple Link Handler Primitives', () => {
 		subscriptions: [
 			{ receipt: 'receipt-aaa', originalTransactionId: 'tx-1' },
 			{ receipt: 'receipt-bbb', originalTransactionId: 'tx-2' },
-			{ receipt: 'receipt-aaa', originalTransactionId: 'tx-1' }, // Duplicate key to test deduplication
+			{ receipt: 'receipt-aaa', originalTransactionId: 'tx-1' },
 		],
 	};
 
 	const mockEvent = {
 		body: JSON.stringify(samplePayloadData),
 	} as APIGatewayProxyEvent;
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+	});
 
 	describe('parseAppleLinkPayload', () => {
 		it('should extract body elements and strip duplicate transaction structures', () => {
@@ -40,7 +56,7 @@ describe('Apple Link Handler Primitives', () => {
 			expect(models).toHaveLength(2);
 			expect(models[0].userId).toBe(mockUserId);
 			expect(models[0].subscriptionId).toBe('tx-1');
-			expect(models[0].creationTimestamp).toBeDefined(); // 👈 FIX: Updated from timestamp to creationTimestamp
+			expect(models[0].creationTimestamp).toBeDefined();
 		});
 	});
 
@@ -57,7 +73,6 @@ describe('Apple Link Handler Primitives', () => {
 		});
 
 		it('should catch Feast platform parameters and return an empty block to bypass SQS updates', () => {
-			// FIX: Explicitly cast or type the literal object to satisfy the parameter compiler contract
 			const feastPayload: AppleLinkPayload = {
 				platform: Platform.IosFeast,
 				subscriptions: [
@@ -66,6 +81,46 @@ describe('Apple Link Handler Primitives', () => {
 			};
 			const sqsMessages = toSqsPayload(feastPayload);
 			expect(sqsMessages).toHaveLength(0);
+		});
+	});
+
+	describe('sharedLink Execution Pipelines Integration', () => {
+		it('should confirm persistUserSubscriptionLinksShared receives the mapped structural array values accurately', async () => {
+			(persistUserSubscriptionLinksShared as jest.Mock).mockResolvedValue(2);
+
+			const parsedPayload = parseAppleLinkPayload(mockEvent);
+			const links = toUserSubscription(mockUserId, parsedPayload);
+
+			const result = await persistUserSubscriptionLinksShared(links);
+			expect(result).toBe(2);
+
+			expect(persistUserSubscriptionLinksShared).toHaveBeenCalledWith(
+				expect.arrayContaining([
+					expect.objectContaining({
+						userId: mockUserId,
+						subscriptionId: 'tx-1',
+					}),
+				]),
+			);
+		});
+
+		it('should confirm enqueueUnstoredPurchaseTokenShared receives the partitioned SQS body collection payload arrays', async () => {
+			(enqueueUnstoredPurchaseTokenShared as jest.Mock).mockResolvedValue(2);
+
+			const parsedPayload = parseAppleLinkPayload(mockEvent);
+			const queuePayload = toSqsPayload(parsedPayload);
+
+			const result = await enqueueUnstoredPurchaseTokenShared(queuePayload);
+			expect(result).toBe(2);
+
+			expect(enqueueUnstoredPurchaseTokenShared).toHaveBeenCalledWith(
+				expect.arrayContaining([
+					expect.objectContaining({
+						subscriptionId: 'tx-1',
+						subscriptionReference: { receipt: 'receipt-aaa' },
+					}),
+				]),
+			);
 		});
 	});
 });
