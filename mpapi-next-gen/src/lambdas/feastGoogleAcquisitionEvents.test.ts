@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { handler } from './feastGoogleAcquisitionEvents';
 import { fetchGoogleSubscriptionV2 } from '../common/google-play-v2';
 import { getParameterValueUsingAppStageStackConvention } from '../common/ssmParameters';
@@ -119,14 +120,26 @@ describe('Feast Google Acquisition Events Lambda', () => {
 		const event = createMockSqsEvent('sub-annual-777', 'US');
 		await isolatedHandler(event);
 
-		expect(mockGlobalFetch).toHaveBeenCalledWith(
-			'https://guardian.com',
-			expect.objectContaining({
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: expect.stringContaining('"paymentId":"sub-annual-777"'),
-			}),
-		);
+		expect(mockGlobalFetch).toHaveBeenCalledTimes(1);
+		const firstCallArgs = mockGlobalFetch.mock.calls[0];
+		expect(firstCallArgs[0]).toBe('https://guardian.com');
+
+		const optionsArgument = firstCallArgs[1];
+		expect(optionsArgument.method).toBe('POST');
+		expect(optionsArgument.headers).toEqual({
+			'Content-Type': 'application/json',
+		});
+
+		const requestBody = JSON.parse(optionsArgument.body);
+
+		expect(requestBody.paymentId).toBe('sub-annual-777');
+		expect(requestBody.eventTimeStamp).toBe('2026-01-01T12:00:00.000Z');
+		expect(requestBody.product).toBe('FEAST_APP');
+		expect(requestBody.country).toBe('GB');
+		expect(requestBody.currency).toBe('GBP');
+		expect(requestBody.paymentFrequency).toBe('ANNUALLY');
+		expect(requestBody.acquisitionType).toBe('PURCHASE');
+		expect(requestBody.readerType).toBe('Direct');
 	});
 
 	it('should throw an unhandled exception when processing country codes not defined inside the local currency map dictionary', async () => {
