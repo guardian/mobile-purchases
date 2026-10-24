@@ -1,19 +1,51 @@
-import type { ScanIterator } from '@aws/dynamodb-data-mapper';
-import type { AndExpression } from '@aws/dynamodb-expressions';
-import {
-	attributeExists,
-	equals,
-	greaterThan,
-	lessThan,
-} from '@aws/dynamodb-expressions';
-import { EndTimeStampFilterSubscription } from '../models/endTimestampFilter';
-import { Platform } from '../models/platform';
+import 'source-map-support/register';
+
+// TODO: Rename this.
+//       We already have a Subscription object.
+import { Subscription as EndTimeStampFilterSubscription } from '../common/endTimestampFilter';
+
+import { subscriptionsFullTableName } from '../common/subscription';
+import { Platform } from '../common/platform';
 import type {
 	AppleSubscriptionReference,
 	SubscriptionReference,
-} from '../models/subscriptionReference';
-import { dynamoMapper, sendToSqs } from '../utils/aws';
-import { plusDays, plusHours } from '../utils/dates';
+} from '../common/subscriptionReference';
+import { plusDays, plusHours } from '../common/dates';
+
+import {
+	DynamoDBClient,
+	ScanCommand,
+	ScanCommandOutput,
+} from '@aws-sdk/client-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
+import {
+	SQSClient,
+	SendMessageCommand,
+	SendMessageCommandOutput,
+} from '@aws-sdk/client-sqs';
+
+// -----------------------------------------------------------------------------
+// Globals
+
+const dynamoDbClient = new DynamoDBClient({});
+const sqsClient = new SQSClient({});
+
+// -----------------------------------------------------------------------------
+// Functions
+
+function sendToSqs(
+	queueUrl: string,
+	event: unknown,
+	delaySeconds?: number,
+): Promise<SendMessageCommandOutput> {
+	return sqsClient.send(
+		new SendMessageCommand({
+			QueueUrl: queueUrl,
+			MessageBody: JSON.stringify(event),
+			DelaySeconds: delaySeconds,
+		}),
+	);
+}
 
 function endTimestampForQuery(event: ScheduleEvent): Date {
 	if (event.endTimestampFilter) {
@@ -55,40 +87,41 @@ const queueUrlForPlatform = (platform: string): string => {
 	}
 };
 
-const defaultSubscriptions = (
+async function* defaultSubscriptions(
 	event: ScheduleEvent,
-): ScanIterator<EndTimeStampFilterSubscription> => {
+): AsyncIterable<EndTimeStampFilterSubscription> {
 	const startTimestamp = startTimestampForQuery(event).toISOString();
 	const endTimestamp = endTimestampForQuery(event).toISOString();
 	console.log(`Will filter subscriptions before ${endTimestamp}`);
 
-	const filter: AndExpression = {
-		type: 'And',
-		conditions: [
-			{
-				...equals(true),
-				subject: 'autoRenewing',
-			},
-			{
-				...attributeExists(),
-				subject: 'receipt',
-			},
-			{
-				...lessThan(endTimestamp),
-				subject: 'endTimestamp',
-			},
-			{
-				...greaterThan(startTimestamp),
-				subject: 'endTimestamp',
-			},
-		],
-	};
+	const tableName = subscriptionsFullTableName();
+	let lastEvaluatedKey: Record<string, any> | undefined = undefined;
 
-	return dynamoMapper.scan(EndTimeStampFilterSubscription, {
-		indexName: 'ios-endTimestamp-revalidation-index-with-platform',
-		filter: filter,
-	});
-};
+	do {
+		const response: ScanCommandOutput = await dynamoDbClient.send(
+			new ScanCommand({
+				TableName: tableName,
+				IndexName: 'ios-endTimestamp-revalidation-index-with-platform',
+				FilterExpression:
+					'autoRenewing = :autoRenewing AND attribute_exists(receipt) AND endTimestamp < :endTimestamp AND endTimestamp > :startTimestamp',
+				ExpressionAttributeValues: {
+					':autoRenewing': { BOOL: true },
+					':endTimestamp': { S: endTimestamp },
+					':startTimestamp': { S: startTimestamp },
+				},
+				ExclusiveStartKey: lastEvaluatedKey,
+			}),
+		);
+
+		if (response.Items) {
+			for (const item of response.Items) {
+				yield unmarshall(item) as EndTimeStampFilterSubscription;
+			}
+		}
+
+		lastEvaluatedKey = response.LastEvaluatedKey;
+	} while (lastEvaluatedKey);
+}
 
 const defaultSendSubscriptionReferenceToQueue = async (
 	queue: string,
@@ -101,7 +134,7 @@ const defaultSendSubscriptionReferenceToQueue = async (
 export function buildHandler(
 	subscriptions: (
 		event: ScheduleEvent,
-	) => ScanIterator<EndTimeStampFilterSubscription> = defaultSubscriptions,
+	) => AsyncIterable<EndTimeStampFilterSubscription> = defaultSubscriptions,
 	sendSubscriptionReferenceToQueue: (
 		queue: string,
 		ref: SubscriptionReference,
@@ -141,5 +174,8 @@ export function buildHandler(
 		);
 	};
 }
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export const handler = buildHandler();

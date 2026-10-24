@@ -4,7 +4,6 @@ const getEntries = (env) => {
   const entries = {
     "google-pubsub": "./typescript/src/pubsub/google.ts",
     "apple-pubsub": "./typescript/src/pubsub/apple.ts",
-    "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
     "feast-apple-pubsub": "./typescript/src/feast/pubsub/apple.ts",
     "feast-google-pubsub": "./typescript/src/feast/pubsub/google.ts",
   };
