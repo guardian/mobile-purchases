@@ -67,7 +67,7 @@ jobs:
             mobile-purchases-apple-fetch-offer-details:
               - tsc-target/apple-fetch-offer-details.zip
             mobile-purchases-apple-link-user-subscription:
-              - tsc-target/apple-link-user-subscription.zip
+              - mpapi-next-gen/dist/apple-link-user-subscription.zip
             mobile-purchases-apple-pubsub:
               - tsc-target/apple-pubsub.zip
             mobile-purchases-apple-revalidate-receipts:

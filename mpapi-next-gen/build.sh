@@ -11,6 +11,7 @@ cd dist
 
 # maintenance: please maintain alphabetical order
 HANDLERS=(
+    "apple-link-user-subscription"
     "apple-subscription-status"
     "apple-update-subscriptions"
     "delete-user-subscription"
