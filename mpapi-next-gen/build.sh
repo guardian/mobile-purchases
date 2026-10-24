@@ -3,7 +3,7 @@
 set -e
 
 yarn clean
-yarn install
+yarn install --frozen-lockfile
 yarn validate
 yarn build
 
