@@ -1,22 +1,30 @@
 import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { HTTPResponses } from '../models/apiGatewayHttp';
-import type { Subscription } from '../models/subscription';
-import { SubscriptionEmpty } from '../models/subscription';
-import { UserSubscriptionEmpty } from '../models/userSubscription';
-import { dynamoMapper } from '../utils/aws';
-import { plusDays } from '../utils/dates';
-import type { UserIdResolution } from '../utils/guIdentityApi';
-import { getAuthToken, getUserId } from '../utils/guIdentityApi';
-import { mapPlatformToSoftOptInProductName } from '../utils/softOptIns';
-import { getConfigValue } from '../utils/ssmConfig';
-import { Platform } from '../models/platform';
+import { HTTPResponses } from '../common/apiGatewayHttp';
+import type { Subscription } from '../common/subscription';
+import { subscriptionsFullTableName } from '../common/subscription';
+import { userSubscriptionsFullTableName } from '../common/userSubscription';
+import { plusDays } from '../common/dates';
+import type { UserIdResolution } from '../common/guIdentityApi';
+import { getAuthToken, getUserId } from '../common/guIdentityApi';
+import { mapPlatformToSoftOptInProductName } from '../common/softOptIns';
+import { Platform } from '../common/platform';
+import { getParameterValueUsingAppStageStackConvention } from '../common/ssmParameters';
+import {
+	DynamoDBClient,
+	QueryCommand,
+	BatchGetItemCommand,
+	type QueryCommandOutput,
+	type BatchGetItemCommandOutput,
+} from '@aws-sdk/client-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
+import { Region } from '../common/appIdentity';
 
 interface SubscriptionStatus {
 	subscriptionId: string;
 	from: string;
 	to: string;
-	cancellationTimestamp?: string;
+	cancellationTimestamp?: string | undefined;
 	valid: boolean;
 	gracePeriod: boolean;
 	autoRenewing: boolean;
@@ -29,36 +37,76 @@ interface SubscriptionStatusResponse {
 	subscriptions: SubscriptionStatus[];
 }
 
+const dynamoClient = new DynamoDBClient({ region: Region });
+
 async function getUserSubscriptionIds(userId: string): Promise<string[]> {
 	const subs: string[] = [];
+	const tableName = userSubscriptionsFullTableName();
 
-	// ( comment group #488db8c1 )
-	// TODO:
-	// In PR: https://github.com/guardian/mobile-purchases/pull/1698
-	// we performed a renaming of ReadSubscription to UserSubscriptionEmpty
-	// With that said it should now be possible to use UserSubscription instead of
-	// UserSubscriptionEmpty as first argument of the dynamoMapper.query(
+	let lastEvaluatedKey: Record<string, any> | undefined = undefined;
 
-	const subscriptionResults = dynamoMapper.query(UserSubscriptionEmpty, {
-		userId: userId,
-	});
+	do {
+		const response: QueryCommandOutput = await dynamoClient.send(
+			new QueryCommand({
+				TableName: tableName,
+				KeyConditionExpression: 'userId = :userId',
+				ExpressionAttributeValues: {
+					':userId': { S: userId },
+				},
+				ExclusiveStartKey: lastEvaluatedKey,
+			}),
+		);
 
-	for await (const sub of subscriptionResults) {
-		subs.push(sub.subscriptionId);
-	}
+		if (response.Items) {
+			for (const item of response.Items) {
+				const unmarshalled = unmarshall(item);
+				if (unmarshalled.subscriptionId) {
+					subs.push(unmarshalled.subscriptionId);
+				}
+			}
+		}
+
+		lastEvaluatedKey = response.LastEvaluatedKey;
+	} while (lastEvaluatedKey);
+
 	return subs;
 }
 
 async function getSubscriptions(
 	subscriptionIds: string[],
 ): Promise<SubscriptionStatusResponse> {
-	const subs: SubscriptionEmpty[] = [];
-	const toGet = subscriptionIds.map((subscriptionId) =>
-		new SubscriptionEmpty().setSubscriptionId(subscriptionId),
-	);
+	if (subscriptionIds.length === 0) {
+		return { subscriptions: [] };
+	}
 
-	for await (const sub of dynamoMapper.batchGet(toGet)) {
-		subs.push(sub);
+	const subs: Subscription[] = [];
+	const tableName = subscriptionsFullTableName();
+
+	// DynamoDB BatchGetItem caps max request sizes at 100 items per round-trip
+	const chunkSize = 100;
+	for (let i = 0; i < subscriptionIds.length; i += chunkSize) {
+		const chunk = subscriptionIds.slice(i, i + chunkSize);
+
+		const keys = chunk.map((id) => ({
+			subscriptionId: { S: id },
+		}));
+
+		const response: BatchGetItemCommandOutput = await dynamoClient.send(
+			new BatchGetItemCommand({
+				RequestItems: {
+					[tableName]: {
+						Keys: keys,
+					},
+				},
+			}),
+		);
+
+		const items = response.Responses?.[tableName];
+		if (items) {
+			for (const item of items) {
+				subs.push(unmarshall(item) as Subscription);
+			}
+		}
 	}
 
 	const sortedSubs = subs.sort(
@@ -103,11 +151,14 @@ async function getSubscriptions(
 }
 
 async function apiKeysConfig(): Promise<string[]> {
-	// returning an array just in case we get more than one client one day
-	const apiKey0Default = await getConfigValue<string>('user.api-key.0');
-	const apiKey1Salesforce = await getConfigValue<string>(
-		'user.api-key.1.salesforce',
-	);
+	const apiKey0Default =
+		await getParameterValueUsingAppStageStackConvention<string>(
+			'user.api-key.0',
+		);
+	const apiKey1Salesforce =
+		await getParameterValueUsingAppStageStackConvention<string>(
+			'user.api-key.1.salesforce',
+		);
 	return [apiKey0Default, apiKey1Salesforce];
 }
 
