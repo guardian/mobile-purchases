@@ -1,7 +1,7 @@
 import 'source-map-support/register';
 import * as crypto from 'crypto';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { getConfigValue } from '../utils/ssmConfig';
+import { getParameterValueUsingAppStageStackConvention } from '../common/ssmParameters';
 
 interface HttpRequestPayload {
 	username: string;
@@ -41,12 +41,14 @@ async function payloadToResponse(
 	//   4. If one day a key needs to be replaced, then both the key and its keyIdentifier will
 	//      have to be updated in AWS.
 
-	const appBundleId = await getConfigValue<string>(
-		'promotional-offers-appBundleId',
-	);
-	const keyIdentifier = await getConfigValue<string>(
-		'promotional-offers-keyIdentifier',
-	);
+	const appBundleId =
+		await getParameterValueUsingAppStageStackConvention<string>(
+			'promotional-offers-appBundleId',
+		);
+	const keyIdentifier =
+		await getParameterValueUsingAppStageStackConvention<string>(
+			'promotional-offers-keyIdentifier',
+		);
 	const productIdentifier = payload.productIdentifier;
 	const offerIdentifier = payload.offerIdentifier;
 	const applicationUsername = payload.username.toLowerCase();
@@ -70,9 +72,10 @@ async function payloadToResponse(
 		timestamp;
 
 	const data = Buffer.from(str1, 'utf8');
-	const privateKey1 = await getConfigValue<string>(
-		'promotional-offers-encryption-private-key',
-	);
+	const privateKey1 =
+		await getParameterValueUsingAppStageStackConvention<string>(
+			'promotional-offers-encryption-private-key',
+		);
 	const privateKey2 = crypto.createPrivateKey({ key: privateKey1 });
 	const signature = crypto.sign('SHA256', data, privateKey2);
 

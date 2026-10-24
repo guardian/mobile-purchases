@@ -2,6 +2,8 @@ const esbuild = require('esbuild');
 
 // maintenance: please maintain alphabetical order
 const entryPoints = {
+	'apple-fetch-offer-details':
+		'./src/lambdas/promotionalOffersAppleFetchOfferDetails.ts',
 	'apple-link-user-subscription': './src/lambdas/appleLinkUserSubscription.ts',
 	'apple-subscription-status': './src/lambdas/appleSubscriptionStatus.ts',
 	'apple-update-subscriptions': './src/lambdas/appleUpdateSubscriptions.ts',
