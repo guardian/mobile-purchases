@@ -1,4 +1,3 @@
-import 'source-map-support/register';
 import { DynamoDBClient, ExportFormat } from '@aws-sdk/client-dynamodb';
 import { ExportTableToPointInTimeCommand } from '@aws-sdk/client-dynamodb';
 import { plusDays } from '../common/dates';

@@ -1,4 +1,3 @@
-import 'source-map-support/register';
 import zlib from 'zlib';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { QueryCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';

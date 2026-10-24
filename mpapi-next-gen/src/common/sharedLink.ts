@@ -19,9 +19,20 @@ const dynamoClient = DynamoDBDocumentClient.from(baseDynamoClient, {
 });
 const sqsClient = new SQSClient({});
 
+const BATCH_GET_LIMIT = 100;
+const BATCH_WRITE_LIMIT = 25;
+const SQS_BATCH_LIMIT = 10;
+
+const MAX_UNPROCESSED_RETRIES = 5;
+const UNPROCESSED_RETRY_DELAY_MS = 100;
+
 export interface SubscriptionCheckData {
 	subscriptionId: string;
 	subscriptionReference: SubscriptionReference;
+}
+
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function enqueueUnstoredPurchaseTokenShared(
@@ -46,11 +57,18 @@ export async function enqueueUnstoredPurchaseTokenShared(
 
 	const tableName = subscriptionsFullTableName();
 
-	const BATCH_GET_LIMIT = 100;
 	for (let i = 0; i < initialKeysToFetch.length; i += BATCH_GET_LIMIT) {
 		let keysToFetch = initialKeysToFetch.slice(i, i + BATCH_GET_LIMIT);
+		let attempt = 0;
 
 		while (keysToFetch.length > 0) {
+			if (attempt > 0 && attempt > MAX_UNPROCESSED_RETRIES) {
+				throw new ProcessingError(
+					`Exceeded ${MAX_UNPROCESSED_RETRIES} retries fetching subscriptions; ${keysToFetch.length} keys still unprocessed`,
+					true,
+				);
+			}
+
 			const command = new BatchGetCommand({
 				RequestItems: {
 					[tableName]: {
@@ -70,6 +88,11 @@ export async function enqueueUnstoredPurchaseTokenShared(
 				(dynamoResult.UnprocessedKeys?.[tableName]?.Keys as Array<
 					Record<string, any>
 				>) ?? [];
+
+			if (keysToFetch.length > 0) {
+				attempt += 1;
+				await sleep(UNPROCESSED_RETRY_DELAY_MS);
+			}
 		}
 	}
 
@@ -77,13 +100,19 @@ export async function enqueueUnstoredPurchaseTokenShared(
 		(value) => value.subscriptionReference,
 	);
 
-	if (refsToSend.length > 0) {
-		const queueUrl = process.env.QueueUrl;
-		if (queueUrl === undefined) {
-			throw new Error('No QueueUrl env parameter provided');
-		}
+	if (refsToSend.length === 0) {
+		return 0;
+	}
 
-		const sqsMessages: SendMessageBatchRequestEntry[] = refsToSend.map(
+	const queueUrl = process.env.QueueUrl;
+	if (queueUrl === undefined) {
+		throw new Error('No QueueUrl env parameter provided');
+	}
+
+	let successCount = 0;
+	for (let i = 0; i < refsToSend.length; i += SQS_BATCH_LIMIT) {
+		const chunk = refsToSend.slice(i, i + SQS_BATCH_LIMIT);
+		const sqsMessages: SendMessageBatchRequestEntry[] = chunk.map(
 			(subRef, index) => ({
 				Id: index.toString(),
 				MessageBody: JSON.stringify(subRef),
@@ -103,10 +132,11 @@ export async function enqueueUnstoredPurchaseTokenShared(
 				true,
 			);
 		}
-		return result.Successful?.length ?? 0;
-	} else {
-		return 0;
+
+		successCount += result.Successful?.length ?? 0;
 	}
+
+	return successCount;
 }
 
 export async function persistUserSubscriptionLinksShared(
@@ -128,10 +158,18 @@ export async function persistUserSubscriptionLinksShared(
 		},
 	}));
 
-	const BATCH_WRITE_LIMIT = 25;
 	for (let i = 0; i < allWriteRequests.length; i += BATCH_WRITE_LIMIT) {
 		let writeRequests = allWriteRequests.slice(i, i + BATCH_WRITE_LIMIT);
+		let attempt = 0;
+
 		while (writeRequests.length > 0) {
+			if (attempt > 0 && attempt > MAX_UNPROCESSED_RETRIES) {
+				throw new ProcessingError(
+					`Exceeded ${MAX_UNPROCESSED_RETRIES} retries writing user subscriptions; ${writeRequests.length} items still unprocessed`,
+					true,
+				);
+			}
+
 			const command = new BatchWriteCommand({
 				RequestItems: {
 					[tableName]: writeRequests,
@@ -142,7 +180,8 @@ export async function persistUserSubscriptionLinksShared(
 			writeRequests = (result.UnprocessedItems?.[tableName] as any[]) ?? [];
 
 			if (writeRequests.length > 0) {
-				await new Promise((resolve) => setTimeout(resolve, 100));
+				attempt += 1;
+				await sleep(UNPROCESSED_RETRY_DELAY_MS);
 			}
 		}
 	}
