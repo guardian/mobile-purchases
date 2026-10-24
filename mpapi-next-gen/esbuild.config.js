@@ -10,6 +10,8 @@ const entryPoints = {
 	'export-subscription-events-table':
 		'./src/lambdas/exportSubscriptionEventsTable.ts',
 	'export-subscription-table-v2': './src/lambdas/exportSubscriptionTableV2.ts',
+	'feast-acquisition-events-router':
+		'./src/lambdas/feastAcquisitionEventsRouter.ts',
 	'feast-apple-acquisition-events':
 		'./src/lambdas/feastAppleAcquisitionEvents.ts',
 	'feast-apple-update-subscriptions':
