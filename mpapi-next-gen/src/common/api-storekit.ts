@@ -224,11 +224,11 @@ export const appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastP
 		);
 
 		const appleStoreKitSubscriptionData:
-			| AppleStoreKitSubscriptionData
-			| undefined = await transactionIdToAppleStoreKitSubscriptionData(
-			appBundleId,
-			transactionId,
-		);
+			AppleStoreKitSubscriptionData | undefined =
+			await transactionIdToAppleStoreKitSubscriptionData(
+				appBundleId,
+				transactionId,
+			);
 
 		if (appleStoreKitSubscriptionData === undefined) {
 			console.log(

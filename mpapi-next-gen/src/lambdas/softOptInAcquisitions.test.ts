@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { handler } from './softOptInAcquisitions';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';

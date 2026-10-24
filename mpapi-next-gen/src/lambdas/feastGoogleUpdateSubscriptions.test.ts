@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { handler } from './feastGoogleUpdateSubscriptions';
 import { mockClient } from 'aws-sdk-client-mock';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
@@ -49,17 +50,14 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 
-		// Reset mock wrapper history call logs between individual iterations
 		dynamoMock.reset();
 		sqsMock.reset();
 		cloudWatchMock.reset();
 
-		// Setup environment parameters required by production functions
 		process.env.HistoricalQueueUrl = 'https://sqs.mock-historical-queue-url';
 		process.env.Stage = 'CODE';
 		process.env.AWS_REGION = 'eu-west-1';
 
-		// Default successful pass-through for common/updatesub dependency
 		(putSubscription as jest.Mock).mockImplementation((sub) =>
 			Promise.resolve(sub),
 		);
@@ -218,5 +216,58 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 
 		const response = await handler(event);
 		expect(response).toBe('OK');
+	});
+
+	it('should verify that injecting the real putSubscription execution loop marshalls a plain persistence data object onto PutItemCommand', async () => {
+		const { buildHandler: realBuildHandler } = jest.requireActual(
+			'./feastGoogleUpdateSubscriptions',
+		);
+
+		const { putSubscription: realPutSubscription } = jest.requireActual(
+			'../common/updatesub',
+		);
+
+		(fetchGoogleSubscriptionV2 as jest.Mock).mockResolvedValue({
+			startTime: new Date('2026-01-01T00:00:00.000Z'),
+			expiryTime: new Date('2026-02-01T00:00:00.000Z'),
+			autoRenewing: true,
+			productId: 'feast-monthly',
+			obfuscatedExternalAccountId: undefined,
+			billingPeriodDuration: 'P1M',
+		});
+		(fetchGoogleSubscription as jest.Mock).mockResolvedValue({
+			startTimeMillis: '1767225600000',
+			expiryTimeMillis: '1769904000000',
+			autoRenewing: true,
+		});
+
+		const testHandler = realBuildHandler(
+			fetchGoogleSubscriptionV2,
+			fetchGoogleSubscription,
+			realPutSubscription,
+			jest.fn().mockResolvedValue(undefined),
+			getIdentityIdFromBraze,
+			jest.fn().mockResolvedValue(undefined),
+			false,
+		);
+
+		const event = createMockSqsEvent({
+			purchaseToken: 'token-wire-test-999',
+			packageName: 'uk.co.guardian.feast',
+			subscriptionId: 'sub-id-monthly',
+		});
+
+		await testHandler(event);
+
+		const ddbCalls = dynamoMock.commandCalls(PutItemCommand);
+		expect(ddbCalls.length).toBeGreaterThanOrEqual(1);
+
+		const targetWriteInput = ddbCalls[0].args[0].input;
+		expect(targetWriteInput.Item).toBeDefined();
+		expect(targetWriteInput.Item.subscriptionId).toEqual({
+			S: 'token-wire-test-999',
+		});
+		expect(targetWriteInput.Item.productId).toEqual({ S: 'feast-monthly' });
+		expect(targetWriteInput.Item.platform).toEqual({ S: 'android-feast' });
 	});
 });
