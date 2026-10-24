@@ -103,7 +103,7 @@ jobs:
             mobile-purchases-feast-apple-pubsub:
               - tsc-target/feast-apple-pubsub.zip
             mobile-purchases-feast-apple-update-subscriptions:
-              - tsc-target/feast-apple-update-subscriptions.zip
+              - mpapi-next-gen/dist/feast-apple-update-subscriptions.zip
             mobile-purchases-feast-google-pubsub:
               - tsc-target/feast-google-pubsub.zip
             mobile-purchases-feast-google-update-subscriptions:
