@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import type { DynamoDBStreamEvent } from 'aws-lambda';
 import {
 	UserSubscription,

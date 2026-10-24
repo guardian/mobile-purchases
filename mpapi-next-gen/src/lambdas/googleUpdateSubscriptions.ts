@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import type { SQSEvent, SQSRecord } from 'aws-lambda';
 import { ProcessingError } from '../common/processingError';
 import {

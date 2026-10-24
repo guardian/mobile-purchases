@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { Platform } from '../common/platform';
 import { UserSubscription } from '../common/userSubscription';
@@ -66,7 +67,7 @@ type AppleSubscription = {
 	originalTransactionId: string;
 };
 
-type AppleLinkPayload = {
+export type AppleLinkPayload = {
 	platform:
 		| Platform.DailyEdition
 		| Platform.Ios
