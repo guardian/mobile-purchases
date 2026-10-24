@@ -110,22 +110,48 @@ function callValidateReceipt(
 			'exclude-old-transactions': true,
 		});
 
-		const response = await fetch(endpoint, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body,
-		});
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds in milliseconds
 
-		if (!response.ok) {
-			console.error(
-				`Impossible to validate the receipt, got status ${response.status} ${response.statusText} from ${endpoint}`,
-			);
-			throw new ProcessingError('Impossible to validate receipt', true);
+		let response: Response | undefined;
+
+		try {
+			response = await fetch(endpoint, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body,
+				signal: controller.signal,
+			});
+
+			if (response === undefined) {
+				throw new ProcessingError(
+					'[2aa11477] did not get an answer from `fetch`',
+					true,
+				);
+			}
+
+			const validResponse = response;
+
+			if (!validResponse.ok) {
+				console.error(
+					`[c994cb19] impossible to validate the receipt, got status ${validResponse.status} ${validResponse.statusText} from ${endpoint}`,
+				);
+				throw new ProcessingError('Impossible to validate receipt', true);
+			}
+
+			return {
+				readBody: () => validResponse.text(),
+			};
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') {
+				console.error('[fc6406e3] the request timed out after 10 seconds.');
+			} else {
+				console.error('[7ec3c766] a network error occurred:', error);
+			}
+			throw error;
+		} finally {
+			clearTimeout(timeoutId);
 		}
-
-		return {
-			readBody: () => response.text(),
-		};
 	});
 }
 
