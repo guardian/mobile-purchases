@@ -59,11 +59,9 @@ export const storeUserSubscriptionInDynamo = async (
 ): Promise<void> => {
 	const tableName = userSubscriptionsFullTableName();
 
-	const plainUserSubscription = {
-		userId: userSubscription.userId,
-		subscriptionId: userSubscription.subscriptionId,
-		creationTimestamp: userSubscription.creationTimestamp,
-	};
+	// fun way to convert the class instance into a plain data object
+	// containing all fields
+	const plainUserSubscription = { ...userSubscription };
 
 	await dynamoDbClient.send(
 		new PutItemCommand({
@@ -134,7 +132,7 @@ const googleSubscriptionToSubscription = (
 	);
 };
 
-const buildHandler =
+export const buildHandler =
 	(
 		fetchSubscriptionDetails: (
 			purchaseToken: string,

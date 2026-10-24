@@ -221,6 +221,7 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 		const { buildHandler: realBuildHandler } = jest.requireActual(
 			'./feastGoogleUpdateSubscriptions',
 		);
+
 		const { putSubscription: realPutSubscription } = jest.requireActual(
 			'../common/updatesub',
 		);
