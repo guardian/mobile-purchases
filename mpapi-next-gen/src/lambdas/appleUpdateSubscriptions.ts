@@ -146,8 +146,7 @@ export async function toAppleSubscription_async(
 	// preserving legacy behavior: gate the call strictly if appBundleId is present
 	if (appBundleId) {
 		const extra_object:
-			| AppleStoreKitSubscriptionDataDerivationForExtra
-			| undefined =
+			AppleStoreKitSubscriptionDataDerivationForExtra | undefined =
 			await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(
 				appBundleId,
 				transactionId,
