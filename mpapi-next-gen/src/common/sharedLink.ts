@@ -66,7 +66,6 @@ export async function enqueueUnstoredPurchaseTokenShared(
 				delete indexedReferences[item.subscriptionId];
 			}
 
-			// FIX: Keep the safe cast so that subsequent loop evaluations match the parent collection type
 			keysToFetch =
 				(dynamoResult.UnprocessedKeys?.[tableName]?.Keys as Array<
 					Record<string, any>
@@ -119,7 +118,6 @@ export async function persistUserSubscriptionLinksShared(
 
 	const tableName = userSubscriptionsFullTableName();
 
-	// FIX: Explicitly map to a plain persistence object using creationTimestamp
 	const allWriteRequests = userSubscriptions.map((sub) => ({
 		PutRequest: {
 			Item: {
@@ -130,7 +128,6 @@ export async function persistUserSubscriptionLinksShared(
 		},
 	}));
 
-	// Guarded by the BatchWrite 25-item physical threshold
 	const BATCH_WRITE_LIMIT = 25;
 	for (let i = 0; i < allWriteRequests.length; i += BATCH_WRITE_LIMIT) {
 		let writeRequests = allWriteRequests.slice(i, i + BATCH_WRITE_LIMIT);
