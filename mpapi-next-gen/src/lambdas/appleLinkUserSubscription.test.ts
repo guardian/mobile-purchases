@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { Platform } from '../common/platform';
 import {
 	toUserSubscription,

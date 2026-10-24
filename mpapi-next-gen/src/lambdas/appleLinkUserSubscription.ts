@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { Platform } from '../common/platform';
 import { UserSubscription } from '../common/userSubscription';
