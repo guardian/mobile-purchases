@@ -18,6 +18,7 @@ HANDLERS=(
     "export-historical-data"
     "export-subscription-events-table"
     "export-subscription-table-v2"
+    "feast-google-update-subscriptions"
     "soft-opt-in-acquisitions"
     "soft-opt-in-acquisitions-dlq-processor"
     "googleoauth2"
