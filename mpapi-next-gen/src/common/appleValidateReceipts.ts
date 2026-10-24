@@ -1,11 +1,9 @@
-import type { IHttpClientResponse } from 'typed-rest-client/Interfaces';
 import { App } from '../common/app';
 import { GracefulProcessingError } from '../common/GracefulProcessingError';
 import { ProcessingError } from '../common/processingError';
 import { Stage } from '../common/appIdentity';
 import { optionalMsToDate } from '../common/dates';
 import type { Option } from '../common/option';
-import { restClient } from '../common/restClient';
 import { getParameterValueUsingAppStageStackConvention } from '../common/ssmParameters';
 
 export interface PendingRenewalInfo {
@@ -96,32 +94,40 @@ function passwordForApp(app: App): Promise<string> {
 	}
 }
 
+interface NativeFetchResponseWrapper {
+	readBody: () => Promise<string>;
+}
+
 function callValidateReceipt(
 	receipt: string,
 	app: App = App.Live,
 	forceSandbox = false,
-): Promise<IHttpClientResponse> {
+): Promise<NativeFetchResponseWrapper> {
 	const endpoint = forceSandbox ? sandboxReceiptEndpoint : receiptEndpoint;
-	return passwordForApp(app)
-		.then((password) => {
-			const body = JSON.stringify({
-				'receipt-data': receipt,
-				password: password,
-				'exclude-old-transactions': true,
-			});
-			return restClient.client.post(endpoint, body);
-		})
-		.then((response) => {
-			const statusCode = response.message.statusCode;
-			const statusText = response.message.statusMessage;
-			if (statusCode && (statusCode < 200 || statusCode >= 300)) {
-				console.error(
-					`Impossible to validate the receipt, got ${statusCode} ${statusText} from ${endpoint}`,
-				);
-				throw new ProcessingError('Impossible to validate receipt', true);
-			}
-			return response;
+	return passwordForApp(app).then(async (password) => {
+		const body = JSON.stringify({
+			'receipt-data': receipt,
+			password: password,
+			'exclude-old-transactions': true,
 		});
+
+		const response = await fetch(endpoint, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body,
+		});
+
+		if (!response.ok) {
+			console.error(
+				`Impossible to validate the receipt, got status ${response.status} ${response.statusText} from ${endpoint}`,
+			);
+			throw new ProcessingError('Impossible to validate receipt', true);
+		}
+
+		return {
+			readBody: () => response.text(),
+		};
+	});
 }
 
 function checkResponseStatus(

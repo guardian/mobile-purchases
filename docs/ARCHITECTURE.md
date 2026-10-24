@@ -79,7 +79,7 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
      name: mobile-purchases-feast-google-update-subscriptions-PROD
 
 [11] Lambda/function
-     code: typescript/src/feast/update-subs/apple.ts
+     code: mpapi-next-gen/src/lambdas/feastAppleUpdateSubscriptions.ts
      name: mobile-purchases-feast-apple-update-subscriptions-PROD
 
 [07] Dynamo table
