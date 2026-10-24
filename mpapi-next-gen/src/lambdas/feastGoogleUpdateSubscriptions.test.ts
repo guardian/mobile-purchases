@@ -14,24 +14,36 @@ import type { SQSEvent } from 'aws-lambda';
 import { ProcessingError } from '../common/processingError';
 import { GracefulProcessingError } from '../common/GracefulProcessingError';
 
-// 1. Initialise official AWS SDK Mock Client instances
+// -----------------------------------------------------------------------------
+// Mock Client instances
+
 const dynamoMock = mockClient(DynamoDBClient);
 const sqsMock = mockClient(SQSClient);
 const cloudWatchMock = mockClient(CloudWatchClient);
 
-// Mock common business collaborator modules
+// -----------------------------------------------------------------------------
+// Mock common
+
 jest.mock('../common/google-play');
 jest.mock('../common/google-play-v2');
 jest.mock('../common/braze');
 jest.mock('../common/updatesub');
 
+// -----------------------------------------------------------------------------
+// Console calibration
+
 jest.spyOn(console, 'error').mockImplementation(() => {});
 jest.spyOn(console, 'warn').mockImplementation(() => {});
 
+// -----------------------------------------------------------------------------
 // Intercept S3 extra-metadata access attempts inside the test runner environment
+
 jest.mock('../common/google-subscription-extra', () => ({
 	extraction: jest.fn().mockResolvedValue(undefined),
 }));
+
+// -----------------------------------------------------------------------------
+// tests
 
 describe('Feast Google Update Subscriptions Lambda Migration', () => {
 	beforeEach(() => {
@@ -70,7 +82,6 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 	});
 
 	it('should verify standard subscriber updates map user records as plain persistence items when Braze resolves a valid ID', async () => {
-		// Mock Google Play APIs returning standard data models
 		(fetchGoogleSubscriptionV2 as jest.Mock).mockResolvedValue({
 			startTime: new Date('2026-01-01T00:00:00.000Z'),
 			expiryTime: new Date('2026-02-01T00:00:00.000Z'),
@@ -86,7 +97,6 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 			paymentState: 1,
 		});
 
-		// Mock Braze interface matching the query with an Identity ID
 		(getIdentityIdFromBraze as jest.Mock).mockResolvedValue({
 			identityId: 'identity-user-999',
 		});
@@ -97,11 +107,9 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 			subscriptionId: 'sub-id-monthly',
 		});
 
-		// Execute the handler to exercise the full internal integration loop
 		const response = await handler(event);
 		expect(response).toBe('OK');
 
-		// 2. Assert the extracted command parameters safely using aws-sdk-client-mock helper arrays
 		const ddbCalls = dynamoMock.commandCalls(PutItemCommand);
 		expect(ddbCalls).toHaveLength(1);
 
@@ -111,7 +119,6 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 		expect(commandInput.Item.subscriptionId).toEqual({ S: 'token-abc-123' });
 		expect(commandInput.Item.creationTimestamp).toBeDefined();
 
-		// Assert historical database archival message format via SQS
 		expect(sqsMock.commandCalls(SendMessageCommand)).toHaveLength(1);
 	});
 
@@ -139,7 +146,6 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 		const response = await handler(event);
 		expect(response).toBe('OK');
 
-		// The user subscription write should be skipped completely if external account is missing
 		expect(dynamoMock.commandCalls(PutItemCommand)).toHaveLength(0);
 		expect(getIdentityIdFromBraze).not.toHaveBeenCalled();
 	});
@@ -159,7 +165,6 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 			autoRenewing: true,
 		});
 
-		// Braze finds the profile but it has no linked identityId
 		(getIdentityIdFromBraze as jest.Mock).mockResolvedValue({
 			identityId: undefined,
 		});
@@ -173,7 +178,6 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 		const response = await handler(event);
 		expect(response).toBe('OK');
 
-		// 3. Asserts missing link fallback tracking routes metrics to CloudWatch safely via unboxed mocks
 		const cwCalls = cloudWatchMock.commandCalls(PutMetricDataCommand);
 		expect(cwCalls).toHaveLength(1);
 
@@ -185,7 +189,6 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 	});
 
 	it('should re-throw a ProcessingError if shouldRetry is marked as true to trigger SQS retries', async () => {
-		// Force the fetch coordinator dependency to throw a retryable error
 		const retryableError = new ProcessingError(
 			'Temporary network timeout',
 			true,
@@ -198,13 +201,10 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 			subscriptionId: 'sub-id-monthly',
 		});
 
-		// Verifies that the handler bubbles the error up to the runtime engine
 		await expect(handler(event)).rejects.toThrow('Temporary network timeout');
 	});
 
 	it('should swallow a GracefulProcessingError and return OK to cleanly delete the message from SQS', async () => {
-		// Import GracefulProcessingError at the top of your test file if needed
-		// Force a non-fatal business edge case error rule exception
 		const gracefulError = new GracefulProcessingError(
 			'Purchase expired a very long time ago',
 		);
@@ -216,7 +216,6 @@ describe('Feast Google Update Subscriptions Lambda Migration', () => {
 			subscriptionId: 'sub-id-monthly',
 		});
 
-		// Verifies that it intercepts the error gracefully and handles it without crashing
 		const response = await handler(event);
 		expect(response).toBe('OK');
 	});
