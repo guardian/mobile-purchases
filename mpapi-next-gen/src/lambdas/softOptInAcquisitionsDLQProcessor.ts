@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import type { Subscription } from '../common/subscription';
 import { Region, Stage } from '../common/appIdentity';
 import {

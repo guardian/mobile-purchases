@@ -67,7 +67,7 @@ type AppleSubscription = {
 	originalTransactionId: string;
 };
 
-type AppleLinkPayload = {
+export type AppleLinkPayload = {
 	platform:
 		| Platform.DailyEdition
 		| Platform.Ios

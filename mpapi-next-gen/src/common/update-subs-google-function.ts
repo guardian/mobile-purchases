@@ -1,4 +1,3 @@
-import 'source-map-support/register';
 import type { SQSRecord } from 'aws-lambda';
 import { ProcessingError } from './processingError';
 import { Subscription } from './subscription';

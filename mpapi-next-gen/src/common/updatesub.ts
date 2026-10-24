@@ -38,7 +38,10 @@ export async function putSubscription(
 	await dynamoDbClient.send(
 		new PutItemCommand({
 			TableName: tableName,
-			Item: marshall(plainSubscription, { removeUndefinedValues: true }),
+			Item: marshall(plainSubscription, {
+				removeUndefinedValues: true,
+				convertClassInstanceToMap: true,
+			}),
 		}),
 	);
 
