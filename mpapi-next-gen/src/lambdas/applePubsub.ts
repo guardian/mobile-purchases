@@ -77,7 +77,8 @@ export async function toDynamoEventAppleAsync(
 		}
 	}
 
-	const product_id = typeof notification.product_id === 'string' ? notification.product_id : '';
+	const product_id =
+		typeof notification.product_id === 'string' ? notification.product_id : '';
 	const purchase_date_ms = Number(notification.purchase_date_ms);
 	const expires_date_ms = Number(notification.expires_date_ms);
 

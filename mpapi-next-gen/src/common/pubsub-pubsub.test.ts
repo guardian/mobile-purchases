@@ -322,7 +322,7 @@ describe('The apple pubsub', () => {
 		const mockStoreFunction = jest.fn((event: SubscriptionEvent) =>
 			Promise.resolve(event),
 		);
-		
+
 		const mockSqsFunction = jest.fn(
 			(_queueUrl: string, _event: { receipt: string }) =>
 				Promise.resolve({
