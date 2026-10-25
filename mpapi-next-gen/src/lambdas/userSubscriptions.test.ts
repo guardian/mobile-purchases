@@ -101,6 +101,125 @@ describe('The user subscriptions lambda', () => {
 		);
 		expect(data.subscriptions[0].platform).toEqual(Platform.IosFeast);
 	});
+
+	it('should cleanly batch partition chunks when subscription array limits exceed 100 entries', async () => {
+		const userId = 'user-batch-100';
+		const mockIds = Array.from({ length: 150 }, (_, i) => `sub-${i}`);
+		const nowStr = new Date().toISOString();
+		const endStr = plusDays(new Date(), 35).toISOString();
+
+		ddbMock.on(QueryCommand).resolves({
+			Items: mockIds.map((id) => ({
+				userId: { S: userId },
+				subscriptionId: { S: id },
+			})),
+		});
+
+		ddbMock
+			.on(BatchGetItemCommand)
+			.resolvesOnce({
+				Responses: {
+					'mobile-purchases-CODE-subscriptions': mockIds
+						.slice(0, 100)
+						.map((id) => ({
+							subscriptionId: { S: id },
+							platform: { S: Platform.IosFeast },
+							productId: { S: 'product-id' },
+							startTimestamp: { S: nowStr },
+							endTimestamp: { S: endStr },
+							autoRenewing: { BOOL: true },
+						})),
+				},
+			})
+			.resolvesOnce({
+				Responses: {
+					'mobile-purchases-CODE-subscriptions': mockIds
+						.slice(100)
+						.map((id) => ({
+							subscriptionId: { S: id },
+							platform: { S: Platform.IosFeast },
+							productId: { S: 'product-id' },
+							startTimestamp: { S: nowStr },
+							endTimestamp: { S: endStr },
+							autoRenewing: { BOOL: true },
+						})),
+				},
+			});
+
+		const event = buildApiGatewayEvent(userId);
+		const response = await handler(event);
+
+		expect(response.statusCode).toEqual(200);
+		expect(ddbMock.commandCalls(BatchGetItemCommand)).toHaveLength(2);
+
+		const data = JSON.parse(response.body);
+		expect(data.subscriptions).toHaveLength(150);
+	});
+
+	it('should continuously cycle and retry evaluations when BatchGetItem responses return UnprocessedKeys maps', async () => {
+		const userId = 'user-retry-unprocessed';
+		const nowStr = new Date().toISOString();
+		const endStr = plusDays(new Date(), 35).toISOString();
+
+		ddbMock.on(QueryCommand).resolves({
+			Items: [
+				{ userId: { S: userId }, subscriptionId: { S: 'sub-part-1' } },
+				{ userId: { S: userId }, subscriptionId: { S: 'sub-part-2' } },
+			],
+		});
+
+		ddbMock
+			.on(BatchGetItemCommand)
+			.resolvesOnce({
+				Responses: {
+					'mobile-purchases-CODE-subscriptions': [
+						{
+							subscriptionId: { S: 'sub-part-1' },
+							platform: { S: Platform.IosFeast },
+							productId: { S: 'product-id' },
+							startTimestamp: { S: nowStr },
+							endTimestamp: { S: endStr },
+							autoRenewing: { BOOL: true },
+						},
+					],
+				},
+				UnprocessedKeys: {
+					'mobile-purchases-CODE-subscriptions': {
+						Keys: [{ subscriptionId: { S: 'sub-part-2' } }],
+					},
+				},
+			})
+			.resolvesOnce({
+				Responses: {
+					'mobile-purchases-CODE-subscriptions': [
+						{
+							subscriptionId: { S: 'sub-part-2' },
+							platform: { S: Platform.IosFeast },
+							productId: { S: 'product-id' },
+							startTimestamp: { S: nowStr },
+							endTimestamp: { S: endStr },
+							autoRenewing: { BOOL: true },
+						},
+					],
+				},
+				UnprocessedKeys: {},
+			});
+
+		const event = buildApiGatewayEvent(userId);
+		const response = await handler(event);
+
+		expect(response.statusCode).toEqual(200);
+		expect(ddbMock.commandCalls(BatchGetItemCommand)).toHaveLength(2);
+
+		const data = JSON.parse(response.body);
+		expect(data.subscriptions).toHaveLength(2);
+		expect(data.subscriptions.map((s: any) => s.subscriptionId)).toContain(
+			'sub-part-1',
+		);
+		expect(data.subscriptions.map((s: any) => s.subscriptionId)).toContain(
+			'sub-part-2',
+		);
+	});
 });
 
 const buildApiGatewayEvent = (userId: string): APIGatewayProxyEvent => {
