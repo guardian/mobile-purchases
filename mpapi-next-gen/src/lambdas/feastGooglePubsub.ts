@@ -1,32 +1,67 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import type { AWSError } from 'aws-sdk';
-import type Sqs from 'aws-sdk/clients/sqs';
-import type { PromiseResult } from 'aws-sdk/lib/request';
-import { HTTPResponses } from '../../models/apiGatewayHttp';
-import type { SubscriptionEvent } from '../../models/subscriptionEvent';
-import type { GoogleSubscriptionReference } from '../../models/subscriptionReference';
+import { HTTPResponses } from '../common/apiGatewayHttp';
+import type { SubscriptionEvent } from '../common/subscriptionEvent';
+import type { GoogleSubscriptionReference } from '../common/subscriptionReference';
 import type {
 	GoogleSubscriptionMetaData,
 	SubscriptionNotification,
-} from '../../pubsub/google-common';
+} from '../common/pubsub-google-common';
 import {
 	fetchMetadata as defaultFetchMetadata,
 	parsePayload,
 	toDynamoEventGoogleAsync,
 	toSqsSubReference,
-} from '../../pubsub/google-common';
-import { Ignorable } from '../../pubsub/ignorable';
-import { dynamoMapper, sendToSqs } from '../../utils/aws';
+} from '../common/pubsub-google-common';
+import { Ignorable } from '../common/ignorable';
+import {
+	SQSClient,
+	SendMessageCommand,
+	SendMessageCommandOutput,
+} from '@aws-sdk/client-sqs';
+import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
+import { subscriptionEventsV2FullTableName } from '../common/subscriptionEvent';
 
-const defaultStoreEventInDynamo = (event: SubscriptionEvent): Promise<void> => {
-	return dynamoMapper.put({ item: event }).then((_) => undefined);
+
+const dynamoDbClient = new DynamoDBClient({});
+const sqsClient = new SQSClient({});
+
+function sendToSqs(
+	queueUrl: string,
+	event: unknown,
+	delaySeconds?: number,
+): Promise<SendMessageCommandOutput> {
+	return sqsClient.send(
+		new SendMessageCommand({
+			QueueUrl: queueUrl,
+			MessageBody: JSON.stringify(event),
+			DelaySeconds: delaySeconds,
+		}),
+	);
+}
+
+const defaultStoreEventInDynamo = async (
+	event: SubscriptionEvent,
+): Promise<void> => {
+	const tableName = subscriptionEventsV2FullTableName();
+
+	await dynamoDbClient.send(
+		new PutItemCommand({
+			TableName: tableName,
+			Item: marshall(event, {
+				removeUndefinedValues: true,
+				convertClassInstanceToMap: true,
+			}),
+		}),
+	);
 };
 
 export function buildHandler(
 	sendMessageToSqs: (
 		queueUrl: string,
 		message: GoogleSubscriptionReference,
-	) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
+		delaySeconds?: number,
+	) => Promise<SendMessageCommandOutput> = sendToSqs,
 	storeEventInDynamo: (
 		event: SubscriptionEvent,
 	) => Promise<void> = defaultStoreEventInDynamo,
