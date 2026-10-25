@@ -3,14 +3,14 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import type {
     GoogleSubscriptionMetaData,
     SubscriptionNotification,
-} from './google-common';
+} from '../common/pubsub-google-common';
 import {
     fetchMetadata,
     parsePayload,
     toDynamoEventGoogleAsync,
     toSqsSubReference,
-} from './google-common';
-import { parseStoreAndSend_async } from './pubsub';
+} from '../common/pubsub-google-common';
+import { parseStoreAndSend_async } from '../common/pubsub-pubsub';
 
 export async function handler(
     request: APIGatewayProxyEvent,
