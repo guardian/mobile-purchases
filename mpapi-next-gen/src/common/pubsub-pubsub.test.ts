@@ -635,4 +635,154 @@ describe('The apple pubsub', () => {
 			expect(mockAppleFetchMetadataFunction.mock.calls.length).toEqual(1);
 		});
 	});
+	describe('AWS SDK v3 command construction (default implementations)', () => {
+		const knownAppleDynamoEvent = new SubscriptionEvent(
+			'TEST',
+			'2025-10-25T12:00:00.000Z|INITIAL_BUY',
+			'2025-10-25',
+			'2025-10-25T12:00:00.000Z',
+			'INITIAL_BUY',
+			'ios',
+			'uk.co.guardian.iphone2',
+			true,
+			null,
+			{ notification_type: 'INITIAL_BUY' },
+			0,
+			null,
+			null,
+			'product_id',
+			0,
+			0,
+			'',
+		);
+
+		const buildValidAppleEvent = (): APIGatewayProxyEvent => {
+			const body: StatusUpdateNotification = {
+				original_transaction_id: 'TEST',
+				cancellation_date: 'TEST',
+				web_order_line_item_id: 'TEST',
+				auto_renew_adam_id: 'TEST',
+				expiration_intent: 'TEST',
+				auto_renew_product_id:
+					'uk.co.guardian.gla.12months.2018Dec.withFreeTrial',
+				auto_renew_status: 'true',
+				bid: 'uk.co.guardian.iphone2',
+				bvrs: 'TEST',
+				environment: 'Sandbox',
+				notification_type: 'INITIAL_BUY',
+				unified_receipt: {
+					environment: 'Sandbox',
+					latest_receipt: 'TEST',
+					latest_receipt_info: [
+						{
+							app_item_id: 'TEST',
+							bvrs: 'TEST',
+							is_in_intro_offer_period: 'false',
+							is_trial_period: 'true',
+							item_id: 'TEST',
+							original_transaction_id: 'TEST',
+							product_id: 'uk.co.guardian.gla.12months.2018Dec.withFreeTrial',
+							quantity: '1',
+							transaction_id: 'TEST',
+							unique_identifier: 'TEST',
+							unique_vendor_identifier: 'TEST',
+							version_external_identifier: 'TEST',
+							web_order_line_item_id: 'TEST',
+							purchase_date_ms: 'TEST',
+							original_purchase_date_ms: 'TEST',
+							expires_date: 'TEST',
+							expires_date_ms: 'TEST',
+						},
+					],
+					pending_renewal_info: [
+						{
+							auto_renew_product_id:
+								'uk.co.guardian.gla.12months.2018Dec.withFreeTrial',
+							auto_renew_status: '1',
+							original_transaction_id: 'TEST',
+							product_id: 'uk.co.guardian.gla.12months.2018Dec.withFreeTrial',
+							price_consent_status: '',
+							price_increase_status: '',
+						},
+					],
+					status: 0,
+				},
+				promotional_offer_id: 'promotional_offer_id',
+				promotional_offer_name: 'promotional_offer_name',
+				product_id: 'product_id',
+				purchase_date_ms: 0,
+				expires_date_ms: 0,
+			};
+			return {
+				queryStringParameters: { secret: 'MYSECRET' },
+				body: JSON.stringify(body),
+				headers: {},
+				multiValueHeaders: {},
+				httpMethod: 'POST',
+				isBase64Encoded: false,
+				path: '',
+				pathParameters: {},
+				multiValueQueryStringParameters: {},
+				// @ts-expect-error // keeping the test fixtures small
+				requestContext: null,
+				resource: '',
+			};
+		};
+
+		it('sends a SendMessageCommand with the Apple subscription reference as JSON body', async () => {
+			sqsMock.on(SendMessageCommand).resolves({ MessageId: 'msg-1' });
+			dynamoMock.on(PutItemCommand).resolves({});
+
+			const result = await parseStoreAndSend_async(
+				buildValidAppleEvent(),
+				parseApplePayload,
+				(_notification) => Promise.resolve(knownAppleDynamoEvent),
+				toAppleSqsEvent,
+				() => Promise.resolve(undefined),
+				undefined,
+				undefined,
+			);
+
+			expect(result).toStrictEqual(HTTPResponses.OK);
+
+			const calls = sqsMock.commandCalls(SendMessageCommand);
+			expect(calls).toHaveLength(1);
+			expect(calls[0].args[0].input).toStrictEqual({
+				QueueUrl: 'https://sqs.example/google-queue',
+				MessageBody: JSON.stringify({ receipt: 'TEST' }),
+				DelaySeconds: undefined,
+			});
+		});
+
+		it('writes a PutItemCommand to the subscription-events-v2 table with a marshalled apple event', async () => {
+			sqsMock.on(SendMessageCommand).resolves({ MessageId: 'msg-1' });
+			dynamoMock.on(PutItemCommand).resolves({});
+
+			const result = await parseStoreAndSend_async(
+				buildValidAppleEvent(),
+				parseApplePayload,
+				(_notification) => Promise.resolve(knownAppleDynamoEvent),
+				toAppleSqsEvent,
+				() => Promise.resolve(undefined),
+				undefined,
+				undefined,
+			);
+
+			expect(result).toStrictEqual(HTTPResponses.OK);
+
+			const calls = dynamoMock.commandCalls(PutItemCommand);
+			expect(calls).toHaveLength(1);
+
+			const input = calls[0].args[0].input;
+			expect(input.TableName).toBe(subscriptionEventsV2FullTableName());
+			expect(input.Item).toBeDefined();
+			expect(input.Item).toMatchObject({
+				subscriptionId: { S: 'TEST' },
+				platform: { S: 'ios' },
+				appId: { S: 'uk.co.guardian.iphone2' },
+				freeTrial: { BOOL: true },
+				eventType: { S: 'INITIAL_BUY' },
+			});
+		});
+	});
 });
