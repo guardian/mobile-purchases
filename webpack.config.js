@@ -2,7 +2,7 @@ const path = require('path');
 
 const getEntries = (env) => {
   const entries = {
-
+    "feast-google-pubsub": "./typescript/src/feast/pubsub/google.ts",
   };
   return env.production ? entries : {
     ...entries,
