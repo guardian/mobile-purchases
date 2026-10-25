@@ -1,8 +1,8 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import { buildHandler } from '../../../src/feast/pubsub/google';
-import { HTTPResponses } from '../../../src/models/apiGatewayHttp';
-import { SubscriptionEvent } from '../../../src/models/subscriptionEvent';
-import type { GoogleSubscriptionReference } from '../../../src/models/subscriptionReference';
+import { buildHandler } from './feastGooglePubsub';
+import { HTTPResponses } from '../common/apiGatewayHttp';
+import { SubscriptionEvent } from '../common/subscriptionEvent';
+import type { GoogleSubscriptionReference } from '../common/subscriptionReference';
 import { expect, beforeEach, jest, describe, it } from '@jest/globals';
 
 const buildApiGatewayEvent = (secret: string): APIGatewayProxyEvent => {
