@@ -3,11 +3,17 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import type { AWSError } from 'aws-sdk';
 import type Sqs from 'aws-sdk/clients/sqs';
 import type { PromiseResult } from 'aws-sdk/lib/request';
-import { HTTPResponses } from '../models/apiGatewayHttp';
-import type { SubscriptionEvent } from '../models/subscriptionEvent';
-import { dynamoMapper, sendToSqs } from '../utils/aws';
-import type { Option } from '../utils/option';
+import { HTTPResponses } from './apiGatewayHttp';
+import type { SubscriptionEvent } from './subscriptionEvent';
+import type { Option } from './option';
 import { Ignorable } from './ignorable';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+
+const dynamoDbClient = new DynamoDBClient({});
+const sqsClient = new SQSClient({});
 
 export const ONE_YEAR_IN_SECONDS = 31557600;
 
