@@ -107,6 +107,7 @@ describe('Feast Google Acquisition Events Lambda', () => {
 			freeTrial: false,
 			regionCode: 'US',
 			rawResponse: {
+				regionCode: 'US',
 				lineItems: [
 					{
 						offerDetails: {
@@ -135,11 +136,56 @@ describe('Feast Google Acquisition Events Lambda', () => {
 		expect(requestBody.paymentId).toBe('sub-annual-777');
 		expect(requestBody.eventTimeStamp).toBe('2026-01-01T12:00:00.000Z');
 		expect(requestBody.product).toBe('FEAST_APP');
-		expect(requestBody.country).toBe('GB');
-		expect(requestBody.currency).toBe('GBP');
+		expect(requestBody.country).toBe('US');
+		expect(requestBody.currency).toBe('USD');
 		expect(requestBody.paymentFrequency).toBe('ANNUALLY');
 		expect(requestBody.acquisitionType).toBe('PURCHASE');
 		expect(requestBody.readerType).toBe('Direct');
+	});
+
+	it('should accurately bubble AbortError events when fetch boundary thresholds hit the 10 seconds constraint limit', async () => {
+		process.env.Stage = 'PROD';
+
+		let isolatedHandler: any;
+		jest.isolateModules(() => {
+			const module = require('./feastGoogleAcquisitionEvents');
+			isolatedHandler = module.handler;
+		});
+
+		(fetchGoogleSubscriptionV2 as jest.Mock).mockResolvedValue({
+			startTime: new Date('2026-01-01T12:00:00.000Z'),
+			expiryTime: new Date('2026-02-01T12:00:00.000Z'),
+			autoRenewing: true,
+			productId: 'feast-annual',
+			billingPeriodDuration: 'P1Y',
+			freeTrial: false,
+			regionCode: 'US',
+			rawResponse: {
+				regionCode: 'US',
+				lineItems: [
+					{
+						offerDetails: {
+							basePlanId: 'feast-annual',
+						},
+					},
+				],
+			},
+		});
+
+		const abortError = new Error('The user aborted a request.');
+		abortError.name = 'AbortError';
+		mockGlobalFetch.mockRejectedValueOnce(abortError);
+
+		const event = createMockSqsEvent('sub-timeout-999', 'US');
+
+		await expect(isolatedHandler(event)).rejects.toThrow(
+			'The user aborted a request.',
+		);
+		expect(console.error).toHaveBeenCalledWith(
+			expect.stringContaining(
+				'[c4ef182a] Acquisition API request timed out after 10 seconds.',
+			),
+		);
 	});
 
 	it('should throw an unhandled exception when processing country codes not defined inside the local currency map dictionary', async () => {

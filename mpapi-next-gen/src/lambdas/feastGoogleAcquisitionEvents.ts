@@ -68,16 +68,31 @@ export const postPayloadToAcquisitionAPI = async (
 			);
 		console.log(`[9118860a] acquisition api url: ${url}`);
 
-		const response = await fetch(url, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(payload),
-		});
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-		if (!response.ok) {
-			throw new Error(
-				`[606a2012] Failed to post payload to Acquisition API: ${response.status} ${response.statusText}`,
-			);
+		try {
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload),
+				signal: controller.signal,
+			});
+
+			if (!response.ok) {
+				throw new Error(
+					`[606a2012] Failed to post payload to Acquisition API: ${response.status} ${response.statusText}`,
+				);
+			}
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') {
+				console.error(
+					'[c4ef182a] Acquisition API request timed out after 10 seconds.',
+				);
+			}
+			throw error;
+		} finally {
+			clearTimeout(timeoutId);
 		}
 	} else {
 		console.log(
