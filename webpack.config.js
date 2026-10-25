@@ -4,7 +4,6 @@ const getEntries = (env) => {
   const entries = {
     "google-pubsub": "./typescript/src/pubsub/google.ts",
     "apple-pubsub": "./typescript/src/pubsub/apple.ts",
-    "apple-fetch-offer-details": "./typescript/src/promotional-offers/appleFetchOfferDetails.ts",
     "user-subscriptions": "./typescript/src/user/user.ts",
     "export-subscription-tables": "./typescript/src/export/exportSubscriptions.ts",
     "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
