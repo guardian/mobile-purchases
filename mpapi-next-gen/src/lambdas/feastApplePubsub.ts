@@ -1,7 +1,11 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import type { AWSError } from 'aws-sdk';
-import type Sqs from 'aws-sdk/clients/sqs';
-import type { PromiseResult } from 'aws-sdk/lib/request';
+import {
+	SQSClient,
+	SendMessageCommand,
+	SendMessageCommandOutput,
+} from '@aws-sdk/client-sqs';
+import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
 import { HTTPResponses } from '../common/apiGatewayHttp';
 import type { AppleSubscriptionReference } from '../common/subscriptionReference';
 
@@ -13,14 +17,7 @@ import { toDynamoEventAppleAsync, toSqsSubReference } from './applePubsub';
 
 import type { StatusUpdateNotification } from '../common/pubsub-apple-common';
 import { parsePayload } from '../common/pubsub-apple-common';
-
-import {
-	SQSClient,
-	SendMessageCommand,
-	SendMessageCommandOutput,
-} from '@aws-sdk/client-sqs';
-import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
-import { unmarshall } from '@aws-sdk/util-dynamodb';
+import { subscriptionEventsV2FullTableName } from '../common/subscriptionEvent';
 
 const dynamoDbClient = new DynamoDBClient({});
 const sqsClient = new SQSClient({});
@@ -46,14 +43,25 @@ const defaultStoreEventInDynamo = async (
 	event: StatusUpdateNotification,
 ): Promise<void> => {
 	const item = await toDynamoEventAppleAsync(event, true);
-	return dynamoMapper.put({ item }).then((_) => undefined);
+	const tableName = subscriptionEventsV2FullTableName();
+
+	await dynamoDbClient.send(
+		new PutItemCommand({
+			TableName: tableName,
+			Item: marshall(item, {
+				removeUndefinedValues: true,
+				convertClassInstanceToMap: true,
+			}),
+		}),
+	);
 };
 
 export function buildHandler(
 	sendMessageToSqs: (
 		queueUrl: string,
 		message: AppleSubscriptionReference,
-	) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
+		delaySeconds?: number,
+	) => Promise<SendMessageCommandOutput> = sendToSqs,
 	storeEventInDynamo: (
 		event: StatusUpdateNotification,
 	) => Promise<void> = defaultStoreEventInDynamo,
