@@ -1,16 +1,13 @@
 import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import type { AWSError } from 'aws-sdk';
-import type Sqs from 'aws-sdk/clients/sqs';
-import type { PromiseResult } from 'aws-sdk/lib/request';
 import { HTTPResponses } from './apiGatewayHttp';
 import type { SubscriptionEvent } from './subscriptionEvent';
+import { subscriptionEventFullTableName } from './subscriptionEvent';
 import type { Option } from './option';
 import { Ignorable } from './ignorable';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
-import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import { SQSClient, SendMessageCommand, type SendMessageCommandOutput } from '@aws-sdk/client-sqs';
 
 const dynamoDbClient = new DynamoDBClient({});
 const sqsClient = new SQSClient({});
@@ -35,17 +32,29 @@ async function catchingServerErrors(
 	block: () => Promise<APIGatewayProxyResult>,
 ): Promise<APIGatewayProxyResult> {
 	try {
-		return block();
+		return await block();
 	} catch (e) {
 		console.error('Internal server error', e);
 		return HTTPResponses.INTERNAL_ERROR;
 	}
 }
 
-function storeInDynamoImpl(
+async function storeInDynamoImpl(
 	event: SubscriptionEvent,
 ): Promise<SubscriptionEvent> {
-	return dynamoMapper.put({ item: event }).then((result) => result.item);
+	const tableName = subscriptionEventFullTableName();
+	
+	await dynamoDbClient.send(
+		new PutItemCommand({
+			TableName: tableName,
+			Item: marshall(event, { 
+				removeUndefinedValues: true,
+				convertClassInstanceToMap: true 
+			}),
+		}),
+	);
+
+	return event;
 }
 
 export async function parseStoreAndSend_async<Payload, SqsEvent, MetaData>(
@@ -63,7 +72,8 @@ export async function parseStoreAndSend_async<Payload, SqsEvent, MetaData>(
 	sendToSqsFunction: (
 		queueUrl: string,
 		event: SqsEvent,
-	) => Promise<PromiseResult<Sqs.SendMessageResult, AWSError>> = sendToSqs,
+		delaySeconds?: number,
+	) => Promise<SendMessageCommandOutput> = sendToSqs,
 ): Promise<APIGatewayProxyResult> {
 	const secret = process.env.Secret;
 	return catchingServerErrors(async () => {
