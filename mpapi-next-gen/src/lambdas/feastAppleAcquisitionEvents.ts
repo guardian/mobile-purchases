@@ -124,7 +124,8 @@ export async function toAppleSubscription_async(
 	const appBundleId: string | undefined = response.latestReceiptInfo.bundleId;
 	if (appBundleId !== undefined) {
 		const extra_object:
-			AppleStoreKitSubscriptionDataDerivationForExtra | undefined =
+			| AppleStoreKitSubscriptionDataDerivationForExtra
+			| undefined =
 			await transactionIdToAppleStoreKitSubscriptionDataDerivationForExtra(
 				appBundleId,
 				transactionId,
@@ -162,7 +163,8 @@ const appleSubscriptionToAcquisitionApiPayload = async (
 	subscription: Subscription,
 ): Promise<AcquisitionApiPayload> => {
 	const extendedData:
-		AppleStoreKitSubscriptionDataDerivationForFeastPipeline | undefined =
+		| AppleStoreKitSubscriptionDataDerivationForFeastPipeline
+		| undefined =
 		await appleSubscriptionToAppleStoreKitSubscriptionDataDerivationForFeastPipeline(
 			subscription,
 		);
