@@ -222,7 +222,9 @@ type GoogleSubscription = {
 
 type GoogleLinkPayload = {
 	platform:
-		Platform.Android | Platform.AndroidPuzzles | Platform.AndroidEdition;
+		| Platform.Android
+		| Platform.AndroidPuzzles
+		| Platform.AndroidEdition;
 	subscriptions: GoogleSubscription[];
 };
 
