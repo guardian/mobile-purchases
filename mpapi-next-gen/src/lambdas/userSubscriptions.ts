@@ -82,30 +82,43 @@ async function getSubscriptions(
 	const subs: Subscription[] = [];
 	const tableName = subscriptionsFullTableName();
 
-	// DynamoDB BatchGetItem caps max request sizes at 100 items per round-trip
 	const chunkSize = 100;
 	for (let i = 0; i < subscriptionIds.length; i += chunkSize) {
 		const chunk = subscriptionIds.slice(i, i + chunkSize);
 
-		const keys = chunk.map((id) => ({
-			subscriptionId: { S: id },
-		}));
+		let requestItems = {
+			[tableName]: {
+				Keys: chunk.map((id) => ({
+					subscriptionId: { S: id },
+				})),
+			},
+		};
 
-		const response: BatchGetItemCommandOutput = await dynamoClient.send(
-			new BatchGetItemCommand({
-				RequestItems: {
-					[tableName]: {
-						Keys: keys,
-					},
-				},
-			}),
-		);
-
-		const items = response.Responses?.[tableName];
-		if (items) {
-			for (const item of items) {
-				subs.push(unmarshall(item) as Subscription);
+		let attempts = 0;
+		while (
+			requestItems[tableName] &&
+			requestItems[tableName].Keys.length > 0 &&
+			attempts < 5
+		) {
+			if (attempts > 0) {
+				await new Promise((resolve) => setTimeout(resolve, attempts * 50));
 			}
+
+			const response: BatchGetItemCommandOutput = await dynamoClient.send(
+				new BatchGetItemCommand({
+					RequestItems: requestItems,
+				}),
+			);
+
+			const items = response.Responses?.[tableName];
+			if (items) {
+				for (const item of items) {
+					subs.push(unmarshall(item) as Subscription);
+				}
+			}
+
+			requestItems = (response.UnprocessedKeys as any) || {};
+			attempts++;
 		}
 	}
 
