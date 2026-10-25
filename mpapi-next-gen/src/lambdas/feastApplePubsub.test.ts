@@ -2,10 +2,25 @@ import '@jest/globals';
 import type { StatusUpdateNotification } from '../common/pubsub-apple-common';
 import { parsePayload } from '../common/pubsub-apple-common';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
+import { mockClient } from 'aws-sdk-client-mock';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { buildHandler } from './feastApplePubsub';
 import { HTTPResponses } from '../common/apiGatewayHttp';
 import type { AppleSubscriptionReference } from '../common/subscriptionReference';
+import { subscriptionEventsV2FullTableName } from '../common/subscriptionEvent';
 import { expect, beforeEach, describe, it, jest } from '@jest/globals';
+
+const sqsMock = mockClient(SQSClient);
+const dynamoMock = mockClient(DynamoDBClient);
+
+jest.mock('./applePubsub', () => {
+	const actual = jest.requireActual('./applePubsub');
+	return {
+		...actual,
+		toDynamoEventAppleAsync: jest.fn(),
+	};
+});
 
 const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
 	const body: StatusUpdateNotification = {
@@ -82,6 +97,8 @@ const buildApiGatewayEvent = (): APIGatewayProxyEvent => {
 beforeEach(() => {
 	process.env['QueueUrl'] = '';
 	process.env['Secret'] = 'test_secret';
+	sqsMock.reset();
+	dynamoMock.reset();
 });
 
 describe('The Feast Apple pubsub', () => {
@@ -121,9 +138,9 @@ describe('The Feast Apple pubsub', () => {
 		input.queryStringParameters = {};
 
 		const noOpLogger = (_request: APIGatewayProxyEvent): void => {};
-		const noOpStoreEventInDynamo = (
-			_event: StatusUpdateNotification,
-		): Promise<void> => Promise.resolve();
+		const noOpStoreEventInDynamo = jest.fn(
+			(_event: StatusUpdateNotification): Promise<void> => Promise.resolve(),
+		);
 		const handler = buildHandler(
 			mockSqsFunction,
 			noOpStoreEventInDynamo,
@@ -133,6 +150,8 @@ describe('The Feast Apple pubsub', () => {
 		const result = await handler(input);
 
 		expect(result).toStrictEqual(HTTPResponses.UNAUTHORISED);
+		expect(mockSqsFunction).not.toHaveBeenCalled();
+		expect(noOpStoreEventInDynamo).not.toHaveBeenCalled();
 	});
 
 	it('invokes the method to add the event to the Dynamo table', async () => {
@@ -154,7 +173,6 @@ describe('The Feast Apple pubsub', () => {
 		const result = await handler(input);
 		const parsedPayload = parsePayload(input.body);
 
-		// Skip the test if parsePayload returns an error
 		if (parsedPayload instanceof Error) {
 			throw parsedPayload;
 		}
@@ -162,5 +180,105 @@ describe('The Feast Apple pubsub', () => {
 		expect(result).toStrictEqual(HTTPResponses.OK);
 		expect(storeEventInDynamoMock).toHaveBeenCalledTimes(1);
 		expect(storeEventInDynamoMock).toHaveBeenCalledWith(parsedPayload);
+	});
+
+	describe('AWS SDK v3 command construction (default implementations)', () => {
+		beforeEach(() => {
+			sqsMock.reset();
+			dynamoMock.reset();
+			process.env['QueueUrl'] = 'https://sqs.example/apple-queue';
+			process.env['Secret'] = 'test_secret';
+		});
+
+		it('sends a SendMessageCommand with the Apple subscription reference as JSON body', async () => {
+			sqsMock.on(SendMessageCommand).resolves({ MessageId: 'msg-1' });
+			dynamoMock.on(PutItemCommand).resolves({});
+
+			const noOpLogger = (_request: APIGatewayProxyEvent): void => {};
+			const noOpStoreEventInDynamo = jest.fn(
+				(_event: StatusUpdateNotification): Promise<void> => Promise.resolve(),
+			);
+			const handler = buildHandler(
+				undefined,
+				noOpStoreEventInDynamo,
+				noOpLogger,
+			);
+
+			const result = await handler(buildApiGatewayEvent());
+
+			expect(result).toStrictEqual(HTTPResponses.OK);
+
+			const calls = sqsMock.commandCalls(SendMessageCommand);
+			expect(calls).toHaveLength(1);
+			expect(calls[0].args[0].input).toStrictEqual({
+				QueueUrl: 'https://sqs.example/apple-queue',
+				MessageBody: JSON.stringify({ receipt: 'TEST' }),
+				DelaySeconds: undefined,
+			});
+		});
+
+		it('writes a PutItemCommand to the subscription-events-v2 table with a marshalled apple event', async () => {
+			const { toDynamoEventAppleAsync } = jest.requireMock('./applePubsub') as {
+				toDynamoEventAppleAsync: jest.Mock;
+			};
+			toDynamoEventAppleAsync.mockResolvedValue({
+				subscriptionId: 'TEST',
+				timestampAndType: '2025-10-25T12:00:00.000Z|INITIAL_BUY',
+				date: '2025-10-25',
+				timestamp: '2025-10-25T12:00:00.000Z',
+				eventType: 'INITIAL_BUY',
+				platform: 'ios-feast',
+				appId: 'uk.co.guardian.Feast',
+				freeTrial: false,
+				applePayload: { notification_type: 'INITIAL_BUY' },
+				googlePayload: null,
+				ttl: 0,
+				promotional_offer_id: 'promotional_offer_id',
+				promotional_offer_name: 'promotional_offer_name',
+				product_id: 'product_id',
+				purchase_date_ms: 0,
+				expires_date_ms: 0,
+				extra: '',
+			});
+
+			sqsMock.on(SendMessageCommand).resolves({ MessageId: 'msg-1' });
+			dynamoMock.on(PutItemCommand).resolves({});
+
+			const mockSqsFunction = jest.fn(
+				(_queueurl: string, _event: AppleSubscriptionReference) =>
+					Promise.resolve({} as never),
+			);
+			const noOpLogger = (_request: APIGatewayProxyEvent): void => {};
+			const handler = buildHandler(mockSqsFunction, undefined, noOpLogger);
+
+			const result = await handler(buildApiGatewayEvent());
+
+			expect(result).toStrictEqual(HTTPResponses.OK);
+
+			const calls = dynamoMock.commandCalls(PutItemCommand);
+			expect(calls).toHaveLength(1);
+
+			const input = calls[0].args[0].input;
+			expect(input.TableName).toBe(subscriptionEventsV2FullTableName());
+			expect(input.Item).toStrictEqual({
+				subscriptionId: { S: 'TEST' },
+				timestampAndType: { S: '2025-10-25T12:00:00.000Z|INITIAL_BUY' },
+				date: { S: '2025-10-25' },
+				timestamp: { S: '2025-10-25T12:00:00.000Z' },
+				eventType: { S: 'INITIAL_BUY' },
+				platform: { S: 'ios-feast' },
+				appId: { S: 'uk.co.guardian.Feast' },
+				freeTrial: { BOOL: false },
+				applePayload: { M: { notification_type: { S: 'INITIAL_BUY' } } },
+				googlePayload: { NULL: true },
+				ttl: { N: '0' },
+				promotional_offer_id: { S: 'promotional_offer_id' },
+				promotional_offer_name: { S: 'promotional_offer_name' },
+				product_id: { S: 'product_id' },
+				purchase_date_ms: { N: '0' },
+				expires_date_ms: { N: '0' },
+				extra: { S: '' },
+			});
+		});
 	});
 });
