@@ -111,12 +111,10 @@ function callValidateReceipt(
 		});
 
 		const controller = new AbortController();
-		const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds in milliseconds
-
-		let response: Response | undefined;
+		const timeoutId = setTimeout(() => controller.abort(), 10000);
 
 		try {
-			response = await fetch(endpoint, {
+			const response = await fetch(endpoint, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body,
@@ -130,17 +128,18 @@ function callValidateReceipt(
 				);
 			}
 
-			const validResponse = response;
-
-			if (!validResponse.ok) {
+			if (!response.ok) {
 				console.error(
-					`[c994cb19] impossible to validate the receipt, got status ${validResponse.status} ${validResponse.statusText} from ${endpoint}`,
+					`[c994cb19] impossible to validate the receipt, got status ${response.status} ${response.statusText} from ${endpoint}`,
 				);
 				throw new ProcessingError('Impossible to validate receipt', true);
 			}
 
+			// Consume the response body stream text immediately while the abort signal is active
+			const bodyText = await response.text();
+
 			return {
-				readBody: () => validResponse.text(),
+				readBody: () => Promise.resolve(bodyText),
 			};
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') {
