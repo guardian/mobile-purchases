@@ -2,7 +2,7 @@ import 'source-map-support/register';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { HTTPResponses } from './apiGatewayHttp';
 import type { SubscriptionEvent } from './subscriptionEvent';
-import { subscriptionEventFullTableName } from './subscriptionEvent';
+import { subscriptionEventsV2FullTableName } from './subscriptionEvent';
 import type { Option } from './option';
 import { Ignorable } from './ignorable';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
@@ -46,7 +46,7 @@ async function catchingServerErrors(
 async function storeInDynamoImpl(
 	event: SubscriptionEvent,
 ): Promise<SubscriptionEvent> {
-	const tableName = subscriptionEventFullTableName();
+	const tableName = subscriptionEventsV2FullTableName();
 
 	await dynamoDbClient.send(
 		new PutItemCommand({
