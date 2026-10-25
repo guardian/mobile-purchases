@@ -7,7 +7,11 @@ import type { Option } from './option';
 import { Ignorable } from './ignorable';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
-import { SQSClient, SendMessageCommand, type SendMessageCommandOutput } from '@aws-sdk/client-sqs';
+import {
+	SQSClient,
+	SendMessageCommand,
+	type SendMessageCommandOutput,
+} from '@aws-sdk/client-sqs';
 
 const dynamoDbClient = new DynamoDBClient({});
 const sqsClient = new SQSClient({});
@@ -43,13 +47,13 @@ async function storeInDynamoImpl(
 	event: SubscriptionEvent,
 ): Promise<SubscriptionEvent> {
 	const tableName = subscriptionEventFullTableName();
-	
+
 	await dynamoDbClient.send(
 		new PutItemCommand({
 			TableName: tableName,
-			Item: marshall(event, { 
+			Item: marshall(event, {
 				removeUndefinedValues: true,
-				convertClassInstanceToMap: true 
+				convertClassInstanceToMap: true,
 			}),
 		}),
 	);

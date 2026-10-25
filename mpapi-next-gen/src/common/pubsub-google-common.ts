@@ -3,18 +3,11 @@ import { z } from 'zod';
 import { SubscriptionEvent } from './subscriptionEvent';
 import type { GoogleSubscriptionReference } from './subscriptionReference';
 import { googlePackageNameToPlatform } from './appToPlatform';
-import {
-	fetchGoogleSubscription,
-	GOOGLE_PAYMENT_STATE,
-} from './google-play';
+import { fetchGoogleSubscription, GOOGLE_PAYMENT_STATE } from './google-play';
 import type { GoogleExtraDataExtended } from './google-subscription-extra';
 import { extraction } from './google-subscription-extra';
 import { Stage } from './appIdentity';
-import {
-	dateToSecondTimestamp,
-	optionalMsToDate,
-	thirtyMonths,
-} from './dates';
+import { dateToSecondTimestamp, optionalMsToDate, thirtyMonths } from './dates';
 import type { Option } from './option';
 import { Ignorable } from './ignorable';
 
