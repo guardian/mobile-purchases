@@ -63,20 +63,20 @@ export type PendingRefundReviewNotification = z.infer<
 	typeof PendingRefundReviewNotificationSchema
 >;
 
-// Zod doesn't seem to support both extending a base schema with a refinement
-// and extending so I need to apply the refinement here.
 const DeveloperNotificationSchema = z
 	.union([
 		SubscriptionNotificationSchema,
 		VoidedPurchaseNotificationSchema,
 		PendingRefundReviewNotificationSchema,
 	])
-	.refine(
-		(data) => optionalMsToDate(data.eventTimeMillis) !== null,
-		(data) => ({
-			message: `Unable to parse the eventTimeMillis field ${data.eventTimeMillis}`,
-		}),
-	);
+	.superRefine((data, ctx) => {
+		if (optionalMsToDate(data.eventTimeMillis) === null) {
+			ctx.addIssue({
+				code: 'custom',
+				message: `Unable to parse the eventTimeMillis field ${data.eventTimeMillis}`,
+			});
+		}
+	});
 export type DeveloperNotification = z.infer<typeof DeveloperNotificationSchema>;
 
 export interface GoogleSubscriptionMetaData {
