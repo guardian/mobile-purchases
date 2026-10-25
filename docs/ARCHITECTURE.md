@@ -46,7 +46,7 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
          : mobile-purchases-applepubsub-CODE
 
 [10] Lambda/function
-     code: typescript/src/pubsub/google.ts
+     code: mpapi-next-gen/src/lambdas/googlePubsub.ts
      name: mobile-purchases-googlepubsub-PROD (generate extra for table [07])
          : mobile-purchases-googlepubsub-CODE
 

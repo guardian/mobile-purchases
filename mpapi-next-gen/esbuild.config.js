@@ -27,6 +27,7 @@ const entryPoints = {
 	googleoauth2: './src/lambdas/googleOauth2.ts',
 	'google-link-user-subscription':
 		'./src/lambdas/googleLinkUserSubscription.ts',
+	'google-pubsub': './src/lambdas/googlePubsub.ts',
 	'google-subscription-status': './src/lambdas/googleSubscriptionStatus.ts',
 	'google-update-subscriptions': './src/lambdas/googleUpdateSubscriptions.ts',
 	'soft-opt-in-acquisitions': './src/lambdas/softOptInAcquisitions.ts',
