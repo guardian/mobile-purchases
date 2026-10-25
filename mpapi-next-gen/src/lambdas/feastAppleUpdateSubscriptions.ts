@@ -208,24 +208,40 @@ const decodeSubscriptionReference = (
 const defaultFetchSubscriptionsFromApple = async (
 	reference: AppleSubscriptionReference,
 ): Promise<SubscriptionMaybeWithAppAccountToken[]> => {
-	const responses = await validateReceipt(
-		reference.receipt,
-		{ sandboxRetry: false },
-		App.Feast,
-	);
-	return Promise.all(
-		responses.map(async (response) => {
-			const subscription = await toAppleSubscription_async(response);
-			if (response.latestReceiptInfo.appAccountToken) {
-				return withAppAccountToken(
-					subscription,
-					response.latestReceiptInfo.appAccountToken,
-				);
-			} else {
-				return subscription;
-			}
-		}),
-	);
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+	const timeoutPromise = new Promise<never>((_, reject) => {
+		controller.signal.addEventListener('abort', () => {
+			reject(new Error('Apple receipt validation timed out after 10 seconds'));
+		});
+	});
+
+	try {
+		const responses = await Promise.race([
+			validateReceipt(reference.receipt, { sandboxRetry: false }, App.Feast),
+			timeoutPromise,
+		]);
+
+		clearTimeout(timeoutId);
+
+		return Promise.all(
+			responses.map(async (response) => {
+				const subscription = await toAppleSubscription_async(response);
+				if (response.latestReceiptInfo.appAccountToken) {
+					return withAppAccountToken(
+						subscription,
+						response.latestReceiptInfo.appAccountToken,
+					);
+				} else {
+					return subscription;
+				}
+			}),
+		);
+	} catch (error: any) {
+		clearTimeout(timeoutId);
+		throw error;
+	}
 };
 
 const defaultStoreSubscriptionInDynamo = async (
