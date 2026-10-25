@@ -144,6 +144,7 @@ describe('Feast Google Acquisition Events Lambda', () => {
 	});
 
 	it('should accurately bubble AbortError events when fetch boundary thresholds hit the 10 seconds constraint limit', async () => {
+		jest.useFakeTimers();
 		process.env.Stage = 'PROD';
 
 		let isolatedHandler: any;
@@ -172,20 +173,42 @@ describe('Feast Google Acquisition Events Lambda', () => {
 			},
 		});
 
-		const abortError = new Error('The user aborted a request.');
-		abortError.name = 'AbortError';
-		mockGlobalFetch.mockRejectedValueOnce(abortError);
+		mockGlobalFetch.mockImplementation((url, options) => {
+			return new Promise((resolve, reject) => {
+				if (options?.signal) {
+					options.signal.addEventListener('abort', () => {
+						const abortError = new Error('The user aborted a request.');
+						abortError.name = 'AbortError';
+						reject(abortError);
+					});
+					if (options.signal.aborted) {
+						const abortError = new Error('The user aborted a request.');
+						abortError.name = 'AbortError';
+						reject(abortError);
+					}
+				}
+			});
+		});
 
 		const event = createMockSqsEvent('sub-timeout-999', 'US');
 
-		await expect(isolatedHandler(event)).rejects.toThrow(
+		const handlerPromise = isolatedHandler(event);
+
+		const wrappedPromise = expect(handlerPromise).rejects.toThrow(
 			'The user aborted a request.',
 		);
+
+		await jest.advanceTimersByTimeAsync(10000);
+
+		await wrappedPromise;
+
 		expect(console.error).toHaveBeenCalledWith(
 			expect.stringContaining(
 				'[c4ef182a] Acquisition API request timed out after 10 seconds.',
 			),
 		);
+
+		jest.useRealTimers();
 	});
 
 	it('should throw an unhandled exception when processing country codes not defined inside the local currency map dictionary', async () => {
