@@ -1,11 +1,23 @@
-export const withEnv = async (
+export const withEnv = async <T>(
 	env: Record<string, string>,
-	callback: () => unknown,
-) => {
-	const oldEnv = process.env;
-	process.env = env;
+	callback: () => Promise<T> | T,
+): Promise<T> => {
+	const original: Record<string, string | undefined> = {};
+	for (const key of Object.keys(env)) {
+		original[key] = process.env[key];
+	}
 
-	await callback();
+	Object.assign(process.env, env);
 
-	process.env = oldEnv;
+	try {
+		return await callback();
+	} finally {
+		for (const key of Object.keys(env)) {
+			if (original[key] === undefined) {
+				delete process.env[key];
+			} else {
+				process.env[key] = original[key];
+			}
+		}
+	}
 };
