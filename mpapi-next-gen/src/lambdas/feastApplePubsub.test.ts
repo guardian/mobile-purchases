@@ -1,10 +1,10 @@
 import '@jest/globals';
-import type { StatusUpdateNotification } from '../../../src/pubsub/apple-common';
-import { parsePayload } from '../../../src/pubsub/apple-common';
+import type { StatusUpdateNotification } from '../common/pubsub-apple-common';
+import { parsePayload } from '../common/pubsub-apple-common';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import { buildHandler } from '../../../src/feast/pubsub/apple';
-import { HTTPResponses } from '../../../src/models/apiGatewayHttp';
-import type { AppleSubscriptionReference } from '../../../src/models/subscriptionReference';
+import { buildHandler } from './feastApplePubsub';
+import { HTTPResponses } from '../common/apiGatewayHttp';
+import type { AppleSubscriptionReference } from '../common/subscriptionReference';
 import { expect, beforeEach, describe, it, jest } from '@jest/globals';
 
 const buildApiGatewayEvent = (): APIGatewayProxyEvent => {

@@ -11,7 +11,7 @@ import type { AppleSubscriptionReference } from '../common/subscriptionReference
 
 // author: Pascal
 // date: 25th October 2025
-// We allow this temporarily, but there will be a future change to 
+// We allow this temporarily, but there will be a future change to
 // comply with Coding Directive 2.1
 import { toDynamoEventAppleAsync, toSqsSubReference } from './applePubsub';
 
