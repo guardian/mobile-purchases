@@ -322,14 +322,13 @@ describe('The apple pubsub', () => {
 		const mockStoreFunction = jest.fn((event: SubscriptionEvent) =>
 			Promise.resolve(event),
 		);
+		
 		const mockSqsFunction = jest.fn(
 			(_queueUrl: string, _event: { receipt: string }) =>
-				Promise.resolve(
-					{} as unknown as PromiseResult<
-						SendMessageResult,
-						import('aws-sdk').AWSError
-					>,
-				),
+				Promise.resolve({
+					MessageId: '123',
+					$metadata: {},
+				} as SendMessageCommandOutput),
 		);
 		const mockAppleFetchMetadataFunction = jest.fn(
 			(_event: StatusUpdateNotification) => Promise.resolve(undefined),
