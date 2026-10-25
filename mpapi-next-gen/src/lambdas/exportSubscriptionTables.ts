@@ -15,6 +15,10 @@ import { Region } from '../common/appIdentity';
 const dynamoDbClient = new DynamoDBClient({ region: Region });
 const s3Client = new S3Client({ region: Region });
 
+export function computePrefix(stage: string): string {
+	return stage === 'PROD' ? 'data' : 'code-data';
+}
+
 export class DynamoStream extends Readable {
 	private tableName: string;
 	private lastEvaluatedKey: Record<string, any> | undefined = undefined;
@@ -126,7 +130,7 @@ export async function handler(): Promise<HandlerOutput> {
 	const yesterday = plusDays(new Date(), -1).toISOString().substring(0, 10);
 	console.log(`[1f1fdd69] yesterday: ${yesterday}`);
 
-	const prefix = Stage === 'PROD' ? 'data' : 'code-data';
+	const prefix = computePrefix(Stage);
 	const filename = `${prefix}/date=${yesterday}/${yesterday}.json.gz`;
 	console.log(`[ead5f375] uploading ${filename} to s3`);
 
