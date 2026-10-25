@@ -28,6 +28,8 @@ const entryPoints = {
 		'./src/lambdas/googleLinkUserSubscription.ts',
 	'google-subscription-status': './src/lambdas/googleSubscriptionStatus.ts',
 	'google-update-subscriptions': './src/lambdas/googleUpdateSubscriptions.ts',
+	'apple-fetch-offer-details':
+		'./src/lambdas/promotionalOffersAppleFetchOfferDetails.ts',
 	'soft-opt-in-acquisitions': './src/lambdas/softOptInAcquisitions.ts',
 	'soft-opt-in-acquisitions-dlq-processor':
 		'./src/lambdas/softOptInAcquisitionsDLQProcessor.ts',
