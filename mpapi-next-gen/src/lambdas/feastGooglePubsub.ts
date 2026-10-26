@@ -22,8 +22,14 @@ import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { subscriptionEventsV2FullTableName } from '../common/subscriptionEvent';
 
+// -----------------------------------------------------------------------------
+// Globals
+
 const dynamoDbClient = new DynamoDBClient({});
 const sqsClient = new SQSClient({});
+
+// -----------------------------------------------------------------------------
+// Functions
 
 function sendToSqs(
 	queueUrl: string,
@@ -119,5 +125,8 @@ export function buildHandler(
 		}
 	};
 }
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export const handler = buildHandler();
