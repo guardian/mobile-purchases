@@ -1,3 +1,13 @@
+/*
+This function, is a utility designed to temporarily mock environment variables
+(process.env) during the execution of a specific callback function, restoring
+the original environment variables afterward—even if the callback fails.
+
+Used in testing environments it tests how code behaves under different
+environment configurations without permanently polluting or changing the
+global process.env for other tests.
+*/
+
 export const withEnv = async <T>(
 	env: Record<string, string>,
 	callback: () => Promise<T> | T,
