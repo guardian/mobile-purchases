@@ -11,6 +11,9 @@ import type { StatusUpdateNotification } from '../common/pubsub-apple-common';
 import { parsePayload } from '../common/pubsub-apple-common';
 import { parseStoreAndSend_async } from '../common/pubsub-pubsub';
 
+// -----------------------------------------------------------------------------
+// Functions
+
 export async function toDynamoEventAppleAsync(
 	notification: StatusUpdateNotification,
 	useStoreKitForExtra: boolean,
@@ -126,6 +129,9 @@ export function toSqsSubReference(
 		receipt: receipt,
 	};
 }
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export async function handler(
 	request: APIGatewayProxyEvent,

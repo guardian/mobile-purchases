@@ -9,18 +9,26 @@ import { marshall } from '@aws-sdk/util-dynamodb';
 import { HTTPResponses } from '../common/apiGatewayHttp';
 import type { AppleSubscriptionReference } from '../common/subscriptionReference';
 
+// -----------------------------------------------------------------------------
 // author: Pascal
 // date: 25th October 2025
 // We allow this temporarily, but there will be a future change to
 // comply with Coding Directive 2.1
 import { toDynamoEventAppleAsync, toSqsSubReference } from './applePubsub';
+// -----------------------------------------------------------------------------
 
 import type { StatusUpdateNotification } from '../common/pubsub-apple-common';
 import { parsePayload } from '../common/pubsub-apple-common';
 import { subscriptionEventsV2FullTableName } from '../common/subscriptionEvent';
 
+// -----------------------------------------------------------------------------
+// Globals
+
 const dynamoDbClient = new DynamoDBClient({});
 const sqsClient = new SQSClient({});
+
+// -----------------------------------------------------------------------------
+// Functions
 
 function sendToSqs(
 	queueUrl: string,
@@ -108,5 +116,8 @@ export function buildHandler(
 		}
 	};
 }
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export const handler = buildHandler();
