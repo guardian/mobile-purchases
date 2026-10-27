@@ -8,6 +8,9 @@ import { dateToSecondTimestamp, thirtyMonths } from '../common/dates';
 import { Stage } from '../common/appIdentity';
 import { getParameterValueUsingAppStageStackConvention } from '../common/ssmParameters';
 
+// -----------------------------------------------------------------------------
+// Types
+
 export type AcquisitionApiPayloadQueryParameter = {
 	name: string;
 	value: string;
@@ -58,69 +61,12 @@ export type AcquisitionApiPayload = {
 	email?: string | undefined;
 };
 
-export const postPayloadToAcquisitionAPI = async (
-	payload: AcquisitionApiPayload,
-) => {
-	if (Stage === 'PROD') {
-		const url =
-			await getParameterValueUsingAppStageStackConvention<string>(
-				'acquisitionApiUrl',
-			);
-		console.log(`[9118860a] acquisition api url: ${url}`);
+// -----------------------------------------------------------------------------
+// Globals
 
-		const controller = new AbortController();
-		const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-		try {
-			const response = await fetch(url, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(payload),
-				signal: controller.signal,
-			});
-
-			if (!response.ok) {
-				throw new Error(
-					`[606a2012] Failed to post payload to Acquisition API: ${response.status} ${response.statusText}`,
-				);
-			}
-		} catch (error) {
-			if (error instanceof Error && error.name === 'AbortError') {
-				console.error(
-					'[c4ef182a] Acquisition API request timed out after 10 seconds.',
-				);
-			}
-			throw error;
-		} finally {
-			clearTimeout(timeoutId);
-		}
-	} else {
-		console.log(
-			`[69460012] postPayload has been called with payload: ${JSON.stringify(payload)}`,
-		);
-	}
-};
-
-const googleSubscriptionToSubscription = (
-	purchaseToken: string,
-	packageName: string,
-	googleSubscription: GoogleSubscription,
-): Subscription => {
-	return new Subscription(
-		purchaseToken,
-		googleSubscription.startTime?.toISOString() ?? '',
-		googleSubscription.expiryTime.toISOString(),
-		googleSubscription.userCancellationTime?.toISOString(),
-		googleSubscription.autoRenewing,
-		googleSubscription.productId,
-		googlePackageNameToPlatform(packageName),
-		googleSubscription.freeTrial,
-		googleSubscription.billingPeriodDuration,
-		googleSubscription,
-		undefined,
-		null,
-		dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)),
-	);
+const basePlanIdToPaymentFrequencyMap = {
+	'feast-annual': 'ANNUALLY',
+	'feast-monthly': 'MONTHLY',
 };
 
 const countryToCurrencyMap = {
@@ -252,6 +198,74 @@ const countryToCurrencyMap = {
 	OM: 'OMR', // Oman - Omani Rial
 };
 
+// -----------------------------------------------------------------------------
+// Functions
+
+export const postPayloadToAcquisitionAPI = async (
+	payload: AcquisitionApiPayload,
+) => {
+	if (Stage === 'PROD') {
+		const url =
+			await getParameterValueUsingAppStageStackConvention<string>(
+				'acquisitionApiUrl',
+			);
+		console.log(`[9118860a] acquisition api url: ${url}`);
+
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+		try {
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload),
+				signal: controller.signal,
+			});
+
+			if (!response.ok) {
+				throw new Error(
+					`[606a2012] Failed to post payload to Acquisition API: ${response.status} ${response.statusText}`,
+				);
+			}
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') {
+				console.error(
+					'[c4ef182a] Acquisition API request timed out after 10 seconds.',
+				);
+			}
+			throw error;
+		} finally {
+			clearTimeout(timeoutId);
+		}
+	} else {
+		console.log(
+			`[69460012] postPayload has been called with payload: ${JSON.stringify(payload)}`,
+		);
+	}
+};
+
+const googleSubscriptionToSubscription = (
+	purchaseToken: string,
+	packageName: string,
+	googleSubscription: GoogleSubscription,
+): Subscription => {
+	return new Subscription(
+		purchaseToken,
+		googleSubscription.startTime?.toISOString() ?? '',
+		googleSubscription.expiryTime.toISOString(),
+		googleSubscription.userCancellationTime?.toISOString(),
+		googleSubscription.autoRenewing,
+		googleSubscription.productId,
+		googlePackageNameToPlatform(packageName),
+		googleSubscription.freeTrial,
+		googleSubscription.billingPeriodDuration,
+		googleSubscription,
+		undefined,
+		null,
+		dateToSecondTimestamp(thirtyMonths(googleSubscription.expiryTime)),
+	);
+};
+
 const countryToCurrency = (country: string): string => {
 	const supportedCountries = Object.keys(countryToCurrencyMap);
 	if (supportedCountries.includes(country)) {
@@ -261,11 +275,6 @@ const countryToCurrency = (country: string): string => {
 	throw new Error(
 		`[acba643d] (countryToCurrencyMap) country ${country} is not supported`,
 	);
-};
-
-const basePlanIdToPaymentFrequencyMap = {
-	'feast-annual': 'ANNUALLY',
-	'feast-monthly': 'MONTHLY',
 };
 
 const basePlanIdToPaymentFrequency = (basePlanId: string): string => {
@@ -420,6 +429,9 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
 	console.log(`[d522f940] acquisition api payload: ${JSON.stringify(payload)}`);
 	await postPayloadToAcquisitionAPI(payload);
 };
+
+// -----------------------------------------------------------------------------
+// Globals
 
 export const handler = async (event: SQSEvent): Promise<void> => {
 	console.log(

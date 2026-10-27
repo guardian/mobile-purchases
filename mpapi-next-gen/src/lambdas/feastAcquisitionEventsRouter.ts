@@ -13,8 +13,14 @@ import {
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
+// -----------------------------------------------------------------------------
+// Globals
+
 const dynamoDbClient = new DynamoDBClient({});
 const sqsClient = new SQSClient({});
+
+// -----------------------------------------------------------------------------
+// Functions
 
 function sendToSqs(
 	queueUrl: string,
@@ -84,6 +90,9 @@ const processAcquisition = async (
 		return false;
 	}
 };
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
 	console.log(
