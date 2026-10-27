@@ -1,7 +1,7 @@
 const path = require('path');
 
-const getEntries = (env) => {
-  const entries = {
+const getEntries = () => {
+  return {
     "google-pubsub": "./typescript/src/pubsub/google.ts",
     "apple-pubsub": "./typescript/src/pubsub/apple.ts",
     "google-subscription-status": "./typescript/src/subscription-status/googleSubStatus.ts",
@@ -24,10 +24,6 @@ const getEntries = (env) => {
     "feast-apple-acquisition-events": "./typescript/src/feast/acquisition-events/apple.ts",
     "feast-google-acquisition-events": "./typescript/src/feast/acquisition-events/google.ts"
   };
-  return env.production ? entries : {
-    ...entries,
-    "test-launcher": "./typescript/src/test-launcher/test-launcher.ts",
-  };
 };
 
 module.exports = (env) => ({
@@ -46,7 +42,7 @@ module.exports = (env) => ({
   },
   target: 'node',
   mode: env.production ? 'production' : 'development',
-  entry: getEntries(env),
+  entry: getEntries(),
   output: {
     path: path.resolve(__dirname, 'tsc-target'),
     libraryTarget: 'commonjs2'
