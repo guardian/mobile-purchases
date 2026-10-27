@@ -20,6 +20,9 @@ import {
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { Region } from '../common/appIdentity';
 
+// -----------------------------------------------------------------------------
+// Types
+
 interface SubscriptionStatus {
 	subscriptionId: string;
 	from: string;
@@ -37,7 +40,13 @@ interface SubscriptionStatusResponse {
 	subscriptions: SubscriptionStatus[];
 }
 
+// -----------------------------------------------------------------------------
+// Globals
+
 const dynamoClient = new DynamoDBClient({ region: Region });
+
+// -----------------------------------------------------------------------------
+// Functions
 
 async function getUserSubscriptionIds(userId: string): Promise<string[]> {
 	const subs: string[] = [];
@@ -174,6 +183,9 @@ async function apiKeysConfig(): Promise<string[]> {
 		);
 	return [apiKey0Default, apiKey1Salesforce];
 }
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export async function handler(
 	httpRequest: APIGatewayProxyEvent,
