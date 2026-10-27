@@ -12,12 +12,8 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { Region } from '../common/appIdentity';
 
-const dynamoDbClient = new DynamoDBClient({ region: Region });
-const s3Client = new S3Client({ region: Region });
-
-export function computePrefix(stage: string): string {
-	return stage === 'PROD' ? 'data' : 'code-data';
-}
+// -----------------------------------------------------------------------------
+// Types
 
 export class DynamoStream extends Readable {
 	private tableName: string;
@@ -98,6 +94,22 @@ export class DynamoStream extends Readable {
 interface HandlerOutput {
 	recordCount: number;
 }
+
+// -----------------------------------------------------------------------------
+// Globals
+
+const dynamoDbClient = new DynamoDBClient({ region: Region });
+const s3Client = new S3Client({ region: Region });
+
+// -----------------------------------------------------------------------------
+// Functions
+
+export function computePrefix(stage: string): string {
+	return stage === 'PROD' ? 'data' : 'code-data';
+}
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export async function handler(): Promise<HandlerOutput> {
 	const bucket = process.env['ExportBucket'];

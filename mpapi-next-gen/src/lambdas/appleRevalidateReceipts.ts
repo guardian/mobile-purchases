@@ -25,6 +25,14 @@ import {
 } from '@aws-sdk/client-sqs';
 
 // -----------------------------------------------------------------------------
+// Types
+
+export interface ScheduleEvent {
+	endTimestampFilter?: string;
+	startTimestampFilter?: string;
+}
+
+// -----------------------------------------------------------------------------
 // Globals
 
 const dynamoDbClient = new DynamoDBClient({});
@@ -61,11 +69,6 @@ function startTimestampForQuery(event: ScheduleEvent): Date {
 	} else {
 		return plusDays(new Date(), -60);
 	}
-}
-
-export interface ScheduleEvent {
-	endTimestampFilter?: string;
-	startTimestampFilter?: string;
 }
 
 const queueUrlForPlatform = (platform: string): string => {
