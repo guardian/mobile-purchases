@@ -371,6 +371,9 @@ export async function processAcquisition(
 	return true;
 }
 
+// -----------------------------------------------------------------------------
+// Handler
+
 export async function handler(_event: unknown): Promise<void> {
 	const dlqUrl = process.env.DLQUrl;
 
