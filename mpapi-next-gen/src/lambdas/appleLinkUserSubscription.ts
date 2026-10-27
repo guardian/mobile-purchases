@@ -11,6 +11,27 @@ import {
 } from '../common/sharedLink';
 import type { SubscriptionCheckData } from '../common/sharedLink';
 
+// -----------------------------------------------------------------------------
+// Types
+
+type AppleSubscription = {
+	receipt: string;
+	originalTransactionId: string;
+};
+
+type AppleLinkPayload = {
+	platform:
+		| Platform.DailyEdition
+		| Platform.Ios
+		| Platform.IosPuzzles
+		| Platform.IosEdition
+		| Platform.IosFeast;
+	subscriptions: AppleSubscription[];
+};
+
+// -----------------------------------------------------------------------------
+// Functions
+
 export async function parseAndStoreLink<A>(
 	httpRequest: APIGatewayProxyEvent,
 	parsePayload: (request: APIGatewayProxyEvent) => A,
@@ -62,21 +83,6 @@ export async function parseAndStoreLink<A>(
 	}
 }
 
-type AppleSubscription = {
-	receipt: string;
-	originalTransactionId: string;
-};
-
-export type AppleLinkPayload = {
-	platform:
-		| Platform.DailyEdition
-		| Platform.Ios
-		| Platform.IosPuzzles
-		| Platform.IosEdition
-		| Platform.IosFeast;
-	subscriptions: AppleSubscription[];
-};
-
 function deduplicate<T, U>(list: T[], selector: (item: T) => U): T[] {
 	return list.reduce<T[]>(
 		(agg, item) =>
@@ -125,6 +131,9 @@ export function toSqsPayload(
 		},
 	}));
 }
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export async function handler(
 	httpRequest: APIGatewayProxyEvent,

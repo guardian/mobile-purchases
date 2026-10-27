@@ -6,6 +6,9 @@ import type { AppleValidationResponse } from '../common/appleValidateReceipts';
 import { validateReceipt } from '../common/appleValidateReceipts';
 import { plusDays } from '../common/dates';
 
+// -----------------------------------------------------------------------------
+// Types
+
 interface AppleSubscription {
 	receipt: string;
 	originalTransactionId: string;
@@ -29,6 +32,9 @@ interface AppleSubscriptionStatusResponse {
 	product: string;
 	latestReceipt: string;
 }
+
+// -----------------------------------------------------------------------------
+// Functions
 
 function toResponse(
 	validationResponse: AppleValidationResponse,
@@ -71,6 +77,9 @@ function logClientServerStatusDiff(
 		}
 	}
 }
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export async function handler(
 	httpRequest: APIGatewayProxyEvent,
