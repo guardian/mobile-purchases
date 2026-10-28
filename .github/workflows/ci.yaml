@@ -21,10 +21,6 @@ jobs:
           node-version-file: .nvmrc
           cache: yarn
 
-      - name: old lambda collection build remains 
-        run: |
-          yarn install
-
       - name: Build the new lambda collection
         run: |
           cd mpapi-next-gen
