@@ -256,7 +256,7 @@ The apps call endpoints to check the status of a subscription.
  ---------------                   -----------------------------------------                   -------------------
 
 [01] Lambda/function
-     code: typescript/src/subscription-status/appleSubStatus.ts
+     code: mpapi-next-gen/src/lambdas/appleSubscriptionStatus.ts
      name: mobile-purchases-apple-subscription-status-PROD
 
 
