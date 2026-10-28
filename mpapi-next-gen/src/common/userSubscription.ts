@@ -17,8 +17,8 @@ export class UserSubscription {
 		this.subscriptionId = subscriptionId;
 		this.creationTimestamp = creationTimestamp;
 	}
+}
 
-	static getTableName(): string {
-		return `${App}-${Stage}-user-subscriptions`;
-	}
+export function userSubscriptionsFullTableName() {
+	return `${App}-${Stage}-user-subscriptions`;
 }
