@@ -11,7 +11,6 @@ const entries = {
   "feast-google-pubsub": "./typescript/src/feast/pubsub/google.ts",
   "feast-acquisition-events-router": "./typescript/src/feast/acquisition-events/router.ts",
   "feast-apple-acquisition-events": "./typescript/src/feast/acquisition-events/apple.ts",
-  "feast-google-acquisition-events": "./typescript/src/feast/acquisition-events/google.ts"
 };
 
 module.exports = (env) => ({
