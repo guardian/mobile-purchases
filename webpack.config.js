@@ -3,7 +3,6 @@ const path = require('path');
 const entries = {
   "google-pubsub": "./typescript/src/pubsub/google.ts",
   "apple-pubsub": "./typescript/src/pubsub/apple.ts",
-  "google-subscription-status": "./typescript/src/subscription-status/googleSubStatus.ts",
   "apple-fetch-offer-details": "./typescript/src/promotional-offers/appleFetchOfferDetails.ts",
   "google-link-user-subscription": "./typescript/src/link/google.ts",
   "apple-link-user-subscription": "./typescript/src/link/apple.ts",
