@@ -23,8 +23,6 @@ jobs:
 
       - name: Test and build the old lambda collection
         run: |
-          export NODE_OPTIONS="--max-old-space-size=4096"
-          mkdir -p tsc-target
           yarn install
           yarn run build
 
