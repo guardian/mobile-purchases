@@ -22,6 +22,9 @@ import { PRODUCT_BILLING_PERIOD } from '../common/productBillingPeriod';
 import { appleBundleToPlatform } from '../common/appToPlatform';
 import { dateToSecondTimestamp, thirtyMonths } from '../common/dates';
 
+// -----------------------------------------------------------------------------
+// Types
+
 export type AcquisitionApiPayloadQueryParameter = {
 	name: string;
 	value: string;
@@ -71,6 +74,9 @@ export type AcquisitionApiPayload = {
 	state?: string | undefined;
 	email?: string | undefined;
 };
+
+// -----------------------------------------------------------------------------
+// Functions
 
 export const postPayloadToAcquisitionAPI = async (
 	payload: AcquisitionApiPayload,
@@ -287,6 +293,9 @@ const processSQSRecord = async (record: SQSRecord): Promise<void> => {
 	);
 	await Promise.all(promises);
 };
+
+// -----------------------------------------------------------------------------
+// Handler
 
 export const handler = async (event: SQSEvent): Promise<void> => {
 	console.log(

@@ -282,4 +282,36 @@ describe('Feast Apple Update Subscriptions Lambda Integration', () => {
 		expect(squashedUserIds).toContain('identity-user-batch-1');
 		expect(squashedUserIds).toContain('identity-user-batch-2');
 	});
+
+	describe('Apple Receipt Client Shared Transport Timeout', () => {
+		beforeEach(() => {
+			jest.useFakeTimers();
+		});
+
+		afterEach(() => {
+			jest.useRealTimers();
+		});
+
+		it('should reject with a timeout error if validateReceipt takes longer than 10 seconds', async () => {
+			(validateReceipt as jest.Mock).mockReturnValue(new Promise(() => {}));
+
+			const event = createMockSqsEvent({
+				receipt: 'mock-hanging-apple-receipt-string',
+			});
+
+			const handlerPromise = handler(event as any);
+
+			jest.advanceTimersByTime(10000);
+
+			await expect(handlerPromise).rejects.toThrow(
+				'Apple receipt validation timed out after 10 seconds',
+			);
+
+			expect(validateReceipt).toHaveBeenCalledWith(
+				'mock-hanging-apple-receipt-string',
+				{ sandboxRetry: false },
+				expect.any(String),
+			);
+		});
+	});
 });
