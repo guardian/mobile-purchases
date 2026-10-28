@@ -31,11 +31,6 @@ jobs:
           yarn lint:check
           yarn run test
           yarn run build
-          cd tsc-target
-          for BUNDLE in *.js
-          do
-              zip "${BUNDLE%.*}.zip" "$BUNDLE"
-          done
 
       - name: Build the new lambda collection
         run: |
