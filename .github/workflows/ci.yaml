@@ -21,7 +21,7 @@ jobs:
           node-version-file: .nvmrc
           cache: yarn
 
-      - name: Test and build the old lambda collection
+      - name: old lambda collection build remains 
         run: |
           yarn install
           yarn run build
