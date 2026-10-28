@@ -69,7 +69,7 @@ jobs:
             mobile-purchases-apple-link-user-subscription:
               - mpapi-next-gen/dist/apple-link-user-subscription.zip
             mobile-purchases-apple-pubsub:
-              - tsc-target/apple-pubsub.zip
+              - mpapi-next-gen/dist/apple-pubsub.zip
             mobile-purchases-apple-revalidate-receipts:
               - mpapi-next-gen/dist/apple-revalidate-receipts.zip
             mobile-purchases-apple-subscription-status:
