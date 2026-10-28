@@ -4,7 +4,6 @@ const entries = {
   "google-pubsub": "./typescript/src/pubsub/google.ts",
   "apple-pubsub": "./typescript/src/pubsub/apple.ts",
   "apple-fetch-offer-details": "./typescript/src/promotional-offers/appleFetchOfferDetails.ts",
-  "google-link-user-subscription": "./typescript/src/link/google.ts",
   "apple-link-user-subscription": "./typescript/src/link/apple.ts",
   "user-subscriptions": "./typescript/src/user/user.ts",
   "export-subscription-tables": "./typescript/src/export/exportSubscriptions.ts",
