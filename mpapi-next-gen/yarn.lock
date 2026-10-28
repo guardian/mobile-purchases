@@ -1178,6 +1178,11 @@
   resolved "https://registry.yarnpkg.com/@guardian/prettier/-/prettier-10.0.0.tgz#3e1ac1e4c83d8ca578e7ce7c9b67ba8935078781"
   integrity sha512-b/ITMGfAxL5Rz+HZqmn5AGTI/Bb7Ep50SmRvcDo0QqahTmeAneiWOc1eFBA3pFRkMCR2UwU79v7kDXaMQwS2DQ==
 
+"@guardian/types@^9.0.1":
+  version "9.0.1"
+  resolved "https://registry.yarnpkg.com/@guardian/types/-/types-9.0.1.tgz#a03682d9c2942560714f9c724a1cd7068f772a93"
+  integrity sha512-JTQe4giki1QYqE5bRkCbYWvelF2DtaQVlGmIbVwO8XWNc62TOQcBOUmqFb2EWpszWqkzBLEBB4rKKArgBZHTeA==
+
 "@humanfs/core@^0.19.2":
   version "0.19.2"
   resolved "https://registry.yarnpkg.com/@humanfs/core/-/core-0.19.2.tgz#a8272ca03b2acf492670222b2320b6c421bfde60"

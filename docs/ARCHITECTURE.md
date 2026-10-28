@@ -67,11 +67,11 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
          : mobile-purchases-PROD-feast-google-subscriptions-to-fetch-dlq
 
 [03] Lambda/function
-     code: typescript/src/update-subs/apple.ts
+     code: mpapi-next-gen/src/lambdas/appleUpdateSubscriptions.ts
      name: mobile-purchases-apple-update-subscriptions-PROD
 
 [02] Lambda/function
-     code: typescript/src/update-subs/google.ts
+     code: mpapi-next-gen/src/lambdas/googleUpdateSubscriptions.ts
      name: mobile-purchases-google-update-subscriptions-PROD
 
 [01] Lambda/function
