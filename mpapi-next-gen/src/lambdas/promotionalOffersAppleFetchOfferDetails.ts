@@ -3,9 +3,6 @@ import * as crypto from 'crypto';
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { getParameterValueUsingAppStageStackConvention } from '../common/ssmParameters';
 
-// -----------------------------------------------------------------------------
-// Types
-
 interface HttpRequestPayload {
 	username: string;
 	productIdentifier: string;
@@ -18,9 +15,6 @@ interface Response {
 	keyIdentifier: string;
 	signature: string;
 }
-
-// -----------------------------------------------------------------------------
-// Functions
 
 async function payloadToResponse(
 	payload: HttpRequestPayload,
@@ -92,9 +86,6 @@ async function payloadToResponse(
 		signature: signature.toString('base64'),
 	};
 }
-
-// -----------------------------------------------------------------------------
-// Handler
 
 export async function handler(
 	request: APIGatewayProxyEvent,
