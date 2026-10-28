@@ -19,6 +19,7 @@ const entryPoints = {
 		'./src/lambdas/feastAcquisitionEventsRouter.ts',
 	'feast-apple-acquisition-events':
 		'./src/lambdas/feastAppleAcquisitionEvents.ts',
+	'feast-apple-pubsub': './src/lambdas/feastApplePubsub.ts',
 	'feast-apple-update-subscriptions':
 		'./src/lambdas/feastAppleUpdateSubscriptions.ts',
 	'feast-google-acquisition-events':
