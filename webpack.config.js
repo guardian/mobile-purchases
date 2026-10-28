@@ -1,23 +1,17 @@
 const path = require('path');
 
-const getEntries = (env) => {
-  const entries = {
-    "google-pubsub": "./typescript/src/pubsub/google.ts",
-    "apple-pubsub": "./typescript/src/pubsub/apple.ts",
-    "apple-fetch-offer-details": "./typescript/src/promotional-offers/appleFetchOfferDetails.ts",
-    "user-subscriptions": "./typescript/src/user/user.ts",
-    "export-subscription-tables": "./typescript/src/export/exportSubscriptions.ts",
-    "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
-    "feast-apple-pubsub": "./typescript/src/feast/pubsub/apple.ts",
-    "feast-google-pubsub": "./typescript/src/feast/pubsub/google.ts",
-    "feast-acquisition-events-router": "./typescript/src/feast/acquisition-events/router.ts",
-    "feast-apple-acquisition-events": "./typescript/src/feast/acquisition-events/apple.ts",
-    "feast-google-acquisition-events": "./typescript/src/feast/acquisition-events/google.ts"
-  };
-  return env.production ? entries : {
-    ...entries,
-    "test-launcher": "./typescript/src/test-launcher/test-launcher.ts",
-  };
+const entries = {
+  "google-pubsub": "./typescript/src/pubsub/google.ts",
+  "apple-pubsub": "./typescript/src/pubsub/apple.ts",
+  "apple-fetch-offer-details": "./typescript/src/promotional-offers/appleFetchOfferDetails.ts",
+  "user-subscriptions": "./typescript/src/user/user.ts",
+  "export-subscription-tables": "./typescript/src/export/exportSubscriptions.ts",
+  "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
+  "feast-apple-pubsub": "./typescript/src/feast/pubsub/apple.ts",
+  "feast-google-pubsub": "./typescript/src/feast/pubsub/google.ts",
+  "feast-acquisition-events-router": "./typescript/src/feast/acquisition-events/router.ts",
+  "feast-apple-acquisition-events": "./typescript/src/feast/acquisition-events/apple.ts",
+  "feast-google-acquisition-events": "./typescript/src/feast/acquisition-events/google.ts"
 };
 
 module.exports = (env) => ({
@@ -36,7 +30,7 @@ module.exports = (env) => ({
   },
   target: 'node',
   mode: env.production ? 'production' : 'development',
-  entry: getEntries(env),
+  entry: entries,
   output: {
     path: path.resolve(__dirname, 'tsc-target'),
     libraryTarget: 'commonjs2'
