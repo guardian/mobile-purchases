@@ -30,6 +30,7 @@ HANDLERS=(
     "google-link-user-subscription"
     "google-subscription-status"
     "google-update-subscriptions"
+    "user-subscriptions"
 )
 
 for HANDLER in "${HANDLERS[@]}"; do
