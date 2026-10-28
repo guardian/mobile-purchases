@@ -26,8 +26,6 @@ jobs:
           export NODE_OPTIONS="--max-old-space-size=4096"
           mkdir -p tsc-target
           yarn install
-          yarn run clean
-          yarn run test
           yarn run build
 
       - name: Build the new lambda collection
