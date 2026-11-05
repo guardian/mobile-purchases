@@ -9,6 +9,7 @@ const entryPoints = {
 	'apple-update-subscriptions': './src/lambdas/appleUpdateSubscriptions.ts',
 	'delete-user-subscription': './src/lambdas/deleteUserSubscription.ts',
 	'export-historical-data': './src/lambdas/exportHistoricalData.ts',
+	'export-subscription-tables': './src/lambdas/exportSubscriptionTables.ts',
 	'export-subscription-events-table':
 		'./src/lambdas/exportSubscriptionEventsTable.ts',
 	'export-subscription-table-v2': './src/lambdas/exportSubscriptionTableV2.ts',
