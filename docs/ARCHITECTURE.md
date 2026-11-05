@@ -198,7 +198,7 @@ Inserts into the user-subscriptions Dynamo table trigger the soft-opt-in-acquisi
     Works in conjunction with:
        - SQS Queue: mobile-purchases-soft-opt-in-acquisitions-DLQ-PROD
        - Lambda/function:
-          code: typescript/src/soft-opt-ins/dlq-processor.ts
+          code: mpapi-next-gen/src/lambdas/softOptInAcquisitionsDLQProcessor.ts
           name: mobile-purchases-soft-opt-in-acquisitions-dlq-processor-PROD
 
 [02] Dynamo table

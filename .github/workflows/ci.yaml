@@ -95,7 +95,7 @@ jobs:
             mobile-purchases-google-update-subscriptions:
               - tsc-target/google-update-subscriptions.zip
             mobile-purchases-soft-opt-in-acquisitions-dlq-processor:
-              - tsc-target/soft-opt-in-acquisitions-dlq-processor.zip
+              - mpapi-next-gen/dist/soft-opt-in-acquisitions-dlq-processor.zip
             mobile-purchases-soft-opt-in-acquisitions:
               - mpapi-next-gen/dist/soft-opt-in-acquisitions.zip
             mobile-purchases-user-subscriptions:
