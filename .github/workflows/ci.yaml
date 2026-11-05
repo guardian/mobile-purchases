@@ -97,7 +97,7 @@ jobs:
             mobile-purchases-soft-opt-in-acquisitions-dlq-processor:
               - tsc-target/soft-opt-in-acquisitions-dlq-processor.zip
             mobile-purchases-soft-opt-in-acquisitions:
-              - tsc-target/soft-opt-in-acquisitions.zip
+              - mpapi-next-gen/dist/soft-opt-in-acquisitions.zip
             mobile-purchases-user-subscriptions:
               - tsc-target/user-subscriptions.zip
             mobile-purchases-feast-apple-pubsub:

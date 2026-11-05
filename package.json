@@ -5,9 +5,7 @@
 	"scripts": {
 		"clean": "rm -r tsc-target",
 		"build": "NODE_OPTIONS=\"--max-old-space-size=8192\" webpack --env production",
-		"build:dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" webpack",
 		"test": "jest",
-		"test-lambda": "yarn build:dev && node ./tsc-target/test-launcher.js",
 		"lint:check": "eslint typescript",
 		"lint:fix": "eslint typescript --fix",
 		"format:check": "prettier --check typescript",

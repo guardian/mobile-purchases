@@ -1,4 +1,3 @@
-import { DynamoDbTable } from '@aws/dynamodb-data-mapper';
 import { App, Stage } from '../common/appIdentity';
 
 // This class abstract the records in the dynamo table
@@ -21,20 +20,5 @@ export class UserSubscription {
 
 	static getTableName(): string {
 		return `${App}-${Stage}-user-subscriptions`;
-	}
-
-	get [DynamoDbTable]() {
-		return UserSubscription.getTableName();
-	}
-}
-
-// Note:
-//   UserSubscriptionEmpty is a convenience class for when you need to create
-//   an empty UserSubscription object. But the type should be used in place
-//   of UserSubscription.
-
-export class UserSubscriptionEmpty extends UserSubscription {
-	constructor() {
-		super('', '', '');
 	}
 }
