@@ -29,8 +29,8 @@
 		"@types/eslint-scope": "^9.1.0",
 		"@types/jest": "^30.0.0",
 		"@types/node-fetch": "^2.6.2",
-		"@typescript-eslint/eslint-plugin": "^8.71.2",
-		"@typescript-eslint/parser": "^8.72.0",
+		"@typescript-eslint/eslint-plugin": "^8.72.0",
+		"@typescript-eslint/parser": "^8.72.1",
 		"eslint": "9.8.0",
 		"jest": "^30.5.2",
 		"prettier": "^3.9.10",
@@ -38,7 +38,7 @@
 		"ts-loader": "^9.6.2",
 		"ts-node": "^10.4.0",
 		"typescript": "^5.9.3",
-		"webpack": "^5.112.0",
+		"webpack": "^5.112.2",
 		"webpack-cli": "^7.2.3"
 	},
 	"dependencies": {
