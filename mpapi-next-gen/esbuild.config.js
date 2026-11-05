@@ -12,6 +12,8 @@ const entryPoints = {
 	'export-subscription-table-v2': './src/lambdas/exportSubscriptionTableV2.ts',
 	'feast-apple-update-subscriptions':
 		'./src/lambdas/feastAppleUpdateSubscriptions.ts',
+	'feast-google-acquisition-events':
+		'./src/lambdas/feastGoogleAcquisitionEvents.ts',
 	'feast-google-update-subscriptions':
 		'./src/lambdas/feastGoogleUpdateSubscriptions.ts',
 	'google-link-user-subscription':
