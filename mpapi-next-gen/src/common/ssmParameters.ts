@@ -2,7 +2,7 @@ import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { App, Stack, Stage } from './appIdentity';
 
 const ssmClient = new SSMClient({
-	region: process.env.AWS_REGION || 'us-east-1',
+	region: process.env.AWS_REGION || 'eu-west-1',
 });
 
 export async function getParameterValue(
