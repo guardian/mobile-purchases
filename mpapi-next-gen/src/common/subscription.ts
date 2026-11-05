@@ -2,8 +2,9 @@ import { App, Stage } from '../common/appIdentity';
 
 export class Subscription {
 	/*
-        Warning: The subscriptionId value, defined in this schema, is going to carry the purchase token (`purchaseToken`) 
-        from a Google Play notification and not the value of the attribute `subscriptionId` of that notification.
+        Warning: The subscriptionId value, defined in this schema, is going to
+		carry the purchase token (`purchaseToken`) from a Google Play notification
+		and not the value of the attribute `subscriptionId` of that notification.
 
         See the file: google-identifiers.md in the documentation folder for details.
     */
@@ -25,8 +26,6 @@ export class Subscription {
 	ttl: number | undefined;
 	extra: string | undefined;
 
-	tableName: string;
-
 	constructor(
 		subscriptionId: string,
 		startTimestamp: string,
@@ -47,7 +46,6 @@ export class Subscription {
 
 		ttl?: number,
 		extra?: string,
-		tableName = 'subscriptions',
 	) {
 		this.subscriptionId = subscriptionId;
 		this.startTimestamp = startTimestamp;
@@ -63,10 +61,9 @@ export class Subscription {
 		this.applePayload = applePayload;
 		this.ttl = ttl;
 		this.extra = extra;
-		this.tableName = tableName;
 	}
+}
 
-	get fullTableName(): string {
-		return `${App}-${Stage}-${this.tableName}`;
-	}
+export function subscriptionsFullTableName() {
+	return `${App}-${Stage}-subscriptions`;
 }
