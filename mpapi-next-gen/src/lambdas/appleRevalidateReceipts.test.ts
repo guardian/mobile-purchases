@@ -1,7 +1,7 @@
-import { Subscription } from '../../src/models/endTimestampFilter';
-import { Platform } from '../../src/models/platform';
-import { buildHandler } from '../../src/revalidate-receipts/appleRevalidateReceipts';
-import { withEnv } from '../helpers/withEnv';
+import { Subscription } from '../common/endTimestampFilter';
+import { Platform } from '../common/platform';
+import { buildHandler } from './appleRevalidateReceipts';
+import { withEnv } from '../common/withEnv';
 
 describe('appleRevalidateReceipts', () => {
 	it('pushes events to the correct SQS queue', async () => {

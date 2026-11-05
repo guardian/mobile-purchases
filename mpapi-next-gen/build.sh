@@ -13,6 +13,7 @@ cd dist
 HANDLERS=(
     "apple-fetch-offer-details"
     "apple-link-user-subscription"
+    "apple-revalidate-receipts"
     "apple-subscription-status"
     "apple-update-subscriptions"
     "delete-user-subscription"
