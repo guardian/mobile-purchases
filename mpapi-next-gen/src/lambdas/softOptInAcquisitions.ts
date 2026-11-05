@@ -399,6 +399,8 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 	for (const record of records) {
 		const eventName = record.eventName;
 
+		console.log(`[808bfc02] record: ${JSON.stringify(record)}`);
+
 		// We only process INSERT events.
 		// For that we try and extract the subscription record with the given
 		// subscriptionId and call `processAcquisition`.
@@ -410,7 +412,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 			const identityId = record.dynamodb?.NewImage?.userId?.S || '';
 			const subscriptionId = record.dynamodb?.NewImage?.subscriptionId?.S || '';
 			console.log(
-				`[71744259] identityId: ${identityId}, subscriptionId: ${subscriptionId}`,
+				`[71744259] processing identityId: ${identityId}, subscriptionId: ${subscriptionId}`,
 			);
 
 			let subscriptionRecord: Subscription;
