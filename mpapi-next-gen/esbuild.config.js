@@ -9,6 +9,8 @@ const entryPoints = {
 	'export-subscription-events-table':
 		'./src/lambdas/exportSubscriptionEventsTable.ts',
 	'export-subscription-table-v2': './src/lambdas/exportSubscriptionTableV2.ts',
+	'google-link-user-subscription':
+		'./src/lambdas/googleLinkUserSubscription.ts',
 	'google-subscription-status': './src/lambdas/googleSubscriptionStatus.ts',
 	'google-update-subscriptions': './src/lambdas/googleUpdateSubscriptions.ts',
 	'soft-opt-in-acquisitions': './src/lambdas/softOptInAcquisitions.ts',
