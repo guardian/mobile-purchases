@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { handler } from './googleSubscriptionStatus'; // Adjust path as necessary
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';

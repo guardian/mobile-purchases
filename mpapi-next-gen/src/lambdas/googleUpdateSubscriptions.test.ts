@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { mockClient } from 'aws-sdk-client-mock';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { putSubscription } from './googleUpdateSubscriptions';
