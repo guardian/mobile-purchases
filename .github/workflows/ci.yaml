@@ -101,7 +101,7 @@ jobs:
             mobile-purchases-user-subscriptions:
               - mpapi-next-gen/dist/user-subscriptions.zip
             mobile-purchases-feast-apple-pubsub:
-              - tsc-target/feast-apple-pubsub.zip
+              - mpapi-next-gen/dist/feast-apple-pubsub.zip
             mobile-purchases-feast-apple-update-subscriptions:
               - mpapi-next-gen/dist/feast-apple-update-subscriptions.zip
             mobile-purchases-feast-google-pubsub:

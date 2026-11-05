@@ -24,6 +24,7 @@ HANDLERS=(
     "export-subscription-tables"
     "feast-acquisition-events-router"
     "feast-apple-acquisition-events"
+    "feast-apple-pubsub"
     "feast-apple-update-subscriptions"
     "feast-google-acquisition-events"
     "feast-google-update-subscriptions"
