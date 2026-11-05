@@ -111,7 +111,7 @@ jobs:
             mobile-purchases-feast-acquisition-events-bus-cloudformation:
               - feast-acquisition-events.cloudformation.yaml
             mobile-purchases-feast-acquisition-events-router:
-              - tsc-target/feast-acquisition-events-router.zip
+              - mpapi-next-gen/dist/feast-acquisition-events-router.zip
             mobile-purchases-feast-apple-acquisition-events:
               - mpapi-next-gen/dist/feast-apple-acquisition-events.zip
             mobile-purchases-feast-google-acquisition-events:
