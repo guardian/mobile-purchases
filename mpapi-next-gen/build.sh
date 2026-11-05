@@ -18,6 +18,7 @@ HANDLERS=(
     "export-subscription-table-v2"
     "soft-opt-in-acquisitions"
     "googleoauth2"
+    "google-subscription-status"
 )
 
 for HANDLER in "${HANDLERS[@]}"; do
