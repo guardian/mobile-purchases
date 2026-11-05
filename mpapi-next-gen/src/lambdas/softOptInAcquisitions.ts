@@ -400,9 +400,7 @@ export async function handler(event: DynamoDBStreamEvent): Promise<void> {
 	for (const record of records) {
 		const eventName = record.eventName;
 
-		console.log(
-			`[808bfc02] record: ${JSON.stringify(record)}`,
-		);
+		console.log(`[808bfc02] record: ${JSON.stringify(record)}`);
 
 		// We only process INSERT events.
 		// For that we try and extract the subscription record with the given
