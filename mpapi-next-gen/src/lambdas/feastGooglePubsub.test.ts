@@ -1,9 +1,18 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import { buildHandler } from '../../../src/feast/pubsub/google';
-import { HTTPResponses } from '../../../src/models/apiGatewayHttp';
-import { SubscriptionEvent } from '../../../src/models/subscriptionEvent';
-import type { GoogleSubscriptionReference } from '../../../src/models/subscriptionReference';
+import { mockClient } from 'aws-sdk-client-mock';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { buildHandler } from './feastGooglePubsub';
+import { HTTPResponses } from '../common/apiGatewayHttp';
+import {
+	SubscriptionEvent,
+	subscriptionEventsV2FullTableName,
+} from '../common/subscriptionEvent';
+import type { GoogleSubscriptionReference } from '../common/subscriptionReference';
 import { expect, beforeEach, jest, describe, it } from '@jest/globals';
+
+const sqsMock = mockClient(SQSClient);
+const dynamoMock = mockClient(DynamoDBClient);
 
 const buildApiGatewayEvent = (secret: string): APIGatewayProxyEvent => {
 	const receivedEvent = {
@@ -53,6 +62,8 @@ const buildApiGatewayEvent = (secret: string): APIGatewayProxyEvent => {
 beforeEach(() => {
 	process.env['QueueUrl'] = '';
 	process.env['Secret'] = 'test_secret';
+	sqsMock.reset();
+	dynamoMock.reset();
 });
 
 describe('The Feast Google pubsub', () => {
@@ -84,8 +95,9 @@ describe('The Feast Google pubsub', () => {
 		const incorrectSecret = 'incorrect_secret';
 		const input = buildApiGatewayEvent(incorrectSecret);
 
-		const noOpStoreEventInDynamo = (_event: SubscriptionEvent): Promise<void> =>
-			Promise.resolve();
+		const noOpStoreEventInDynamo = jest.fn(
+			(_event: SubscriptionEvent): Promise<void> => Promise.resolve(),
+		);
 		const mockSqsFunction = jest.fn(
 			(_queueurl: string, _event: GoogleSubscriptionReference) =>
 				Promise.resolve({} as never),
@@ -102,29 +114,8 @@ describe('The Feast Google pubsub', () => {
 		const result = await handler(input);
 
 		expect(result).toStrictEqual(HTTPResponses.UNAUTHORISED);
-	});
-	it('Should return HTTP 401 if secret is incorrect', async () => {
-		const incorrectSecret = 'incorrect_secret';
-		const input = buildApiGatewayEvent(incorrectSecret);
-
-		const noOpStoreEventInDynamo = (_event: SubscriptionEvent): Promise<void> =>
-			Promise.resolve();
-		const mockSqsFunction = jest.fn(
-			(_queueurl: string, _event: GoogleSubscriptionReference) =>
-				Promise.resolve({} as never),
-		);
-		const mockFetchMetadataFunction = jest.fn((_event: unknown) =>
-			Promise.resolve({ freeTrial: true }),
-		);
-		const handler = buildHandler(
-			mockSqsFunction,
-			noOpStoreEventInDynamo,
-			mockFetchMetadataFunction,
-		);
-
-		const result = await handler(input);
-
-		expect(result).toStrictEqual(HTTPResponses.UNAUTHORISED);
+		expect(mockSqsFunction).not.toHaveBeenCalled();
+		expect(noOpStoreEventInDynamo).not.toHaveBeenCalled();
 	});
 
 	it('invokes the method to add the event to the Dynamo table', async () => {
@@ -151,14 +142,14 @@ describe('The Feast Google pubsub', () => {
 
 		const expectedSubscriptionEventInDynamo: SubscriptionEvent =
 			new SubscriptionEvent(
-				'PURCHASE_TOKEN', // subscriptionId
-				'2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED', // timestampAndType
-				'2017-08-21', // date
-				'2017-08-21T21:06:06.168Z', // timestamp
-				'SUBSCRIPTION_PURCHASED', // eventType
-				'android-feast', // platform
-				'uk.co.guardian.feast', // appId
-				true, // freeTrial
+				'PURCHASE_TOKEN',
+				'2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED',
+				'2017-08-21',
+				'2017-08-21T21:06:06.168Z',
+				'SUBSCRIPTION_PURCHASED',
+				'android-feast',
+				'uk.co.guardian.feast',
+				true,
 				{
 					eventTimeMillis: '1503349566168',
 					packageName: 'uk.co.guardian.feast',
@@ -169,15 +160,15 @@ describe('The Feast Google pubsub', () => {
 						version: '1.0',
 					},
 					version: '1.0',
-				}, // googlePayload
-				null, // applePayload
-				1582319167, // ttl
-				null, // promotional_offer_id
-				null, // promotional_offer_name
-				'uk.co.guardian.feast.access.test', // product_id
-				undefined, // purchase_date_ms
-				undefined, // expires_date_ms
-				'', // extra
+				},
+				null,
+				1582319167,
+				null,
+				null,
+				'uk.co.guardian.feast.access.test',
+				undefined,
+				undefined,
+				'',
 			);
 
 		expect(result).toStrictEqual(HTTPResponses.OK);
@@ -218,5 +209,88 @@ describe('The Feast Google pubsub', () => {
 		expect(mockSqsFunction.mock.calls[0][1]).toStrictEqual(
 			expectedSubscriptionReferenceInSqs,
 		);
+	});
+
+	describe('AWS SDK v3 command construction (default implementations)', () => {
+		beforeEach(() => {
+			sqsMock.reset();
+			dynamoMock.reset();
+			process.env['QueueUrl'] = 'https://sqs.example/feast-queue';
+			process.env['Secret'] = 'test_secret';
+		});
+
+		it('sends a SendMessageCommand with the parsed subscription reference as JSON body', async () => {
+			sqsMock.on(SendMessageCommand).resolves({ MessageId: 'msg-1' });
+			dynamoMock.on(PutItemCommand).resolves({});
+
+			const noOpStoreEventInDynamo = (
+				_event: SubscriptionEvent,
+			): Promise<void> => Promise.resolve();
+			const mockFetchMetadataFunction = jest.fn((_event: unknown) =>
+				Promise.resolve({ freeTrial: true }),
+			);
+			const handler = buildHandler(
+				undefined,
+				noOpStoreEventInDynamo,
+				mockFetchMetadataFunction,
+			);
+
+			const result = await handler(buildApiGatewayEvent('test_secret'));
+
+			expect(result).toStrictEqual(HTTPResponses.OK);
+
+			const calls = sqsMock.commandCalls(SendMessageCommand);
+			expect(calls).toHaveLength(1);
+			expect(calls[0].args[0].input).toStrictEqual({
+				QueueUrl: 'https://sqs.example/feast-queue',
+				MessageBody: JSON.stringify({
+					packageName: 'uk.co.guardian.feast',
+					purchaseToken: 'PURCHASE_TOKEN',
+					subscriptionId: 'uk.co.guardian.feast.access.test',
+				}),
+				DelaySeconds: undefined,
+			});
+		});
+
+		it('writes a PutItemCommand to the subscription-events-v2 table with a marshalled SubscriptionEvent', async () => {
+			sqsMock.on(SendMessageCommand).resolves({ MessageId: 'msg-1' });
+			dynamoMock.on(PutItemCommand).resolves({});
+
+			const mockSqsFunction = jest.fn(
+				(_queueurl: string, _event: GoogleSubscriptionReference) =>
+					Promise.resolve({} as never),
+			);
+			const mockFetchMetadataFunction = jest.fn((_event: unknown) =>
+				Promise.resolve({ freeTrial: true }),
+			);
+			const handler = buildHandler(
+				mockSqsFunction,
+				undefined,
+				mockFetchMetadataFunction,
+			);
+
+			const result = await handler(buildApiGatewayEvent('test_secret'));
+
+			expect(result).toStrictEqual(HTTPResponses.OK);
+
+			const calls = dynamoMock.commandCalls(PutItemCommand);
+			expect(calls).toHaveLength(1);
+
+			const input = calls[0].args[0].input;
+			expect(input.TableName).toBe(subscriptionEventsV2FullTableName());
+			expect(input.Item).toBeDefined();
+			expect(input.Item).toMatchObject({
+				subscriptionId: { S: 'PURCHASE_TOKEN' },
+				timestampAndType: {
+					S: '2017-08-21T21:06:06.168Z|SUBSCRIPTION_PURCHASED',
+				},
+				date: { S: '2017-08-21' },
+				timestamp: { S: '2017-08-21T21:06:06.168Z' },
+				eventType: { S: 'SUBSCRIPTION_PURCHASED' },
+				platform: { S: 'android-feast' },
+				appId: { S: 'uk.co.guardian.feast' },
+				freeTrial: { BOOL: true },
+			});
+		});
 	});
 });
