@@ -6,7 +6,7 @@ import { JWT } from 'google-auth-library';
 import { getParameterValue } from '../common/ssmParameters';
 
 const s3Client = new S3Client({
-	region: process.env.AWS_REGION || 'us-east-1',
+	region: process.env.AWS_REGION || 'eu-west-1',
 });
 
 interface GoogleServiceAccountCredentials {
