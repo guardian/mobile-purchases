@@ -9,7 +9,6 @@ const entries = {
   "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
   "feast-apple-pubsub": "./typescript/src/feast/pubsub/apple.ts",
   "feast-google-pubsub": "./typescript/src/feast/pubsub/google.ts",
-  "feast-acquisition-events-router": "./typescript/src/feast/acquisition-events/router.ts",
 };
 
 module.exports = (env) => ({
