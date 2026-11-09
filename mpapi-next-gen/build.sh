@@ -20,6 +20,7 @@ HANDLERS=(
     "soft-opt-in-acquisitions"
     "soft-opt-in-acquisitions-dlq-processor"
     "googleoauth2"
+    "google-link-user-subscription"
     "google-subscription-status"
     "google-update-subscriptions"
 )

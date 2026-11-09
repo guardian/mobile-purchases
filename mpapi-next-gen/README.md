@@ -23,12 +23,12 @@ If you are not familiar with them please refer to [scr/code-directives.md](scr/c
 2. Add a new entry in `esbuild.config.js`
 3. Add a new entry in `build.sh`
 4. Update the "Upload to Riff-Raff" of ci.yaml to point at the right bundle
+5. If needed update the architecture diagram
 
 In the specific case of the on going lambda migrations, you will also need to 
 
-1. Remove the old handler in the legacy code
-2. Remove the entry in the legacy webpack config file
-
+1. Remove the entry in the legacy webpack config file
+2. Remove the old handler in the legacy code
 
 ### System documentation
 
