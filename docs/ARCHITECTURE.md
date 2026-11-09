@@ -24,8 +24,8 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
  ------------------------                                  ----------------                         ------------                                         -----------------------------                       |               [extra]            |
                                                           ( applepubsub [09] )                     ( apple-subscriptions-to-fetch [13] )                ( apple-update-subscriptions [03] )                   ----------------------------------
                                                           ( googlepubsub [10] )                    ( google-subscriptions-to-fetch [06] )               ( google-update-subscriptions [02] )
-                                                          ( feastapplepubsub )                     ( feast-apple-subscriptions-to-fetch [05] )          ( feast-apple-subscriptions-to-fetch [11] )
-                                                          ( feastgooglepubsub )                    ( feast-google-subscriptions-to-fetch [04] )         ( feast-google-subscriptions-to-fetch [01] )
+                                                          ( feastapplepubsub )                     ( feast-apple-subscriptions-to-fetch [05] )          ( feast-apple-update-subscriptions [11] )
+                                                          ( feastgooglepubsub )                    ( feast-google-subscriptions-to-fetch [04] )         ( feast-google-update-subscriptions [01] )
                                                                 |                                                                                               |
                                                                 |                                                                                               |
                                                                 |                                                                                               |                   ---------------------------------------
@@ -75,7 +75,7 @@ Data enters the system via pubsub endpoints which are called by the Apple App St
      name: mobile-purchases-google-update-subscriptions-PROD
 
 [01] Lambda/function
-     code: typescript/src/feast/update-subs/google.ts
+     code: mpapi-next-gen/src/lambdas/feastGoogleUpdateSubscriptions.ts
      name: mobile-purchases-feast-google-update-subscriptions-PROD
 
 [11] Lambda/function

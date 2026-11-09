@@ -107,7 +107,7 @@ jobs:
             mobile-purchases-feast-google-pubsub:
               - tsc-target/feast-google-pubsub.zip
             mobile-purchases-feast-google-update-subscriptions:
-              - tsc-target/feast-google-update-subscriptions.zip
+              - mpapi-next-gen/dist/feast-google-update-subscriptions.zip
             mobile-purchases-feast-acquisition-events-bus-cloudformation:
               - feast-acquisition-events.cloudformation.yaml
             mobile-purchases-feast-acquisition-events-router:
