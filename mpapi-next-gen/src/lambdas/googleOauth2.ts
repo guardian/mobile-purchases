@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { Stage } from '../common/appIdentity';

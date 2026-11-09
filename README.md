@@ -20,6 +20,10 @@ We have the commands
 - `yarn format:check`
 - `yarn format:fix`
 
+### @googleapis/androidpublisher
+
+Note that we had had problems with @googleapis/androidpublisher which for the moment needs to remain at version 27.0.0
+
 ### Data
 
 There are three Dynamo DB tables:

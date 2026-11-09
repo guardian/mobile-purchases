@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { mockClient } from 'aws-sdk-client-mock';
 import {
 	DynamoDBDocumentClient,

@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { marshall } from '@aws-sdk/util-dynamodb';
 
 // 1. Mock the client before importing the handler to catch the prototype cleanly
