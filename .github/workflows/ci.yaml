@@ -115,4 +115,4 @@ jobs:
             mobile-purchases-feast-apple-acquisition-events:
               - tsc-target/feast-apple-acquisition-events.zip
             mobile-purchases-feast-google-acquisition-events:
-              - tsc-target/feast-google-acquisition-events.zip
+              - mpapi-next-gen/dist/feast-google-acquisition-events.zip
