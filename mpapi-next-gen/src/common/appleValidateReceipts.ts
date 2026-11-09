@@ -1,11 +1,9 @@
-import type { IHttpClientResponse } from 'typed-rest-client/Interfaces';
 import { App } from '../common/app';
 import { GracefulProcessingError } from '../common/GracefulProcessingError';
 import { ProcessingError } from '../common/processingError';
 import { Stage } from '../common/appIdentity';
 import { optionalMsToDate } from '../common/dates';
 import type { Option } from '../common/option';
-import { restClient } from '../common/restClient';
 import { getParameterValueUsingAppStageStackConvention } from '../common/ssmParameters';
 
 export interface PendingRenewalInfo {
@@ -96,32 +94,65 @@ function passwordForApp(app: App): Promise<string> {
 	}
 }
 
+interface NativeFetchResponseWrapper {
+	readBody: () => Promise<string>;
+}
+
 function callValidateReceipt(
 	receipt: string,
 	app: App = App.Live,
 	forceSandbox = false,
-): Promise<IHttpClientResponse> {
+): Promise<NativeFetchResponseWrapper> {
 	const endpoint = forceSandbox ? sandboxReceiptEndpoint : receiptEndpoint;
-	return passwordForApp(app)
-		.then((password) => {
-			const body = JSON.stringify({
-				'receipt-data': receipt,
-				password: password,
-				'exclude-old-transactions': true,
+	return passwordForApp(app).then(async (password) => {
+		const body = JSON.stringify({
+			'receipt-data': receipt,
+			password: password,
+			'exclude-old-transactions': true,
+		});
+
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+		try {
+			const response = await fetch(endpoint, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body,
+				signal: controller.signal,
 			});
-			return restClient.client.post(endpoint, body);
-		})
-		.then((response) => {
-			const statusCode = response.message.statusCode;
-			const statusText = response.message.statusMessage;
-			if (statusCode && (statusCode < 200 || statusCode >= 300)) {
+
+			if (response === undefined) {
+				throw new ProcessingError(
+					'[2aa11477] did not get an answer from `fetch`',
+					true,
+				);
+			}
+
+			if (!response.ok) {
 				console.error(
-					`Impossible to validate the receipt, got ${statusCode} ${statusText} from ${endpoint}`,
+					`[c994cb19] impossible to validate the receipt, got status ${response.status} ${response.statusText} from ${endpoint}`,
 				);
 				throw new ProcessingError('Impossible to validate receipt', true);
 			}
-			return response;
-		});
+
+			// Consume the response body stream text immediately while the abort signal is active
+			const bodyText = await response.text();
+
+			return {
+				readBody: () => Promise.resolve(bodyText),
+			};
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') {
+				console.error('[fc6406e3] the request timed out after 10 seconds.');
+			} else {
+				console.error('[7ec3c766] a network error occurred:', error);
+			}
+			throw error;
+		} finally {
+			clearTimeout(timeoutId);
+		}
+	});
 }
 
 function checkResponseStatus(
