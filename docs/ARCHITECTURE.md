@@ -146,7 +146,7 @@ The mobile apps link an In App Purchase with a Guardian user by calling the link
      name: mobile-purchases-PROD-user-subscriptions
 
 [04] Lambda/function
-     code: typescript/src/update-subs/apple.ts
+     code: mpapi-next-gen/src/lambdas/appleUpdateSubscriptions.ts
      name: mobile-purchases-apple-update-subscriptions-PROD
 
 [05] Lambda/function

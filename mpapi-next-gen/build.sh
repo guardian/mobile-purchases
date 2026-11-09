@@ -12,6 +12,7 @@ cd dist
 # maintenance: please maintain alphabetical order
 HANDLERS=(
     "apple-subscription-status"
+    "apple-update-subscriptions"
     "delete-user-subscription"
     "export-historical-data"
     "export-subscription-events-table"

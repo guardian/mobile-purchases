@@ -274,7 +274,7 @@ export function toSensiblePayloadFormat(
 			isRetryable: response['is-retryable'] === true,
 			latestReceipt: response.latest_receipt ?? receipt,
 			latestReceiptInfo: {
-				bundleId: bundleId,
+				bundleId: bundleId ?? '',
 				autoRenewStatus: autoRenewStatus,
 				cancellationDate: optionalMsToDate(receiptInfo.cancellation_date_ms),
 				expiresDate: new Date(expiryDate(receiptInfo)),

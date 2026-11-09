@@ -26,6 +26,14 @@ export function plusThirtyMonths(from: Date): Date {
 	return plusMonths(from, 30);
 }
 
+export function thirtyMonths(from: Date = new Date()): Date {
+	return plusMonths(from, 30);
+}
+
+export function dateToSecondTimestamp(date: Date): number {
+	return Math.ceil(date.getTime() / 1000);
+}
+
 export function optionalMsToDate(ms: Option<string> | undefined): Option<Date> {
 	if (ms) {
 		const parsedDate = new Date(Number.parseInt(ms));

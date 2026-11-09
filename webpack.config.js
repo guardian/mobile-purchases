@@ -8,7 +8,6 @@ const entries = {
   "apple-link-user-subscription": "./typescript/src/link/apple.ts",
   "user-subscriptions": "./typescript/src/user/user.ts",
   "google-update-subscriptions": "./typescript/src/update-subs/google.ts",
-  "apple-update-subscriptions": "./typescript/src/update-subs/apple.ts",
   "export-subscription-tables": "./typescript/src/export/exportSubscriptions.ts",
   "apple-revalidate-receipts": "./typescript/src/revalidate-receipts/appleRevalidateReceipts.ts",
   "feast-apple-pubsub": "./typescript/src/feast/pubsub/apple.ts",
