@@ -309,6 +309,18 @@ Lambda/function (s):
     [06] mobile-purchases-export-subscription-table-v2-PROD
     [07] mobile-purchases-export-user-subscription-table-v2-PROD
 
-         mobile-purchases-export-subscription-table-PROD (replaced by v2 -- to be confirmed)
-         mobile-purchases-export-user-subscription-table-PROD (in use ?)
+Lambdas from the CI file (riffraff imports):
+     mobile-purchases-export-historical-data
+     mobile-purchases-export-subscription-events-table
+     mobile-purchases-export-subscription-table-v2
+          - Has two function names in riffraff.yaml (reasons unknown)
+            1. mobile-purchases-export-subscription-table-v2-PROD
+            2. mobile-purchases-export-user-subscription-table-v2-PROD
+     mobile-purchases-export-subscription-tables
+          - Has two function names in riffraff.yaml (reasons unknown)
+            1. mobile-purchases-export-subscription-table-PROD         # doesn't appear on the diagram
+            2. mobile-purchases-export-user-subscription-table-PROD    # doesn't appear on the diagram
+
+The CI file maps labels to program files.
+The riffraff.yaml maps those labels to one or more function names.
 ```
