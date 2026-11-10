@@ -12,3 +12,5 @@ Test files should be colocated with the file they test.
 2.1 Lambdas' handlers in `./lambdas` can import from `./common`, but should not import from each other.
 
 2.2 Files in `./common` can import from `./common`, but should not import from `./lambdas`.
+
+2.3 Test files in `./lambdas` should only import from their companion handler or from `./common`.
