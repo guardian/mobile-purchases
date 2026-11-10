@@ -27,6 +27,7 @@ HANDLERS=(
     "feast-apple-pubsub"
     "feast-apple-update-subscriptions"
     "feast-google-acquisition-events"
+    "feast-google-pubsub"
     "feast-google-update-subscriptions"
     "soft-opt-in-acquisitions"
     "soft-opt-in-acquisitions-dlq-processor"

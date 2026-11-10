@@ -21,22 +21,6 @@ jobs:
           node-version-file: .nvmrc
           cache: yarn
 
-      - name: Test and build the old lambda collection
-        run: |
-          export NODE_OPTIONS="--max-old-space-size=4096"
-          mkdir -p tsc-target
-          yarn install
-          yarn run clean
-          yarn format:check
-          yarn lint:check
-          yarn run test
-          yarn run build
-          cd tsc-target
-          for BUNDLE in *.js
-          do
-              zip "${BUNDLE%.*}.zip" "$BUNDLE"
-          done
-
       - name: Build the new lambda collection
         run: |
           cd mpapi-next-gen
@@ -105,7 +89,7 @@ jobs:
             mobile-purchases-feast-apple-update-subscriptions:
               - mpapi-next-gen/dist/feast-apple-update-subscriptions.zip
             mobile-purchases-feast-google-pubsub:
-              - tsc-target/feast-google-pubsub.zip
+              - mpapi-next-gen/dist/feast-google-pubsub.zip
             mobile-purchases-feast-google-update-subscriptions:
               - mpapi-next-gen/dist/feast-google-update-subscriptions.zip
             mobile-purchases-feast-acquisition-events-bus-cloudformation:

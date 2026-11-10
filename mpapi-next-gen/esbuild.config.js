@@ -24,6 +24,7 @@ const entryPoints = {
 		'./src/lambdas/feastAppleUpdateSubscriptions.ts',
 	'feast-google-acquisition-events':
 		'./src/lambdas/feastGoogleAcquisitionEvents.ts',
+	'feast-google-pubsub': './src/lambdas/feastGooglePubsub.ts',
 	'feast-google-update-subscriptions':
 		'./src/lambdas/feastGoogleUpdateSubscriptions.ts',
 	googleoauth2: './src/lambdas/googleOauth2.ts',
