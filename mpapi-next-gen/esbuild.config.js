@@ -2,6 +2,8 @@ const esbuild = require('esbuild');
 
 // maintenance: please maintain alphabetical order
 const entryPoints = {
+	'apple-fetch-offer-details':
+		'./src/lambdas/promotionalOffersAppleFetchOfferDetails.ts',
 	'apple-link-user-subscription': './src/lambdas/appleLinkUserSubscription.ts',
 	'apple-subscription-status': './src/lambdas/appleSubscriptionStatus.ts',
 	'apple-update-subscriptions': './src/lambdas/appleUpdateSubscriptions.ts',
@@ -20,6 +22,7 @@ const entryPoints = {
 		'./src/lambdas/feastGoogleAcquisitionEvents.ts',
 	'feast-google-update-subscriptions':
 		'./src/lambdas/feastGoogleUpdateSubscriptions.ts',
+	googleoauth2: './src/lambdas/googleOauth2.ts',
 	'google-link-user-subscription':
 		'./src/lambdas/googleLinkUserSubscription.ts',
 	'google-subscription-status': './src/lambdas/googleSubscriptionStatus.ts',
@@ -29,7 +32,7 @@ const entryPoints = {
 	'soft-opt-in-acquisitions': './src/lambdas/softOptInAcquisitions.ts',
 	'soft-opt-in-acquisitions-dlq-processor':
 		'./src/lambdas/softOptInAcquisitionsDLQProcessor.ts',
-	googleoauth2: './src/lambdas/googleOauth2.ts',
+	'user-subscriptions': './src/lambdas/userSubscriptions.ts',
 };
 
 async function build() {

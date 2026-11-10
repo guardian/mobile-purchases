@@ -99,7 +99,7 @@ jobs:
             mobile-purchases-soft-opt-in-acquisitions:
               - mpapi-next-gen/dist/soft-opt-in-acquisitions.zip
             mobile-purchases-user-subscriptions:
-              - tsc-target/user-subscriptions.zip
+              - mpapi-next-gen/dist/user-subscriptions.zip
             mobile-purchases-feast-apple-pubsub:
               - tsc-target/feast-apple-pubsub.zip
             mobile-purchases-feast-apple-update-subscriptions:

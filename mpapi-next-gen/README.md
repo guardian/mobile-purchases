@@ -21,7 +21,7 @@ If you are not familiar with them please refer to [scr/code-directives.md](scr/c
 
 Note that we had had problems with @googleapis/androidpublisher which for the moment needs to remain at version 27.0.0
 
-### Adding a new lamdda
+### Adding a new lambda
 
 1. Add a new .ts file in `scr/handlers`
 2. Add a new entry in `esbuild.config.js`
