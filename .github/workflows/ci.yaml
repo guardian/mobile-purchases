@@ -65,7 +65,7 @@ jobs:
             mobile-purchases-googleoauth2:
               - mpapi-next-gen/dist/googleoauth2.zip
             mobile-purchases-apple-fetch-offer-details:
-              - tsc-target/apple-fetch-offer-details.zip
+              - mpapi-next-gen/dist/apple-fetch-offer-details.zip
             mobile-purchases-apple-link-user-subscription:
               - mpapi-next-gen/dist/apple-link-user-subscription.zip
             mobile-purchases-apple-pubsub:
