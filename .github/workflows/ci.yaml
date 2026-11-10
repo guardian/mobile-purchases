@@ -71,7 +71,7 @@ jobs:
             mobile-purchases-apple-pubsub:
               - tsc-target/apple-pubsub.zip
             mobile-purchases-apple-revalidate-receipts:
-              - tsc-target/apple-revalidate-receipts.zip
+              - mpapi-next-gen/dist/apple-revalidate-receipts.zip
             mobile-purchases-apple-subscription-status:
               - mpapi-next-gen/dist/apple-subscription-status.zip
             mobile-purchases-apple-update-subscriptions:
