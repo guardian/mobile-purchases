@@ -183,7 +183,7 @@ Resources:
               Effect: Allow
               Action:
                 - ssm:GetParameter
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/mobile-purchases/${Stage}/mobile/user.api-key.0
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/mobile-purchases/${Stage}/mobile/*
 
   LogGroupValidateReceipts:
     Type: 'AWS::Logs::LogGroup'
