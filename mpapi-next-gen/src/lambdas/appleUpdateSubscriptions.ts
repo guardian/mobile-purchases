@@ -61,7 +61,7 @@ export async function queueHistoricalSubscription(
 ): Promise<void> {
 	const queueUrl = process.env.HistoricalQueueUrl;
 	if (queueUrl === undefined) {
-		throw new Error('No HistoricalQueueUrl env parameter provided');
+		throw new Error('[c20d7491] no HistoricalQueueUrl env parameter provided');
 	}
 	const payload = subscription.googlePayload ?? subscription.applePayload;
 	if (payload) {
@@ -87,29 +87,37 @@ export async function parseAndStoreSubscriptionUpdate(
 		await Promise.all(subscriptions.map(putSubscription));
 		await Promise.all(subscriptions.map(queueHistoricalSubscription));
 		console.log(
-			`Processed ${subscriptions.length} subscriptions: ${subscriptions.map(
+			`[9e2af1df] processed ${subscriptions.length} subscriptions: ${subscriptions.map(
 				(s) => s.subscriptionId,
 			)}`,
 		);
 		return 'OK';
 	} catch (error) {
 		if (error instanceof ProcessingError) {
-			console.error('Error processing the subscription update', error);
+			console.error(
+				'[c4b7a53c] error processing the subscription update',
+				error,
+			);
 			if (error.shouldRetry) {
-				console.error('Will throw an exception to retry this message');
+				console.error(
+					'[f4e03de5] will throw an exception to retry this message',
+				);
 				throw error;
 			} else {
-				console.error("The error wasn't retryable, giving up.");
+				console.error("[0004b427] the error wasn't retryable, giving up.");
 				return 'Error, giving up';
 			}
 		} else if (error instanceof GracefulProcessingError) {
 			console.warn(
-				'Error processing the subscription update is being handled gracefully',
+				'[a5b1f9e4] error processing the subscription update is being handled gracefully',
 				error,
 			);
 			return 'OK';
 		} else {
-			console.error('Unexpected error, will throw to retry: ', error);
+			console.error(
+				'[5cd439b9] unexpected error, will throw to retry: ',
+				error,
+			);
 			throw error;
 		}
 	}
