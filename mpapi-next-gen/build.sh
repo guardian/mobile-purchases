@@ -42,9 +42,25 @@ HANDLERS=(
 for HANDLER in "${HANDLERS[@]}"; do
     mkdir -p "${HANDLER}_tmp"
     cp "${HANDLER}.js" "${HANDLER}_tmp/"
+    cp "${HANDLER}.js.map" "${HANDLER}_tmp/"
+    
     cp -r ../node_modules "${HANDLER}_tmp/"
+
     pushd "${HANDLER}_tmp" > /dev/null
+
+    find node_modules -type f \( \
+        -name "*.md" -o -name "*.ts" -o -name "*.map" -o -name "*.d.ts" \
+        -o -name "LICENSE*" -o -name "CHANGELOG*" -o -name "README*" \
+        -o -name ".eslintrc*" -o -name ".prettierrc*" -o -name "tsconfig*" \
+    \) -delete 2>/dev/null || true
+
+    find node_modules -type d \( \
+        -name "__tests__" -o -name "test" -o -name "tests" \
+        -o -name "docs" -o -name "example" -o -name "examples" \
+    \) -exec rm -rf {} + 2>/dev/null || true
+
     zip -r "../${HANDLER}.zip" .
     popd > /dev/null
     rm -rf "${HANDLER}_tmp"
 done
+
