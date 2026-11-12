@@ -57,6 +57,7 @@ async function build() {
 				'@aws-sdk/client-s3',
 				'@aws-sdk/client-sqs',
 				'@aws-sdk/client-ssm',
+				'google-auth-library',
 			],
 			tsconfig: 'tsconfig.json',
 			mainFields: ['main'],

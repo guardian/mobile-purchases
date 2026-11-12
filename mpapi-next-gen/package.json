@@ -6,6 +6,8 @@
 	"packageManager": "yarn@1.22.22",
 	"scripts": {
 		"build": "node esbuild.config.js",
+		"package": "yarn build && cp -r node_modules dist/ && cd dist && zip -r ../lambda-package.zip .",
+		"package:clean": "rm -f lambda-package.zip && rm -rf dist",
 		"clean": "rm -rf dist",
 		"lint:check": "eslint src --ext .ts,.tsx",
 		"lint:fix": "eslint src --ext .ts,.tsx --fix",
