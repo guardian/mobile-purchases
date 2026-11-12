@@ -177,6 +177,13 @@ Resources:
               Action: ['kms:GenerateDataKey', 'kms:Decrypt']
               Resource:
                 - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/0215d06c-81c4-4896-a5da-c818770ea8db
+        - PolicyName: user-subscriptions-ssm-get-parameter
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - ssm:GetParameter
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/mobile-purchases/${Stage}/mobile/*
 
   LogGroupValidateReceipts:
     Type: 'AWS::Logs::LogGroup'
