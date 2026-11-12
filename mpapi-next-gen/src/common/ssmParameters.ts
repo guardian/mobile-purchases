@@ -3,7 +3,15 @@ import { App, Stack, Stage } from './appIdentity';
 
 const ssmClient = new SSMClient({
 	region: process.env.AWS_REGION || 'eu-west-1',
+	maxAttempts: 5,
 });
+
+const CACHE_TTL_MS = 5 * 60_000; // 5 min;
+interface CacheEntry {
+	value: string;
+	expiresAt: number;
+}
+const parameterCache = new Map<string, CacheEntry>();
 
 export async function getParameterValue(
 	parameterName: string,
@@ -14,18 +22,25 @@ export async function getParameterValue(
         `/mobile-purchases/${Stage}/google-oauth-lambda/google.serviceAccountJson`
     */
 
+	const now = Date.now();
+	const hit = parameterCache.get(parameterName);
+	if (hit && now < hit.expiresAt) {
+		return hit.value;
+	}
+
 	try {
 		const command = new GetParameterCommand({
 			Name: parameterName,
 			WithDecryption: true,
 		});
-
 		const response = await ssmClient.send(command);
-
 		if (!response.Parameter?.Value) {
 			throw new Error('[df35dc74] no credentials found in SSM');
 		}
-
+		parameterCache.set(parameterName, {
+			value: response.Parameter.Value,
+			expiresAt: Date.now() + CACHE_TTL_MS,
+		});
 		return response.Parameter.Value;
 	} catch (error) {
 		console.error('[5446b6c6] error retrieving credentials from SSM:', error);
