@@ -166,14 +166,16 @@ export function buildHandler(
 				);
 				sendCounts[countKey]++;
 				console.log(
-					`Sent ${subscription.platform} subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`,
+					`[75736358] sent ${subscription.platform} subscription with id: ${subscription.subscriptionId} and expiry timestamp: ${subscription.endTimestamp}`,
 				);
 			} else {
-				console.warn(`No receipt found for ${subscription.subscriptionId}`);
+				console.warn(
+					`[0a02d5be] no receipt found for ${subscription.subscriptionId}`,
+				);
 			}
 		}
 		console.log(
-			`Sent ${sendCounts['non-feast']} non-Feast subscriptions and ${sendCounts['feast']} Feast subscriptions to be re-validated.`,
+			`[0a9f8624] sent ${sendCounts['non-feast']} non-Feast subscriptions and ${sendCounts['feast']} Feast subscriptions to be re-validated.`,
 		);
 	};
 }

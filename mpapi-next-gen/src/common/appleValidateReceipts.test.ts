@@ -198,7 +198,7 @@ describe('Apple Receipt Validation Module', () => {
 			});
 
 			await expect(validateReceipt(mockReceipt, mockOptions)).rejects.toThrow(
-				'Invalid validation response, empty receipt info array',
+				'[1618f6c4] invalid validation response, empty receipt info array',
 			);
 		});
 	});
