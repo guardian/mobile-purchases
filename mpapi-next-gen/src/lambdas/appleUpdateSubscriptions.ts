@@ -18,6 +18,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import { NumberValue } from '@aws-sdk/lib-dynamodb';
 
 // -----------------------------------------------------------------------------
 // Globals
@@ -27,6 +28,50 @@ const sqsClient = new SQSClient({});
 
 // -----------------------------------------------------------------------------
 // Functions
+
+function wrapUnsafeNumbers(value: unknown): unknown {
+	/*
+	This comment explains the reason why wrapUnsafeNumbers was introduced.
+
+	We were dealing with
+
+	"""
+	ERROR [5cd439b9] unexpected error, will throw to retry:
+	Error: Number 501302004174107840 is greater than Number.MAX_SAFE_INTEGER.
+	Use NumberValue from @aws-sdk/lib-dynamodb.
+	"""
+
+	Reason:
+	Apple App Store Server Notifications and receipt payloads frequently
+	include 18-digit transaction IDs (like 501302004174107840).
+	When those JSON payloads are parsed with standard JSON.parse(), those IDs
+	become unsafe JavaScript number primitives, causing marshall() to throw when
+	it hits them.
+
+	We use wrapUnsafeNumbers to convert unsafe numbers into NumberValue
+	instances before calling marshall().
+	*/
+
+	if (
+		typeof value === 'number' &&
+		!Number.isSafeInteger(value) &&
+		Number.isInteger(value)
+	) {
+		return NumberValue.from(value.toString());
+	}
+	if (typeof value === 'bigint') {
+		return NumberValue.from(value.toString());
+	}
+	if (Array.isArray(value)) {
+		return value.map(wrapUnsafeNumbers);
+	}
+	if (value !== null && typeof value === 'object') {
+		return Object.fromEntries(
+			Object.entries(value).map(([k, v]) => [k, wrapUnsafeNumbers(v)]),
+		);
+	}
+	return value;
+}
 
 export async function putSubscription(
 	subscription: Subscription,
@@ -48,9 +93,13 @@ export async function putSubscription(
 		ttl: subscription.ttl,
 		extra: subscription.extra,
 	};
+	const sanitizedObject = wrapUnsafeNumbers(persistenceObject) as Record<
+		string,
+		unknown
+	>;
 	const command = new PutItemCommand({
 		TableName: subscriptionsFullTableName(),
-		Item: marshall(persistenceObject, { removeUndefinedValues: true }),
+		Item: marshall(sanitizedObject, { removeUndefinedValues: true }),
 	});
 	await dynamoDbClient.send(command);
 	return subscription;
@@ -83,9 +132,15 @@ export async function parseAndStoreSubscriptionUpdate(
 	fetchSubscriberDetails: (record: SQSRecord) => Promise<Subscription[]>,
 ): Promise<string> {
 	try {
+		console.log('[2b0a3170] fetch subscription details');
 		const subscriptions = await fetchSubscriberDetails(sqsRecord); // Subscription[]
+
+		console.log('[661b0392] put all subscriptions');
 		await Promise.all(subscriptions.map(putSubscription));
+
+		console.log('[181b905a] queue historical subscriptions');
 		await Promise.all(subscriptions.map(queueHistoricalSubscription));
+
 		console.log(
 			`[9e2af1df] processed ${subscriptions.length} subscriptions: ${subscriptions.map(
 				(s) => s.subscriptionId,

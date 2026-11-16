@@ -11,6 +11,7 @@ import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { Region } from '../common/appIdentity';
+import { safeJsonStringify } from '../common/safeJson';
 
 // -----------------------------------------------------------------------------
 // Types
@@ -66,7 +67,7 @@ export class DynamoStream extends Readable {
 		let keepPushing = true;
 		while (keepPushing && this.itemBuffer.length > 0) {
 			const nextItem = this.itemBuffer.shift();
-			keepPushing = this.push(JSON.stringify(nextItem) + '\n');
+			keepPushing = this.push(safeJsonStringify(nextItem) + '\n');
 		}
 
 		if (keepPushing) {

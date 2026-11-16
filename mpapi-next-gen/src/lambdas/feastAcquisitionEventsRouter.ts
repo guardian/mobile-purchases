@@ -12,6 +12,7 @@ import {
 } from '@aws-sdk/client-sqs';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
+import { safeJsonStringify } from '../common/safeJson';
 
 // -----------------------------------------------------------------------------
 // Globals
@@ -158,7 +159,7 @@ export const handler = async (event: DynamoDBStreamEvent): Promise<void> => {
 			return;
 		}
 
-		console.log(`subscription ${JSON.stringify(subscription)}`);
+		console.log(`subscription ${safeJsonStringify(subscription)}`);
 
 		const isFeast =
 			subscription.platform === Platform.IosFeast ||
