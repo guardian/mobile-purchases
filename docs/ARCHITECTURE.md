@@ -281,7 +281,7 @@ The apps call endpoints to check the status of a subscription.
 
 By a process that is not documented here, those subscriptions end up in the { User Subscription } dynamo table
 
-The feast acquisition pileline is a workflow we implented in 2024, that take subscriptions notifications from the User Subscriptions Dynamo table and relays them to Big Query through the Acquisition API which is itself a Event Bridge to BQ.
+The feast acquisition pipeline is a workflow we implented in 2024, that take subscriptions notifications from the User Subscriptions Dynamo table and relays them to Big Query through the Acquisition API which is itself a Event Bridge to BQ.
 
 This page documents the various stages of this workflow, for future reference. Notably we document the Apple Subscription look up using JSON Web Tokens, which has no other occurence in all of mobile-purchases as well as the API call the the bq event handler which is also novel to this project.
 
