@@ -188,6 +188,19 @@ function checkResponseStatus(
 			`[32e4bb31] got status ${response.status} and we're in ${Stage}`,
 		);
 	}
+	if (response.status === 21010) {
+		/*
+			Status code 21010 means the user account cannot be found or has been
+			deleted. Apple also describes this status as an unauthorized receipt
+			that should be treated as if no purchase was ever made
+		*/
+		console.error(
+			`[0dac56fd] got status 21010 (user account cannot be found or has been deleted)`,
+		);
+		throw new GracefulProcessingError(
+			`[84b454f4] got status 21010 (user account cannot be found or has been deleted)`,
+		);
+	}
 	if (response.status != 0 && response.status != 21006) {
 		console.error(
 			`[23c3f9e6] invalid receipt, got status ${response.status} for ${response.latest_receipt}`,
