@@ -133,7 +133,10 @@ function callValidateReceipt(
 				console.error(
 					`[c994cb19] impossible to validate the receipt, got status ${response.status} ${response.statusText} from ${endpoint}`,
 				);
-				throw new ProcessingError('Impossible to validate receipt', true);
+				throw new ProcessingError(
+					'[6c6389ac] impossible to validate receipt',
+					true,
+				);
 			}
 
 			// Consume the response body stream text immediately while the abort signal is active
@@ -163,34 +166,41 @@ function checkResponseStatus(
 		response['is-retryable']
 	) {
 		console.error(
-			`Server error received from Apple, got status ${response.status}, will retry`,
+			`[1869236f] server error received from Apple, got status ${response.status}, will retry`,
 		);
-		throw new ProcessingError(`Server error, status ${response.status}`, true);
+		throw new ProcessingError(
+			`[8689f797] server error, status ${response.status}`,
+			true,
+		);
 	}
 	if (response.status === 21007) {
-		const msg = `Got status 21007 and we're in ${Stage}, so we are processing a receipt from the wrong environment.`;
+		const msg = `[73a509de] got status 21007 and we're in ${Stage}, so we are processing a receipt from the wrong environment.`;
 		console.error(msg);
 		throw new GracefulProcessingError(
-			`Got status ${response.status} and we're in ${Stage}`,
+			`[93c55c5f] got status ${response.status} and we're in ${Stage}`,
 		);
 	}
 	if (response.status === 21008) {
 		console.error(
-			`Got status ${response.status} and we're in ${Stage}, so we are processing a receipt from the wrong environment`,
+			`[89a2b777] got status ${response.status} and we're in ${Stage}, so we are processing a receipt from the wrong environment`,
 		);
 		throw new ProcessingError(
-			`Got status ${response.status} and we're in ${Stage}`,
+			`[32e4bb31] got status ${response.status} and we're in ${Stage}`,
 		);
 	}
 	if (response.status != 0 && response.status != 21006) {
 		console.error(
-			`Invalid receipt, got status ${response.status} for ${response.latest_receipt}`,
+			`[23c3f9e6] invalid receipt, got status ${response.status} for ${response.latest_receipt}`,
 		);
-		throw new ProcessingError(`Invalid receipt, got status ${response.status}`);
+		throw new ProcessingError(
+			`[863bff6a] invalid receipt, got status ${response.status}`,
+		);
 	}
 	if (!response.latest_receipt_info && !response.latest_expired_receipt_info) {
 		console.error(`[a67e1349] No receipt info`);
-		throw new ProcessingError(`Invalid validation response, no receipt info`);
+		throw new ProcessingError(
+			`[3e50d7b8] invalid validation response, no receipt info`,
+		);
 	}
 	return response;
 }
@@ -208,7 +218,7 @@ export function toSensiblePayloadFormat(
 			return Number.parseInt(receiptServerInfo.expires_date);
 		} else {
 			throw new ProcessingError(
-				'Receipt has no expiry, this should have been filtered by now',
+				'[52d2ddda] receipt has no expiry, this should have been filtered by now',
 				false,
 			);
 		}
@@ -220,10 +230,10 @@ export function toSensiblePayloadFormat(
 				const latestReceipt = response.latest_receipt_info;
 				if (latestReceipt.length == 0) {
 					console.error(
-						`Invalid validation response, empty receipt info array`,
+						`[71ef6aca] invalid validation response, empty receipt info array`,
 					);
 					throw new ProcessingError(
-						`Invalid validation response, empty receipt info array`,
+						`[1618f6c4] invalid validation response, empty receipt info array`,
 					);
 				}
 
@@ -253,7 +263,7 @@ export function toSensiblePayloadFormat(
 				// should be impossible as this will be caught by checkResponseStatus
 				console.error(`[de3b8fba] No receipt info`);
 				throw new ProcessingError(
-					`Invalid validation response, no receipt info`,
+					`[4f324b5c] invalid validation response, no receipt info`,
 				);
 			}
 		}
@@ -284,7 +294,7 @@ export function toSensiblePayloadFormat(
 			response.receipt?.bid;
 		if (!bundleId) {
 			console.warn(
-				`Unable to identify the bundle id for the original transaction id ${receiptInfo.original_transaction_id}`,
+				`[5423e058] unable to identify the bundle id for the original transaction id ${receiptInfo.original_transaction_id}`,
 			);
 		}
 
@@ -293,10 +303,10 @@ export function toSensiblePayloadFormat(
 		);
 		if (originalPurchaseDate === null) {
 			console.error(
-				`Unable to parse the original purchase date ${receiptInfo.original_purchase_date_ms}`,
+				`[699111e9] unable to parse the original purchase date ${receiptInfo.original_purchase_date_ms}`,
 			);
 			throw new ProcessingError(
-				`Unable to parse the original purchase date`,
+				`[622bd3ee] unable to parse the original purchase date`,
 				false,
 			);
 		}
@@ -329,7 +339,7 @@ async function retryInSandboxIfNecessary(
 	options: ValidationOptions,
 ): Promise<AppleValidationServerResponse> {
 	if (parsedResponse.status === 21007 && options.sandboxRetry) {
-		console.log('Got status code 21007, retrying in Sandbox');
+		console.log('[77f8f3b9] got status code 21007, retrying in Sandbox');
 		return callValidateReceipt(receipt, App.Live, true)
 			.then((response) => response.readBody())
 			.then((body) => JSON.parse(body))
