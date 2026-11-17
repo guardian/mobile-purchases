@@ -1626,6 +1626,8 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
+                - ssm:GetParameter
+                - ssm:GetParameters
                 - ssm:GetParametersByPath
               Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${App}/${Stage}/${Stack}/*
         - Statement:
