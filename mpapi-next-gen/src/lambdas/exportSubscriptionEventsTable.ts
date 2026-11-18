@@ -122,7 +122,7 @@ export async function handler(
 		yesterday = event.date;
 	}
 
-	const tableName = `mobile-purchases-${Stage}-subscription-events`;
+	const tableName = `mobile-purchases-${Stage}-subscription-events-v2`;
 	console.log(`[2eace88e] tableName: ${tableName}`);
 
 	const itemGenerator = queryDynamoDBItems(tableName, yesterday);
