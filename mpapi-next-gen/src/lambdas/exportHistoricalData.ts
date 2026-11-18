@@ -103,16 +103,17 @@ export async function handler(params: {
 	maxMessagesToFetch?: number;
 }): Promise<HandlerOutput> {
 	const bucket = process.env['ExportBucket'];
-	if (!bucket) throw new Error('Variable ExportBucket must be set');
+	if (!bucket) throw new Error('[463957ef] variable ExportBucket must be set');
+	console.log(`[837144d7] bucket: ${bucket}`);
 
 	const sqsUrl = process.env['SqsUrl'];
-	if (!sqsUrl) throw new Error('Variable SqsUrl must be set');
+	if (!sqsUrl) throw new Error('[9845197b] variable SqsUrl must be set');
 
 	const numberOfMessagesNotVisible =
 		await getNumberOfMessagesNotVisible(sqsUrl);
 	if (numberOfMessagesNotVisible > 1) {
 		throw new Error(
-			`Approximately ${numberOfMessagesNotVisible} messages are unavailable for processing. Something else is currently consuming messages from ${sqsUrl}`,
+			`[9a615b20] approximately ${numberOfMessagesNotVisible} messages are unavailable for processing. Something else is currently consuming messages from ${sqsUrl}`,
 		);
 	}
 
@@ -125,6 +126,8 @@ export async function handler(params: {
 	console.log(`[4a949499] yesterday: ${yesterday}`);
 
 	const prefix = Stage === 'PROD' ? 'data' : 'code-data';
+	console.log(`[baaa6175] prefix: ${prefix}`);
+
 	const randomString = Math.random().toString(36).substring(10);
 	const filename = `${prefix}/date=${yesterday}/${yesterday}-${randomString}.json.gz`;
 	console.log(`[b3e0e9c1] filename: ${filename}`);

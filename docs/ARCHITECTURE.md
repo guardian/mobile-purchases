@@ -441,25 +441,25 @@ The update-subscriptions lambdas push onto an SQS queue for each change and this
 
 (Unless otherwise specified elements are in the mobile aws account)
 
- --------------------------------------                ------------------------------------------------------------------              ----              ------------------------------------------------
-| SQS: google-historical-subscriptions | -----------> | Lambda: mobile-purchases-export-google-historical-data-PROD [03] | -----------| S3 |----------> | datalake.mobile_subscription_historical_google |
- --------------------------------------                ------------------------------------------------------------------                                ------------------------------------------------
+ --------------------------------------                ------------------------------------------------------------------              ----              -----------------------------------------------------
+| SQS: google-historical-subscriptions | -----------> | Lambda: mobile-purchases-export-google-historical-data-PROD [03] | -----------| S3 |----------> | datalake.mobile_subscription_historical_google [09] |
+ --------------------------------------                ------------------------------------------------------------------                                -----------------------------------------------------
 
- -------------------------------------                 -----------------------------------------------------------------                                 -----------------------------------------------
-| SQS: apple-historical-subscriptions | ------------> | Lambda: mobile-purchases-export-apple-historical-data-PROD [04] | ------------| S3 |----------> | datalake.mobile_subscription_historical_apple |
- -------------------------------------                 -----------------------------------------------------------------                                 -----------------------------------------------
+ -------------------------------------                 -----------------------------------------------------------------                                 ----------------------------------------------------
+| SQS: apple-historical-subscriptions | ------------> | Lambda: mobile-purchases-export-apple-historical-data-PROD [04] | ------------| S3 |----------> | datalake.mobile_subscription_historical_apple [10] |
+ -------------------------------------                 -----------------------------------------------------------------                                 ----------------------------------------------------
 
- -------------------------------------------           ---------------------------------------------------------------------                             -------------------------------------
-| Dynamo Table: subscription-events-v2 [01] |-------> | Lambda: mobile-purchases-export-subscription-events-table-PROD [05] | --------| S3 |----------> | datalake.mobile_subscription_events |
- -------------------------------------------           ---------------------------------------------------------------------                             -------------------------------------
+ -------------------------------------------           ---------------------------------------------------------------------                             ------------------------------------------
+| Dynamo Table: subscription-events-v2 [01] |-------> | Lambda: mobile-purchases-export-subscription-events-table-PROD [05] | --------| S3 |----------> | datalake.mobile_subscription_events [11] |
+ -------------------------------------------           ---------------------------------------------------------------------                             ------------------------------------------
 
- ----------------------------------                    ----------------------------------------------------------------                                  -------------------------------
-| Dynamo Table: subscriptions [02] | ---------------> | Lambda: mobile-purchases-export-subscription-table-v2-PROD [06] | ------------| S3 |----------> | datalake.mobile_subscriptions |
- ----------------------------------                    ----------------------------------------------------------------                                  -------------------------------
+ ----------------------------------                    -----------------------------------------------------------------                                 ------------------------------------
+| Dynamo Table: subscriptions [02] | ---------------> | Lambda: mobile-purchases-export-subscription-table-v2-PROD [06] | ------------| S3 |----------> | datalake.mobile_subscriptions [12] |
+ ----------------------------------                    -----------------------------------------------------------------                                 ------------------------------------
 
- ---------------------------------------               ----------------------------------------------------------------------                            ------------------------------------
-| Dynamo Table: user-subscriptions [08] | ----------> | Lambda: mobile-purchases-export-user-subscription-table-v2-PROD [07] | -------| S3 |----------> | datalake.mobile_user_subscriptions |
- ---------------------------------------               ----------------------------------------------------------------------                            ------------------------------------
+ ---------------------------------------               ----------------------------------------------------------------------                            -----------------------------------------
+| Dynamo Table: user-subscriptions [08] | ----------> | Lambda: mobile-purchases-export-user-subscription-table-v2-PROD [07] | -------| S3 |----------> | datalake.mobile_user_subscriptions [13] |
+ ---------------------------------------               ----------------------------------------------------------------------                            -----------------------------------------
 
 Dynamo tables:
     [01] mobile-purchases-PROD-subscription-events-v2
@@ -467,23 +467,38 @@ Dynamo tables:
     [08] mobile-purchases-PROD-user-subscriptions
 
 Lambda/function (s):
-    [03] mobile-purchases-export-google-historical-data-PROD
-    [04] mobile-purchases-export-apple-historical-data-PROD
-    [05] mobile-purchases-export-subscription-events-table-PROD
-    [06] mobile-purchases-export-subscription-table-v2-PROD
-    [07] mobile-purchases-export-user-subscription-table-v2-PROD
+    [03] mobile-purchases-export-google-historical-data-PROD                       -> [09]
+          riff-raff label      : mobile-purchases-export-historical-data
+          esbuild config entry : export-historical-data
+          code path            : ./src/lambdas/exportHistoricalData.ts
 
-Lambdas from the CI file (riffraff imports):
-     mobile-purchases-export-historical-data
-     mobile-purchases-export-subscription-events-table
-     mobile-purchases-export-subscription-table-v2
-          - Has two function names in riffraff.yaml (reasons unknown)
-            1. mobile-purchases-export-subscription-table-v2-PROD
-            2. mobile-purchases-export-user-subscription-table-v2-PROD
-     mobile-purchases-export-subscription-tables
-          - Has two function names in riffraff.yaml (reasons unknown)
-            1. mobile-purchases-export-subscription-table-PROD         # doesn't appear on the diagram
-            2. mobile-purchases-export-user-subscription-table-PROD    # doesn't appear on the diagram
+    [04] mobile-purchases-export-apple-historical-data-PROD                        -> [10]
+          riff-raff label      : mobile-purchases-export-historical-data
+          esbuild config entry : export-historical-data
+          code path            : ./src/lambdas/exportHistoricalData.ts
+
+    [05] mobile-purchases-export-subscription-events-table-PROD                    -> [11]
+          riff-raff label      : mobile-purchases-export-subscription-events-table
+          esbuild config entry : export-subscription-events-table
+          code path            : /src/lambdas/exportSubscriptionEventsTable.ts
+
+    [06] mobile-purchases-export-subscription-table-v2-PROD                        -> [12]
+          riff-raff label      : mobile-purchases-export-subscription-table-v2
+          esbuild config entry : export-subscription-table-v2
+          code path            : ./src/lambdas/exportSubscriptionTableV2.ts
+
+    [07] mobile-purchases-export-user-subscription-table-v2-PROD                   -> [13]
+          riff-raff label      : mobile-purchases-export-subscription-table-v2
+          esbuild config entry : export-subscription-table-v2
+          code path            : ./src/lambdas/exportSubscriptionTableV2.ts
+
+
+All paths in the Ophan account:
+    [09] datalake.mobile_subscription_historical_google
+    [10] datalake.mobile_subscription_historical_apple
+    [11] datalake.mobile_subscription_events
+    [12] datalake.mobile_subscriptions
+    [13] datalake.mobile_user_subscriptions
 
 The CI file maps labels to program files.
 The riffraff.yaml maps those labels to one or more function names.
