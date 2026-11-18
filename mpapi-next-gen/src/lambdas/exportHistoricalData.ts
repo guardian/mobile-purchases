@@ -126,7 +126,7 @@ export async function handler(params: {
 	console.log(`[4a949499] yesterday: ${yesterday}`);
 
 	const prefix = Stage === 'PROD' ? 'data' : 'code-data';
-	console.log(`[baaa6175] prefix: ${prefix}`);
+	console.log(`[baaa6175] stage: ${Stage}, prefix: ${prefix}`);
 
 	const randomString = Math.random().toString(36).substring(10);
 	const filename = `${prefix}/date=${yesterday}/${yesterday}-${randomString}.json.gz`;
