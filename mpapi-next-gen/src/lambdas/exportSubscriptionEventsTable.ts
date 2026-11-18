@@ -112,9 +112,8 @@ export async function handler(
 	event?: ManualBackfillEvent,
 ): Promise<HandlerOutput> {
 	const bucket = process.env['ExportBucket'];
+	if (!bucket) throw new Error('[248f7acd] variable ExportBucket must be set');
 	console.log(`[ca76728f] starting export with bucket: ${bucket}`);
-
-	if (!bucket) throw new Error('Variable ExportBucket must be set');
 
 	let yesterday = plusDays(new Date(), -1).toISOString().substr(0, 10);
 	console.log(`[c882b045] yesterday: ${yesterday}`);
@@ -124,17 +123,19 @@ export async function handler(
 	}
 
 	const tableName = `mobile-purchases-${Stage}-subscription-events`;
+	console.log(`[2eace88e] tableName: ${tableName}`);
 
 	const itemGenerator = queryDynamoDBItems(tableName, yesterday);
 
 	const streamGenerator = createStreamFromGenerator(itemGenerator);
 
 	const prefix = Stage === 'PROD' ? 'data' : 'code-data';
+	console.log(`[6884dd4c] prefix: ${prefix}`);
+
 	const filename = `${prefix}/date=${yesterday}/${yesterday}.json.gz`;
 	console.log(`[b6640f04] filename: ${filename}`);
 
 	const recordCount = await streamToS3(streamGenerator, bucket, filename);
-
 	console.log(`[5a02d341] export succeeded, read ${recordCount} records`);
 
 	return { recordCount };
